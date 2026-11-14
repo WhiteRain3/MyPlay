@@ -194,6 +194,7 @@ stays out until someone adds it there on purpose.
   quotes the file. After an import the settings screen is rebuilt (`key` on a generation counter),
   so no card keeps showing, and on its next tap writing back, a value from before the import.
 ## Car text size and control size (F09)
+## Car text size and control size
 
 Two independent settings scale the car screen: text size (a font-scale multiplier on
 `LocalDensity`) and control size (a multiplier on `CarDimens`' touch targets, rail width, gutter
