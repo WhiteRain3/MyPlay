@@ -84,7 +84,8 @@ What the app does today, read from the code:
 ### A3. Release chain for MyPlay
 
 - **Touches (all new files, so upstream's stay mergeable):**
-  - `myplay-version.txt`: one line, for example `0.1.0`.
+  - `myplay-version.txt`: one line. It starts as `0.0.0`, for which the workflow publishes
+    nothing, so the first push cannot release before a review. The Release step sets `0.1.0`.
   - `.github/workflows/myplay-ci.yml`: on every push to `claude/myplay`, run
     `:aap:test :app:testDebugUnitTest :headunit:test :app:assembleDebug :headunit:installDist`
     (the same line as upstream's `ci.yml`, which only runs for `main` and pull requests).
