@@ -15,25 +15,30 @@
     1. adb forward tcp:5277 localabstract:aare_hu
     2. starts aare-headunit.bat with the Audi profile, --headless <folder> and --script "<events>"
     3. waits, takes a phone screenshot, then stops the head unit and its Java process
-    4. saves the phone's log lines that mention aare or AareAap
+    4. saves the phone's log lines that mention aare, AareAap, myplay or AndroidRuntime (crashes)
   Result: <OutRoot>\<version>\<walk>\  with screen-000.png ..., latest.png, phone.png,
   phone-log.txt, headunit-out.txt, headunit-err.txt and summary.txt.
 
-.EXAMPLE
-  .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
+  Windows does not run downloaded scripts by default, so start it like this:
+    powershell -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
 
 .EXAMPLE
-  .\Run-AudiBench.ps1 -ListWalks
+  powershell -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
+
+.EXAMPLE
+  powershell -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -ListWalks
 #>
 [CmdletBinding()]
 param(
     # The unpacked "aare-headunit" folder from myplay-headunit-<version>.zip (it holds bin\aare-headunit.bat).
+    # Its path must not contain a space.
     [string]$HeadUnitDir,
     # Which walk to play; see $Walks below or -ListWalks.
     [string]$Walk = 'home',
     # Name of the result folder. Default: MyPlay's version as the phone reports it.
     [string]$Version,
-    # How long to let the head unit run, in seconds. Default: the walk's last event plus 8.
+    # How long to let the head unit run, in seconds. Default: the walk's last event plus 18
+    # (10 for connecting, 8 after the last event).
     [int]$Seconds = 0,
     # Where result folders go.
     [string]$OutRoot = (Join-Path (Get-Location) 'myplay-bench'),
@@ -62,7 +67,8 @@ $AudiMargins = @('--margins', '0,0,80,0')   # left,top,right,bottom
 # The walks: name = events. Each event is what@seconds, counted from the moment the phone connects.
 #   rotate:N (knob clicks, negative = back)   dpad:up|down|left|right|center (center = press the knob)
 #   key:CODE (4 Back, 3 Home, 66 Enter)       park   drive   night   day   reverse:SECS   tap:X,Y
-# A picture is saved every 3 seconds, so leave at least 3 seconds between events.
+# A picture is saved at most every 3 seconds, and only when a new video frame arrives, so leave at
+# least 3 seconds between events.
 # Add your own walks here.
 # ----------------------------------------------------------------------------------------------
 $Walks = [ordered]@{
@@ -93,6 +99,7 @@ if (-not $Walks.Contains($Walk)) { Stop-WithMessage "No walk named '$Walk'. Know
 $Events = $Walks[$Walk]
 
 if (-not $HeadUnitDir) { Stop-WithMessage 'Give -HeadUnitDir: the unpacked aare-headunit folder from myplay-headunit-<version>.zip' }
+if ($HeadUnitDir.Contains(' ')) { Stop-WithMessage "The path '$HeadUnitDir' contains a space, which the head unit's start file cannot take. Move the aare-headunit folder to a path without spaces, for example C:\myplay\aare-headunit" }
 $Bat = Join-Path (Join-Path $HeadUnitDir 'bin') 'aare-headunit.bat'
 if (-not (Test-Path -LiteralPath $Bat)) { Stop-WithMessage "No head unit at $Bat" }
 
@@ -121,15 +128,21 @@ if ($Seconds -le 0) {
             if ($at -gt $last) { $last = $at }
         }
     }
-    # Connecting takes a few seconds before the walk's clock starts.
-    $Seconds = [int][math]::Ceiling($last) + 8 + 10
+    # 10 seconds for connecting, before the walk's clock starts, and 8 after the last event.
+    $Seconds = [int][math]::Ceiling($last) + 10 + 8
 }
 
 $OutDir = Join-Path (Join-Path $OutRoot $Version) $Walk
 if (Test-Path -LiteralPath $OutDir) {
-    # Keep an earlier run: move it aside under its own time.
-    $stamp = (Get-Item -LiteralPath $OutDir).LastWriteTime.ToString('yyyyMMdd-HHmmss')
-    Rename-Item -LiteralPath $OutDir -NewName "$Walk-$stamp"
+    # Keep an earlier run: move it aside under its own time. If that cannot be done (a file in it
+    # is open, or that name is taken), this run goes into a folder of its own instead.
+    try {
+        $stamp = (Get-Item -LiteralPath $OutDir).LastWriteTime.ToString('yyyyMMdd-HHmmss')
+        Rename-Item -LiteralPath $OutDir -NewName "$Walk-$stamp" -ErrorAction Stop
+    } catch {
+        $OutDir = Join-Path (Join-Path $OutRoot $Version) ("$Walk-run-" + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+        Write-Host "The earlier result folder could not be renamed; this run goes to $OutDir"
+    }
 }
 New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 $OutDir = (Resolve-Path -LiteralPath $OutDir).Path
@@ -170,8 +183,8 @@ $endedEarly = $proc.HasExited
 # The head unit never exits by itself: stop it together with its Java process.
 if (-not $proc.HasExited) { & taskkill /PID $proc.Id /T /F | Out-Null }
 
-# The phone's log for this run, only the lines about MyPlay's connection.
-& adb logcat -d -T "$phoneStart" | Select-String -Pattern 'aare|AareAap' |
+# The phone's log for this run: the lines about MyPlay's connection, and crash reports.
+& adb logcat -d -T "$phoneStart" | Select-String -Pattern 'aare|AareAap|myplay|AndroidRuntime' |
     ForEach-Object { $_.Line } | Out-File -FilePath (Join-Path $OutDir 'phone-log.txt') -Encoding utf8
 
 # --- what happened -----------------------------------------------------------------------------
