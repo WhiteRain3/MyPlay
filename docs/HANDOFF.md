@@ -183,6 +183,11 @@ Release rules carried over from the earlier project, each learned the hard way:
 
 On GitHub (repository `WhiteRain3/MyPlay`):
 
+0. **Let Claude push to this repository.** On 2026-11-18 a cloud session could read it but not
+   push ("Claude doesn't have GitHub access to WhiteRain3/MyPlay"). Open
+   https://github.com/apps/claude/installations/select_target, choose the WhiteRain3 account, and
+   add `MyPlay` to the repositories the Claude app may use (or reconnect GitHub at
+   https://claude.ai/connect-github). Until this is done no session can deliver any work here.
 1. **Actions tab**: press the green button "I understand my workflows, go ahead and enable them".
 2. **Settings > Secrets and variables > Actions > New repository secret**, four times:
 
