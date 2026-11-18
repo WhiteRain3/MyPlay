@@ -74,8 +74,7 @@ Where unchanged AARE does not yet meet these rules (plan tasks A1, A2 and F7 dea
   and `EWMCP-N726` (probably its Bluetooth and Wi-Fi name). Box label Q5H, CAN cable Q5U, DIP
   switches 000000 (A4 2012-2015, HN+).
 - Sound goes over the car's own Bluetooth.
-- A Tester session on the owner's PC drives a phone over adb and reports to a branch. The PC's
-  operating system is not known to us.
+- A Tester session on the owner's PC (Windows) drives a phone over adb and reports to a branch.
 - The owner has not tried AARE or F-Auto in the car.
 
 ## The biggest unknown: does the box accept MyPlay?
@@ -147,8 +146,7 @@ result does not prove the box or the Audi's knob behaves the same.
   `AARE_KEY_PASSWORD`. **Without them it publishes a debug-signed APK**, whose key is new on
   every run, so one such release cannot be installed over another.
 - `.github/workflows/ci.yml` builds and tests pushes to `main` and pull requests only.
-- The fork has no tags and no releases. GitHub turns Actions off on a new fork until the owner
-  enables them.
+- The fork has no tags and no releases. The owner has enabled Actions on it (2026-11-18).
 
 ### What changes for MyPlay (plan task A3; not built yet)
 
@@ -161,9 +159,8 @@ result does not prove the box or the Audi's knob behaves the same.
   `MYPLAY_KEY_ALIAS`, `MYPLAY_KEY_PASSWORD`. A release fails if the keystore is missing; there is
   no debug-signed fallback.
 - No phone-certificate secrets.
-- Signing key: the owner reuses the key of their AA-Experiments fork if they still have the
-  keystore file (GitHub never shows a secret again, so the file itself is needed), otherwise a
-  new one. **The key must never change after the first release**, or the phone will refuse
+- Signing key: the old AA-Experiments keystore if the owner finds it, otherwise a new one
+  (recommended; steps in "What the owner must do"). **The key must never change after the first release**, or the phone will refuse
   updates until MyPlay is uninstalled, which loses its settings. The same goes for the package
   id `io.github.whiterain3.myplay`.
 - Signing key fingerprint (SHA-256): not recorded yet. The Release session writes it here after
@@ -188,20 +185,63 @@ On GitHub (repository `WhiteRain3/MyPlay`):
    https://github.com/apps/claude/installations/select_target, choose the WhiteRain3 account, and
    add `MyPlay` to the repositories the Claude app may use (or reconnect GitHub at
    https://claude.ai/connect-github). Until this is done no session can deliver any work here.
-1. **Actions tab**: press the green button "I understand my workflows, go ahead and enable them".
-2. **Settings > Secrets and variables > Actions > New repository secret**, four times:
+1. **Actions tab**: enable workflows. Done by the owner on 2026-11-18.
+2. **The signing key and its four secrets.** Every MyPlay release is signed with one key. The
+   phone only accepts an update signed with the same key as the installed app, so the key file
+   and its password **can never be changed later**. Keep a copy of both somewhere safe (a
+   password manager, a USB stick): if they are lost, MyPlay has to be uninstalled and set up
+   again to get any further update.
+
+   All commands below are for PowerShell on the Windows PC. `keytool` comes with Java, which
+   `docs/TESTER_SETUP.md` step 1 installs.
+
+   **Route (a): look for the old key, five minutes at most.** The key used for AA-Experiments was
+   a file ending in `.p12`, `.pfx`, `.jks` or `.keystore`. Search your user folder:
+
+   ```powershell
+   Get-ChildItem $env:USERPROFILE -Recurse -Include *.p12,*.pfx,*.jks,*.keystore -ErrorAction SilentlyContinue | Select-Object FullName, LastWriteTime
+   ```
+
+   Ignore `debug.keystore` in a folder called `.android`: that is not it. If a likely file turns
+   up, you need three more things: its password, the key's name inside it (the "alias"), and the
+   key's password (usually the same as the file's). This shows the alias after you type the
+   password:
+
+   ```powershell
+   keytool -list -keystore "C:\path\to\the-file.p12"
+   ```
+
+   If the file or its password cannot be found quickly, use route (b). **Route (b) is
+   recommended**: MyPlay is a new app with a new package id, so it gains nothing from the old key.
+
+   **Route (b): make a new key.**
+
+   ```powershell
+   mkdir C:\myplay-key
+   keytool -genkeypair -keystore C:\myplay-key\myplay-release.jks -alias myplay -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=MyPlay"
+   ```
+
+   It asks for a new password twice (at least 6 characters; write it down now). Nothing else
+   needs answering. The result is the file `C:\myplay-key\myplay-release.jks`.
+
+   **Then, for either route: the four secrets.** Copy the file as text to the clipboard:
+
+   ```powershell
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\myplay-key\myplay-release.jks")) | Set-Clipboard
+   ```
+
+   On GitHub: **Settings > Secrets and variables > Actions > New repository secret**, four
+   times, with exactly these names:
 
    | Name | Value |
    |---|---|
-   | `MYPLAY_KEYSTORE_BASE64` | the keystore file, as base64 text |
-   | `MYPLAY_KEYSTORE_PASSWORD` | the keystore's password |
-   | `MYPLAY_KEY_ALIAS` | the key's name inside the keystore |
-   | `MYPLAY_KEY_PASSWORD` | the key's password (often the same as the keystore's) |
+   | `MYPLAY_KEYSTORE_BASE64` | paste the clipboard (one very long line of letters) |
+   | `MYPLAY_KEYSTORE_PASSWORD` | the password of the file |
+   | `MYPLAY_KEY_ALIAS` | `myplay` for route (b); for route (a) the alias `keytool -list` showed |
+   | `MYPLAY_KEY_PASSWORD` | for route (b) the same password again; for route (a) the key's password |
 
-   These are the same four values as `ANDROID_KEYSTORE_B64`, `ANDROID_KEYSTORE_PASSWORD`,
-   `ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD` in the AA-Experiments repository, if the
-   keystore file still exists. If it does not, say so and a session will give the one command
-   that makes a new key. Keep a copy of the file and passwords somewhere safe either way.
+   GitHub never shows a secret again after saving, so the file and the password must be kept
+   elsewhere too. Do not put the file in the repository or send it in a chat.
 
    Do **not** add `AARE_PHONE_CERT` or `AARE_PHONE_KEY`.
 3. **Actions tab > "Release" (upstream's workflow) > the "..." menu > Disable workflow.** Optional,
@@ -296,10 +336,11 @@ One worker can hold two areas while the work is small. `ui/MainActivity.kt` (1,5
 3. **Styles named after other products.** AARE includes looks called "Android Auto", "Android
    Auto (2019)" and "CarPlay", and its "Retro" look uses a third-party clock font. Remove them
    under your rules, or keep any?
-4. **Signing key.** Do you still have the keystore file from the AA-Experiments fork?
+4. **Signing key.** Answered 2026-11-18: the owner does not know where the old keystore is.
+   Both routes are in "What the owner must do", step 2; a new key is recommended.
 5. **Package id.** `io.github.whiterain3.myplay` is proposed. It can never change later. Say if
    you want another.
-6. **The Tester's PC.** Windows, macOS or Linux?
+6. **The Tester's PC.** Answered 2026-11-18: Windows.
 7. **Google's Android Auto.** Does it stay installed as the daily driver while MyPlay is built?
    (The plan assumes yes.)
 8. **Releases.** Automatic after a clean review, as before, or ask you each time?

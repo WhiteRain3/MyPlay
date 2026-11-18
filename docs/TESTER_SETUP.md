@@ -1,4 +1,4 @@
-# Tester setup: a car screen on the PC
+# Tester setup: a car screen on the Windows PC
 
 For the Tester session on the owner's PC. It shows MyPlay's car screen on the computer using
 AARE's own desktop head unit (the program is called `aare-headunit`), drives it like a rotary
@@ -26,7 +26,7 @@ phone yet. If a step does not behave as written, fix this file in the same repor
 Until the first MyPlay release exists (plan tasks A1 to A4) there is nothing to install. The
 install steps can be done ahead of time.
 
-## Windows (PowerShell)
+## Steps (PowerShell)
 
 ### 1. Install the tools, once
 
@@ -168,19 +168,20 @@ rightmost 80 pixels. What the box itself reports is not known until the owner's 
    knob does nothing, look in the phone log for "Touch mode switch rejected".
 5. `drive`, then `park`: what is hidden while moving comes back.
 
-## macOS and Linux
+## About `headunit.sh` on Windows
 
-Same steps, different installs and paths:
+The repository's `headunit.sh` is a Unix shell script and is not used on Windows. It does three
+things, and the steps above do each of them directly:
 
-- macOS: `brew install temurin@21 ffmpeg android-platform-tools`
-- Debian or Ubuntu: `sudo apt install openjdk-21-jre ffmpeg adb`
-- The program is `aare-headunit/bin/aare-headunit` (no `.bat`), its identity is kept in
-  `~/.config/aare/headunit`, and screenshots work with
-  `adb exec-out screencap -p > phone.png`.
-- Stop a headless run with `timeout 40 aare-headunit/bin/aare-headunit ...` (Linux) or Ctrl+C.
-- With a checkout of the repository, `./headunit.sh --res 1280x720 --dpi 213 --no-touch` does the
-  forward, builds the head unit and starts it in one go. That needs a JDK 17 to 21 and the Android
-  SDK, and until plan task A1 it looks for AARE's package name, not MyPlay's.
+| `headunit.sh` does | On Windows |
+|---|---|
+| `adb forward tcp:5277 localabstract:aare_hu` | the same command (steps 4 and 5) |
+| switches on the app's head unit server, which only debug builds allow from outside | step 3, by hand, once (releases are not debug builds) |
+| builds the head unit with Gradle and starts `bin/aare-headunit` | the release zip already holds the built program with a Windows starter, `bin\aare-headunit.bat` (Gradle's `application` plugin makes both starters; seen in a build of this repository) |
+
+Building the head unit from source on Windows (`gradlew.bat :headunit:installDist`) is possible
+in principle but needs a JDK 17 to 21 and the Android SDK, because the project also contains the
+app. It has not been tried. Use the release zip.
 
 ## What this cannot test
 

@@ -183,8 +183,7 @@ test's log.
 
 ### B2. The Audi profile and a standard knob walk
 
-- **Touches:** new `tools/tester/` with one script for Windows (PowerShell) and one for
-  Linux/macOS (sh): start the head unit with the Audi profile and a named knob script, stop it
+- **Touches:** new `tools/tester/` with one PowerShell script (the owner's PC is Windows): start the head unit with the Audi profile and a named knob script, stop it
   after a set time, collect the pictures and the phone's log into a folder named after the
   version. `docs/TESTER_SETUP.md` is updated to use it.
 - **Verified by:** the Tester runs it and pushes a report with pictures to `claude/test-reports`.
