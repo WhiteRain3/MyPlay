@@ -168,7 +168,9 @@ jobs:
             echo "::notice::Release $TAG appeared while this run was building: not publishing again"
             exit 0
           fi
-          if [ -n "$(git ls-remote --tags origin "refs/tags/$TAG")" ]; then
+          # On its own line, so that a failing question to GitHub stops the run here.
+          TAG_FOUND="$(git ls-remote --tags origin "refs/tags/$TAG")"
+          if [ -n "$TAG_FOUND" ]; then
             echo "::error::Tag $TAG appeared without a release while this run was building: not publishing onto it"
             exit 1
           fi
