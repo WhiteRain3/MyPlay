@@ -109,20 +109,21 @@ in a cloud session with no Windows and no phone. Expect the first run to need fi
 happened, with the error text. Steps 6 and 7 below do the same by hand and are the fallback.
 
 ```powershell
-cd <your checkout of WhiteRain3/MyPlay, branch claude/myplay>
-.\tools\tester\Run-AudiBench.ps1 -ListWalks
-.\tools\tester\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home -Version <version>
+cd <your checkout of WhiteRain3/MyPlay, branch claude/myplay>\tools\tester
+powershell -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
 ```
 
-If PowerShell refuses to run scripts, start it for this one command with
-`powershell -ExecutionPolicy Bypass -File .\tools\tester\Run-AudiBench.ps1 ...`.
+Add `-ListWalks` to see the walks, `-Version <version>` to name the result folder.
+
+The path of the head unit folder must not contain a space (`C:\myplay\aare-headunit` is fine,
+`C:\My Files\aare-headunit` is not).
 
 | Option | Meaning |
 |---|---|
 | `-HeadUnitDir <folder>` | the unpacked `aare-headunit` folder from the release zip. Needed |
 | `-Walk <name>` | `home` (default), `open-back`, `drive-park` or `night-day` |
 | `-Version <name>` | name of the result folder, normally the MyPlay version |
-| `-Seconds <n>` | how long to let the head unit run |
+| `-Seconds <n>` | how long to let the head unit run. Default: the walk's last event plus 18 seconds |
 | `-OutRoot <folder>` | where results go (default `.\myplay-bench`) |
 | `-NoMargins` | leave out the margin part of the profile |
 | `-ListWalks` | list the walks and stop |
@@ -134,7 +135,7 @@ Results are in `<OutRoot>\<version>\<walk>\`:
 
 | File | What |
 |---|---|
-| `screen-000.png`, `screen-001.png`, … and `latest.png` | the car screen, one picture every 3 seconds |
+| `screen-000.png`, `screen-001.png`, … and `latest.png` | the car screen: at most one picture every 3 seconds, and only when a new video frame arrives. A screen on which nothing moves gives no new picture, so fewer pictures than expected is not by itself a fault |
 | `phone.png` | the phone's own screen at the end |
 | `phone-log.txt` | the phone's log lines about the app |
 | `headunit-out.txt`, `headunit-err.txt` | what the head unit printed |
@@ -174,7 +175,8 @@ taskkill /PID $p.Id /T /F
 | `night`, `day` | the car's lights |
 | `tap:X,Y` | a touch (not with `--no-touch`) |
 
-Leave at least 3 seconds between events so each one has its own picture.
+Leave at least 3 seconds between events so each one can have its own picture. A picture is saved
+at most every 3 seconds and only when a new video frame arrives.
 
 ### 7. By hand: phone screenshots and the log
 
