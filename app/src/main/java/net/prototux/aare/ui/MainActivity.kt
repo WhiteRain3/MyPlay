@@ -531,6 +531,7 @@ private fun ConnectionSettings(settings: Settings, refresh: Int) {
             Toggle(stringResource(R.string.setup_toggle_updates_title), stringResource(R.string.setup_toggle_updates_subtitle), checkUpdates) {
                 checkUpdates = it; settings.checkUpdates = it; UpdateChecker.refresh(ctx)
             }
+            MyPlayCheckNow()
         }
         Section(stringResource(R.string.setup_section_location)) {
             Toggle(stringResource(R.string.setup_toggle_car_gps_title), stringResource(R.string.setup_toggle_car_gps_subtitle), carGps) {

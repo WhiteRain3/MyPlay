@@ -12,16 +12,21 @@ import java.net.URL
 import kotlin.concurrent.thread
 
 /**
- * Looks on GitHub for a newer AARE release and, if there is one, surfaces it as a warning on the
- * home screen (no popup). On by default; switched off in Connection settings it never touches the
- * network. The check is one unauthenticated HTTPS request to the public releases API, at most once
- * a day, never while a car is connected, and silent on any failure. The result is cached so the
- * warning shows at once on the next start without asking again.
+ * Looks on GitHub for a newer MyPlay release (this fork's own releases, WhiteRain3/MyPlay) and, if
+ * there is one, surfaces it as a warning on the home screen (no popup). Off by default; while off
+ * in Connection settings it never touches the network by itself. The check is one unauthenticated
+ * HTTPS request to the public releases API, at most once a day, never while a car is connected, and
+ * silent on any failure. The request carries nothing about the user or the phone: no version, no
+ * identifier, only the fixed User-Agent "MyPlay". The result is cached so the warning shows at once
+ * on the next start without asking again. The "Check now" button (MyPlayUpdateCheck) makes the same
+ * single request when tapped.
  */
 object UpdateChecker {
     private const val TAG = "AareUpdate"
-    private const val LATEST = "https://api.github.com/repos/prototux/AARE/releases/latest"
-    private const val RELEASES = "https://github.com/prototux/AARE/releases/latest"
+    private const val LATEST = "https://api.github.com/repos/WhiteRain3/MyPlay/releases/latest"
+    private const val RELEASES = "https://github.com/WhiteRain3/MyPlay/releases/latest"
+    /** MyPlay releases are tagged myplay-v1.2.3. */
+    private const val TAG_PREFIX = "myplay-v"
     private const val DAY_MS = 24 * 60 * 60 * 1000L
 
     /** A release newer than the installed one. [version] has no leading "v". */
@@ -74,21 +79,32 @@ object UpdateChecker {
         return Update(latest, settings.updateLatestUrl ?: RELEASES)
     }
 
-    private fun fetchLatest(): Update? = runCatching {
+    internal fun fetchLatest(): Update? = runCatching {
         val c = URL(LATEST).openConnection() as HttpURLConnection
         c.connectTimeout = 8_000
         c.readTimeout = 8_000
         c.setRequestProperty("Accept", "application/vnd.github+json")
-        c.setRequestProperty("User-Agent", "AARE")
+        c.setRequestProperty("User-Agent", "MyPlay")
         try {
             if (c.responseCode != HttpURLConnection.HTTP_OK) return null
             val json = JSONObject(c.inputStream.bufferedReader().use { it.readText() })
-            val tag = json.optString("tag_name").removePrefix("v").ifBlank { return null }
-            Update(tag, json.optString("html_url").ifBlank { RELEASES })
+            val version = versionFromTag(json.optString("tag_name")) ?: return null
+            Update(version, json.optString("html_url").ifBlank { RELEASES })
         } finally {
             c.disconnect()
         }
     }.onFailure { Log.i(TAG, "update check: ${it.message}") }.getOrNull()
+
+    /**
+     * The version in a MyPlay release tag ("myplay-v1.2.3" gives "1.2.3"), or null for any other
+     * tag: a release that is not tagged as a MyPlay release is never offered as an update.
+     */
+    internal fun versionFromTag(tag: String): String? {
+        val t = tag.trim()
+        if (!t.startsWith(TAG_PREFIX)) return null
+        val version = t.removePrefix(TAG_PREFIX)
+        return version.takeIf { it.firstOrNull()?.isDigit() == true && parts(it).isNotEmpty() }
+    }
 
     /**
      * True when [latest] is a strictly higher semantic version than [installed], comparing numbers

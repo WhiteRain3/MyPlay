@@ -3,4 +3,10 @@
 <resources>
     <string name="myplay_about_fork" translatable="false">MyPlay is a personal fork of AARE by prototux and contributors. It is free software under the same licence, GPL-3.0-or-later. MyPlay is not AARE and is not Android Auto.</string>
     <string name="myplay_about_link_upstream" translatable="false">AARE (original project)</string>
+    <string name="myplay_update_check_now" translatable="false">Check now</string>
+    <string name="myplay_update_check_now_hint" translatable="false">Asks GitHub once for the latest MyPlay release. Nothing about you or this phone is sent; GitHub sees your internet address, as any website does.</string>
+    <string name="myplay_update_checking" translatable="false">Checking…</string>
+    <string name="myplay_update_none" translatable="false">You have the latest release (%1$s).</string>
+    <string name="myplay_update_found" translatable="false">MyPlay %1$s is available. You have %2$s. Tap here to open the release page.</string>
+    <string name="myplay_update_failed" translatable="false">Could not check. GitHub did not answer, or there is no MyPlay release yet.</string>
 </resources>

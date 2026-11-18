@@ -50,9 +50,12 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("wireless", true)
         set(v) = prefs.edit { putBoolean("wireless", v) }
 
-    /** Check GitHub for a newer release and warn on the home screen. Off never touches the network. */
+    /**
+     * Check GitHub for a newer MyPlay release and warn on the home screen. Off by default; while off,
+     * the only update request is the one made when the user taps "Check now" (see MyPlayUpdateCheck).
+     */
     var checkUpdates: Boolean
-        get() = prefs.getBoolean("check_updates", true)
+        get() = prefs.getBoolean("check_updates", false)
         set(v) = prefs.edit { putBoolean("check_updates", v) }
 
     // Update-check cache (see UpdateChecker): the latest release seen and its page, when we last
@@ -142,9 +145,9 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("ignore_driving", false)
         set(v) = prefs.edit { putBoolean("ignore_driving", v) }
 
-    /** The weather next to the clock (from Open-Meteo, with an approximate position). */
+    /** The weather next to the clock (from Open-Meteo, with an approximate position). Off by default in MyPlay. */
     var showWeather: Boolean
-        get() = prefs.getBoolean("show_weather", true)
+        get() = prefs.getBoolean("show_weather", false)
         set(v) = prefs.edit { putBoolean("show_weather", v) }
 
 
