@@ -20,6 +20,8 @@ name: MyPlay release
 on:
   push:
     branches: [claude/myplay]
+  # By hand from the Actions page: does the same, for a run that failed for an outside reason.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -32,7 +34,10 @@ concurrency:
 jobs:
   release:
     name: Build and publish
+    # Only in the MyPlay repository itself, never in a copy of it.
+    if: github.repository == 'WhiteRain3/MyPlay'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       contents: write
     env:
@@ -42,6 +47,7 @@ jobs:
 
       - name: Version from myplay-version.txt
         run: |
+          set -euo pipefail
           VERSION="$(tr -d '[:space:]' < myplay-version.txt)"
           if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "::error::myplay-version.txt must hold a version like 1.2.3, found '$VERSION'"
@@ -73,6 +79,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.MYPLAY_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.MYPLAY_KEY_PASSWORD }}
         run: |
+          set -euo pipefail
           MISSING=""
           [ -n "$KEYSTORE_BASE64" ] || MISSING="$MISSING MYPLAY_KEYSTORE_BASE64"
           [ -n "$KEYSTORE_PASSWORD" ] || MISSING="$MISSING MYPLAY_KEYSTORE_PASSWORD"
@@ -105,6 +112,7 @@ jobs:
           AARE_KEY_ALIAS: ${{ secrets.MYPLAY_KEY_ALIAS }}
           AARE_KEY_PASSWORD: ${{ secrets.MYPLAY_KEY_PASSWORD }}
         run: |
+          set -euo pipefail
           export AARE_KEYSTORE="$RUNNER_TEMP/myplay-release.keystore"
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$AARE_KEYSTORE"
           trap 'rm -f "$AARE_KEYSTORE"' EXIT
@@ -121,6 +129,7 @@ jobs:
       - name: The APK is signed, and not with a debug key
         if: env.PUBLISH == 'true'
         run: |
+          set -euo pipefail
           APKSIGNER="$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)"
           "$APKSIGNER" verify --print-certs "out/MyPlay-$VERSION.apk" | tee certs.txt
           if grep -q "CN=Android Debug" certs.txt; then
@@ -131,12 +140,14 @@ jobs:
       - name: Desktop head unit
         if: env.PUBLISH == 'true'
         run: |
+          set -euo pipefail
           ./gradlew --no-daemon :headunit:installDist
           (cd headunit/build/install && zip -qr "$GITHUB_WORKSPACE/out/myplay-headunit-$VERSION.zip" aare-headunit)
 
       - name: Publish
         if: env.PUBLISH == 'true'
         run: |
+          set -euo pipefail
           # Asked again just before publishing, in case another run published in the meantime.
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "::notice::Release $TAG appeared while this run was building: not publishing again"
@@ -157,4 +168,4 @@ jobs:
           | \`SHA256SUMS\` | checksums |
           NOTES
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "MyPlay $VERSION" --notes-file ../notes.md -- *
+            --title "MyPlay $VERSION" --notes-file ../notes.md --latest -- *
