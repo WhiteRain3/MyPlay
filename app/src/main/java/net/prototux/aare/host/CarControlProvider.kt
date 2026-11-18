@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Lets the voice assistant act on the car (Lapin and any assistant that adopts it), through
- * `ContentResolver.call` on `content://net.prototux.aare.car`:
+ * `ContentResolver.call` on `content://<application id>.car` (`content://io.github.whiterain3.myplay.car`):
  *
  * - `call("tools")` returns `{"json": <JSON array of tool specs>}`, empty when no car is connected;
  * - `call("run", <tool name>, {"args": <JSON object>})` returns `{"result": <JSON object>}`.

@@ -162,8 +162,8 @@ private class DesktopHeadUnit(val opts: Map<String, String>) {
     val route: RouteDrive? = opts["route"].let { r -> if (r == "none") null else runCatching { RouteDrive.load(r ?: "paris-marseille") }.getOrNull() }
     val gps = EmulatorGps(opts["serial"])
 
-    val frame by lazy { JFrame("AARE head unit") }
-    val clusterFrame by lazy { JFrame("AARE head unit: instrument cluster") }
+    val frame by lazy { JFrame("MyPlay test head unit") }
+    val clusterFrame by lazy { JFrame("MyPlay test head unit: instrument cluster") }
     val screen by lazy { ScreenPanel() }
     val status = label("Waiting for the phone…", 15f, bold = true)
     val phone = label("", 13f)
@@ -498,7 +498,7 @@ private class DesktopHeadUnit(val opts: Map<String, String>) {
         p.preferredSize = Dimension(300, 0)
         fun section(title: String) { p.add(gap(14)); p.add(label(title.uppercase(), 11f, color = MUTED)); p.add(gap(4)) }
 
-        p.add(label("AARE head unit", 18f, bold = true, color = ACCENT))
+        p.add(label("MyPlay test head unit", 18f, bold = true, color = ACCENT))
         p.add(gap(6)); p.add(status); p.add(phone)
         section("Navigation"); p.add(nav)
         section("Now playing"); p.add(playing)

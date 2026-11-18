@@ -859,7 +859,7 @@ private fun AudioSettings(settings: Settings, state: ProjectionService.State, re
                 if (policy) stringResource(R.string.audio_policy_ready)
                 else stringResource(R.string.audio_policy_not_ready),
                 policy) {
-                ctx.startSafely(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/prototux/AARE#car-audio")))
+                ctx.startSafely(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/WhiteRain3/MyPlay#car-audio")))
             }
             Check(stringResource(CaptureMethod.SHIZUKU.title),
                 when {
@@ -1455,6 +1455,8 @@ private fun LicenceLine() {
 private fun AboutScreen() {
     val ctx = LocalContext.current
     Section(stringResource(R.string.about_section_what_title)) {
+        Text(stringResource(R.string.myplay_about_fork), style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(8.dp))
         Text(stringResource(R.string.about_text), style = MaterialTheme.typography.bodyMedium)
     }
     Spacer(Modifier.height(16.dp))
@@ -1466,8 +1468,8 @@ private fun AboutScreen() {
             Pill(stringResource(R.string.about_link_issues), Icons.Rounded.BugReport) {
                 ctx.startSafely(Intent(Intent.ACTION_VIEW, Uri.parse(AboutLinks.ISSUES)))
             }
-            Pill(stringResource(R.string.about_link_discussions), Icons.Rounded.Forum) {
-                ctx.startSafely(Intent(Intent.ACTION_VIEW, Uri.parse(AboutLinks.DISCUSSIONS)))
+            Pill(stringResource(R.string.myplay_about_link_upstream), Icons.Rounded.Forum) {
+                ctx.startSafely(Intent(Intent.ACTION_VIEW, Uri.parse(AboutLinks.UPSTREAM)))
             }
         }
     }

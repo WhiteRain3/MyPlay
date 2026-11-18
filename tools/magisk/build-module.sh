@@ -16,16 +16,16 @@ VERSION=${AARE_VERSION:-$(sed -n 's/.*versionName = .*"\(.*\)".*/\1/p' "$ROOT/ap
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
-mkdir -p "$WORK/system/priv-app/AARE" "$WORK/system/etc/permissions" "$WORK/META-INF/com/google/android"
-cp "$APK" "$WORK/system/priv-app/AARE/AARE.apk"
+mkdir -p "$WORK/system/priv-app/MyPlay" "$WORK/system/etc/permissions" "$WORK/META-INF/com/google/android"
+cp "$APK" "$WORK/system/priv-app/MyPlay/MyPlay.apk"
 cp "$ROOT/tools/magisk/privapp-permissions-aare.xml" "$WORK/system/etc/permissions/"
 cat > "$WORK/module.prop" <<PROP
-id=aare
-name=AARE (privileged)
+id=myplay
+name=MyPlay (privileged)
 version=$VERSION
 versionCode=1
 author=AARE contributors
-description=Installs AARE as a privileged app: car audio like Android Auto (music and navigation voice, phone speaker muted).
+description=Installs MyPlay as a privileged app: car audio like Android Auto (music and navigation voice, phone speaker muted).
 PROP
 # Magisk's standard installer stubs.
 cat > "$WORK/META-INF/com/google/android/update-binary" <<'BIN'

@@ -1,5 +1,12 @@
 # AARE
 
+> **This is MyPlay, a personal fork of [AARE](https://github.com/prototux/AARE) by prototux and
+> contributors** (GPL-3.0-or-later, the same licence). MyPlay is not AARE and is not Android Auto.
+> The app is installed as "MyPlay" with the package id `io.github.whiterain3.myplay`, so where the
+> text below names the package `net.prototux.aare`, read the MyPlay id instead. What is different
+> in this fork, and how it is built and released, is in [docs/HANDOFF.md](docs/HANDOFF.md).
+> Everything below this note is AARE's own README, kept as it is.
+
 [<img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" alt="Get it on Obtainium" height="54">](https://apps.obtainium.imranr.dev/redirect?r=obtainium://add/https://github.com/prototux/AARE)
 
 **Android Auto, without Google.** AARE is an open-source replacement for the phone side of

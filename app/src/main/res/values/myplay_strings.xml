@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text that only MyPlay has. English only for now, so it is marked as not to be translated. -->
+<resources>
+    <string name="myplay_about_fork" translatable="false">MyPlay is a personal fork of AARE by prototux and contributors. It is free software under the same licence, GPL-3.0-or-later. MyPlay is not AARE and is not Android Auto.</string>
+    <string name="myplay_about_link_upstream" translatable="false">AARE (original project)</string>
+</resources>

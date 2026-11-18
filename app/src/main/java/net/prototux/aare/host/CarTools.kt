@@ -169,7 +169,7 @@ object CarTools {
         val listener = CarNotificationListener.instance ?: return if (CarNotificationListener.accessGranted(rt.context)) {
             CarNotificationListener.rebind(rt.context)
             error("the messages aren't available yet, try again in a moment")
-        } else error("AARE has no notification access on the phone")
+        } else error("MyPlay has no notification access on the phone")
         if (message.isBlank()) return error("empty message")
         return withConversation(name, app, " among the unread messages") { c ->
             when {
@@ -210,7 +210,7 @@ object CarTools {
         if (CarNotificationListener.accessGranted(context)) {
             CarNotificationListener.rebind(context)
             JSONObject().put("conversations", JSONArray()).put("count", 0)
-        } else error("AARE has no notification access on the phone")
+        } else error("MyPlay has no notification access on the phone")
 
     private fun ok(what: String) = JSONObject().put("ok", true).put("result", what)
     private fun error(what: String) = JSONObject().put("ok", false).put("error", what)
