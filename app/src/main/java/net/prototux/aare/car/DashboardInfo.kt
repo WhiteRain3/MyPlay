@@ -38,6 +38,8 @@ object DashboardInfo {
         val c = url.openConnection() as HttpURLConnection
         c.connectTimeout = 8_000
         c.readTimeout = 8_000
+        // MyPlay: a fixed word instead of Android's default User-Agent (phone model, Android version).
+        c.setRequestProperty("User-Agent", "MyPlay")
         try {
             val current = JSONObject(c.inputStream.bufferedReader().use { it.readText() }).getJSONObject("current")
             Weather(Math.round(current.getDouble("temperature_2m")).toInt(), if (fahrenheit) "°F" else "°", current.getInt("weather_code"),

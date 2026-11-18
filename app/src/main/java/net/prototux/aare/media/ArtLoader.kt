@@ -119,6 +119,9 @@ internal class ArtLoader(private val context: Context) {
         return try {
             conn.connectTimeout = 10_000
             conn.readTimeout = 10_000
+            // MyPlay: Android's default User-Agent names the phone model and Android version. The
+            // host is whatever the media app names, so send a fixed word instead.
+            conn.setRequestProperty("User-Agent", "MyPlay")
             if (conn.responseCode !in 200..299) return null
             conn.inputStream.use { input ->
                 val out = ByteArrayOutputStream()
