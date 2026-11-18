@@ -47,7 +47,12 @@ internal fun DashboardCardsEditor(order: List<DashCard>, rowHeight: Dp, onChange
                 ) {
                     Checkbox(checked = shown, onCheckedChange = null, enabled = canToggle)
                     Spacer(Modifier.width(12.dp))
-                    Text(stringResource(card.label), style = MaterialTheme.typography.bodyLarge)
+                    Column {
+                        Text(stringResource(card.label), style = MaterialTheme.typography.bodyLarge)
+                        // MyPlay: the weather card asks Open-Meteo even with the weather switch off, so say so here.
+                        if (card == DashCard.WEATHER) Text(stringResource(R.string.myplay_dash_card_weather_note),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
                 if (shown) {
                     IconButton(onClick = { onChange(order.moved(i, -1)) }, enabled = i > 0, modifier = Modifier.size(rowHeight)) {
