@@ -98,7 +98,56 @@ The window now shows the car screen. With `--no-touch` the mouse does nothing, a
 
 Keep the window in front while testing by hand: keys only reach it while it has focus.
 
-### 5. Run without a window and save pictures
+### 5. The normal way: the bench script
+
+`tools/tester/Run-AudiBench.ps1` (in the repository, from plan task B2) does a whole run in one
+command: the adb forward, the head unit with the Audi profile and a named knob walk, stopping it
+after a set time, a phone screenshot and the phone's log.
+
+**This script has never been run, and has not even been read by PowerShell yet.** It was written
+in a cloud session with no Windows and no phone. Expect the first run to need fixes; report what
+happened, with the error text. Steps 6 and 7 below do the same by hand and are the fallback.
+
+```powershell
+cd <your checkout of WhiteRain3/MyPlay, branch claude/myplay>
+.\tools\tester\Run-AudiBench.ps1 -ListWalks
+.\tools\tester\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home -Version <version>
+```
+
+If PowerShell refuses to run scripts, start it for this one command with
+`powershell -ExecutionPolicy Bypass -File .\tools\tester\Run-AudiBench.ps1 ...`.
+
+| Option | Meaning |
+|---|---|
+| `-HeadUnitDir <folder>` | the unpacked `aare-headunit` folder from the release zip. Needed |
+| `-Walk <name>` | `home` (default), `open-back`, `drive-park` or `night-day` |
+| `-Version <name>` | name of the result folder, normally the MyPlay version |
+| `-Seconds <n>` | how long to let the head unit run |
+| `-OutRoot <folder>` | where results go (default `.\myplay-bench`) |
+| `-NoMargins` | leave out the margin part of the profile |
+| `-ListWalks` | list the walks and stop |
+
+`adb`, `java` and `ffmpeg` must be on the PATH (step 1). Step 3 and the Trust tap in step 4 must
+have been done once, by hand; the script does not do them.
+
+Results are in `<OutRoot>\<version>\<walk>\`:
+
+| File | What |
+|---|---|
+| `screen-000.png`, `screen-001.png`, … and `latest.png` | the car screen, one picture every 3 seconds |
+| `phone.png` | the phone's own screen at the end |
+| `phone-log.txt` | the phone's log lines about the app |
+| `headunit-out.txt`, `headunit-err.txt` | what the head unit printed |
+| `summary.txt` | what was run |
+
+The profile inside the script is
+`--res 1280x720 --dpi 213 --no-touch --route none --margins 0,0,80,0`: 80 pixels hidden on the
+right. That margin comes from the owner's description of the car, not from the box, and is not
+confirmed; it is corrected after the parked test. The `--margins` option exists from plan task
+B1 on, so the head unit must come from a release that includes it; with an older one, use
+`-NoMargins`.
+
+### 6. By hand: run without a window and save pictures
 
 ```powershell
 adb forward tcp:5277 localabstract:aare_hu
@@ -127,7 +176,7 @@ taskkill /PID $p.Id /T /F
 
 Leave at least 3 seconds between events so each one has its own picture.
 
-### 6. Phone screenshots and the log
+### 7. By hand: phone screenshots and the log
 
 ```powershell
 adb shell screencap -p /sdcard/myplay-shot.png
@@ -139,7 +188,7 @@ Do not use `adb exec-out screencap -p > file.png` in PowerShell: it damages the 
 
 MyPlay also keeps its own connection log on the phone: *Advanced > Connection log*.
 
-### 7. Report
+### 8. Report
 
 As before: push to branch `claude/test-reports` of `WhiteRain3/MyPlay`, in
 `test-reports/<version>/REPORT.md` with the pictures beside it. Say for each check what was done,
@@ -154,10 +203,12 @@ say the box or the Audi's knob behaves the same.
 | `--dpi 213` | the density Google's app reported for the owner's screen |
 | `--no-touch` | knob and buttons only |
 | `--route none` | no simulated drive (it starts a Paris to Marseille drive otherwise) |
+| `--margins 0,0,80,0` | left, top, right, bottom pixels the car does not show (from plan task B1 on) |
 
-Known difference: the car shows about 1200 of the 1280 pixels across. The head unit cannot
-imitate that until plan task B1 adds margin options; until then, ignore what happens in the
-rightmost 80 pixels. What the box itself reports is not known until the owner's parked test.
+The car shows about 1200 of the 1280 pixels across, with the unused part on the right, as Google's
+app reported it. What the box itself reports is not known until the owner's parked test; the
+margin is then corrected. With a head unit older than task B1, leave `--margins` out and ignore
+what happens in the rightmost 80 pixels.
 
 ## Checks worth making on every build
 
@@ -175,7 +226,7 @@ things, and the steps above do each of them directly:
 
 | `headunit.sh` does | On Windows |
 |---|---|
-| `adb forward tcp:5277 localabstract:aare_hu` | the same command (steps 4 and 5) |
+| `adb forward tcp:5277 localabstract:aare_hu` | the same command (step 4; the bench script does it too) |
 | switches on the app's head unit server, which only debug builds allow from outside | step 3, by hand, once (releases are not debug builds) |
 | builds the head unit with Gradle and starts `bin/aare-headunit` | the release zip already holds the built program with a Windows starter, `bin\aare-headunit.bat` (Gradle's `application` plugin makes both starters; seen in a build of this repository) |
 
