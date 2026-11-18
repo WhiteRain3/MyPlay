@@ -165,8 +165,15 @@ result does not prove the box or the Audi's knob behaves the same.
   id `io.github.whiterain3.myplay`.
 - Signing key fingerprint (SHA-256): not recorded yet. The Release session writes it here after
   the first release and checks every later release against it.
-- Upstream's `v*` tags must never be pushed to this repository: they would run upstream's
-  release workflow here. The owner can also switch that workflow off (owner's list, step 3).
+- Upstream's `v*` tags must never be pushed to this repository. As the dispatcher reported on
+  2026-11-18, the Worker's commit `807f2fe` limits upstream's `release.yml` to the repository
+  `prototux/AARE`, so it should do nothing here even then. (That commit was made locally and had
+  not been pushed when this was written; the Planner has not seen it.) The owner can also switch
+  that workflow off (owner's list, step 3).
+- MyPlay very likely cannot be installed next to AARE or F-Auto. All three define the same
+  permission (`android.car.permission.TEMPLATE_RENDERER`), and Android refuses a second app that
+  defines a permission already defined by an app with a different signature. Read from the
+  manifest and Android's rules; not tried on a phone.
 
 Release rules carried over from the earlier project, each learned the hard way:
 
@@ -345,6 +352,19 @@ One worker can hold two areas while the work is small. `ui/MainActivity.kt` (1,5
    (The plan assumes yes.)
 8. **Releases.** Automatic after a clean review, as before, or ask you each time?
 9. **Languages.** AARE is translated into 20 languages. Is English only fine for everything new?
+
+Raised by the review of tasks A1 to A3 (2026-11-18):
+
+10. **Cover art.** The app downloads album pictures from whatever internet address a media app
+    supplies (`media/ArtLoader.kt`), by default. That is a network use beyond the updater. Accept
+    it, add a switch that is off by default, or remove it?
+11. **The Weather card on the dashboard.** Should it obey the same weather switch as the weather
+    next to the clock (off by default)?
+12. **Places where the name AARE still goes out.** The name inside the certificate the app makes
+    for itself (sent to the head unit), the "make" reported to car apps, one style called AARE,
+    three texts, and the name the certificate download gives the server it downloads from. Rename
+    all to MyPlay, or leave some? The plan left the certificate name alone until after the parked
+    test, because head units have accepted it as it is.
 
 ## Not known yet (answered by the parked test, not by the owner)
 
