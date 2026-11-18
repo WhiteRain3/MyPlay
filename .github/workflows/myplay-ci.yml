@@ -1,0 +1,31 @@
+# MyPlay: builds everything and runs the tests on every push to the MyPlay branch.
+# Upstream's ci.yml does the same for main and pull requests only; this file is separate so that
+# upstream's stays as it is.
+name: MyPlay CI
+
+on:
+  push:
+    branches: [claude/myplay]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
+      - name: Protocol, app and head unit tests, debug APK, desktop head unit
+        run: ./gradlew --no-daemon :aap:test :app:testDebugUnitTest :headunit:test :app:assembleDebug :headunit:installDist
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: test-reports
+          path: "**/build/reports/tests/"
+          if-no-files-found: ignore
