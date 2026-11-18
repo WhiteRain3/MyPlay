@@ -34,38 +34,51 @@ concurrency:
 jobs:
   release:
     name: Build and publish
-    # Only in the MyPlay repository itself, never in a copy of it.
-    if: github.repository == 'WhiteRain3/MyPlay'
+    # Only in the MyPlay repository itself, never in a copy of it, and only from the MyPlay branch,
+    # also when started by hand.
+    if: github.repository == 'WhiteRain3/MyPlay' && github.ref == 'refs/heads/claude/myplay'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
       contents: write
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Version from myplay-version.txt
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           VERSION="$(tr -d '[:space:]' < myplay-version.txt)"
-          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          # Three plain numbers, none written with a leading zero (so 1.02.3 is refused).
+          if ! printf '%s' "$VERSION" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; then
             echo "::error::myplay-version.txt must hold a version like 1.2.3, found '$VERSION'"
             exit 1
           fi
           IFS=. read -r MAJOR MINOR PATCH <<< "$VERSION"
+          # The version code gives the middle and last number two digits each.
+          if [ "$MINOR" -gt 99 ] || [ "$PATCH" -gt 99 ]; then
+            echo "::error::In version '$VERSION' the second and third number must be 99 or less"
+            exit 1
+          fi
+          VERSION_CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
           TAG="myplay-v$VERSION"
           {
             echo "VERSION=$VERSION"
-            echo "VERSION_CODE=$(( 10#$MAJOR * 10000 + 10#$MINOR * 100 + 10#$PATCH ))"
+            echo "VERSION_CODE=$VERSION_CODE"
             echo "TAG=$TAG"
           } >> "$GITHUB_ENV"
-          if [ "$VERSION" = "0.0.0" ]; then
+          # Fails the step if GitHub cannot be asked; empty when there is no such tag.
+          TAG_FOUND="$(git ls-remote --tags origin "refs/tags/$TAG")"
+          if [ "$VERSION_CODE" -eq 0 ]; then
             echo "::notice::Version 0.0.0 means not released yet: nothing to publish"
             echo "PUBLISH=false" >> "$GITHUB_ENV"
           elif gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "::notice::Release $TAG already exists: nothing to publish"
             echo "PUBLISH=false" >> "$GITHUB_ENV"
+          elif [ -n "$TAG_FOUND" ]; then
+            echo "::error::Tag $TAG exists but has no release. Not publishing onto a tag someone else made: remove the tag or choose the next version."
+            exit 1
           else
             echo "::notice::Release $TAG does not exist yet: building it"
             echo "PUBLISH=true" >> "$GITHUB_ENV"
@@ -146,12 +159,18 @@ jobs:
 
       - name: Publish
         if: env.PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           # Asked again just before publishing, in case another run published in the meantime.
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "::notice::Release $TAG appeared while this run was building: not publishing again"
             exit 0
+          fi
+          if [ -n "$(git ls-remote --tags origin "refs/tags/$TAG")" ]; then
+            echo "::error::Tag $TAG appeared without a release while this run was building: not publishing onto it"
+            exit 1
           fi
           cd out
           sha256sum -- * > SHA256SUMS
