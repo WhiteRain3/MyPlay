@@ -43,4 +43,17 @@ class UpdateVersionTest {
 
     @Test fun myPlayTagVersionCompares() =
         assertTrue(UpdateChecker.isNewer(UpdateChecker.versionFromTag("myplay-v0.2.0")!!, "0.1.9"))
+
+    /** Only pages of MyPlay's own repository are opened; anything else gives the fixed page. */
+    @Test fun releasePageStaysInMyPlaysRepository() {
+        val fixed = "https://github.com/WhiteRain3/MyPlay/releases/latest"
+        val own = "https://github.com/WhiteRain3/MyPlay/releases/tag/myplay-v0.1.0"
+        assertEquals(own, UpdateChecker.releasePage(own))
+        assertEquals(fixed, UpdateChecker.releasePage(null))
+        assertEquals(fixed, UpdateChecker.releasePage(""))
+        assertEquals(fixed, UpdateChecker.releasePage("https://example.com/WhiteRain3/MyPlay/"))
+        assertEquals(fixed, UpdateChecker.releasePage("https://github.com/WhiteRain3/MyPlayOther/releases"))
+        assertEquals(fixed, UpdateChecker.releasePage("https://github.com/prototux/AARE/releases/latest"))
+        assertEquals(fixed, UpdateChecker.releasePage("http://github.com/WhiteRain3/MyPlay/releases"))
+    }
 }

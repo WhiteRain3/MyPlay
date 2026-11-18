@@ -25,6 +25,8 @@ object UpdateChecker {
     private const val TAG = "AareUpdate"
     private const val LATEST = "https://api.github.com/repos/WhiteRain3/MyPlay/releases/latest"
     private const val RELEASES = "https://github.com/WhiteRain3/MyPlay/releases/latest"
+    /** Every page the app opens for an update starts with this. */
+    private const val REPOSITORY_PAGES = "https://github.com/WhiteRain3/MyPlay/"
     /** MyPlay releases are tagged myplay-v1.2.3. */
     private const val TAG_PREFIX = "myplay-v"
     private const val DAY_MS = 24 * 60 * 60 * 1000L
@@ -76,7 +78,7 @@ object UpdateChecker {
         val latest = settings.updateLatestVersion ?: return null
         if (!isNewer(latest, BuildConfig.VERSION_NAME)) return null
         if (latest == settings.updateDismissedVersion) return null
-        return Update(latest, settings.updateLatestUrl ?: RELEASES)
+        return Update(latest, releasePage(settings.updateLatestUrl))
     }
 
     internal fun fetchLatest(): Update? = runCatching {
@@ -89,11 +91,18 @@ object UpdateChecker {
             if (c.responseCode != HttpURLConnection.HTTP_OK) return null
             val json = JSONObject(c.inputStream.bufferedReader().use { it.readText() })
             val version = versionFromTag(json.optString("tag_name")) ?: return null
-            Update(version, json.optString("html_url").ifBlank { RELEASES })
+            Update(version, releasePage(json.optString("html_url")))
         } finally {
             c.disconnect()
         }
     }.onFailure { Log.i(TAG, "update check: ${it.message}") }.getOrNull()
+
+    /**
+     * The address to open for a release: [url] if it is a page of MyPlay's own repository on GitHub,
+     * otherwise the fixed "latest release" page. So an answer naming any other site is never opened.
+     */
+    internal fun releasePage(url: String?): String =
+        url?.takeIf { it.startsWith(REPOSITORY_PAGES, ignoreCase = true) } ?: RELEASES
 
     /**
      * The version in a MyPlay release tag ("myplay-v1.2.3" gives "1.2.3"), or null for any other
