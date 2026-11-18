@@ -18,6 +18,9 @@ on:
 jobs:
   release:
     name: Build and publish
+    # MyPlay: this is upstream's release for upstream's tags. It never runs in this fork, where it
+    # would publish a debug-signed "AARE" release. MyPlay releases come from myplay-release.yml.
+    if: github.repository == 'prototux/AARE'
     runs-on: ubuntu-latest
     permissions:
       contents: write
