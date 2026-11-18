@@ -61,6 +61,10 @@ private const val USAGE = """AARE desktop head unit: a car screen on your deskto
   --rhd                  right-hand drive
   --cluster              also offer an 800x480 instrument-cluster display (shown in a second window)
   --no-touch             present as a rotary/D-pad-only unit with no touchscreen (like a Mazda commander)
+  --width-margin N       tell the phone that N pixels of the picture's width are not shown (default 0); the phone
+  --height-margin N      splits them evenly between the two sides. The same for the height (default 0)
+  --margins L,T,R,B      unused pixels per side instead (left, top, right, bottom); replaces the two above on the phone.
+                         With any margin, the window and the saved pictures darken the part a car would not show
   --route NAME|FILE      simulated drive (default paris-marseille); "none" to disable
   --speed KMH            cruising speed on open road (default 130)
   --time-scale X         drive X times faster than real time (default 1)
@@ -157,7 +161,18 @@ private class DesktopHeadUnit(val opts: Map<String, String>) {
         rightHandDrive = opts.containsKey("rhd"),
         cluster = opts.containsKey("cluster"),
         noTouch = opts.containsKey("no-touch"),
-    )
+        widthMargin = marginOption("width-margin"),
+        heightMargin = marginOption("height-margin"),
+        margins = opts["margins"]?.let { SideMargins.parse(it) ?: badOption("--margins needs four whole numbers: left,top,right,bottom") },
+    ).also { c -> marginProblem(c, width, height)?.let { badOption(it) } }
+
+    private fun marginOption(name: String): Int =
+        opts[name]?.let { it.toIntOrNull()?.takeIf { n -> n >= 0 } ?: badOption("--$name needs a whole number of pixels, 0 or more") } ?: 0
+
+    private fun badOption(message: String): Nothing {
+        System.err.println(message)
+        exitProcess(2)
+    }
     val identity: PhoneIdentity = loadIdentity()
     val route: RouteDrive? = opts["route"].let { r -> if (r == "none") null else runCatching { RouteDrive.load(r ?: "paris-marseille") }.getOrNull() }
     val gps = EmulatorGps(opts["serial"])
@@ -211,7 +226,8 @@ private class DesktopHeadUnit(val opts: Map<String, String>) {
     fun startDecoder(width: Int, height: Int) {
         videoSize = width to height
         decoder?.close()
-        decoder = VideoDecoder(width, height) { img -> screen.image = img; screen.repaint(); snapshot(img) }
+        // MyPlay: with margins, the part a car would not show is darkened in the window and the pictures.
+        decoder = VideoDecoder(width, height) { frame -> val img = markHidden(frame, config); screen.image = img; screen.repaint(); snapshot(img) }
             .also { d -> codecConfig?.let { d.feed(it, 0, it.size) } }
     }
     var mic: Microphone? = null

@@ -111,6 +111,14 @@ class HeadUnit(
          * so the phone drives the UI entirely from keys and rotary detents.
          */
         val noTouch: Boolean = false,
+        /**
+         * MyPlay: margins the main display reports, in video pixels, for a car that shows only part
+         * of the frame (see ScreenMargins.kt). The plain two are split evenly by the phone;
+         * [margins], when set, give each side and replace them.
+         */
+        val widthMargin: Int = 0,
+        val heightMargin: Int = 0,
+        val margins: SideMargins? = null,
     )
 
     interface Listener {
@@ -210,8 +218,9 @@ class HeadUnit(
     // ------------------------------------------------------------------ input
 
     /** A touch in video coordinates; [action] is a PointerAction. */
-    fun touch(action: PointerAction, x: Int, y: Int) {
+    fun touch(action: PointerAction, screenX: Int, screenY: Int) {
         if (!tlsUp) return
+        val (x, y) = toPanel(config, screenX, screenY)
         send(chInput, InputMsg.INPUT_REPORT, InputReport.newBuilder().setTimestamp(System.nanoTime() / 1000)
             .setTouchEvent(TouchEvent.newBuilder().setAction(action).setActionIndex(0)
                 .addPointerData(TouchEvent.Pointer.newBuilder().setX(x.coerceAtLeast(0)).setY(y.coerceAtLeast(0)).setPointerId(0)))
@@ -505,7 +514,7 @@ class HeadUnit(
         else -> Triple(VideoCodecResolutionType.VIDEO_800x480, 800, 480)
     }
 
-    private fun discovery(): ServiceDiscoveryResponse {
+    internal fun discovery(): ServiceDiscoveryResponse {
         val res = codecSize.first
         fun audio(id: Int, type: AudioStreamType, rate: Int, ch: Int) = Service.newBuilder().setId(id).setMediaSinkService(
             MediaSinkService.newBuilder().setAvailableType(MediaCodecType.MEDIA_CODEC_AUDIO_PCM).setAudioType(type).addAudioConfigs(pcm(rate, ch)))
@@ -520,7 +529,7 @@ class HeadUnit(
                 .setAvailableType(MediaCodecType.MEDIA_CODEC_VIDEO_H264_BP)
                 .addVideoConfigs(VideoConfiguration.newBuilder().setCodecResolution(res)
                     .setFrameRate(if (config.fps60) VideoFrameRateType.VIDEO_FPS_60 else VideoFrameRateType.VIDEO_FPS_30)
-                    .setDensity(config.dpi).setWidthMargin(0).setHeightMargin(0))))
+                    .setDensity(config.dpi).withMargins(config))))
             .apply {
                 if (config.cluster) addChannels(Service.newBuilder().setId(chCluster).setMediaSinkService(MediaSinkService.newBuilder()
                     .setAvailableType(MediaCodecType.MEDIA_CODEC_VIDEO_H264_BP)
@@ -537,8 +546,9 @@ class HeadUnit(
                 .addAllKeycodesSupported(SUPPORTED_KEYS)
                 .apply {
                     // A real rotary/D-pad-only unit declares no touch panel (--no-touch).
-                    if (!config.noTouch) addTouchscreen(
-                        InputSourceService.TouchScreen.newBuilder().setWidth(config.width).setHeight(config.height))
+                    // With margins the panel covers the visible part only (see toPanel in ScreenMargins.kt).
+                    if (!config.noTouch) addTouchscreen(visibleArea(config, config.width, config.height).let { v ->
+                        InputSourceService.TouchScreen.newBuilder().setWidth(v.width).setHeight(v.height) })
                 }))
             .addChannels(Service.newBuilder().setId(chSensors).setSensorSourceService(SensorSourceService.newBuilder().apply {
                 for (t in listOf(SensorType.SENSOR_DRIVING_STATUS_DATA, SensorType.SENSOR_NIGHT_MODE, SensorType.SENSOR_LOCATION,
