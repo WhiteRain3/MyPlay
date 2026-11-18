@@ -444,7 +444,7 @@
     <string name="common_something_went_wrong">Щось пішло не так</string>
     <string name="setup_section_updates">Оновлення</string>
     <string name="setup_toggle_updates_title">Перевіряти оновлення</string>
-    <string name="setup_toggle_updates_subtitle">Попереджати на головному екрані, коли на GitHub з\'являється новіший випуск. Якщо вимкнено, застосунок ніколи не підключається до інтернету.</string>
+    <string name="setup_toggle_updates_subtitle">Попереджати на головному екрані, коли на GitHub з\'являється новіший випуск.</string>
     <string name="update_available_title">Доступне оновлення — %1$s</string>
     <string name="update_available_subtitle">У вас %1$s. Натисніть, щоб переглянути випуск.</string>
     <string name="setup_log_save">Зберегти</string>

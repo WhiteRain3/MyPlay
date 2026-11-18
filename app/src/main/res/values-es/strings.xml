@@ -444,7 +444,7 @@
     <string name="common_something_went_wrong">Algo salió mal</string>
     <string name="setup_section_updates">Actualizaciones</string>
     <string name="setup_toggle_updates_title">Buscar actualizaciones</string>
-    <string name="setup_toggle_updates_subtitle">Avisa en la pantalla principal cuando haya una versión más reciente en GitHub. Desactivado, nunca se conecta a internet.</string>
+    <string name="setup_toggle_updates_subtitle">Avisa en la pantalla principal cuando haya una versión más reciente en GitHub.</string>
     <string name="update_available_title">Actualización disponible: %1$s</string>
     <string name="update_available_subtitle">Tienes %1$s. Toca para ver la versión.</string>
     <string name="setup_log_save">Guardar</string>

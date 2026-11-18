@@ -445,7 +445,7 @@
     <string name="common_something_went_wrong">Er is iets misgegaan</string>
     <string name="setup_section_updates">Updates</string>
     <string name="setup_toggle_updates_title">Controleren op updates</string>
-    <string name="setup_toggle_updates_subtitle">Waarschuwt op het startscherm wanneer er een nieuwere versie op GitHub staat. Uit maakt nooit verbinding met internet.</string>
+    <string name="setup_toggle_updates_subtitle">Waarschuwt op het startscherm wanneer er een nieuwere versie op GitHub staat.</string>
     <string name="update_available_title">Update beschikbaar — %1$s</string>
     <string name="update_available_subtitle">U hebt %1$s. Tik om de release te bekijken.</string>
     <string name="setup_log_save">Opslaan</string>

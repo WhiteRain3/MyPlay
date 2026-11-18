@@ -445,7 +445,7 @@
     <string name="common_something_went_wrong">Noget gik galt</string>
     <string name="setup_section_updates">Opdateringer</string>
     <string name="setup_toggle_updates_title">Søg efter opdateringer</string>
-    <string name="setup_toggle_updates_subtitle">Advar på hjemmeskærmen, når en nyere udgivelse er tilgængelig på GitHub. Slået fra opretter aldrig forbindelse til internettet.</string>
+    <string name="setup_toggle_updates_subtitle">Advar på hjemmeskærmen, når en nyere udgivelse er tilgængelig på GitHub.</string>
     <string name="update_available_title">Opdatering tilgængelig — %1$s</string>
     <string name="update_available_subtitle">Du har %1$s. Tryk for at se udgivelsen.</string>
     <string name="setup_log_save">Gem</string>

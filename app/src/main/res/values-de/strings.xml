@@ -444,7 +444,7 @@
     <string name="common_something_went_wrong">Etwas ist schiefgelaufen</string>
     <string name="setup_section_updates">Updates</string>
     <string name="setup_toggle_updates_title">Auf Updates prüfen</string>
-    <string name="setup_toggle_updates_subtitle">Warnt auf dem Startbildschirm, wenn eine neuere Version auf GitHub verfügbar ist. Aus verbindet sich nie mit dem Internet.</string>
+    <string name="setup_toggle_updates_subtitle">Warnt auf dem Startbildschirm, wenn eine neuere Version auf GitHub verfügbar ist.</string>
     <string name="update_available_title">Update verfügbar — %1$s</string>
     <string name="update_available_subtitle">Sie haben %1$s. Tippen, um die Version anzuzeigen.</string>
     <string name="setup_log_save">Speichern</string>

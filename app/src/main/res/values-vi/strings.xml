@@ -444,7 +444,7 @@
     <string name="common_something_went_wrong">Đã xảy ra lỗi</string>
     <string name="setup_section_updates">Cập nhật</string>
     <string name="setup_toggle_updates_title">Kiểm tra cập nhật</string>
-    <string name="setup_toggle_updates_subtitle">Cảnh báo trên màn hình chính khi có bản phát hành mới hơn trên GitHub. Tắt thì không bao giờ kết nối internet.</string>
+    <string name="setup_toggle_updates_subtitle">Cảnh báo trên màn hình chính khi có bản phát hành mới hơn trên GitHub.</string>
     <string name="update_available_title">Có cập nhật mới — %1$s</string>
     <string name="update_available_subtitle">Bạn đang dùng %1$s. Nhấn để xem bản phát hành.</string>
     <string name="setup_log_save">Lưu</string>

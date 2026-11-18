@@ -444,7 +444,7 @@
     <string name="common_something_went_wrong">Qualcosa è andato storto</string>
     <string name="setup_section_updates">Aggiornamenti</string>
     <string name="setup_toggle_updates_title">Controlla aggiornamenti</string>
-    <string name="setup_toggle_updates_subtitle">Avvisa nella schermata principale quando è disponibile una versione più recente su GitHub. Se disattivato, non si connette mai a Internet.</string>
+    <string name="setup_toggle_updates_subtitle">Avvisa nella schermata principale quando è disponibile una versione più recente su GitHub.</string>
     <string name="update_available_title">Aggiornamento disponibile — %1$s</string>
     <string name="update_available_subtitle">Hai %1$s. Tocca per visualizzare la release.</string>
     <string name="setup_log_save">Salva</string>

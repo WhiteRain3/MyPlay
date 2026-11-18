@@ -428,7 +428,7 @@
     <string name="common_something_went_wrong">出现错误</string>
     <string name="setup_section_updates">更新</string>
     <string name="setup_toggle_updates_title">检查更新</string>
-    <string name="setup_toggle_updates_subtitle">GitHub 上有新版本时，在主屏幕提示。关闭后绝不会连接网络。</string>
+    <string name="setup_toggle_updates_subtitle">GitHub 上有新版本时，在主屏幕提示。</string>
     <string name="update_available_title">有可用更新 — %1$s</string>
     <string name="update_available_subtitle">当前版本为 %1$s。点按查看该版本。</string>
     <string name="setup_log_save">保存</string>
