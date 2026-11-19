@@ -31,6 +31,19 @@ class CarInputLogTest {
         assertEquals("DPAD_CENTER (23)", CarInputLog.keyName(23))
         assertEquals("ROTARY_CONTROLLER (65536)", CarInputLog.keyName(65536))
         assertEquals("key 999", CarInputLog.keyName(999))
+        // Android Auto's own codes for the car's controls.
+        assertEquals("MEDIA (65537)", CarInputLog.keyName(65537))
+        assertEquals("NAVIGATION (65538)", CarInputLog.keyName(65538))
+        assertEquals("RADIO (65539)", CarInputLog.keyName(65539))
+        assertEquals("TEL (65540)", CarInputLog.keyName(65540))
+        assertEquals("PRIMARY_BUTTON (65541)", CarInputLog.keyName(65541))
+        assertEquals("SECONDARY_BUTTON (65542)", CarInputLog.keyName(65542))
+        assertEquals("TERTIARY_BUTTON (65543)", CarInputLog.keyName(65543))
+        assertEquals("TURN_CARD (65544)", CarInputLog.keyName(65544))
+    }
+
+    @Test fun limitLeavesRoomForTheRestOfTheLog() {
+        assertEquals(120, CarInputLog.MAX_LINES)
     }
 
     @Test fun keyLinesSayDownUpHeldAndChannel() {

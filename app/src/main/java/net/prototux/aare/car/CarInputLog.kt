@@ -16,8 +16,8 @@ import aap_protobuf.service.inputsource.message.InputReportOuterClass.InputRepor
  *  - "absolute" inputs (a code and a value), which the app does not use;
  *  - once per session, that a touchpad is sending events, which the app does not use either.
  *
- * At most [maxLines] lines per session, so a long drive does not push the connection's own lines
- * out of the log.
+ * At most [maxLines] lines per session (120, against the 1000 the connection log keeps), so a long
+ * drive does not push the connection's own lines out of the log.
  *
  * The idea of logging the car's keys is from HyperCriSiS's fork of AARE (commit d272542b, "Car
  * keys in the connection log"); this is written anew and also logs the knob and D-pad codes, which
@@ -101,7 +101,8 @@ internal class CarInputLog(
     }
 
     companion object {
-        const val MAX_LINES = 200
+        /** Far below the connection log's own size (DiagLog), so these lines cannot crowd out the rest. */
+        const val MAX_LINES = 120
         /** Turns in one direction closer together than this are one run. */
         const val RUN_GAP_MS = 1500L
 
@@ -116,8 +117,9 @@ internal class CarInputLog(
             219 to "ASSIST", 231 to "VOICE_ASSIST",
             260 to "NAVIGATE_PREVIOUS", 261 to "NAVIGATE_NEXT", 262 to "NAVIGATE_IN", 263 to "NAVIGATE_OUT",
             268 to "DPAD_UP_LEFT", 269 to "DPAD_DOWN_LEFT", 270 to "DPAD_UP_RIGHT", 271 to "DPAD_DOWN_RIGHT",
-            // Not an Android key: the code Android Auto head units use for the rotary knob.
-            65536 to "ROTARY_CONTROLLER",
+            // Not Android keys: Android Auto's own codes for the car's controls (KeyCode.proto).
+            65536 to "ROTARY_CONTROLLER", 65537 to "MEDIA", 65538 to "NAVIGATION", 65539 to "RADIO", 65540 to "TEL",
+            65541 to "PRIMARY_BUTTON", 65542 to "SECONDARY_BUTTON", 65543 to "TERTIARY_BUTTON", 65544 to "TURN_CARD",
         )
 
         /** "BACK (4)", or "key 999" for a code with no name here. */
