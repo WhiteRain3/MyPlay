@@ -14,7 +14,7 @@ known".
 | A1 rename, A2 network defaults, A3 release chain | Done, released in 0.1.0 |
 | B1 head unit margins, B2 Tester script | Done, in 0.1.0. The script ran on the owner's Windows PC without errors |
 | A4 first release and Tester smoke run | 0.1.0 released and run on the PC bench: report `test-reports/0.1.0/REPORT.md` on branch `claude/test-reports` |
-| A7 the car's buttons in the phone's own log | Built (`8d07c0c`, `1692523`, `752fa91`); goes out in 0.1.1. Not yet seen on the bench |
+| A7 the car's buttons in the phone's own log | Done, released in 0.1.1. Not yet seen on the bench |
 | Bench round 1 fixes (K1 to K11 below) | Not started. K1 to K8 can be done before the parked test |
 | The owner's parked test | Not done yet. Everything about the box still waits for it |
 

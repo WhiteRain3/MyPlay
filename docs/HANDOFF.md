@@ -5,8 +5,8 @@ memory; this file is the shared memory. Keep it short and factual. If something 
 fix it in the same commit as the work that showed it was wrong.
 
 State on 2026-11-19: **MyPlay 0.1.0 is released** (tag `myplay-v0.1.0` on commit `0520dae`),
-and 0.1.1 (the car's buttons in the phone's own log) was being released from `752fa91` when this
-was written; whoever confirms it adds it to the table under "Releases". 0.1.0
+and so is 0.1.1 (tag `myplay-v0.1.1` on `970cc4c`: the car's buttons and knob in the phone's own
+log). 0.1.0
 is AARE renamed to MyPlay (package `io.github.whiterain3.myplay`), with updates and weather off
 by default, its own release chain, and a test bench for the Tester. Nothing about the look or the
 knob has changed yet. Next is the owner's parked test against the box, which decides the order of
@@ -180,6 +180,7 @@ result does not prove the box or the Audi's knob behaves the same.
 | Version | Tag and commit | Date | Notes |
 |---|---|---|---|
 | 0.1.0 | `myplay-v0.1.0` = `0520dae` | 2026-11-19 | First build to try against the car. Released by the Worker after the owner said yes in its chat |
+| 0.1.1 | `myplay-v0.1.1` = `970cc4c` | 2026-11-19 | The car's buttons and knob are written to the connection log on the phone (plan task A7). The tag is on GitHub; the Planner did not check the APK's fingerprint |
 
 Signing key: a new key made by the owner, certificate name `CN=MyPlay`. **SHA-256 fingerprint:
 `5c39f23994ffbdb49e073d1c1393ea0af9768db3ba481b64b735c363ee7943c1`.** Every later release must
