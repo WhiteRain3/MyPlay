@@ -180,7 +180,7 @@ result does not prove the box or the Audi's knob behaves the same.
 | Version | Tag and commit | Date | Notes |
 |---|---|---|---|
 | 0.1.0 | `myplay-v0.1.0` = `0520dae` | 2026-11-19 | First build to try against the car. Released by the Worker after the owner said yes in its chat |
-| 0.1.1 | `myplay-v0.1.1` = `970cc4c` | 2026-11-19 | The car's buttons and knob are written to the connection log on the phone (plan task A7). The tag is on GitHub; the Planner did not check the APK's fingerprint |
+| 0.1.1 | `myplay-v0.1.1` = `970cc4c` | 2026-11-19 | The car's buttons and knob are written to the connection log on the phone (plan task A7). Same signing key, version code 101. The first release run failed on a download of the Paparazzi plugin from Maven and succeeded when the same commit was run again (plan task I5) |
 
 Signing key: a new key made by the owner, certificate name `CN=MyPlay`. **SHA-256 fingerprint:
 `5c39f23994ffbdb49e073d1c1393ea0af9768db3ba481b64b735c363ee7943c1`.** Every later release must

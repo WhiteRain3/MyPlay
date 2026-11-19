@@ -14,7 +14,7 @@ known".
 | A1 rename, A2 network defaults, A3 release chain | Done, released in 0.1.0 |
 | B1 head unit margins, B2 Tester script | Done, in 0.1.0. The script ran on the owner's Windows PC without errors |
 | A4 first release and Tester smoke run | 0.1.0 released and run on the PC bench: report `test-reports/0.1.0/REPORT.md` on branch `claude/test-reports` |
-| A7 the car's buttons in the phone's own log | Done, released in 0.1.1. Not yet seen on the bench |
+| A7 the car's buttons in the phone's own log | Done, released in 0.1.1: buttons and knob in the connection log on the phone, at most 120 such lines per connection; the log keeps 1000 lines. Not yet seen on the bench |
 | Bench round 1 fixes (K1 to K11 below) | Not started. K1 to K8 can be done before the parked test |
 | The owner's parked test | Not done yet. Everything about the box still waits for it |
 
@@ -748,6 +748,19 @@ source; with a private repository and a single user that is the owner themselves
   files on the phone, with private details filtered, surviving a crash. Useful because nobody
   but the owner is ever at the car.
 - **Verified by:** Tests. Tester.
+
+### I5. Release builds must not depend on downloading the Paparazzi plugin
+
+The first 0.1.1 release run failed because Maven did not deliver the Paparazzi plugin; running the
+same commit again worked. Paparazzi only draws the README's pictures (`tools/mockups.sh`, used
+with `-Pmockups`), but it is declared in the root `build.gradle.kts` (`apply false`), so every
+build resolves it.
+
+- **Touches:** the root `build.gradle.kts` and `app/build.gradle.kts`: declare the plugin only
+  when `-Pmockups` is given, or in a way that an ordinary build never resolves it. Small edit to
+  two upstream files; check that `tools/mockups.sh` still works.
+- **Verified by:** a build with an empty Gradle cache and that plugin's address blocked still
+  succeeds; CI stays green.
 
 ## Not planned
 
