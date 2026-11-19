@@ -1422,6 +1422,10 @@ private fun LogCard() {
         Toggle(stringResource(R.string.setup_toggle_verbose_log_title), stringResource(R.string.setup_toggle_verbose_log_subtitle), verbose) {
             verbose = it; settings.verboseProtocolLog = it; SessionAapLog.verbose = it
         }
+        var carInput by remember { mutableStateOf(settings.logCarInput) }
+        Toggle(stringResource(R.string.myplay_toggle_log_car_input_title), stringResource(R.string.myplay_toggle_log_car_input_subtitle), carInput) {
+            carInput = it; settings.logCarInput = it
+        }
         if (log.isNotEmpty()) {
             Spacer(Modifier.height(12.dp))
             log.takeLast(40).forEach {

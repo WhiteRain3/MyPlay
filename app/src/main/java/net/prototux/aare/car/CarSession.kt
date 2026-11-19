@@ -290,7 +290,9 @@ class CarSession(
             ?: inputServices.firstOrNull()
         val hasTouch = mainInput?.let(::realTouch) == true
         main.post { runtime.touchscreen = hasTouch }
+        if (settings.logCarInput) for (s in inputServices) DiagLog.add(CarInputLog.serviceLine(s, used = s === mainInput))
         mainInput?.let { s ->
+            inputChannelId = s.id
             InputChannel(s, inputListener).also { ch ->
                 ch.touchScreen?.let { touchSize = it.width to it.height }
                 channels += ch
@@ -381,6 +383,7 @@ class CarSession(
     override fun onClosed(session: AapSession, reason: String, error: Throwable?) {
         val rejected = session.certificateRefusal
         val refusal = session.pinRefusal
+        inputLog.end()
         main.post {
             teardown()
             listener.onEnded(this, reason, rejected, refusal)
@@ -586,8 +589,14 @@ class CarSession(
 
     @Volatile private var touchSize: Pair<Int, Int>? = null
 
+    // MyPlay: the car's keys and knob turns, in the connection log (see CarInputLog).
+    @Volatile private var inputChannelId = -1
+    private val inputLog = CarInputLog({ settings.logCarInput }, DiagLog::add,
+        { ms, block -> main.postDelayed(block, ms) }, SystemClock::uptimeMillis)
+
     private val inputListener = object : InputChannel.Listener {
         override fun onInput(report: InputReport) {
+            inputLog.report(inputChannelId, report)
             if (report.hasTouchEvent()) {
                 val ev = touch?.map(report.touchEvent) ?: return
                 display?.dispatchTouch(ev)

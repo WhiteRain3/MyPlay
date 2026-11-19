@@ -21,6 +21,11 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("verbose_protocol_log", false)
         set(v) = prefs.edit { putBoolean("verbose_protocol_log", v) }
 
+    /** MyPlay: write the car's keys and knob turns to the connection log (see car/CarInputLog). On by default. */
+    var logCarInput: Boolean
+        get() = prefs.getBoolean("log_car_input", true)
+        set(v) = prefs.edit { putBoolean("log_car_input", v) }
+
     /** Also accept head units from the network (TCP 5277, no authentication). Switched off again after one session if [headUnitServerLanOnce]. */
     var headUnitServerLan: Boolean
         get() = prefs.getBoolean("hu_server_lan", false)
