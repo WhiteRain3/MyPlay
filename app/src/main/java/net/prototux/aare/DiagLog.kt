@@ -18,8 +18,20 @@ object DiagLog {
     // MyPlay: 1000 (AARE keeps 300), so the car's button lines (car/CarInputLog, at most 120 per
     // connection) cannot push out the certificate, Wi-Fi and connection lines of the same drive.
     private const val MAX_LINES = 1000
-    /** The file is cut back to [MAX_LINES] lines once it is larger than this; well above what they take. */
-    private const val REWRITE_ABOVE_BYTES = 512 * 1024
+    /** The file is never cut back while it is smaller than this. */
+    internal const val REWRITE_ABOVE_BYTES = 512L * 1024
+    /** How large the file was right after it was last cut back; 0 before the first time. */
+    private var bytesAfterRewrite = 0L
+
+    /**
+     * Whether to cut the file back to the kept lines now. Only when the log is full, the file is
+     * over [REWRITE_ABOVE_BYTES], and it is more than twice the size it had right after the last
+     * cut. The last part is what stops a loop: with long lines (the verbose protocol log) the kept
+     * lines alone can be over the fixed size, and then every new line would rewrite the whole file.
+     * This way at least as many bytes as were kept must be added before the next cut.
+     */
+    internal fun shouldRewrite(full: Boolean, fileBytes: Long, bytesAfterLastRewrite: Long): Boolean =
+        full && fileBytes > REWRITE_ABOVE_BYTES && fileBytes > 2 * bytesAfterLastRewrite
 
     private val _lines = MutableStateFlow<List<String>>(emptyList())
     val lines: StateFlow<List<String>> = _lines
@@ -43,14 +55,17 @@ object DiagLog {
         val f = file ?: return
         runCatching {
             // Rewrite now and then to drop old lines; append otherwise.
-            if (all.size == MAX_LINES && f.length() > REWRITE_ABOVE_BYTES) f.writeText(all.joinToString("\n", postfix = "\n"))
-            else f.appendText("$stamp  $line\n")
+            if (shouldRewrite(all.size == MAX_LINES, f.length(), bytesAfterRewrite)) {
+                f.writeText(all.joinToString("\n", postfix = "\n"))
+                bytesAfterRewrite = f.length()
+            } else f.appendText("$stamp  $line\n")
         }
     }
 
     @Synchronized
     fun clear() {
         _lines.value = emptyList()
+        bytesAfterRewrite = 0
         file?.let { runCatching { it.writeText("") } }
     }
 }
