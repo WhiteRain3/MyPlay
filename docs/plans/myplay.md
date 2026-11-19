@@ -7,17 +7,163 @@ checks each before relying on it. Commit ids of other people's work are as the f
 them; nothing from them has been built or run by us. Where something is not known, it says "not
 known".
 
-## Where things stand (2026-11-19)
+## Where things stand (2026-11-19, evening)
 
 | Tasks | State |
 |---|---|
-| A1 rename, A2 network defaults, A3 release chain | Done, reviewed, released in 0.1.0 |
-| B1 head unit margins, B2 Tester script | Done and in 0.1.0. The script has not been run on Windows yet |
-| A4 first release | **MyPlay 0.1.0 is out** (`myplay-v0.1.0`). Waiting for the Tester's smoke run and the owner's parked test |
-| Everything else | Not started |
+| A1 rename, A2 network defaults, A3 release chain | Done, released in 0.1.0 |
+| B1 head unit margins, B2 Tester script | Done, in 0.1.0. The script ran on the owner's Windows PC without errors |
+| A4 first release and Tester smoke run | 0.1.0 released and run on the PC bench: report `test-reports/0.1.0/REPORT.md` on branch `claude/test-reports` |
+| A7 the car's buttons in the phone's own log | Built (`8d07c0c`, `1692523`, `752fa91`); goes out in 0.1.1. Not yet seen on the bench |
+| Bench round 1 fixes (K1 to K11 below) | Not started. K1 to K8 can be done before the parked test |
+| The owner's parked test | Not done yet. Everything about the box still waits for it |
 
-Next, in this order: the parked test (owner); A7 while waiting (small, no car needed); then
-whatever the test's result table points to.
+Next: K1 to K6 in order, then a release; the parked test whenever the owner can.
+
+## Bench round 1: what the Tester found on 0.1.0, and what to do about it
+
+Source: the Tester's report on 0.1.0 (PC bench, Audi profile, the owner's phone). **All of this
+was seen on the bench, none of it in the car.** The bench sends knob turns, the knob press and
+Back the same way a car does, so fixes that need only those three hold whatever the box sends.
+Anything that needs the knob's tilt or the car's other buttons waits for the parked test.
+
+What worked: it connects in about a second every time, with MyPlay's own certificate; no
+crashes; the knob works with the phone locked; nothing is drawn under the 80-pixel strip; day
+and night switch; the ring moves on the home screen, the bar and the app grid; pressing opens
+things; Back returns from the grid, the call list and the voice bar.
+
+Each finding was checked against the code (file and line given where found), against upstream's
+unmerged branches (nothing there fixes any of these; `fix/aa18-input` is about long presses and
+touchpads, `feat/hide-builtin-apps` helps K8), and against JVKeller's knob commits `570a67de`
+and `a08c2073`, which were read, not run.
+
+### Safe to do now (turn, press and Back only)
+
+**K1. Find out exactly how far the knob gets inside an app (Tester, no code change).**
+- Finding: in MyPlay's car Settings and in Organic Maps the ring "jumps straight to the bar" and
+  no option was reached.
+- From the code: the Settings options are ordinary focusable buttons, and the choice buttons
+  already draw a ring (`media/MediaWidgets.kt` `Pill`). On the home screen the Tester saw focus
+  go through the content, then the bar, then wrap. So the options may be reachable after the
+  bar's last item, or may never be; the report's walks were too short to tell. The cause is
+  **not established**.
+- Do: two long walks on the bench, 30 single turns forward and 30 back, one picture per turn,
+  starting just after opening Settings and just after opening Organic Maps.
+- Tells us: whether K2 is only "start in the right place" or also "the content cannot be entered
+  at all".
+
+**K2. When an app or a new page opens, the ring starts on its first item.**
+- Finding: same as K1, and it is the Tester's "fix first".
+- From the code: `ui/car/CarShell.kt:153-157` asks for focus on the content when the screen
+  changes, but does so before the new screen is laid out, and silently gives up if it fails. The
+  next turn then starts from the bar. Hosted apps (Organic Maps) have a second form of it: every
+  press brings a new page and focus is lost again. JVKeller found and fixed exactly that
+  ("focus started over from the rail", `570a67de`, in `host/CarAppScreen.kt`: ask again one
+  frame after the new page is laid out).
+- Do: take JVKeller's change for hosted apps (keep the author), and apply the same "ask again
+  once it is laid out" in `CarShell.kt` for MyPlay's own screens (Settings, Phone,
+  Notifications). Do **not** take the "panes" part of his later commit: with panes, turning
+  stays inside one area and only a tilt leaves it, and it is not known whether the Audi's knob
+  sends a tilt.
+- Bench check: open Settings from the grid, turn once: the ring is on the first option. Keep
+  turning: every option gets the ring in order, the page scrolls with it, then the bar, then
+  back to the first option. Same in Organic Maps for Search, Categories and the zoom buttons.
+
+**K3. Back never traps.**
+- Finding: Back did nothing in Fermata Mirror.
+- From the code: in a hosted app Back is handed to the app and nothing else happens
+  (`host/CarRuntime.kt:671-682`, `host/CarAppConnection.kt:183`). An app that is on its first
+  page ignores it, so there is no way out except the bar.
+- Do: if Back is pressed again within two seconds and the app has not changed its page, go
+  home. Holding Back goes home at once. (Our own rule; no fork has this.)
+- Bench check: open Fermata Mirror, Back twice: home screen. In Organic Maps, open Search, Back
+  once: back to the map, still inside the app.
+
+**K4. A ring you can see, on everything.**
+- Findings: the play button only gets slightly darker; the app grid shows a faint grey tile and
+  no ring; the "Car audio" message's close button was never reached.
+- From the code: the ring is a 3 dp border in the accent colour (`ui/car/CarFocus.kt`); on a
+  button already filled with the accent colour it cannot be seen. Grid tiles, notices and the
+  Settings switch rows have no ring at all (plan task C1's table).
+- Do: JVKeller's `a08c2073` has this part ("an inner ring and a veil so it shows on filled
+  buttons", and rings on grid tiles, notices, notifications, Settings switches, the phone
+  screen). Take those pieces by hand, with credit, without the panes and the cursor. Add C1's
+  test that fails when something tappable has no ring.
+- Bench check: the `home` walk and a grid walk: every stop shows a clear ring, including play.
+
+**K5. No stop without a visible ring on the home screen; maps buttons that fit.**
+- Findings: one stop on the home screen shows nothing; "Organic Maps" is cut to "Organ / ic /
+  M…".
+- From the code: the card draws up to four maps buttons in a row that cannot scroll
+  (`ui/car/CarShell.kt:494`, `navApps.take(4)`); on this screen the row is wider than the card,
+  so the rest are clipped but still take focus. That matches the report (Waze is installed), but
+  nobody has seen the hidden button, so it stays "probably".
+- Do: show only as many buttons as fit, names on one line with "…", and a "More" button that
+  opens the list when some are left out.
+- Bench check: `home` walk: the number of stops equals the number of things you can see.
+
+**K6. The ringed thing is always on screen.**
+- Findings: the grid's last entry ("Exit to car") is ringed below the bottom edge; the Settings
+  page continues below the edge.
+- Do: when focus moves, scroll so the focused item is fully visible, in the app grid and in
+  every list.
+- Bench check: walk the grid to its end and the Settings page to its end: the ring is always
+  fully visible.
+
+**K7. The bench script's small faults.**
+- Findings: garbled characters in `headunit-out.txt`; the PowerShell profile's output mixed in;
+  results land inside the repository checkout; the log filter lets unrelated lines through.
+- Do: write the file as UTF-8, add `-NoProfile` to the documented command, default the results
+  folder to outside the checkout (or list it in `.gitignore`), tighten the filter. Add walks
+  `settings`, `maps`, `grid-end` and `back-out` so K1 to K6 are one command each.
+- Check: the Tester runs it.
+
+**K8. An app grid you can tell apart.**
+- Findings: six entries all called "Android Auto" (one answers "Could not start Android Auto"),
+  three "Phone", two "Google", two "Settings" plus "SETTINGS".
+- From the code: the grid lists every component on the phone that offers a car screen; several
+  belong to Google's Android Auto app, which MyPlay cannot host.
+- Do: leave out entries that belong to Google's Android Auto app; show the app's own name plus
+  the page's name when two entries would look the same; the phone's Apps page keeps the last
+  word. Upstream's `feat/hide-builtin-apps` (`b69aecd`) hides the built-in Phone and
+  Notifications entries from the grid and can be taken with it.
+- Bench check: a picture of the grid: no two entries with the same name, none that cannot start.
+
+### Small, safe, less urgent
+
+**K9. Opening a maps app from the home screen should not quietly change the home screen.**
+- Finding: the app opened from a maps button becomes the remembered maps app (`last_nav`), and
+  its picture replaces the buttons from then on; with Fermata that was an "Unlock the phone"
+  panel, later a black rectangle.
+- This is how AARE means it to work (the last maps app owns the card). For MyPlay: a setting on
+  the phone, "Maps on the home screen: last used / a chosen app / always ask", and fall back to
+  the buttons when the remembered app shows nothing.
+- Bench check: open Fermata from a button, go home: the card is as the setting says.
+
+**K10. The Music entry with nothing playing.**
+- Finding: it opens the full app grid.
+- From the code: with no music app remembered, the bar's Music button opens the grid
+  (`ui/car/CarShell.kt`, the same fallback as for maps). Do: open a list of music apps only.
+- Bench check: press Music on a fresh install: only music apps are listed.
+
+**K11. The first picture is dark.**
+- Finding: every connection starts dark, then turns light when the head unit reports day.
+- Plan task F2 ("Always dark", on by default, which is what the owner wants anyway) removes the
+  switch-over. Do F2 early; it needs only the bench (`night` / `day` in a walk).
+
+### Must wait for the parked test
+
+| What | Why it waits |
+|---|---|
+| Panes: turning stays in one area, a tilt jumps to the next (JVKeller `a08c2073`) | Needs to know whether the box passes on the knob's tilt. Without a tilt, panes would trap the ring |
+| The knob-driven pointer for mirrored apps and the browser (G2) | The same question: tilt, or a long press to change direction |
+| Giving the Audi's buttons their actions (C5) | Needs the key codes the box really sends; 0.1.1 writes them to the phone's log |
+| Final sizes for the small screen (D2), beyond K5 | Needs the screen size and margins the box really reports, and a photo of the real screen |
+| A5, A6, A8, and everything about sound | Only the box can show whether they are needed |
+
+Noted, nothing to do yet: with the phone locked the knob worked, although the phone's log had
+"Touch mode switch rejected" once (the open question in C4); `drive` then `park` showed no
+difference on the home screen, and it is not known whether anything there should change.
 
 How each task is checked:
 

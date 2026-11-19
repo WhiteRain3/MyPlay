@@ -4,7 +4,9 @@ Every session working on MyPlay reads this file first and updates it last. Sessi
 memory; this file is the shared memory. Keep it short and factual. If something here is wrong,
 fix it in the same commit as the work that showed it was wrong.
 
-State on 2026-11-19: **MyPlay 0.1.0 is released** (tag `myplay-v0.1.0` on commit `0520dae`). It
+State on 2026-11-19: **MyPlay 0.1.0 is released** (tag `myplay-v0.1.0` on commit `0520dae`),
+and 0.1.1 (the car's buttons in the phone's own log) was being released from `752fa91` when this
+was written; whoever confirms it adds it to the table under "Releases". 0.1.0
 is AARE renamed to MyPlay (package `io.github.whiterain3.myplay`), with updates and weather off
 by default, its own release chain, and a test bench for the Tester. Nothing about the look or the
 knob has changed yet. Next is the owner's parked test against the box, which decides the order of
@@ -119,6 +121,31 @@ Read from `docs/certificates.md`, `app/build.gradle.kts` and the release workflo
 Google's terms. The first parked test is done without it, so we learn what the box does with
 MyPlay's own certificate. Open question 1. The fork report's advice: add no code that extracts or
 forces Google's certificate, and never commit a certificate or key.
+
+## What has been seen so far
+
+**On the PC bench (the Tester, 2026-11-19, MyPlay 0.1.0, Audi profile, the owner's phone). Not
+the car, not the box, no sound.** Full report with pictures: `test-reports/0.1.0/REPORT.md` on
+branch `claude/test-reports`.
+
+- Works: connects in about a second every time with MyPlay's own certificate; no crashes; the
+  knob works with the phone locked; nothing is drawn under the 80-pixel strip on the right; day
+  and night switch; the ring moves on the home screen, the bar and the app grid; pressing opens
+  things; Back returns from the grid, the call list and the voice bar. The bench script runs on
+  Windows.
+- Broken, most important first: inside apps and MyPlay's own car Settings the knob only moved
+  along the bar, so Organic Maps' buttons and every Settings option were not reached; Back does
+  not leave Fermata Mirror; one stop on the home screen shows no ring; the play button's ring
+  can barely be seen; the grid's last entry is ringed below the screen's edge; the "Organic
+  Maps" button's name is cut; six grid entries are all called "Android Auto".
+- Also: the Music entry opens the full app grid; the first picture is always dark; opening a
+  maps app from the home screen makes it the remembered maps app.
+- Not tested on the bench: tilting the knob, sound, playing music or video, driving restrictions
+  inside apps, a call.
+
+What to do about each is in the plan under "Bench round 1" (K1 to K11).
+
+**In the car: nothing yet.** The parked test has not been done.
 
 ## Build and test
 
