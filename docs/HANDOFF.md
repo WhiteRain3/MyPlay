@@ -4,8 +4,9 @@ Every session working on MyPlay reads this file first and updates it last. Sessi
 memory; this file is the shared memory. Keep it short and factual. If something here is wrong,
 fix it in the same commit as the work that showed it was wrong.
 
-State when written (Planner, 2026-11-18): the repository is still unchanged AARE at `37f8236`.
-App name AARE, package `net.prototux.aare`. Only documents have been added. The task list is
+State when written (Planner, 2026-11-18): the repository was unchanged AARE at `37f8236`, app
+name AARE, package `net.prototux.aare`, and this branch added only documents. The Worker's
+commits for plan tasks A1 to A3 and B come on top; whoever merges them updates this paragraph. The task list is
 `docs/plans/myplay.md`; the Tester's guide is `docs/TESTER_SETUP.md`.
 
 ## What this fork is
@@ -187,11 +188,9 @@ Release rules carried over from the earlier project, each learned the hard way:
 
 On GitHub (repository `WhiteRain3/MyPlay`):
 
-0. **Let Claude push to this repository.** On 2026-11-18 a cloud session could read it but not
-   push ("Claude doesn't have GitHub access to WhiteRain3/MyPlay"). Open
-   https://github.com/apps/claude/installations/select_target, choose the WhiteRain3 account, and
-   add `MyPlay` to the repositories the Claude app may use (or reconnect GitHub at
-   https://claude.ai/connect-github). Until this is done no session can deliver any work here.
+0. **Let Claude push to this repository.** Done by the owner on 2026-11-19 (before that, cloud
+   sessions could read it but not push). If a push is ever refused again with "Claude doesn't
+   have GitHub access", the fix is at https://github.com/apps/claude/installations/select_target.
 1. **Actions tab**: enable workflows. Done by the owner on 2026-11-18.
 2. **The signing key and its four secrets.** Every MyPlay release is signed with one key. The
    phone only accepts an update signed with the same key as the installed app, so the key file
