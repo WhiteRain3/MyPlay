@@ -23,8 +23,8 @@ phone yet. If a step does not behave as written, fix this file in the same repor
 | A phone with USB debugging on, plugged in | MyPlay runs on it. Android 8 or newer |
 | A MyPlay release | the app (`MyPlay-<version>.apk`) and the head unit (`myplay-headunit-<version>.zip`) from https://github.com/WhiteRain3/MyPlay/releases |
 
-Until the first MyPlay release exists (plan tasks A1 to A4) there is nothing to install. The
-install steps can be done ahead of time.
+The first release, 0.1.0, is out (2026-11-19); the head unit in its zip already has the
+`--margins` option.
 
 ## Steps (PowerShell)
 

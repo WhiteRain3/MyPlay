@@ -1,10 +1,23 @@
 # MyPlay: ordered task list
 
-Planner, 2026-11-18. Written from reading this repository at `37f8236` (upstream AARE, unchanged),
-the earlier study `docs/plans/f-auto.md` in `WhiteRain3/AA-Experiments`, the owner's chosen design
-(direction 1, "Edit the picture", dark) and F-Auto's source at `7f87c1c`. No app code was written.
-File names and counts below come from reading and text searches; a worker checks each before
-relying on it. Where something is not known, it says "not known".
+Planner. First written 2026-11-18 from unchanged AARE at `37f8236`; revised 2026-11-19 after the
+first release, the owner's decisions and the fork report (`docs/research/forks.md` on branch
+`claude/research-forks`). File names and counts come from reading and text searches; a worker
+checks each before relying on it. Commit ids of other people's work are as the fork report gives
+them; nothing from them has been built or run by us. Where something is not known, it says "not
+known".
+
+## Where things stand (2026-11-19)
+
+| Tasks | State |
+|---|---|
+| A1 rename, A2 network defaults, A3 release chain | Done, reviewed, released in 0.1.0 |
+| B1 head unit margins, B2 Tester script | Done and in 0.1.0. The script has not been run on Windows yet |
+| A4 first release | **MyPlay 0.1.0 is out** (`myplay-v0.1.0`). Waiting for the Tester's smoke run and the owner's parked test |
+| Everything else | Not started |
+
+Next, in this order: the parked test (owner); A7 while waiting (small, no car needed); then
+whatever the test's result table points to.
 
 How each task is checked:
 
@@ -20,12 +33,20 @@ and applies to every task that mentions video or mirrored apps.
 
 1. Keep changes to AARE's existing files small, and put new MyPlay code in new files. The Kotlin
    package stays `net.prototux.aare`. This is what keeps merging upstream AARE cheap.
-2. No new network use. See `docs/HANDOFF.md`, "The owner's rules".
+2. Network use only where a feature needs it (today: the updater, cover art, and the weather when
+   it is turned on). A task that adds a network use says so in its note. The owner dropped the
+   earlier "nothing phones home" rule for MyPlay on 2026-11-19.
 3. Every look or behaviour value a task introduces becomes a setting with a sensible default
    (the owner: "we can have plenty of settings").
 4. New text is plain English. AARE ships 20 languages; new MyPlay text is English only until the
-   owner says otherwise (open question 9 in the handoff).
+   owner says otherwise.
 5. One commit per piece. Build and tests pass before every commit.
+6. **Where a feature already exists elsewhere, take it in this order:** an unmerged branch of
+   upstream AARE first (it will merge cleanly when upstream finishes it), then a fork's version,
+   then our own. When taking someone's commit, keep its author, credit them on the About page,
+   and read it first: none of it has been run by us.
+7. Third-party artwork and fonts are allowed (the owner dropped that rule for MyPlay on
+   2026-11-19), with their licence text kept in the app as AARE already does.
 
 ## Phase A: a build the owner can try against the box
 
@@ -65,21 +86,18 @@ possible. Nothing about the look or the knob changes here.
   (`aapt dump badging`). A text search for user-visible "AARE" finds only credits. Head unit: the
   Tester installs it and sees the home screen.
 
-### A2. Network use brought in line with the owner's rules
+### A2. Network defaults (done)
 
-What the app does today, read from the code:
+Done in 0.1.0. It was planned under a "nothing phones home" rule that the owner has since dropped
+for MyPlay; the results stand because the owner confirmed each one on 2026-11-19.
 
-| What | Today | Change |
+| What | In 0.1.0 | Owner's decision |
 |---|---|---|
-| Update check (`UpdateChecker.kt`) | On by default, asks GitHub about `prototux/AARE` at most once a day, off in debug builds | Point at `WhiteRain3/MyPlay`. Off by default. Add a "Check for updates" button that asks once when tapped. Understand the `myplay-v` tag prefix |
-| Weather (`car/DashboardInfo.kt`, Open-Meteo) | On by default, sends an approximate position (about 10 km) | Off by default. Whether it stays as an opt-in or goes is the owner's choice (handoff question 2) |
-| Certificate download (`cert/CertificateDownload.kt`) | Only when tapped. Automatic refresh exists and is off by default | No change in this task. Owner's decision (handoff question 1) |
-| Browser app on the car screen | Opens DuckDuckGo when the user opens it | No change: it is the user browsing |
-
-- **Touches:** `UpdateChecker.kt`, `Settings.kt` (two defaults), the Connection page in
-  `ui/MainActivity.kt` (the button), `UpdateVersionTest.kt`.
-- **Verified by:** Tests (tag parsing and version comparison). The Reviewer searches the code for
-  every network address and confirms the table above is complete.
+| Update check | Reads `WhiteRain3/MyPlay` on GitHub only. Off by default, with a "Check now" button | Confirmed. A private repository with updates from the owner's own server is a possible later task (I3) |
+| Weather (Open-Meteo, sends an approximate position) | Off by default, works when turned on, the dashboard card unchanged | Stays as it is |
+| Cover art (downloaded from the address a media app supplies) | On | Stays on |
+| Certificate download | Unchanged from AARE: only when tapped; automatic refresh off by default | Not decided (handoff question 1) |
+| Browser app on the car screen | Unchanged | Not a question: it is the user browsing |
 
 ### A3. Release chain for MyPlay
 
@@ -118,14 +136,18 @@ What the app does today, read from the code:
   (`apksigner verify --print-certs`, compared with the fingerprint in the handoff). A run without
   the secret fails with a clear message.
 
-### A4. First release, Tester smoke run, and the owner's parked test (the gate)
+### A4. First release (done), Tester smoke run, and the owner's parked test (the gate)
 
-- **Touches:** `myplay-version.txt` (0.1.0), nothing else.
+- **Touches:** `myplay-version.txt` (0.1.0), nothing else. Released 2026-11-19.
 - **Head unit:** the Tester follows `docs/TESTER_SETUP.md`: install, connect, home screen appears,
   the knob script moves something. This proves the build is not broken before the owner drives to
   the car.
 - **Car:** the owner follows "The parked test" in `docs/HANDOFF.md` and sends back the connection
-  log, photos of the car screen, and the answers listed there.
+  log, photos of the car screen, and the answers listed there, including what the log says about
+  the screen size and margins the box reports.
+- **Known gap in 0.1.0:** the app's own connection log does not record which buttons the car
+  sends; only the developer log read over USB does. Task A7 fixes that. Until then the "press
+  each button" part of the test needs the PC, or waits for the next build.
 - **What the result means, and the next step for each:**
 
 | What the log or screen shows | Meaning | Next |
@@ -133,42 +155,87 @@ What the app does today, read from the code:
 | MyPlay's screen on the car | The box accepts a non-Google phone app | Phase C onwards, in order |
 | Nothing after pairing; no "TLS" line in the log | The start-up over Bluetooth and Wi-Fi did not get through | A5 |
 | "TLS handshake did not complete" or "status -3" | The box (or what is behind it) refuses MyPlay's certificate | The owner decides about Google's certificate (handoff question 1). No other way through is known |
-| Connected, but black, cut off or badly sized picture | The box's screen report needs correcting | A6 |
+| Connected, but black, cut off or badly sized picture | The box's screen report needs correcting, or its video needs a different setting | A6 |
+| It connects and then drops, or Google's app takes over | Both apps are answering the box | A8 |
 
-### A5. Only if the start-up fails: adapter compatibility from F-Auto
+### A5. Only if the start-up fails: compatibility with adapter boxes
 
-F-Auto (GPL, same licence) made a similar clone-style adapter work. Read from its `FORTUNER.md`
-and code, it needed three things together:
+The owner's box is the same kind of thing as the wireless adapters that gave AARE and its forks
+trouble. What is known, from the fork report and F-Auto's `FORTUNER.md` (real-car notes for a
+Kowan KA05 adapter):
 
-1. a "Connect now" button that dials a paired device by name, skipping Android's cached service
-   check (`WirelessConnector.findBondedByName`);
-2. the exact message order of Google's phone app during the Bluetooth and Wi-Fi start-up
-   (`WirelessBootstrap.Options.officialPhoneOrder`), with the TCP connection retried 20 times;
-3. answering the head unit's version request with the same version
-   (`SessionOptions.echoHeadUnitVersion`).
+- Cheap adapters may only finish the Bluetooth and Wi-Fi start-up when the phone answers in the
+  exact order Google's app uses, and echoes the head unit's own version.
+- An adapter can get stuck: it accepts Bluetooth but never starts. Forgetting the pairing and
+  pairing again cleared it; switching it off and on did not.
+- With Google's app disabled, Android may never notice the adapter offers wireless Android Auto,
+  so the app never tries.
+- F-Auto **also forced Google's certificate** on its adapter, so it is not known whether the
+  message order alone is enough for the owner's box.
 
-On that adapter F-Auto **also forced Google's certificate**. So it is not known whether 1 to 3
-are enough on their own for the owner's box.
+What to take, in this order:
 
-- **Touches:** `aap/.../wireless/WirelessBootstrap.kt`, `transport/wireless/WirelessConnector.kt`,
-  `service/ProjectionService.kt`, one switch on the Connection page ("Compatibility mode for
-  adapter boxes", off by default, with the box's Bluetooth name). Credit F-Auto in the About page
-  and in the commit.
-- **Verified by:** Tests (F-Auto's bootstrap tests come along; the existing ones still pass with
-  the switch off). Car: the owner tries again and sends the log.
+1. **Upstream's branch `feat/wireless-adapter-handshake`** (`1daaf008`, with tests and a section
+   in `docs/decisions.md`): a "Wireless compatibility" setting with Auto / Adapter / Built-in.
+   Upstream deliberately does not guess from the Bluetooth name, because a wrong guess costs a
+   connection the driver cannot explain. This replaces the earlier plan to port F-Auto's version.
+2. JVKeller `8c72758d`: one retry loop with waits (7 tries over about 30 seconds) while Bluetooth
+   stays up, and a clear message when a VPN blocks the car's Wi-Fi.
+3. JVKeller `42de7bae`: stop asking the car's Bluetooth for its services on every start, which
+   could collide with an adapter's start-up.
+4. F-Auto's "Connect now" button (dial a paired device by name), only if the log shows the app
+   never tried.
+5. Later, if drops happen while driving: upstream's `feat/wireless-reconnect-after-drop`.
 
-### A6. Only if the picture is wrong: a screen rule for the box
+- **Touches:** `aap/.../wireless/`, `transport/wireless/WirelessConnector.kt`,
+  `service/ProjectionService.kt`, the Connection page.
+- **Verified by:** Tests (each of these comes with its own). Car: the owner tries again and sends
+  the log.
 
-- **Touches:** nothing at first. `docs/vehicles.md` describes a file the owner can import on the
+### A6. Only if the picture is wrong
+
+- **Wrong size, cut edges:** `docs/vehicles.md` describes a file the owner can import on the
   phone (*Advanced > Vehicle overrides*) that corrects density and margins for one head unit
   without a new build. Once the right values are known, the rule goes into
   `app/src/main/assets/vehicles.json`, matched on what the box reports in the log line
   `head unit:`.
-- **Verified by:** Tests (`vehicles.json` parsing has tests). Car: a photo of the screen.
+- **Black screen although connected** (the most common first failure on unusual head units,
+  according to the fork report):
+  - filipeniquini `8a7107d1`: wait for the car's answer before sending video, send anyway if it
+    never answers, assume 30 pictures a second when the car does not say.
+  - F-Auto `cf582d7c`: a per-car "force H.264" setting, for boxes that connect but cannot show
+    the newer video format.
+- **Verified by:** Tests (both commits carry tests; `vehicles.json` parsing has tests). Car: a
+  photo of the screen.
+
+### A7. The car's buttons in the app's own log
+
+Small, needs no car, and makes the parked test more useful. Do it while waiting.
+
+- **What:** every key the car sends (not knob turns, which would flood it) is written to the
+  connection log the owner can read on the phone. HyperCriSiS `d272542b` does exactly this in
+  `car/CarSession.kt`. JVKeller `2afa9094` logs each key code once per session; either is fine.
+- **Why:** nobody knows what the box sends for the MMI knob's press and tilt and for the buttons.
+  Phase C and task C5 depend on it.
+- **Verified by:** Tests. Head unit: keys pressed in the window appear in the phone's log.
+
+### A8. Google's Android Auto taking the connection
+
+Three forks hit this independently: while Google's app is enabled, Android may hand it the car
+too, and both sessions break. The parked test already asks the owner to turn off wireless
+Android Auto in Google's app.
+
+- **What:** a warning on MyPlay's home screen when Google's app is enabled and set to answer the
+  car, and (the phone is rooted) one tap to switch Google's app off and one to switch it back
+  on. Upstream is building the same on branch `feat/shizuku-setup`; take that if it is ready.
+- **Note for the owner:** Google's app is the daily driver today. Switching it off means Android
+  Auto does not start until it is switched on again. Nothing is uninstalled.
+- **Verified by:** Tests on the detection. Car.
 
 ## Phase B: a test bench that looks like the Audi
 
-Does not need the car. Can run alongside A4.
+Does not need the car. Both tasks are done and in 0.1.0. The profile's margin (80 pixels on the
+right) is from the owner's description and is corrected after the parked test.
 
 ### B1. Margins on the desktop head unit
 
@@ -216,6 +283,25 @@ where focus is (`ui/car/CarFocus.kt`). The ring is only used in some files:
 The counts are from a text search. Some elements share a helper that already draws the ring, so
 the true gap is smaller; the worker checks each one.
 
+**Someone has already solved most of this for a knob-only car.** JVKeller's fork drives a Mazda
+commander knob (turn, tilt four ways, press, no touch). None of it is in upstream. Read it before
+writing our own:
+
+| Commit | What it does |
+|---|---|
+| `a08c2073` | **Panes:** turning moves inside one area (the bar, each dashboard card, the content) and wraps; tilting jumps to the next area. **Cursor:** on screens that only take touches, the knob drives a pointer. A ring on every button that lacked one. Switches on only after the car sends a knob turn |
+| `934bb1f8` | A small hook that lets one screen take the car's keys first (Home and Back stay global). Everything knob-specific needs it |
+| `570a67de`, `1903f5d9` | The knob moves and zooms the map; tilts move from key to key on the car keyboard |
+| `deda4fb2` | When a call rings, focus is on Answer; once answered, on Hang up |
+
+**Not known:** whether the box passes on the MMI knob's tilt at all, or only turn and press. The
+pane idea needs some second input to jump between areas. If there is no tilt, a long press or one
+of the MMI buttons has to do it. Task A7 and the parked test answer this, so they come first.
+
+Recommended route: take `934bb1f8` and `a08c2073` as the base of C1 to C3 (keeping the author),
+then adjust to what the Audi's knob really sends. If the worker finds they do not apply cleanly
+on our branch, it says so and C1 to C3 are done as written below.
+
 ### C1. A ring on every tappable thing
 
 - **Touches:** the files above, one commit per screen. A new unit test that reads the car-screen
@@ -256,12 +342,12 @@ The owner's phone runs Android 16.
 ### C5. The Audi's own buttons
 
 Which MMI buttons the box passes on (Back, Menu, Nav, Media, Tel, the knob's tilt, the
-steering-wheel keys) is not known. The app writes every key it receives to its log
-(`input key: code=...`).
+steering-wheel keys) is not known. Task A7 puts them in the log the owner can read.
 
-- **Touches:** after the owner presses each button once with the detailed log on:
-  `car/CarSession.kt` (map any unhandled key) and a phone page "Car buttons" where each button's
-  action can be chosen.
+- **Touches:** upstream's branch `feat/car-key-remap` (`6c810cfd`) already lets each car button
+  be given another action; take it and add a phone page "Car buttons" in our design. Upstream's
+  `fix/aa18-input` (6 commits: long presses while a key is held, and more) is worth taking with
+  it.
 - **Verified by:** Tests on the mapping. Car.
 
 ## Phase D: a compact layout for 1200x723
@@ -282,12 +368,23 @@ nobody touches it, so targets can be smaller.
   when the screen is small in dp and has no touch), a setting to force either.
 - **Verified by:** Tests on the choice. Head unit pictures before and after. Car.
 
-### D3. "Size of everything" setting
+### D3. Size settings
 
-- **Touches:** a setting on the phone that changes the density MyPlay draws at (the same value
-  `vehicles.json` calls `dpi`), from smaller to larger, with the picture from Phase E showing the
-  result.
+- **Touches:** upstream already has these on two unmerged branches: `feat/car-density-setting`
+  (`489670a1`, a phone setting for how large everything is drawn) and
+  `feat/car-text-control-size` (`a5587626`, text size and control size separately). Take those
+  instead of writing our own; the picture from Phase E shows the result.
 - **Verified by:** Tests. Head unit. Car.
+
+### D4. Things other small screens already broke
+
+From the fork report, to check on our pictures in D1 instead of discovering in the car:
+
+- On an 800x480 unit the bar's third app was cut off (upstream #269, HyperCriSiS `c41c6529`).
+- Short screens should scroll the bar instead of squeezing it, and drop cramped dashboard cards
+  (F-Auto `561c146e`).
+- Text drawn without an explicit colour came out black on dark looks (same commit). This matters
+  for every look we add in Phase F.
 
 ## Phase E: the phone app in the chosen design
 
@@ -341,6 +438,14 @@ AARE already has themes (colours, type, shapes), layouts, an accent colour, a wa
 or the user's photo) and a contrast test that holds every theme to readable contrast
 (`docs/decisions.md`, "Car screen themes and layouts").
 
+A lesson from the forks: every fork that added a look did it by copying a whole screen file, and
+each now carries several near-identical copies that can no longer take upstream's fixes. For
+MyPlay a look is **data** (colours, shapes, spacing, which status items) applied to the existing
+one or two layouts. F3 depends on that.
+
+The looks AARE ships, including "Android Auto", "Android Auto (2019)", "CarPlay" and "Retro" with
+its clock font, all stay (owner's decision, 2026-11-19).
+
 ### F1. MyPlay's own dark looks
 
 - **Touches:** new theme files next to the existing ones in `ui/theme/`, original palettes
@@ -380,15 +485,11 @@ ordinary setting.
 
 ### F6. Look files, backup and undo
 
-- **Touches:** one file holding the whole look, save and load, undo of the last change
-  (`core/LookBundle.kt` from AA-Experiments, without the parts about Google's app).
+- **Touches:** start from upstream's branch `feat/settings-backup` (all settings in one file,
+  leaving out per-phone values and private keys; originally HyperCriSiS `6a1e6717`, with tests).
+  Add on top: a file holding only the look, and undo of the last change (`core/LookBundle.kt`
+  from AA-Experiments, without the parts about Google's app).
 - **Verified by:** Tests (round trip). Tester.
-
-### F7. Only after the owner answers question 3: brand-named styles and the bundled font
-
-AARE ships styles named "Android Auto", "Android Auto (2019)" and "CarPlay", and its Retro style
-uses a third-party font for the clock (DSEG7 Classic, open licence). Under the owner's rules
-these may have to go. Nothing is removed until the owner says.
 
 ## Phase G: mirrored apps with the knob
 
@@ -398,38 +499,57 @@ Shizuku; the owner's phone is rooted). Today only touches and Back reach that ap
 only while the car reports it is parked; how passenger mode affects that is to be read from the
 code in G1.
 
+What the forks add (none of it run by us):
+
+| From | What | Use for us |
+|---|---|---|
+| JVKeller `a08c2073` (`ui/car/CarCursor.kt`) | A knob-driven pointer on touch-only screens: tilt moves it (faster while held), press taps or drags, turn scrolls, tilting against an edge leaves | **The base of G2.** The only work anywhere that makes mirrored apps usable with a knob |
+| HyperCriSiS `7fdeeccb`, `ec13dad3`, `38f4c575`, `67819eda`; upstream branch `feat/media-app-video` (`5fd0bc4e`) | "Video mode": a button in the music controls runs the media app itself (YouTube, NewPipe) on a car-sized screen, with play, pause, skip and seek underneath. Parked or passenger only | **The base of G3.** Touch-based, so it needs G2 |
+| HyperCriSiS `73043fe2`, `55556370` | The phone's screen mirrored through the root helper, with no "start recording?" question each time | G4 |
+| filipeniquini `33000400` | A size per mirrored app; YouTube opens phone-sized by default | G3, if YouTube lays out badly at car size |
+| JVKeller `346b51b2` and three more | AARE's own video player worked entirely by the knob (local files and Jellyfin; not YouTube) | A model for knob-first video controls |
+
 ### G1. Knob and buttons reach the mirrored app
 
 - **Touches:** `ui/car/StandaloneAppScreen.kt`, `car/CarSession.kt`, `launch/`: while a mirrored
   app is on screen, knob turns, the knob press and the direction keys are sent into it the same
-  way Back already is. A per-app choice of what a turn means (next/previous item, up/down,
-  left/right).
+  way Back already is (JVKeller `934bb1f8` is the hook for this). A per-app choice of what a turn
+  means (next/previous item, up/down, left/right).
 - **Verified by:** Tests on the key mapping. Head unit with a simple mirrored app. Car.
 
 ### G2. A pointer for apps that ignore keys
 
-- **Touches:** a pointer drawn over the mirrored app: turning moves it along one direction, a
-  long press switches direction, a press taps. For apps where G1 does nothing.
-- **Verified by:** Head unit. Car.
+- **Touches:** take JVKeller's cursor (`a08c2073`, `ui/car/CarCursor.kt`) for mirrored apps, the
+  phone screen and the browser. If the Audi's knob has no tilt (not known), the pointer needs
+  another way to change direction: a long press that switches between left-right and up-down.
+- **Verified by:** Tests (JVKeller's first version `2afa9094` has unit tests). Head unit. Car.
 
 ### G3. YouTube
 
+- **Touches:** video mode from upstream's `feat/media-app-video`, or HyperCriSiS's version if
+  upstream's is not ready, made usable with G1 and G2.
 - **Not known:** how well the YouTube phone app can be driven with keys alone, and whether it
-  plays normally on a virtual screen. Found out with G1 and G2 on the head unit, then in the car.
-- **Touches:** whatever G1 and G2 show is missing; possibly a small preset for that app.
+  plays normally on a virtual screen. Found out on the head unit, then in the car.
 - **Verified by:** Car: the owner plays a video parked using only the knob.
 
 ### G4. The phone's own screen on the car screen
 
-The same question for AARE's "Phone screen" app (`mirror/`), which needs the phone unlocked and
-uses an accessibility service for touches. Whether keys can be sent that way is not known; with
-root there are other ways. Planned after G1 to G3.
+- **Touches:** AARE's "Phone screen" app (`mirror/`) needs the phone unlocked, asks for screen
+  recording, and uses an accessibility service for touches. On a rooted phone HyperCriSiS
+  `73043fe2` and `55556370` do it through the root helper without the question. With G2's pointer
+  on top it becomes usable with the knob.
+- **Verified by:** Head unit. Car.
 
 ## Phase H: sound and calls with this box
 
 The owner's sound goes over the car's own Bluetooth. Not known until the parked test: whether
 music and navigation voice simply keep playing over that link while MyPlay is connected, and
 whether the box also expects sound over its own connection.
+
+Two things from the fork report to keep in mind: many adapters claim a hands-free microphone that
+is not really there (F-Auto switches calls to speakerphone automatically), and some head units
+only accept one sound format (upstream branch `fix/aac-only-media-sink`). Neither is known to
+apply to this box.
 
 ### H1. Find out
 
@@ -447,10 +567,18 @@ whether the box also expects sound over its own connection.
 
 ### I1. Taking in upstream AARE
 
+Upstream moves fast: besides `main` it has about 50 unmerged branches (286 commits) as of
+2026-11-18, several of which this plan wants. The forks that stayed healthy (HyperCriSiS,
+JVKeller) kept one feature per change, added tests, and did not rewrite `CarShell.kt`,
+`MainActivity.kt` or `Settings.kt` in bulk. The forks that did rewrite them can no longer take
+upstream's fixes.
+
 - **Routine:** the owner presses "Sync fork" on `main` (or asks a session to); a worker merges
   `main` into `claude/myplay`, resolves conflicts, runs all tests; the Reviewer reads the merge;
-  a release follows the usual way. Suggested whenever upstream fixes something we need, and
-  otherwise about monthly.
+  a release follows the usual way. Whenever upstream merges one of the branches named in this
+  plan, and otherwise about monthly.
+- **Taking an unmerged upstream branch early** (rule 6): merge that branch as it is, in one
+  commit that names it, so the later merge of `main` recognises it.
 
 ### I2. An updater that installs
 
@@ -459,8 +587,54 @@ whether the box also expects sound over its own connection.
   only when the owner taps.
 - **Verified by:** Tests. The owner updates from one release to the next.
 
+### I3. Possible later, not decided: private repository, updates from the owner's own server
+
+The owner is considering making the repository private and serving updates from their own
+Raspberry Pi web server, as their other app does. To be looked at again after the parked test.
+What it would touch: where the updater looks (`UpdateChecker.kt`), a step in the release
+workflow that puts the APK and a small version file on that server, and the tester guide. One
+thing to settle then: MyPlay is GPL, so anyone who is given the app must also be able to get its
+source; with a private repository and a single user that is the owner themselves.
+
+### I4. A log the owner can send without a PC
+
+- **Touches:** l0rdg3x `89c8b070`, `4a263e07` (`devlog/DevLog.kt`): the detailed log written to
+  files on the phone, with private details filtered, surviving a crash. Useful because nobody
+  but the owner is ever at the car.
+- **Verified by:** Tests. Tester.
+
 ## Not planned
 
 - Using Google's Desktop Head Unit for MyPlay: it refuses any phone app without Google's
   certificate (`docs/certificates.md`).
 - Anything that changes Google's Android Auto app. MyPlay does not use it.
+- Split screen (two apps side by side; upstream branch `feat/car-split-screen`): two panes on a
+  7-inch screen would be too small. Can be revisited.
+
+## Do not copy (from the fork report)
+
+- **Code that extracts or forces Google's certificate** (F-Auto and athanasso
+  `cert/GearheadKeyExtractor.kt`, background updaters for it, one-tap prompts). Never commit a
+  certificate or key. The download button AARE already has is the owner's open question; nothing
+  more is added. Google's current certificate also ends on 2026-12-31 by upstream's notes.
+- **Hooks that make Google Maps or Waze accept the app** (meraz9000's `tools/aare-hooks/`,
+  abandoned in October). Fragile, and YouTube does not need them.
+- **Guessing from the Bluetooth name**, and fixed density presets by head unit name (athanasso
+  sets 160 dpi for a list of names; the owner's screen is 213).
+- **Mirrored apps running while the car moves, on by default** (athanasso). MyPlay keeps AARE's
+  model: parked only, plus a passenger mode the user switches on.
+- **paperwolf165's root tricks that change the whole phone** (screen size and density, display
+  off, and typing a saved PIN to unlock). The PIN part is never taken. Its plan for fitting the
+  phone's display to the car, with its tests, can be read for ideas.
+- **Bulk rewrites** of `CarShell.kt`, `MainActivity.kt` and `Settings.kt` (see I1).
+
+## Not known, and only the car can tell
+
+- Whether the box accepts MyPlay, and with which certificate.
+- Which start-up order the box needs.
+- What screen size, density, margins and video format the box reports and accepts.
+- What the box sends for the MMI knob (turn only, or tilt too) and for each button.
+- Whether the knob moves focus while the phone is locked (Android 16; no fork mentions 16).
+- Where sound goes while MyPlay is connected.
+- Whether any of the forks' work has ever run on an Audi MMI 3G or on this box: the fork report
+  found no mention.

@@ -4,10 +4,16 @@ Every session working on MyPlay reads this file first and updates it last. Sessi
 memory; this file is the shared memory. Keep it short and factual. If something here is wrong,
 fix it in the same commit as the work that showed it was wrong.
 
-State when written (Planner, 2026-11-18): the repository was unchanged AARE at `37f8236`, app
-name AARE, package `net.prototux.aare`, and this branch added only documents. The Worker's
-commits for plan tasks A1 to A3 and B come on top; whoever merges them updates this paragraph. The task list is
-`docs/plans/myplay.md`; the Tester's guide is `docs/TESTER_SETUP.md`.
+State on 2026-11-19: **MyPlay 0.1.0 is released** (tag `myplay-v0.1.0` on commit `0520dae`). It
+is AARE renamed to MyPlay (package `io.github.whiterain3.myplay`), with updates and weather off
+by default, its own release chain, and a test bench for the Tester. Nothing about the look or the
+knob has changed yet. Next is the owner's parked test against the box, which decides the order of
+everything after it.
+
+- Task list: `docs/plans/myplay.md`.
+- Tester's guide: `docs/TESTER_SETUP.md`.
+- What other forks of AARE have built, what to take and what to avoid:
+  `docs/research/forks.md` on branch `claude/research-forks`. The plan already uses it.
 
 ## What this fork is
 
@@ -28,7 +34,8 @@ phone apps (video included) usable with the knob. Video is for when parked, or f
 - F-Auto (https://github.com/malashhab/F-Auto) is another AARE fork, used as reference only.
   The owner wants the work based on AARE.
 
-What AARE consists of (about 27,000 lines of Kotlin in the app, 288 unit tests in all):
+What AARE consisted of when forked (about 27,000 lines of Kotlin in the app, 288 unit tests in
+all; MyPlay's own commits have added to both):
 
 | Folder | What |
 |---|---|
@@ -42,24 +49,25 @@ What AARE consists of (about 27,000 lines of Kotlin in the app, 288 unit tests i
 
 These come from the owner and are not up for reinterpretation.
 
-1. No analytics and nothing that phones home. The only allowed network use is an updater that
-   reads this fork's GitHub releases when the owner asks.
-2. Small commits with clear messages. After each major step, a short summary and how to test it.
-3. Where the effect of something is not known, say so. Never invent descriptions.
-4. No third-party logos, artwork or fonts.
-5. Plain English in the app and in messages to the owner. They are not an Android developer.
-6. Keep upstream's credits and the licence (GPL-3.0-or-later). Every released APK has its source
-   public in this repository.
-7. The app must not pose as AARE or as Android Auto. Its name is MyPlay.
+1. Small commits with clear messages. After each major step, a short summary and how to test it.
+2. Where the effect of something is not known, say so. Never invent descriptions.
+3. Plain English in the app and in messages to the owner. They are not an Android developer.
+4. Keep upstream's credits and the licence (GPL-3.0-or-later).
+5. The app must not pose as AARE or as Android Auto. Its name is MyPlay.
+6. Network use only where a feature needs it. Today that is: the updater (reads
+   `WhiteRain3/MyPlay` on GitHub), cover art for music, and the weather when it is turned on.
 
-Where unchanged AARE does not yet meet these rules (plan tasks A1, A2 and F7 deal with them):
+**Two rules were dropped on 2026-11-19.** "Nothing phones home" and "no third-party logos,
+artwork or fonts" were the owner's rules for their earlier project (AA-Experiments). The
+dispatcher carried them over; the owner never set them for MyPlay and has said they do not apply
+here. So third-party artwork and fonts are allowed (with their licence text kept in the app, as
+AARE does), and AARE's looks named after Android Auto and CarPlay, its Retro clock font and cover
+art all stay. Earlier commits and messages that cite those rules are out of date on that point.
 
-- Rule 1: the update check is on by default and asks about upstream's releases; the weather on
-  the car screen is on by default and sends an approximate position to Open-Meteo; a "Download
-  certificate" button fetches files from a third party's GitHub repository when tapped.
-- Rule 4: three built-in styles are named after and modelled on Android Auto and CarPlay, and one
-  style bundles a third-party clock font. Open question 3.
-- Rule 7: everything is still called AARE.
+Places that still say AARE on purpose or by leftover (found in the review of 0.1.0, not a
+question any more): the name inside the certificate the app makes for itself, which is left
+alone until after the parked test because head units have accepted it as it is; the "make"
+reported to car apps; one look called AARE; three texts. Credits to AARE stay in any case.
 
 ## The owner's setup
 
@@ -108,8 +116,9 @@ Read from `docs/certificates.md`, `app/build.gradle.kts` and the release workflo
   and the connection log says so.
 
 **Using Google's certificate is the owner's decision and nothing here assumes it.** It is against
-Google's terms, and it is a network download beyond the updater. The first parked test is done
-without it, so we learn what the box does with MyPlay's own certificate. Open question 1.
+Google's terms. The first parked test is done without it, so we learn what the box does with
+MyPlay's own certificate. Open question 1. The fork report's advice: add no code that extracts or
+forces Google's certificate, and never commit a certificate or key.
 
 ## Build and test
 
@@ -139,131 +148,79 @@ result does not prove the box or the Audi's knob behaves the same.
 
 ## Releases
 
-### How this repository releases today (upstream's way)
+### Released so far
 
-- `.github/workflows/release.yml` runs when a tag `v1.2.3` is pushed. It publishes "AARE
-  <version>" with the APK, a Magisk module, the desktop head unit and checksums.
-- It signs with the secrets `AARE_KEYSTORE_BASE64`, `AARE_KEYSTORE_PASSWORD`, `AARE_KEY_ALIAS`,
-  `AARE_KEY_PASSWORD`. **Without them it publishes a debug-signed APK**, whose key is new on
-  every run, so one such release cannot be installed over another.
-- `.github/workflows/ci.yml` builds and tests pushes to `main` and pull requests only.
-- The fork has no tags and no releases. The owner has enabled Actions on it (2026-11-18).
+| Version | Tag and commit | Date | Notes |
+|---|---|---|---|
+| 0.1.0 | `myplay-v0.1.0` = `0520dae` | 2026-11-19 | First build to try against the car. Released by the Worker after the owner said yes in its chat |
 
-### What changes for MyPlay (plan task A3; not built yet)
+Signing key: a new key made by the owner, certificate name `CN=MyPlay`. **SHA-256 fingerprint:
+`5c39f23994ffbdb49e073d1c1393ea0af9768db3ba481b64b735c363ee7943c1`.** Every later release must
+show the same fingerprint (`apksigner verify --print-certs`); whoever releases checks it. The key
+and the package id `io.github.whiterain3.myplay` can never change now: the phone would refuse
+updates until MyPlay is uninstalled, which loses its settings.
 
-- New workflow files, so upstream's stay untouched: `myplay-ci.yml` and `myplay-release.yml`.
-- The version lives in `myplay-version.txt` on `claude/myplay`. A push that changes it to a
-  version with no release yet tests, builds, signs and publishes release `myplay-v<version>`.
-  A push that does not change it publishes nothing. This is the pattern of the AA-Experiments
-  fork.
-- Secrets, to be added by the owner: `MYPLAY_KEYSTORE_BASE64`, `MYPLAY_KEYSTORE_PASSWORD`,
-  `MYPLAY_KEY_ALIAS`, `MYPLAY_KEY_PASSWORD`. A release fails if the keystore is missing; there is
-  no debug-signed fallback.
-- No phone-certificate secrets.
-- Signing key: the old AA-Experiments keystore if the owner finds it, otherwise a new one
-  (recommended; steps in "What the owner must do"). **The key must never change after the first release**, or the phone will refuse
-  updates until MyPlay is uninstalled, which loses its settings. The same goes for the package
-  id `io.github.whiterain3.myplay`.
-- Signing key fingerprint (SHA-256): not recorded yet. The Release session writes it here after
-  the first release and checks every later release against it.
-- Upstream's `v*` tags must never be pushed to this repository. As the dispatcher reported on
-  2026-11-18, the Worker's commit `807f2fe` limits upstream's `release.yml` to the repository
-  `prototux/AARE`, so it should do nothing here even then. (That commit was made locally and had
-  not been pushed when this was written; the Planner has not seen it.) The owner can also switch
-  that workflow off (owner's list, step 3).
+(Release state, the fingerprint and who released are as the dispatcher reported them; the
+Planner did not download the APK.)
+
+### How a release happens
+
+- The version is the one line in `myplay-version.txt` on `claude/myplay`.
+- `.github/workflows/myplay-release.yml` runs on every push to that branch. If the version has
+  no release yet (and is not `0.0.0`), it tests, builds, signs with the owner's key and publishes
+  release `myplay-v<version>` with `MyPlay-<version>.apk`, `myplay-headunit-<version>.zip` and
+  `SHA256SUMS`. A push that does not change the version publishes nothing. Its signing and
+  publishing steps have now run once, successfully.
+- `.github/workflows/myplay-ci.yml` builds and tests every push to the branch.
+- It signs with the repository secrets `MYPLAY_KEYSTORE_BASE64`, `MYPLAY_KEYSTORE_PASSWORD`,
+  `MYPLAY_KEY_ALIAS`, `MYPLAY_KEY_PASSWORD`. If the keystore secret is missing the release fails;
+  there is no debug-signed fallback.
+- No phone-certificate secrets are set or passed (see "Certificates").
+- Upstream's own workflows are still in the repository. Its `release.yml` (on `v*` tags) has
+  been limited to `prototux/AARE` by commit `807f2fe`, so it does nothing here. Upstream's `v*`
+  tags should still never be pushed to this repository.
 - MyPlay very likely cannot be installed next to AARE or F-Auto. All three define the same
   permission (`android.car.permission.TEMPLATE_RENDERER`), and Android refuses a second app that
   defines a permission already defined by an app with a different signature. Read from the
   manifest and Android's rules; not tried on a phone.
 
-Release rules carried over from the earlier project, each learned the hard way:
+### Release rules, each learned the hard way
 
-- Only the Release step changes the version. Workers leave `myplay-version.txt` alone.
+- Only the Release step changes `myplay-version.txt`. Everyone else never touches it.
 - A release is made only from a commit the Reviewer called CLEAN, and only if the branch tip is
   exactly that commit.
-- After pushing a version change, push nothing else to the branch until the release is confirmed
-  at `https://github.com/WhiteRain3/MyPlay/releases/latest`.
+- **After pushing a version change, push nothing else to the branch until the release is
+  confirmed** at `https://github.com/WhiteRain3/MyPlay/releases/latest`. This includes documents.
+- So far the owner has been asked before each release (open question 8).
 
-## What the owner must do, in order
+### Possible later, not decided
 
-On GitHub (repository `WhiteRain3/MyPlay`):
+The owner is considering a private repository with updates served from their own Raspberry Pi
+web server, as their other app does. To be looked at again after the parked test (plan task I3).
 
-0. **Let Claude push to this repository.** Done by the owner on 2026-11-19 (before that, cloud
-   sessions could read it but not push). If a push is ever refused again with "Claude doesn't
-   have GitHub access", the fix is at https://github.com/apps/claude/installations/select_target.
-1. **Actions tab**: enable workflows. Done by the owner on 2026-11-18.
-2. **The signing key and its four secrets.** Every MyPlay release is signed with one key. The
-   phone only accepts an update signed with the same key as the installed app, so the key file
-   and its password **can never be changed later**. Keep a copy of both somewhere safe (a
-   password manager, a USB stick): if they are lost, MyPlay has to be uninstalled and set up
-   again to get any further update.
+## What the owner has done, and what is left
 
-   All commands below are for PowerShell on the Windows PC. `keytool` comes with Java, which
-   `docs/TESTER_SETUP.md` step 1 installs.
+Done:
 
-   **Route (a): look for the old key, five minutes at most.** The key used for AA-Experiments was
-   a file ending in `.p12`, `.pfx`, `.jks` or `.keystore`. Search your user folder:
+- Let Claude push to this repository (2026-11-19). If a push is ever refused again with "Claude
+  doesn't have GitHub access", the fix is at
+  https://github.com/apps/claude/installations/select_target.
+- Enabled Actions on the fork (2026-11-18).
+- Made a new signing key and added the four `MYPLAY_...` secrets. **Keep a copy of the key file
+  and its password somewhere safe** (a password manager, a USB stick). GitHub never shows a
+  secret again, and without the file no update can ever be installed over the current app.
 
-   ```powershell
-   Get-ChildItem $env:USERPROFILE -Recurse -Include *.p12,*.pfx,*.jks,*.keystore -ErrorAction SilentlyContinue | Select-Object FullName, LastWriteTime
-   ```
+Left:
 
-   Ignore `debug.keystore` in a folder called `.android`: that is not it. If a likely file turns
-   up, you need three more things: its password, the key's name inside it (the "alias"), and the
-   key's password (usually the same as the file's). This shows the alias after you type the
-   password:
-
-   ```powershell
-   keytool -list -keystore "C:\path\to\the-file.p12"
-   ```
-
-   If the file or its password cannot be found quickly, use route (b). **Route (b) is
-   recommended**: MyPlay is a new app with a new package id, so it gains nothing from the old key.
-
-   **Route (b): make a new key.**
-
-   ```powershell
-   mkdir C:\myplay-key
-   keytool -genkeypair -keystore C:\myplay-key\myplay-release.jks -alias myplay -keyalg RSA -keysize 4096 -validity 36500 -dname "CN=MyPlay"
-   ```
-
-   It asks for a new password twice (at least 6 characters; write it down now). Nothing else
-   needs answering. The result is the file `C:\myplay-key\myplay-release.jks`.
-
-   **Then, for either route: the four secrets.** Copy the file as text to the clipboard:
-
-   ```powershell
-   [Convert]::ToBase64String([IO.File]::ReadAllBytes("C:\myplay-key\myplay-release.jks")) | Set-Clipboard
-   ```
-
-   On GitHub: **Settings > Secrets and variables > Actions > New repository secret**, four
-   times, with exactly these names:
-
-   | Name | Value |
-   |---|---|
-   | `MYPLAY_KEYSTORE_BASE64` | paste the clipboard (one very long line of letters) |
-   | `MYPLAY_KEYSTORE_PASSWORD` | the password of the file |
-   | `MYPLAY_KEY_ALIAS` | `myplay` for route (b); for route (a) the alias `keytool -list` showed |
-   | `MYPLAY_KEY_PASSWORD` | for route (b) the same password again; for route (a) the key's password |
-
-   GitHub never shows a secret again after saving, so the file and the password must be kept
-   elsewhere too. Do not put the file in the repository or send it in a chat.
-
-   Do **not** add `AARE_PHONE_CERT` or `AARE_PHONE_KEY`.
-3. **Actions tab > "Release" (upstream's workflow) > the "..." menu > Disable workflow.** Optional,
-   a safety catch.
-4. Tell the dispatcher it is done. Nothing is published until tasks A1 to A3 are built and
-   reviewed.
-
-On the phone and in the car, once the dispatcher says the first release is out: see the next
-section.
+- The parked test, below.
+- The open questions further down.
 
 ## The parked test (the gate)
 
 Car parked. Google's Android Auto stays installed as the daily driver.
 
 1. If AARE or F-Auto is installed, uninstall it: MyPlay cannot be installed next to them.
-2. Download `MyPlay-<version>.apk` from the release page and install it.
+2. Download `MyPlay-0.1.0.apk` from https://github.com/WhiteRain3/MyPlay/releases and install it.
 3. Open MyPlay and go through "Finish setting up".
 4. *Advanced*: turn on "Verbose protocol log".
 5. In Google's Android Auto settings, turn off wireless Android Auto, so the two apps do not
@@ -273,13 +230,26 @@ Car parked. Google's Android Auto stays installed as the daily driver.
 7. If the phone asks to **Trust** the head unit, tap it and reconnect.
 8. Whatever happens, open *Advanced > Connection log*, save it and send it. The line where it
    stops tells us which stage failed.
-9. If MyPlay's screen appears on the car, also answer:
-   - Photo of the screen: is anything cut off at the edges?
-   - Turn the knob: does a ring move? Press it: does the ringed thing open?
-   - Same again with the phone locked.
-   - Press each MMI button and steering-wheel key once (they are written to the log).
-   - Does music from the phone still play through the car? Does a navigation voice?
-10. Do **not** tap "Download certificate" unless you have decided open question 1.
+9. Note what the connection log says about the screen size and margins the box reports (the
+   lines after `head unit:`), or simply send the whole log.
+10. If MyPlay's screen appears on the car, also answer:
+    - Photo of the screen: is anything cut off at the edges?
+    - Turn the knob: does a ring move? Press it: does the ringed thing open?
+    - Tilt the knob in each direction: does anything happen?
+    - Same again with the phone locked.
+    - Does music from the phone still play through the car? Does a navigation voice?
+11. Do **not** tap "Download certificate" unless you have decided open question 1.
+
+Three things worth knowing beforehand:
+
+- **Buttons.** 0.1.0 does not write the car's button presses into the log on the phone, only into
+  the developer log that needs the PC. So "which buttons does the box pass on" waits for the next
+  build (plan task A7), unless the Tester's PC is connected during the test.
+- **If it connects and then drops, or Google's app appears instead.** Other people's forks hit
+  this: with Google's app enabled, Android may hand it the car too. Say so in the report; the
+  stronger fix is plan task A8.
+- **If nothing happens at all after pairing.** Other people's adapters got stuck until the
+  pairing was forgotten and made again; switching the adapter off and on did not help.
 
 What each result leads to is in the table under task A4 of the plan.
 
@@ -321,10 +291,17 @@ One worker can hold two areas while the work is small. `ui/MainActivity.kt` (1,5
   read messages between tasks.
 - Keep upstream mergeable: new MyPlay code goes in new files; edits to AARE's files are small; no
   renaming of packages or files, no reformatting. `main` is never committed to.
-- No new network use, no new library, no font or artwork from outside without the owner's yes.
+- Network use only where a feature needs it; a task that adds one says so in its note. A new
+  library is named in the note too. Third-party artwork and fonts are allowed, with their
+  licence text kept in the app.
+- Before building something, look in `docs/research/forks.md`: take an unmerged branch of
+  upstream AARE first, then a fork's version, then write our own. Keep the author of any commit
+  taken and credit them on the About page. Do not copy what that report's "what not to do" lists.
 - Workers do not change the version.
 - Whether releases go out automatically after a clean review, as in the earlier project, is open
-  question 8. Until answered, the dispatcher asks before each release.
+  question 8. Until answered, the owner is asked before each release.
+- Documents are pushed like code: fetch first, build on the tip, never while a release is waiting
+  to be confirmed, and never touching `myplay-version.txt`.
 - Hand-offs are carried by the session that created them, with the Claude Code Remote
   `send_message` tool. Do not assume a hand-off happened: send it and say so, or say plainly that
   you cannot.
@@ -336,40 +313,34 @@ One worker can hold two areas while the work is small. `ui/MainActivity.kt` (1,5
 1. **Google's certificate.** If the box refuses MyPlay's own certificate, do you want to use
    Google's (the "Download certificate" button)? And whatever the answer: should that button
    stay as it is, be hidden, or be removed from MyPlay?
-2. **Weather on the car screen.** It needs to send an approximate position to a weather service
-   (Open-Meteo). The plan turns it off by default. Keep it as something you can switch on, or
-   remove it?
-3. **Styles named after other products.** AARE includes looks called "Android Auto", "Android
-   Auto (2019)" and "CarPlay", and its "Retro" look uses a third-party clock font. Remove them
-   under your rules, or keep any?
-4. **Signing key.** Answered 2026-11-18: the owner does not know where the old keystore is.
-   Both routes are in "What the owner must do", step 2; a new key is recommended.
-5. **Package id.** `io.github.whiterain3.myplay` is proposed. It can never change later. Say if
-   you want another.
-6. **The Tester's PC.** Answered 2026-11-18: Windows.
 7. **Google's Android Auto.** Does it stay installed as the daily driver while MyPlay is built?
    (The plan assumes yes.)
-8. **Releases.** Automatic after a clean review, as before, or ask you each time?
+8. **Releases.** Automatic after a clean review, as in the earlier project, or ask you each time?
 9. **Languages.** AARE is translated into 20 languages. Is English only fine for everything new?
+13. **Private repository and your own update server.** You are considering it; to be looked at
+    again after the parked test.
 
-Raised by the review of tasks A1 to A3 (2026-11-18):
+The numbers are kept from earlier messages so they still match.
 
-10. **Cover art.** The app downloads album pictures from whatever internet address a media app
-    supplies (`media/ArtLoader.kt`), by default. That is a network use beyond the updater. Accept
-    it, add a switch that is off by default, or remove it?
-11. **The Weather card on the dashboard.** Should it obey the same weather switch as the weather
-    next to the clock (off by default)?
-12. **Places where the name AARE still goes out.** The name inside the certificate the app makes
-    for itself (sent to the head unit), the "make" reported to car apps, one style called AARE,
-    three texts, and the name the certificate download gives the server it downloads from. Rename
-    all to MyPlay, or leave some? The plan left the certificate name alone until after the parked
-    test, because head units have accepted it as it is.
+### Answered
+
+| No. | Question | Answer |
+|---|---|---|
+| 2, 11 | Weather | Stays as in 0.1.0: off by default, works when turned on, the dashboard card unchanged (2026-11-19) |
+| 3 | Looks named after other products, and the Retro clock font | They stay; the rule behind the question was dropped (2026-11-19) |
+| 4 | Signing key | A new key was made; fingerprint under "Releases" |
+| 5 | Package id | `io.github.whiterain3.myplay`, used in 0.1.0 and now fixed for good |
+| 6 | The Tester's PC | Windows |
+| 10 | Cover art | Stays on (2026-11-19) |
+| 12 | Places that still say AARE | No longer a question; listed under "The owner's rules" |
+| - | Where updates come from | `WhiteRain3/MyPlay` on GitHub (confirmed 2026-11-19) |
 
 ## Not known yet (answered by the parked test, not by the owner)
 
 - Whether the box accepts MyPlay at all, and with which certificate.
-- Whether the wireless start-up works with this box, or needs F-Auto's compatibility mode.
+- Whether the wireless start-up works with this box, or needs the adapter compatibility setting
+  (plan task A5).
 - What screen size, density and margins the box reports.
 - Whether the knob moves focus while the phone is locked (Android 16).
-- Which of the Audi's buttons the box passes on.
+- Which of the Audi's buttons the box passes on, and whether it passes on the knob's tilt.
 - Where sound goes while MyPlay is connected.
