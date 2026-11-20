@@ -286,4 +286,5 @@
     <string name="phone_role_on_accent_what" translatable="false">Text and symbols on the accent colour</string>
     <string name="phone_role_text_what" translatable="false">Most text and symbols</string>
     <string name="phone_role_text_dim_what" translatable="false">Second lines and quieter text</string>
+    <string name="phone_own_colours_dark_bar" translatable="false">\"Dark bar\" is on, so by day the car shows the bar in its night colour.</string>
 </resources>

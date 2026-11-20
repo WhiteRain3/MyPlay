@@ -74,7 +74,7 @@ object WallpaperFiles {
         val tmp = File(source.path + ".tmp")
         return runCatching {
             shown.copyTo(tmp, overwrite = true)
-            if (source.exists()) source.delete()
+            // renameTo replaces the old source in one step on Android; deleting it first could lose it.
             check(tmp.renameTo(source))
             true
         }.getOrElse { tmp.delete(); false }

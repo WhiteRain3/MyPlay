@@ -103,4 +103,15 @@ class WallpaperEditTest {
         assertEquals(false, java.io.File(source.path + ".tmp").exists())
         dir.deleteRecursively()
     }
+
+    @Test
+    fun anOldSourceIsReplacedWhole() {
+        val dir = kotlin.io.path.createTempDirectory("wp").toFile()
+        val source = java.io.File(dir, WallpaperFiles.SOURCE).apply { writeText("old") }
+        val shown = java.io.File(dir, "shown.jpg").apply { writeText("new") }
+        assertEquals(true, WallpaperFiles.keepSource(shown, source))
+        assertEquals("new", source.readText())
+        assertEquals(false, java.io.File(source.path + ".tmp").exists())
+        dir.deleteRecursively()
+    }
 }

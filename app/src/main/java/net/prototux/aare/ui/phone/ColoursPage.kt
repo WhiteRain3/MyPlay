@@ -124,6 +124,8 @@ fun ColoursPage() {
         RowGroup(rows = ColourRole.entries.map { role ->
             { OwnColourRow(role, roleColour(scheme, role), role in mine, onPick = { picking = role }, onBack = { saveOwn(own.with(editNight, role, null)) }) }
         })
+        // The car draws the bar with the night colours by day when "Dark bar" is on (CarShell).
+        if (!editNight && remember { settings.darkBar }) HintLine(Icons.Rounded.DarkMode, stringResource(R.string.phone_own_colours_dark_bar))
         hardToRead({ roleColour(scheme, it) }, mine.keys).forEach { (fg, bg) ->
             val ratio = contrastRatio(roleColour(scheme, fg), roleColour(scheme, bg))
             HintLine(Icons.Rounded.WarningAmber, stringResource(R.string.phone_own_colours_hard_to_read,
