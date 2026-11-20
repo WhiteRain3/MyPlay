@@ -46,9 +46,12 @@ param(
     [int]$Seconds = 0,
     # Where result folders go. Default: a folder "myplay-bench" next to the head unit folder.
     [string]$OutRoot,
-    # For the walks settings, maps, music and back-out: the place of the app to open in the app grid,
+    # For the walks settings, maps, map-move, music and back-out: the place of the app to open in the app grid,
     # counted from 1 in the order the ring moves through the grid (see the grid-end pictures).
     [int]$Tile = 1,
+    # For the walk map-move: how many clicks forward from where the maps app starts the ring reach
+    # the map itself (its last stop, after the app's buttons; count them on the maps walk's pictures).
+    [int]$MapClicks = 12,
     # Leave out the margin option of the profile.
     [switch]$NoMargins,
     # Only print the walks and stop.
@@ -133,6 +136,12 @@ $Walks = [ordered]@{
     # the knob to open what is ringed, 10 clicks through that level, 10 clicks back, then Back.
     # The ring should reach every row and button, stay fully on screen, and Back should go up one
     # level (plan R4-2: the music browser on the bench, as the unit tests cannot host a media app).
+    # Moving a hosted map with the knob (plan R5, R5-8; give the place of Organic Maps or Waze as
+    # -Tile and the clicks to the map as -MapClicks): push on the map, the pad right twice and down
+    # once (the map should show more of the right, then of below), two turns forward (zoom in) and
+    # one back (zoom out), a push to stop, then Back. The line "Moving the map" should show between
+    # the two pushes.
+    'map-move'   = "$OpenGrid $ToTile " + (Get-Turns 23 $MapClicks) + " dpad:center@$(26 + 3 * $MapClicks) dpad:right@$(29 + 3 * $MapClicks) dpad:right@$(32 + 3 * $MapClicks) dpad:down@$(35 + 3 * $MapClicks) rotate:1@$(38 + 3 * $MapClicks) rotate:1@$(41 + 3 * $MapClicks) rotate:-1@$(44 + 3 * $MapClicks) dpad:center@$(47 + 3 * $MapClicks) key:4@$(50 + 3 * $MapClicks)"
     'music'      = "$OpenGrid $ToTile " + (Get-Turns 23 15) + ' dpad:center@68 ' + (Get-Turns 71 10) + ' ' + (Get-BackTurns 101 10) + ' key:4@131'
     # Open the app grid, open tile -Tile, then Back twice within a second: the home screen should
     # show, also for an app that ignores Back. (Holding Back cannot be played from here.)
@@ -144,7 +153,8 @@ $Package = 'io.github.whiterain3.myplay'
 if ($ListWalks) {
     foreach ($name in $Walks.Keys) { Write-Host ("{0,-12} {1}" -f $name, $Walks[$name]) }
     Write-Host ''
-    Write-Host "settings, maps, music and back-out open tile number -Tile of the app grid (now $Tile)."
+    Write-Host "settings, maps, map-move, music and back-out open tile number -Tile of the app grid (now $Tile)."
+    Write-Host "map-move turns -MapClicks times (now $MapClicks) to reach the map before pushing."
     exit 0
 }
 
