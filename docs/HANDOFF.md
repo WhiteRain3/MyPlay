@@ -321,6 +321,10 @@ right session cannot do a task, it tells the owner instead of quietly doing the 
 - **Connection worker**: protocol, wireless, the desktop head unit, build and release files
   (`aap/`, `app/.../transport/`, `service/`, `car/`, `headunit/`, `.github/`, `tools/`). Only
   needed when a task is there.
+- **Phone worker** (from 2026-11-20): the phone app's new design, plan Phase E. Writes only new
+  files under `app/.../ui/phone/`, `res/values/strings_phone.xml`, its own settings file of
+  extension properties, and the start-screen routing in `ui/MainActivity.kt`. The car Worker
+  stays out of those; neither edits `Settings.kt` while both run.
 - **Reviewer**: reads a diff for bugs and rule violations, builds and tests, ends with CLEAN or
   HOLD. Changes nothing.
 - **Release**: changes the version, pushes, confirms the release and the signing fingerprint.

@@ -277,58 +277,80 @@ What exists today, from the code:
   on the car library, and Waze once W1 works. Google Maps on the phone only gives MyPlay its
   next-turn text, not a map.
 
-**M1. A fourth layout: "Map behind".**
-- Touches: one new file for the layout (`ui/car/`), one new value in `CarLayout.kt`, a few lines
-  where layouts are chosen in `CarShell.kt`. The maps app's picture fills the area beside the
-  bar; the existing dashboard cards (next turn, music, and the others) float over it in a
-  column; with no maps app chosen it falls back to the wallpaper.
-- Verified by: Tests (layout choice). Bench: with Organic Maps as the maps app, a picture of the
-  home screen shows the map edge to edge with cards over it.
+**The owner's decision (2026-11-20):** "add all those layouts for me to pick out on the app ...
+Or literally just add a bunch of customization options like map as background, apps as pills".
+The Design reviewer has drawn three car-screen layouts (A left rail and card column, B bottom
+dock with corner cards, C top ribbon with right rail and one stage card; `docs/design-options/
+car-screen/` on branch `claude/design-options` of AA-Experiments), is drawing three more where
+the map runs under the bar too, and one sheet that turns all six into combinable options.
 
-**M2. Tell the maps app where the free space is, and keep telling it.**
-- Touches: the new layout marks its cards (and the bar, if the map is allowed under it) with the
-  existing `obstructsMap()`; `MapGeometry` gets tests for the new arrangements (a card column on
-  one side; cards on both sides; a card that disappears). "Stable area" is what is free with
-  every card showing; "visible area" is what is free right now.
-- Verified by: Tests. Bench: Organic Maps' position arrow sits in the middle of the free part,
-  not of the screen; start music so the music card appears, and the arrow moves over; stop it,
-  and the arrow moves back. Car: the same with Waze, which is where the owner saw it.
-- Not known: how each maps app uses the two areas. The owner saw Waze do it under Google's app.
+**So a layout is data, not a screen file.** The fork report's lesson: every fork that added a
+look copied a whole shell file and then could not take upstream's fixes. Here one new screen
+file draws any combination of options, and "A", "B", "C" and the three to come are named sets of
+options (presets). AARE's three existing layouts stay as they are and stay selectable.
 
-**M3. Settings for it** (phone, and the short list in the car):
-- Which cards show and in what order (exists: the dashboard list); card side (left, right,
-  both); card width (three steps); how see-through the cards are; whether the map goes under
-  the bar; bar position (exists); whether cards hide after a while when nothing changes.
-- Touches: `Settings.kt`, the new layout file, the phone page for the home screen (later the
-  picture page from Phase E).
-- Verified by: Tests on each setting. Bench pictures per setting.
+The options (from the owner's words and the Design reviewer's brief):
 
-**M4. Placement by screen shape, and items for the bar.**
-- The owner's own screen is small (about 900 x 543 in layout units), so cards must be few and
-  narrow there; wide and very wide screens get side-by-side placement. Upstream's
-  `feat/rail-status-widgets` (clock, outside temperature, battery, weather as choosable bar
-  items) is taken here.
-- Verified by: Tests on placement for the three shapes in the owner's picture plus the Audi's.
-  Bench pictures at each size (the head unit takes `--res`).
+| Option | Values |
+|---|---|
+| Map | as background / as a card (today's behaviour) |
+| Map under the bar | yes / no |
+| Bar style | solid rail / see-through rail / floating pills / bottom dock / top ribbon |
+| Bar side | left / right / top / bottom (top and bottom only for dock and ribbon) |
+| Cards | which ones, in what order (exists today), at most how many at once |
+| Card place | slots per bar style, as in the pictures (column beside the rail; corners; one stage card) |
+| Card size | small / medium / large, per card |
+| See-through | how much of the map shows through cards and bar |
+| Auto-hide | cards and bar fade after a while with nothing changing, and come back on a knob turn |
 
-**M5. The knob on this layout.**
-- Turning goes through the cards and the bar as today. The map itself needs a way to be moved
-  and zoomed by the knob (plan C3; JVKeller `570a67de`), which depends on whether the box passes
-  on the knob's tilt.
+**M1. The layout as data.**
+- Touches: one new file `ui/car/CarLayoutSpec.kt` holding the options above as one value, the
+  presets A, B, C (and room for three more), and reading and writing them through one new file
+  of settings (`MyPlayLayoutSettings.kt`, extension properties on `Settings` so `Settings.kt` is
+  not edited by two streams at once). No drawing yet.
+- Verified by: unit tests: every preset round-trips through the settings; an option combination
+  that makes no sense (a top ribbon on the left) is corrected to the nearest valid one.
 
-Safe now, on the bench: M1, M2, M3, and M4's placement rules. Needs the 0.1.1 log or a photo
-from the car: the real screen size and margins (the free space must leave out what the car does
-not show), final card sizes for the Audi, and M5.
+**M2. Tell the maps app where the free space is, and keep telling it.** *(Already queued for
+the Worker.)*
+- Touches: `host/templates/MapGeometry.kt` and its callers. Tests for the arrangements the six
+  layouts produce (a column on one side; corner cards; one stage card; a bar under the map).
+  "Stable area" is what is free with every card the layout allows; "visible area" is what is
+  free right now.
+- Verified by: Tests. Bench: Organic Maps' position arrow sits in the middle of the free part;
+  start music so the music card appears and the arrow moves; stop it and it moves back. Car: the
+  same with Waze, where the owner saw it.
 
-How each task is checked:
+**M3. One screen file that draws a spec.**
+- Touches: new `ui/car/SpecShell.kt`, one more value in `CarLayout.kt` ("Custom"), three lines
+  in `CarShell.kt` to choose it. The maps app's picture fills the screen (or the area beside the
+  bar); the bar in the chosen style; the existing dashboard cards in the chosen slots; every one
+  of them marked as covering the map so M2 does its work. Falls back to the wallpaper when no
+  maps app is chosen.
+- Verified by: Tests on slot placement. Bench: one picture per preset with Organic Maps, compared
+  side by side with the Design reviewer's drawings.
 
-- **Tests**: unit tests on a computer (`:aap:test`, `:headunit:test`, `:app:testDebugUnitTest`).
-- **Head unit**: AARE's own desktop head unit, run by the Tester on the owner's PC as an Audi-like
-  screen (1280x720 video, 213 dpi, no touch, knob only). See `docs/TESTER_SETUP.md`.
-- **Car**: the owner, parked, with the box. Only the car can answer questions about the box.
+**M4. The knob on these layouts.**
+- Turning goes through the bar and the cards in reading order; reading-only cards (next turn,
+  arrival time, clock) are never a stop, as the drawings show. Moving and zooming the map with
+  the knob waits for the box's answer about tilt (C3).
+- Verified by: bench walks per preset: the number of stops is as the drawing says.
 
-Video on the car screen is for when the car is parked, or for a passenger. That is said here once
-and applies to every task that mentions video or mirrored apps.
+**M5. Choosing and editing it on the phone.** (Phone stream, Phase E: task E6.)
+
+**M6. Placement by screen shape, and items for the bar.**
+- Wide and very wide screens get side-by-side slots; the Audi's small one (about 900 x 543 in
+  layout units) gets few, narrow cards. Upstream's `feat/rail-status-widgets` (clock, outside
+  temperature, battery, weather as choosable bar items) is taken here.
+- Verified by: tests on placement for the Audi's size and the three shapes in the owner's
+  picture; bench pictures at each size (`--res`).
+
+It only works with a maps app MyPlay can host: Organic Maps, OsmAnd, CoMaps, and Waze with the
+host shims module (0.1.2). Google Maps on the phone gives only its next-turn text, not a map.
+
+Safe now, on the bench: M1, M2, M3, M4 (turn, press and Back), M6's placement rules. Needs the
+car: the real screen size and margins (the free area must leave out what the car does not show),
+final card sizes for the Audi, moving the map with the knob.
 
 ## Standing rules for every task
 
@@ -689,49 +711,107 @@ From the fork report, to check on our pictures in D1 instead of discovering in t
 
 ## Phase E: the phone app in the chosen design
 
-The owner chose direction 1, "Edit the picture", dark, with dark symbol tiles for what cannot be
-seen on the car screen (`docs/design-options/` on branch `claude/design-options` of
-AA-Experiments; the "merged" pictures). They do not like light themes.
+**Starts now (2026-11-20), built by a second worker ("Phone worker") in parallel with the car
+Worker.** The owner chose this days ago and asked why it is not built yet.
 
-Two facts make this easier here than it was there: MyPlay draws the car screen itself, so the
-picture on the phone can be the real car screen drawn small with sample content (AARE already
-does this for "Preview car screen" and for its README pictures), and a change can show at once
-without restarting anything. The second is believed from the code and is checked in E2.
+The design: direction 1 "Edit the picture", dark, with direction 2's dark symbol tiles for
+everything that cannot be seen on the car screen. Pictures: `merged-overview.png`,
+`merged-1-customise.png`, `merged-2-battery.png`, `merged-3-behind-the-scenes.png` and the README
+in `docs/design-options/` on branch `claude/design-options` of AA-Experiments. They were drawn for
+the earlier project, so some tiles name things MyPlay does not have (Flags, Restart Android
+Auto); the shapes, colours, controls and layout are what to follow, the contents come from
+MyPlay's own settings.
 
-### E1. Dark only, and the shared parts
+What the phone app is today (`ui/MainActivity.kt`, 1,540 lines): a status card, "Finish setting
+up", a "Preview car screen" button, then a list of nine pages (Car screen, Apps, Voice, Messages,
+Sound, Connection, Car data, Advanced, About), each a long column of switches. It follows the
+phone's light or dark setting. About 60 settings live in `Settings.kt`.
 
-- **Touches:** the phone theme (always dark, whatever the phone's setting), new file(s) for the
-  shared parts from the design: symbol tile, big symbol button, simple row, colour dots, section
-  heading, the "saved" bar.
-- **Verified by:** Tests where there is logic. Tester: phone screenshots. Design reviewer.
+**Keeping the two workers apart.** The Phone worker writes only:
+- new files under `app/.../ui/phone/` (all new screens and parts);
+- `ui/MainActivity.kt`, and there only to point the start screen and the page routes at the new
+  screens (the old page functions stay where they are and are called from the new tiles until
+  each is redrawn);
+- new strings in a new file `res/values/strings_phone.xml`.
+It does not edit `Settings.kt`, anything under `ui/car/`, `host/`, `car/` or `media/`. A new
+setting the phone needs goes into a new file of extension properties on `Settings`, like the car
+side's `MyPlayLayoutSettings.kt`, one file per stream. The car Worker does not touch
+`ui/MainActivity.kt` or `ui/phone/` while this phase runs. If either needs the other's file, it
+asks through the dispatcher.
 
-### E2. The Customise screen
+The picture of the car screen on the phone draws the car's own screen small, from the same code
+the car uses (`CarShell` with sample content, as "Preview car screen" and the README pictures
+already do). So the picture changes when the car side changes, without the Phone worker editing
+car files.
 
-- **Touches:** new screen that replaces the category list in `ui/MainActivity.kt` as the home
-  screen: the car-screen picture on top with tappable parts (bar, clock, status icons, dashboard
-  cards, wallpaper, app grid), and below it tiles for what cannot be seen: Connection, Apps,
-  Sound, Messages, Voice, Updates, Backup, Advanced, About. Each tile shows its own state.
-  "Finish setting up" stays above everything until setup is done. The old pages stay reachable
-  from the tiles until each is rebuilt.
-- **Verified by:** Tester: phone screenshots, and one changed setting visible on the head unit
-  without reconnecting.
+**E1. Dark always, and the shared parts.**
+- Touches: `ui/phone/PhoneParts.kt` (new): the symbol tile (icon, big value, small label, a dot
+  for "needs attention"), the big symbol button, the simple row (icon, title, value, switch or
+  arrow), the section heading with a line, colour dots, the "Saved" bar; `ui/MainActivity.kt`:
+  the phone always dark (one line, `PhoneTheme(dark = true)`). Colours taken from the pictures.
+- Verified by: unit tests where there is logic (a tile's value text); Tester: phone screenshots
+  of a test page showing every part; Design reviewer.
 
-### E3. One page per part of the picture
+**E2. The Customise start screen.**
+- Touches: `ui/phone/CustomiseScreen.kt` (new), `ui/MainActivity.kt` (start screen points here).
+  Top to bottom: the status line (connected or not) and "Finish setting up" while anything is
+  missing, as today; the car-screen picture with "Tap a part of the screen to change it"; the
+  "Behind the scenes" tiles (E4); "Preview car screen" stays as a button. Tapping the picture
+  opens, for now, today's Car screen page.
+- Verified by: Tester: phone screenshots. Every page that existed before is still reachable (a
+  checklist in the commit message, one line per old page).
 
-One small task each, in this order: Bar (side, what is on it), Clock, Status icons (battery,
-signal), Dashboard cards (which, order), Wallpaper, Colours, App grid. Each page has the part
-drawn large on top and big controls under it, as on the Battery picture.
+**E3. Tap a part of the picture.**
+- Touches: `ui/phone/CarPicture.kt` (new): the small car screen with tappable regions (bar,
+  clock, battery and signal, each dashboard card, the wallpaper, the app grid button), each
+  outlined when touched, as in the picture.
+- Verified by: unit test on the regions for the Audi's screen size; Tester: tapping each region
+  opens its page.
 
-- **Touches:** one new file per page, and the setting it edits in `Settings.kt`.
-- **Verified by:** Tests on each setting. Tester screenshots. Design reviewer. Car for anything
-  about readability.
+**E4. "Behind the scenes" tiles.** One tile each, showing its own state:
 
-### E4. The "behind the scenes" pages
+| Tile | Value shown | Opens |
+|---|---|---|
+| Updates | installed version, a dot when a newer one is out | updates page |
+| Connection | "Connected" / "Waiting" / "Off" | today's Connection page |
+| Apps | how many apps on the car screen | today's Apps page |
+| Sound | the car audio method | today's Sound page |
+| Messages | on or off | today's Messages page |
+| Voice | the assistant's name | today's Voice page |
+| Certificates | which one is offered next | today's certificates card |
+| Advanced | "Log on" when the detailed log is on | today's Advanced page (head unit server, overrides, log) |
+| Car data | — | today's Car data page |
+| About | the version | today's About page |
 
-Connection, Apps, Sound, Messages, Voice, Advanced: the existing pages restyled with the simple
-rows. No behaviour change.
+- Touches: `ui/phone/BehindTheScenes.kt` (new). The values are read from existing settings and
+  state only, no new setting.
+- Verified by: unit tests on the values; Tester screenshots; every old page reachable.
 
-- **Verified by:** Tests unchanged and passing. Tester screenshots.
+**E5. One page per part of the picture**, one task each, in this order: Status icons (the
+Battery page in the pictures: icon, number and % as big symbol buttons; size as growing icons;
+colour dots; colour by level), Clock, Bar, Dashboard cards, Wallpaper, Colours. Each is a new
+file in `ui/phone/`. **What the car screen can already do** is wired straight away (bar side,
+cards and their order, wallpaper, colours and looks exist today). **What it cannot do yet**
+(battery number and colour by level, clock size) needs a car-side task first (Phase F, F4); the
+page shows those controls only once the car side has them, so nothing on the phone does nothing.
+- Verified by: tests on each setting the page writes; Tester: a phone screenshot and a bench
+  picture of the car screen after each change.
+
+**E6. Car screen layout: presets and options** (with Phase M).
+- Touches: `ui/phone/LayoutScreen.kt` (new): the presets as pictures to pick from, then the
+  options of M1 as big symbol buttons, and the Design reviewer's "tap a card, drag it to a
+  dashed slot" from the layout drawings. Reads and writes only through M1's
+  `MyPlayLayoutSettings.kt` (the car Worker's file; the Phone worker uses it, does not edit it).
+- Depends on M1 being merged. Verified by: Tester: pick each preset, then a bench picture.
+
+**E7. Redraw the remaining pages** (Connection, Apps, Sound, Messages, Voice, Advanced, About) in
+the simple-row style of "Behind the scenes". No behaviour change; every switch keeps its setting.
+- Verified by: unit tests unchanged and passing; Tester screenshots; Design reviewer.
+
+**E8. Backup.** The "Backup" tile and page once Phase F's F6 (settings backup) exists.
+
+Order for the Phone worker: E1, E2, E4, E3, E5 (Status icons page first, as in the pictures),
+E7, then E6 when M1 is in, E8 when F6 is in.
 
 ## Phase F: the look system
 
