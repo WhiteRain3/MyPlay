@@ -16,6 +16,9 @@
     <string name="phone_cards_order" translatable="false">Shown, in this order</string>
     <string name="phone_part_wallpaper" translatable="false">Wallpaper</string>
     <string name="phone_wallpaper_other_photo" translatable="false">Choose another photo</string>
+    <string name="phone_part_colours" translatable="false">Colours</string>
+    <string name="phone_colours_phone_accent" translatable="false">Use the phone\'s colours</string>
+    <string name="phone_colours_day_night" translatable="false">Day and night</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->

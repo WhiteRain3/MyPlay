@@ -317,6 +317,8 @@ fun ColourDots(
     onSelect: (Color) -> Unit,
     endText: String? = null,
     onEnd: (() -> Unit)? = null,
+    /** Whether [endText] shows as chosen; by default when no dot is. */
+    endSelected: Boolean? = null,
 ) {
     val chosen = selectedColourIndex(colours, current)
     PartCard(padding = 12.dp) {
@@ -342,7 +344,8 @@ fun ColourDots(
                 Text(
                     endText,
                     Modifier.then(if (onEnd != null) Modifier.clip(RoundedCornerShape(10.dp)).clickable(onClick = onEnd) else Modifier).padding(6.dp),
-                    color = if (chosen == null) PhoneColors.Text else PhoneColors.Muted, fontSize = 13.sp,
+                    color = if (endSelected ?: (chosen == null)) PhoneColors.Accent else PhoneColors.Muted, fontSize = 13.sp,
+                    fontWeight = if (endSelected ?: (chosen == null)) FontWeight.Bold else FontWeight.Normal,
                     maxLines = 1, softWrap = false,
                 )
             }
