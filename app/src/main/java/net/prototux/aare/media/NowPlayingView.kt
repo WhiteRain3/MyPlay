@@ -50,6 +50,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -162,6 +167,13 @@ private fun Controls(hub: DefaultMediaHub, source: PlaybackSource, state: Source
 
 private val PLAY_SIZE = 96.dp
 
+/** MyPlay (R5): how far one press of left or right on the pad seeks, on the progress bar. */
+internal const val SEEK_STEP_MS = 10_000L
+
+/** MyPlay (R5): where a seek of [stepMs] from [positionMs] lands, kept inside the song. */
+internal fun seekTarget(positionMs: Long, durationMs: Long, stepMs: Long): Long =
+    (positionMs + stepMs).coerceIn(0L, if (durationMs > 0) durationMs else Long.MAX_VALUE)
+
 /** Position extrapolated from the last sample while playing; a slider when seeking is allowed. */
 @Composable
 private fun Progress(info: PlaybackInfo, canSeek: Boolean, seekTo: (Long) -> Unit) {
@@ -187,7 +199,17 @@ private fun Progress(info: PlaybackInfo, canSeek: Boolean, seekTo: (Long) -> Uni
                     seekTo((dragValue * info.durationMs).toLong())
                     dragging = false
                 },
-                modifier = Modifier.fillMaxWidth().height(48.dp).carFocusHighlight(MaterialTheme.shapes.small),
+                // MyPlay (R5): with the ring on the bar, left and right on the pad seek 10 s back and on.
+                modifier = Modifier.fillMaxWidth().height(48.dp).carFocusHighlight(MaterialTheme.shapes.small)
+                    .onPreviewKeyEvent { e ->
+                        val step = when (e.key) {
+                            Key.DirectionLeft -> -SEEK_STEP_MS
+                            Key.DirectionRight -> SEEK_STEP_MS
+                            else -> return@onPreviewKeyEvent false
+                        }
+                        if (e.type == KeyEventType.KeyDown) seekTo(seekTarget(pos, info.durationMs, step))
+                        true
+                    },
             )
         } else {
             LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)))
