@@ -47,6 +47,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Some history, so the release notes can find the commit that set the version.
+          fetch-depth: 50
 
       - name: Version from myplay-version.txt
         env:
@@ -217,7 +220,8 @@ jobs:
             if [ -f "$GITHUB_WORKSPACE/docs/releases/$VERSION.md" ]; then
               cat "$GITHUB_WORKSPACE/docs/releases/$VERSION.md"
             else
-              git -C "$GITHUB_WORKSPACE" log -1 --format=%B "$GITHUB_SHA" | grep -v -E '^(Co-Authored-By|Claude-Session):' || true
+              # The commit that set the version, which need not be the last one of the push.
+              git -C "$GITHUB_WORKSPACE" log -1 --format=%B "$GITHUB_SHA" -- myplay-version.txt | grep -v -E '^(Co-Authored-By|Claude-Session):' || true
             fi
           } >> ../notes.md
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \

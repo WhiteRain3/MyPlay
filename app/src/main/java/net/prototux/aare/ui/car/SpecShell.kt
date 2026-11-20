@@ -319,7 +319,12 @@ private fun SpecCard(card: SpecCard, spec: CarLayoutSpec, state: CarUiState, act
     }
     val knob = remember { CardKnob() }
     // The knob's press goes inside; a touch opens the app, as on the other cards.
-    val press = { if (CarFocusVisibility.keyInput) knob.inside = true else open?.invoke() ?: Unit }
+    // H1-a: pressed again after turning back onto the card (still inside): go to the first button now.
+    val press = {
+        if (!CarFocusVisibility.keyInput) open?.invoke() ?: Unit
+        else if (knob.inside) { runCatching { knob.first.requestFocus() }; Unit }
+        else knob.inside = true
+    }
     // The buttons become stops only once that change is drawn: ask for the focus after it.
     LaunchedEffect(knob.inside) {
         if (knob.inside) {
