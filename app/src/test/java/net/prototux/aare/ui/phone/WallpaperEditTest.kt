@@ -51,7 +51,7 @@ class WallpaperEditTest {
     fun anEditRoundTripsAndBadValuesAreClamped() {
         val e = WallpaperEdit(1.5f, 0.25f, -0.5f, 40, 3)
         assertEquals(e, WallpaperEdit.decode(e.encode()))
-        assertEquals(WallpaperEdit(5f, 1f, -1f, 80, 10), WallpaperEdit.decode("zoom=99;x=7;y=-7;dim=200;blur=50"))
+        assertEquals(WallpaperEdit(WallpaperEdit.MAX_ZOOM, 1f, -1f, 80, 10), WallpaperEdit.decode("zoom=99;x=7;y=-7;dim=200;blur=50"))
         assertEquals(WallpaperEdit(), WallpaperEdit.decode("rubbish"))
     }
 
@@ -68,5 +68,28 @@ class WallpaperEditTest {
         assertEquals(16, out.size)
         val g = (out[5] shr 8) and 0xFF
         assertTrue("$g", g in 60..200)
+    }
+
+    @Test
+    fun anOlderPhotoBecomesTheUntouchedCopyOnceAndEditsStartFromIt() {
+        val dir = kotlin.io.path.createTempDirectory("wp").toFile()
+        val shown = java.io.File(dir, "wallpaper.jpg").apply { writeText("original") }
+        val source = java.io.File(dir, WallpaperFiles.SOURCE)
+        // First edit: no copy yet, the shown photo becomes it.
+        assertEquals(source, WallpaperFiles.sourceFile(shown, source))
+        assertEquals("original", source.readText())
+        // The edit is written over the shown photo; the next edit still starts from the copy.
+        shown.writeText("edited once")
+        assertEquals("original", WallpaperFiles.sourceFile(shown, source)!!.readText())
+        shown.writeText("edited twice")
+        assertEquals("original", WallpaperFiles.sourceFile(shown, source)!!.readText())
+        dir.deleteRecursively()
+    }
+
+    @Test
+    fun noPhotoNoSource() {
+        val dir = kotlin.io.path.createTempDirectory("wp").toFile()
+        assertEquals(null, WallpaperFiles.sourceFile(java.io.File(dir, "wallpaper.jpg"), java.io.File(dir, WallpaperFiles.SOURCE)))
+        dir.deleteRecursively()
     }
 }

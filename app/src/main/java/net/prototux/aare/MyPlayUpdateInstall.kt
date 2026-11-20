@@ -52,6 +52,9 @@ object MyPlayUpdateInstall {
     private val _state = MutableStateFlow<State>(State.Idle)
     val state: StateFlow<State> = _state.asStateFlow()
 
+    /** A version used in addresses and file names: digits and dots only ("0.2.0"). */
+    internal fun isPlainVersion(v: String): Boolean = v.matches(Regex("\\d+(\\.\\d+)*"))
+
     /** The APK of [version] in a release's JSON, only at MyPlay's own download address for that version. */
     internal fun apkUrl(release: JSONObject, version: String): String? = assetUrl(release, "MyPlay-$version.apk", version)
 
@@ -95,7 +98,11 @@ object MyPlayUpdateInstall {
     /** Downloads, checks and installs [version]. Call off the main thread; follow [state]. */
     fun downloadAndInstall(context: Context, version: String) {
         val app = context.applicationContext
-        if (_state.value is State.Downloading || _state.value == State.Checking || _state.value == State.Installing) return
+        if (!isPlainVersion(version)) { _state.value = State.Failed(Failure.NO_APK); return }
+        // Claim the run at once (two taps in the same moment start only one).
+        val before = _state.value
+        if (before is State.Downloading || before == State.Checking || before == State.Installing) return
+        if (!_state.compareAndSet(before, State.Downloading(null))) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !app.packageManager.canRequestPackageInstalls()) {
             _state.value = State.NeedsPermission
             runCatching {

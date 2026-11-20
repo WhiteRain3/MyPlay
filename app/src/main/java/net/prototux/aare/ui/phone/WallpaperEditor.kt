@@ -67,11 +67,22 @@ object WallpaperFiles {
     fun shown(context: Context) = File(context.filesDir, Settings.WALLPAPER_FILE)
 
     /** Keeps the photo just set as the wallpaper as the untouched copy to edit from. */
-    fun keepSource(context: Context): Boolean = runCatching { shown(context).copyTo(source(context), overwrite = true); true }.getOrDefault(false)
+    fun keepSource(context: Context): Boolean = keepSource(shown(context), source(context))
 
-    /** The copy to edit from; the shown wallpaper itself if there is no copy yet (an older photo). */
+    internal fun keepSource(shown: File, source: File): Boolean = runCatching { shown.copyTo(source, overwrite = true); true }.getOrDefault(false)
+
+    /**
+     * The file to edit from: the untouched copy. A photo set before the editor existed has no copy
+     * yet: the shown wallpaper becomes the copy now, once, so later edits start from it and not
+     * from their own results (darkening and blur never pile up). Null when there is no photo.
+     */
+    internal fun sourceFile(shown: File, source: File): File? {
+        if (!source.isFile && shown.isFile) keepSource(shown, source)
+        return source.takeIf { it.isFile }
+    }
+
     fun loadSource(context: Context): Bitmap? {
-        val f = source(context).takeIf { it.isFile } ?: shown(context).takeIf { it.isFile } ?: return null
+        val f = sourceFile(shown(context), source(context)) ?: return null
         return runCatching { BitmapFactory.decodeFile(f.path) }.getOrNull()
     }
 

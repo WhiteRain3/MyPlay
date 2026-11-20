@@ -24,7 +24,8 @@ data class WallpaperEdit(
     fun encode(): String = "zoom=$zoom;x=$offsetX;y=$offsetY;dim=$dimPercent;blur=$blur"
 
     companion object {
-        const val MAX_ZOOM = 5f
+        /** At most three times: the kept photo is at most 1920 pixels wide, and more would look soft on the car. */
+        const val MAX_ZOOM = 3f
         const val MAX_DIM = 80
         const val MAX_BLUR = 10
 

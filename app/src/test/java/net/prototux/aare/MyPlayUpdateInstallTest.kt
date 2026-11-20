@@ -56,4 +56,13 @@ class MyPlayUpdateInstallTest {
         assertEquals(Failure.WRONG_VERSION, c(ver = "0.1.0"))
         assertEquals(Failure.WRONG_SIGNER, c(signers = setOf("x")))
     }
+
+    @Test
+    fun onlyAPlainVersionIsUsedInAddressesAndNames() {
+        assertTrue(MyPlayUpdateInstall.isPlainVersion("0.2.0"))
+        assertTrue(MyPlayUpdateInstall.isPlainVersion("1"))
+        assertFalse(MyPlayUpdateInstall.isPlainVersion("1.2/../x"))
+        assertFalse(MyPlayUpdateInstall.isPlainVersion("1.2-beta"))
+        assertFalse(MyPlayUpdateInstall.isPlainVersion(""))
+    }
 }
