@@ -463,7 +463,10 @@ class CarRuntime(
                 builtinIcon(R.drawable.ic_car_exit), CarAppKind.EXIT)
         }
         // MyPlay (K8): entries that would show the same name get their app's name in front.
-        val names = MyPlayAppList.names(entries.map { MyPlayAppList.Named(it.packageName, it.label, appLabel(it.packageName)) }, context.packageName)
+        // MyPlay's own built-ins are never renamed, so their app name is not looked up (K8-3).
+        val names = MyPlayAppList.names(entries.map {
+            MyPlayAppList.Named(it.packageName, it.label, if (it.packageName == context.packageName) "" else appLabel(it.packageName))
+        }, context.packageName)
         val shown = entries.mapIndexed { i, e -> if (names[i] == e.label) e else CarAppEntry(e.id, e.packageName, names[i], e.icon, e.kind) }
         ui.apps.clear()
         ui.apps.addAll(shown)
