@@ -18,6 +18,7 @@ internal object MyPlayBackupKeys {
         "car_control_size" to Type.STRING,
         "log_car_input" to Type.BOOLEAN,
         "myplay_maps_follow_car_lights" to Type.BOOLEAN,
+        "myplay_debug_map_areas" to Type.BOOLEAN,
         "myplay_layout_spec" to Type.STRING,
         "myplay_layout_preset" to Type.STRING,
         "myplay_status_battery_icon" to Type.BOOLEAN,

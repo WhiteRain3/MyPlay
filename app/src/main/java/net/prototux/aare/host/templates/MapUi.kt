@@ -78,6 +78,9 @@ import kotlin.math.roundToInt
 internal class ObstructionRegistry {
     var map by mutableStateOf(Rect.Zero)
     val rects = mutableStateMapOf<Any, Rect>()
+    /** MyPlay: the areas last told to the app (map surface px), for [MapAreaOutline]. */
+    var toldVisible by mutableStateOf<List<Int>?>(null)
+    var toldStable by mutableStateOf<List<Int>?>(null)
 }
 
 internal val LocalObstructions = staticCompositionLocalOf<ObstructionRegistry?> { null }
@@ -173,6 +176,7 @@ internal fun MapScaffold(
                 }
             }
         }
+        MapAreaOutline(registry.toldVisible, registry.toldStable) // MyPlay
     }
     ReportAreas(registry, panState)
 }
@@ -188,6 +192,7 @@ private fun CompactMapScaffold(modifier: Modifier, overlay: (@Composable BoxWith
                 BoxWithConstraints(Modifier.fillMaxSize().padding(gutter)) { overlay() }
             }
         }
+        MapAreaOutline(registry.toldVisible, registry.toldStable) // MyPlay
     }
     ReportAreas(registry, remember { mutableStateOf(false) })
 }
@@ -204,6 +209,7 @@ private fun ReportAreas(registry: ObstructionRegistry, panState: androidx.compos
     LaunchedEffect(registry, host, covers) {
         var lastVisible: List<Int>? = null
         var lastStable: List<Int>? = null
+        var logged = 0 // MyPlay: lines written to the connection log for this map
         snapshotFlow {
             listOf(registry.map, registry.rects.values.toList(), panState.value,
                 covers?.shown?.values?.toList().orEmpty(), covers?.reserved?.values?.toList().orEmpty())
@@ -217,15 +223,23 @@ private fun ReportAreas(registry: ObstructionRegistry, panState: androidx.compos
                 val reserved = covers?.reserved?.values?.map { it.toBox() }.orEmpty()
                 val areas = MapAreas.compute(map.toBox(), shown, reserved)
                 val area = MapAreas.inSurface(map.toBox(), areas.visible)
-                if (area != lastVisible) {
+                val visibleChanged = area != lastVisible
+                if (visibleChanged) {
                     lastVisible = area
                     safeCall("setVisibleArea") { host.setVisibleArea(area[0], area[1], area[2], area[3]) }
                 }
                 // stable area: the layout with all chrome shown, i.e. outside pan mode
                 val stable = MapAreas.inSurface(map.toBox(), areas.stable)
-                if (!pan && stable != lastStable) {
+                val stableChanged = !pan && stable != lastStable
+                if (stableChanged) {
                     lastStable = stable
                     safeCall("setStableArea") { host.setStableArea(stable[0], stable[1], stable[2], stable[3]) }
+                }
+                // MyPlay: what the app was told, in the connection log and for the outline.
+                registry.toldVisible = lastVisible
+                registry.toldStable = lastStable
+                if ((visibleChanged || stableChanged) && logged++ < MapAreaDebug.MAX_LINES) {
+                    net.prototux.aare.DiagLog.add(MapAreaDebug.line(map.toBox(), area, if (pan) null else stable))
                 }
             }
     }
