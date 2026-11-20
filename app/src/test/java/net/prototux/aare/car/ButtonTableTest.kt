@@ -72,4 +72,13 @@ class ButtonTableTest {
         assertEquals(m, ButtonTable.decodeCodes(ButtonTable.encodeCodes(m)))
         assertEquals(m, ButtonTable.decodeCodes(ButtonTable.encodeCodes(m) + ";knob_push=;wheel=3"))
     }
+
+    /** B1-1: "press what has the ring" on Back, Menu or the wheel presses the item, not that key. */
+    @Test fun selectAlwaysPressesTheRingsItem() {
+        assertEquals(KeyEvent.KEYCODE_DPAD_CENTER, ButtonAction.selectKeyFor(KeyEvent.KEYCODE_BACK))
+        assertEquals(KeyEvent.KEYCODE_DPAD_CENTER, ButtonAction.selectKeyFor(KeyEvent.KEYCODE_MENU))
+        assertEquals(KeyEvent.KEYCODE_DPAD_CENTER, ButtonAction.selectKeyFor(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
+        assertEquals(KeyEvent.KEYCODE_DPAD_CENTER, ButtonAction.selectKeyFor(KeyEvent.KEYCODE_DPAD_CENTER))
+        assertEquals(KeyEvent.KEYCODE_ENTER, ButtonAction.selectKeyFor(KeyEvent.KEYCODE_ENTER))
+    }
 }
