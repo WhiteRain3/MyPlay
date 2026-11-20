@@ -8,7 +8,7 @@ import org.junit.Test
 class CarCheckLogTest {
     @Test
     fun privateDetailsAreTakenOut() {
-        assertEquals("trusted head unit certificate for [address]: SHA-256 ab12",
+        assertEquals("trusted head unit certificate for XX:XX:XX:XX:71:13: SHA-256 ab12",
             CarCheckLog.withoutPrivate("trusted head unit certificate for 00:1A:7D:DA:71:13: SHA-256 ab12"))
         assertEquals("tcp from [address] port 5277", CarCheckLog.withoutPrivate("tcp from 192.168.1.20 port 5277"))
         assertEquals("ip [address]", CarCheckLog.withoutPrivate("ip fe80:0:0:0:1c2b:3dff:fe4e:5f60"))

@@ -6,7 +6,7 @@ package net.prototux.aare.ui.phone
  * (the page asks the owner to read it before sending all the same).
  */
 object CarCheckLog {
-    /** Bluetooth and Wi-Fi addresses (the car's Bluetooth address is how it is told apart). */
+    /** Bluetooth and Wi-Fi addresses (the car's Bluetooth address is how it is told apart): masked but for their last two bytes. */
     private val MAC = Regex("""\b[0-9A-Fa-f]{2}(?:[:-][0-9A-Fa-f]{2}){5}\b""")
     private val IPV4 = Regex("""\b(?:\d{1,3}\.){3}\d{1,3}\b""")
     /** Written out, or shortened with "::" (which needs one at least). */
@@ -19,8 +19,9 @@ object CarCheckLog {
     private val VIN = Regex("""\b(?=[A-HJ-NPR-Z0-9]*[A-HJ-NPR-Z])(?=[A-HJ-NPR-Z0-9]*\d)[A-HJ-NPR-Z0-9]{17}\b""")
 
     /**
-     * Names the connection log writes as they are: who a message was auto-replied to, a Bluetooth
-     * device's name and the car's Wi-Fi network name (in quotes on wireless lines). The certificate's
+     * Names older connection logs hold as they are (the car side no longer writes them): who a
+     * message was auto-replied to, a Bluetooth device's name and the car's Wi-Fi network name (in
+     * quotes on wireless lines). The certificate's
      * and the head unit's names in other lines stay: they name the car, not a person.
      */
     private val NAMES: List<Pair<Regex, String>> = listOf(
@@ -36,7 +37,8 @@ object CarCheckLog {
         for ((pattern, replacement) in NAMES) out = out.replace(pattern, replacement)
         if (out.contains("wireless: ")) out = out.replace(QUOTED, "\"[network]\"")
         return out
-            .replace(MAC, "[address]")
+            // The last two bytes stay, so lines about the same device can still be told apart.
+            .replace(MAC) { m -> "XX:XX:XX:XX:" + m.value.takeLast(5).replace('-', ':') }
             .replace(EMAIL, "[e-mail]")
             .replace(IPV6, "[address]")
             .replace(IPV4, "[address]")
