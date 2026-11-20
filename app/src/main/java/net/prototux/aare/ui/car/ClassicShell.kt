@@ -110,7 +110,7 @@ private fun ActivityPill(state: CarUiState, actions: CarActions) {
         .background(MaterialTheme.colorScheme.surfaceContainerHighest)
     when {
         guiding && (nav == null || screen != nav.id) -> Row(
-            pill.clickable { nav?.let(actions::openApp) }.padding(start = 8.dp, end = 20.dp),
+            pill.carFocusHighlight(RoundedCornerShape(percent = 50)).clickable { nav?.let(actions::openApp) }.padding(start = 8.dp, end = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             TurnBadge(state)
@@ -118,7 +118,7 @@ private fun ActivityPill(state: CarUiState, actions: CarActions) {
             Text(turnText(state), style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         media != null && screen != media.id -> Row(pill.padding(start = 8.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.clip(CircleShape).clickable { actions.openApp(media) }) { AppIcon(media, 52) }
+            Box(Modifier.clip(CircleShape).carFocusHighlight(CircleShape).clickable { actions.openApp(media) }) { AppIcon(media, 52) }
             RoundIcon(Icons.Rounded.SkipPrevious, stringResource(R.string.media_action_previous), filled = false) { actions.mediaPrevious() }
             RoundIcon(if (np?.playing == true) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                 stringResource(R.string.media_action_play_pause), filled = false) { actions.mediaPlayPause() }

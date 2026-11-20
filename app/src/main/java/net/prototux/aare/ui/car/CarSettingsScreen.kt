@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -96,9 +97,10 @@ private fun Choice(title: String, options: List<Pair<String, String>>, selected:
 
 @Composable
 private fun SwitchRow(title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().heightIn(min = LocalCarDimens.current.touchTarget).clickable { onChange(!checked) },
+    Row(Modifier.fillMaxWidth().heightIn(min = LocalCarDimens.current.touchTarget).carFocusHighlight(RoundedCornerShape(16.dp)).clickable { onChange(!checked) },
         verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-        Switch(checked = checked, onCheckedChange = onChange)
+        // MyPlay: the row is the one stop for the knob; the switch only shows the state.
+        Switch(checked = checked, onCheckedChange = null)
     }
 }

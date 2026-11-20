@@ -404,7 +404,7 @@ private fun ToggleSwitch(toggle: Toggle, checked: Boolean, onChange: (Boolean) -
         onCheckedChange = onChange,
         enabled = toggle.isEnabled,
         // the default switch is phone-sized: scale it to car targets
-        modifier = Modifier.padding(horizontal = 14.dp).scale(1.25f),
+        modifier = Modifier.padding(horizontal = 14.dp).scale(1.25f).carFocusHighlight(CircleShape),
     )
 }
 

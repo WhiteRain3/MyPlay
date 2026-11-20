@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
@@ -42,7 +43,7 @@ internal fun DashboardCardsEditor(order: List<DashCard>, rowHeight: Dp, onChange
             val canToggle = !(shown && order.size == 1)
             Row(Modifier.fillMaxWidth().heightIn(min = rowHeight), verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    Modifier.weight(1f).heightIn(min = rowHeight).clickable(enabled = canToggle) { onChange(order.withCard(card, !shown)) },
+                    Modifier.weight(1f).heightIn(min = rowHeight).carFocusHighlight(MaterialTheme.shapes.small).clickable(enabled = canToggle) { onChange(order.withCard(card, !shown)) },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Checkbox(checked = shown, onCheckedChange = null, enabled = canToggle)
@@ -55,10 +56,10 @@ internal fun DashboardCardsEditor(order: List<DashCard>, rowHeight: Dp, onChange
                     }
                 }
                 if (shown) {
-                    IconButton(onClick = { onChange(order.moved(i, -1)) }, enabled = i > 0, modifier = Modifier.size(rowHeight)) {
+                    IconButton(onClick = { onChange(order.moved(i, -1)) }, enabled = i > 0, modifier = Modifier.size(rowHeight).carFocusHighlight(CircleShape)) {
                         Icon(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.common_up))
                     }
-                    IconButton(onClick = { onChange(order.moved(i, 1)) }, enabled = i < order.lastIndex, modifier = Modifier.size(rowHeight)) {
+                    IconButton(onClick = { onChange(order.moved(i, 1)) }, enabled = i < order.lastIndex, modifier = Modifier.size(rowHeight).carFocusHighlight(CircleShape)) {
                         Icon(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.common_down))
                     }
                 }

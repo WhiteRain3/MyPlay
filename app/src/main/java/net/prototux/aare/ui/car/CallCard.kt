@@ -113,7 +113,7 @@ private fun InCall(call: CarCall, state: CarUiState, actions: CarActions, modifi
                     )
                 }
                 .padding(12.dp).clip(MaterialTheme.shapes.large).background(LocalCarColors.current.accept)
-                .clickable { phone?.let(actions::openApp) }.padding(start = 20.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+                .carFocusHighlight(MaterialTheme.shapes.large).clickable { phone?.let(actions::openApp) }.padding(start = 20.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(Icons.Rounded.Call, null, tint = LocalCarColors.current.onCall)
@@ -130,7 +130,7 @@ private fun InCall(call: CarCall, state: CarUiState, actions: CarActions, modifi
 @Composable
 private fun RoundButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, color: Color,
                         size: androidx.compose.ui.unit.Dp = LocalCarDimens.current.touchTarget, onClick: () -> Unit) {
-    Box(Modifier.size(size).clip(CircleShape).background(color).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(size).clip(CircleShape).background(color).carFocusHighlight(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
         Icon(icon, label, tint = LocalCarColors.current.onCall)
     }
 }

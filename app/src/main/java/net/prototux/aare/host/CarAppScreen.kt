@@ -58,6 +58,8 @@ import net.prototux.aare.R
 import net.prototux.aare.host.templates.LocalCompactMap
 import net.prototux.aare.host.templates.RenderTemplate
 import net.prototux.aare.host.templates.TemplateHost
+import net.prototux.aare.ui.theme.LocalCarDimens
+import net.prototux.aare.ui.car.carFocusHighlight
 
 /**
  * One hosted car app on the car screen: its current template, its alerts, and loading/error
@@ -105,7 +107,7 @@ fun CarAppScreen(conn: CarAppConnection, runtime: CarRuntime, modifier: Modifier
                 }
             }
         }
-        if (compact && onOpen != null) Box(Modifier.fillMaxSize().clickable(onClick = onOpen))
+        if (compact && onOpen != null) Box(Modifier.fillMaxSize().carFocusHighlight(RoundedCornerShape(LocalCarDimens.current.cardRadius)).clickable(onClick = onOpen))
         conn.alert?.let { AlertCard(it, conn, host, Modifier.align(Alignment.TopCenter)) }
     }
 }
@@ -136,7 +138,7 @@ private fun AppMessage(conn: CarAppConnection, message: String?, retry: (() -> U
                 Text(
                     stringResource(R.string.common_try_again), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.clip(MaterialTheme.shapes.extraLarge).background(MaterialTheme.colorScheme.primary)
-                        .clickable(onClick = retry).padding(horizontal = 32.dp, vertical = 18.dp),
+                        .carFocusHighlight(MaterialTheme.shapes.extraLarge).clickable(onClick = retry).padding(horizontal = 32.dp, vertical = 18.dp),
                 )
             }
         }
@@ -171,7 +173,7 @@ private fun AlertCard(alert: Alert, conn: CarAppConnection, host: TemplateHost, 
                     Text(
                         action.title?.toString() ?: stringResource(R.string.common_ok), style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.secondaryContainer)
-                            .clickable {
+                            .carFocusHighlight(MaterialTheme.shapes.large).clickable {
                                 runCatching { action.onClickDelegate?.sendClick(host.done) }
                                 conn.dismissAlert()
                             }.padding(horizontal = 28.dp, vertical = 16.dp),

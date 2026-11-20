@@ -187,7 +187,7 @@ private fun Progress(info: PlaybackInfo, canSeek: Boolean, seekTo: (Long) -> Uni
                     seekTo((dragValue * info.durationMs).toLong())
                     dragging = false
                 },
-                modifier = Modifier.fillMaxWidth().height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp).carFocusHighlight(MaterialTheme.shapes.small),
             )
         } else {
             LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)))
