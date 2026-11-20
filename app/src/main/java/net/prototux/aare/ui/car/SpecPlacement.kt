@@ -69,7 +69,9 @@ internal object SpecPlacement {
         }
         val map = if (s.mapUnderBar) screen else content
         val shape = shapeOf(width, height)
-        return Placement(bar, content, map, slots(s, content, shape).take(minOf(s.cards.size, shape.maxCards)))
+        // M6-1: divide the space for the cards that will be shown, not for every card in the spec.
+        val count = minOf(s.cards.size, shape.maxCards)
+        return Placement(bar, content, map, slots(s, content, shape, count).take(count))
     }
 
     /**
@@ -79,10 +81,10 @@ internal object SpecPlacement {
     fun readingOrder(boxes: List<Box>): List<Int> =
         boxes.indices.sortedWith(compareBy<Int>({ boxes[it].top }, { boxes[it].left }))
 
-    private fun slots(s: CarLayoutSpec, c: Box, shape: Shape): List<Box> {
+    private fun slots(s: CarLayoutSpec, c: Box, shape: Shape, count: Int): List<Box> {
         val inner = Box(c.left + GAP, c.top + GAP, c.right - GAP, c.bottom - GAP)
         if (inner.width <= 0f || inner.height <= 0f) return emptyList()
-        val n = s.cards.size.coerceAtLeast(1)
+        val n = count.coerceAtLeast(1)
         val side = s.barSide == BarSide.LEFT || s.barSide == BarSide.RIGHT
         // The "start" side is the bar's side for a side bar, the left otherwise.
         val startIsRight = s.barSide == BarSide.RIGHT

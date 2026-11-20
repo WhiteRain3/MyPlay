@@ -89,6 +89,23 @@ class SpecPlacementTest {
         }
     }
 
+    /**
+     * M6-1: on the Audi's screen (901 x 543 dp) the cards that are shown fill the column; no hole is
+     * left where a dropped card would have been.
+     */
+    @Test fun theShownCardsFillTheColumnOnTheAudisScreen() {
+        val p = SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("A"), 901f, 543f)
+        assertEquals(3, p.slots.size)
+        assertEquals(p.content.bottom - SpecPlacement.GAP, p.slots.last().bottom, 0.01f)
+    }
+
+    @Test fun theShownCardsFillTheRowAlongABottomBar() {
+        val spec = CarLayoutSpec.PRESETS.getValue("A").copy(barStyle = BarStyle.SOLID_RAIL, barSide = BarSide.BOTTOM)
+        val p = SpecPlacement.place(spec, 901f, 543f)
+        assertEquals(3, p.slots.size)
+        assertEquals(p.content.right - SpecPlacement.GAP, p.slots.last().right, 0.01f)
+    }
+
     /** A very wide screen: the corner cards sit side by side at the far end, the middle stays free. */
     @Test fun veryWideScreensPutCardsSideBySide() {
         val p = SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("D"), 1920f, 720f)
