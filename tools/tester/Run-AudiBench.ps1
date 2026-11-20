@@ -46,7 +46,7 @@ param(
     [int]$Seconds = 0,
     # Where result folders go. Default: a folder "myplay-bench" next to the head unit folder.
     [string]$OutRoot,
-    # For the walks settings, maps and back-out: the place of the app to open in the app grid,
+    # For the walks settings, maps, music and back-out: the place of the app to open in the app grid,
     # counted from 1 in the order the ring moves through the grid (see the grid-end pictures).
     [int]$Tile = 1,
     # Leave out the margin option of the profile.
@@ -103,6 +103,13 @@ function Get-Turns([int]$From, [int]$Count) {
     return ($list -join ' ')
 }
 
+# N single clicks back, 3 seconds apart, the first at $From seconds.
+function Get-BackTurns([int]$From, [int]$Count) {
+    $list = @()
+    for ($i = 0; $i -lt $Count; $i++) { $list += "rotate:-1@$($From + 3 * $i)" }
+    return ($list -join ' ')
+}
+
 $Walks = [ordered]@{
     # Parked, then 12 single clicks forward: the ring should move to each element of the home screen.
     'home'       = 'park@2 ' + (Get-Turns 5 12)
@@ -121,6 +128,12 @@ $Walks = [ordered]@{
     # The same for a maps app (give the place of Organic Maps as -Tile): the ring should start
     # inside the app and reach its buttons.
     'maps'       = "$OpenGrid $ToTile " + (Get-Turns 23 20)
+    # The music browser (give the place of a music app as -Tile; one with folders, such as the
+    # phone's own music player or a podcast app): 15 clicks forward through its top level, press
+    # the knob to open what is ringed, 10 clicks through that level, 10 clicks back, then Back.
+    # The ring should reach every row and button, stay fully on screen, and Back should go up one
+    # level (plan R4-2: the music browser on the bench, as the unit tests cannot host a media app).
+    'music'      = "$OpenGrid $ToTile " + (Get-Turns 23 15) + ' dpad:center@68 ' + (Get-Turns 71 10) + ' ' + (Get-BackTurns 101 10) + ' key:4@131'
     # Open the app grid, open tile -Tile, then Back twice within a second: the home screen should
     # show, also for an app that ignores Back. (Holding Back cannot be played from here.)
     'back-out'   = "$OpenGrid $ToTile key:4@26 key:4@27"
@@ -131,7 +144,7 @@ $Package = 'io.github.whiterain3.myplay'
 if ($ListWalks) {
     foreach ($name in $Walks.Keys) { Write-Host ("{0,-12} {1}" -f $name, $Walks[$name]) }
     Write-Host ''
-    Write-Host "settings, maps and back-out open tile number -Tile of the app grid (now $Tile)."
+    Write-Host "settings, maps, music and back-out open tile number -Tile of the app grid (now $Tile)."
     exit 0
 }
 
