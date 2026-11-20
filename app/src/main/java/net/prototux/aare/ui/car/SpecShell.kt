@@ -142,7 +142,7 @@ internal fun SpecShell(
                         for (i in SpecPlacement.readingOrder(listOf(p.bar) + slots + listOfNotNull(panel))) {
                             if (i == 0) SpecBar(state, actions, spec, clockCard, Modifier.at(p.bar).coversMap())
                             else if (i > slots.size) MapsPanel(state, actions, Modifier.at(panel!!))
-                            else if (spec.cardPlace == CardPlace.STAGE) StageSlot(spec, state, actions, Modifier.at(slots[0]))
+                            else if (spec.cardPlace == CardPlace.STAGE) StageSlot(spec, state, actions, stageShown.orEmpty(), Modifier.at(slots[0]))
                             else CardSlot(spec.cards[i - 1], spec, state, actions, Modifier.at(slots[i - 1]))
                         }
                     }
@@ -281,8 +281,9 @@ private fun CardSlot(card: SpecCard, spec: CarLayoutSpec, state: CarUiState, act
 
 /** The stage: the first card that has something to show, plus one more with "one extra at a time". */
 @Composable
-private fun StageSlot(spec: CarLayoutSpec, state: CarUiState, actions: CarActions, modifier: Modifier) {
-    val shownCards = spec.cards.filter { shownNow(it, spec, state) }.take(if (spec.oneExtraAtATime) 2 else 1)
+private fun StageSlot(spec: CarLayoutSpec, state: CarUiState, actions: CarActions, withContent: List<SpecCard>, modifier: Modifier) {
+    // P2-5: [withContent] is the same list the bar's clock rule reads, worked out once by the caller.
+    val shownCards = withContent.take(if (spec.oneExtraAtATime) 2 else 1)
     Box(modifier.coversMap(now = shownCards.isNotEmpty())) {
         if (shownCards.isNotEmpty()) {
             Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(SpecPlacement.GAP.dp)) {
