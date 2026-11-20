@@ -10,7 +10,9 @@
     <string name="phone_part_picture_description" translatable="false">Picture of the car screen with the current settings</string>
     <string name="phone_part_bar" translatable="false">Bar</string>
     <string name="phone_bar_side" translatable="false">Side</string>
-    <string name="phone_bar_more" translatable="false">On the bar</string>
+    <string name="phone_bar_items" translatable="false">Shown on the bar, in this order</string>
+    <string name="phone_bar_items_hint" translatable="false">A bar at the side of a short screen (the Audi\'s) has room for the clock only; the others show when the bar is at the bottom.</string>
+    <string name="phone_bar_more" translatable="false">More</string>
     <string name="phone_part_cards" translatable="false">Cards</string>
     <string name="phone_cards_weather_note" translatable="false">While shown, sends a rough position (about 10 km) to Open-Meteo, even with the Weather switch off</string>
     <string name="phone_cards_order" translatable="false">Shown, in this order</string>
