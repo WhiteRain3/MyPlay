@@ -111,6 +111,9 @@ class CarRuntime(
 
     override val driving: Boolean get() = ui.drivingRestricted
     override val night: Boolean get() = ui.night
+    override val mapNight: Boolean get() = MyPlayNight.forMaps(ui.night, carNight, settings.mapsFollowCarLights)
+    /** The last [mapNight] the apps were told, to tell them again when only it changes. */
+    private var toldMapNight: Boolean? = null
     override var screenWidthDp by mutableIntStateOf(1280)
     override var screenHeightDp by mutableIntStateOf(720)
     override var densityDpi by mutableIntStateOf(160)
@@ -284,8 +287,10 @@ class CarRuntime(
             Settings.THEME_LIGHT -> false
             else -> carNight ?: true
         }
-        if (ui.night != night) {
+        val mapNightNow = MyPlayNight.forMaps(night, carNight, settings.mapsFollowCarLights)
+        if (ui.night != night || toldMapNight != mapNightNow) {
             ui.night = night
+            toldMapNight = mapNightNow
             configurationChanged()
         }
         val position = settings.railPosition

@@ -13,4 +13,6 @@
     <string name="myplay_toggle_log_car_input_title" translatable="false">Log the car\'s buttons and knob</string>
     <string name="myplay_toggle_log_car_input_subtitle" translatable="false">Write each button press and knob turn the car sends into this log: the key code, down or up, and how far the knob turned. No touches and nothing about you are recorded. At most 120 lines per connection.</string>
     <string name="myplay_maps_more" translatable="false">More</string>
+    <string name="myplay_toggle_maps_follow_car_title" translatable="false">Map apps follow the car\'s lights</string>
+    <string name="myplay_toggle_maps_follow_car_subtitle" translatable="false">Map apps switch between day and night colours when the car does, even when the colours above are always dark or always light.</string>
 </resources>

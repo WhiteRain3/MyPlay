@@ -14,6 +14,9 @@ interface HostEnvironment {
 
     val night: Boolean
 
+    /** MyPlay (K11/F2): day or night for map apps, which may follow the car's lights apart from [night]. */
+    val mapNight: Boolean get() = night
+
     /** The area apps draw in, in dp, and its density. */
     val screenWidthDp: Int
     val screenHeightDp: Int

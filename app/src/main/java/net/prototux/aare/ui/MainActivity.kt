@@ -723,6 +723,11 @@ private fun CarScreenSettings(settings: Settings, refresh: Int) {
             Choices(stringResource(R.string.setup_choice_colors), listOf(Settings.THEME_AUTO to stringResource(R.string.setup_choice_colors_auto), Settings.THEME_DARK to stringResource(R.string.setup_choice_dark), Settings.THEME_LIGHT to stringResource(R.string.setup_choice_light)), theme) {
                 theme = it; settings.carTheme = it
             }
+            // MyPlay (K11/F2)
+            var mapsFollow by remember { mutableStateOf(settings.mapsFollowCarLights) }
+            Toggle(stringResource(R.string.myplay_toggle_maps_follow_car_title), stringResource(R.string.myplay_toggle_maps_follow_car_subtitle), mapsFollow) {
+                mapsFollow = it; settings.mapsFollowCarLights = it
+            }
             Spacer(Modifier.height(12.dp))
             Choices(stringResource(R.string.setup_choice_bar), listOf(Settings.RAIL_AUTO to stringResource(R.string.setup_choice_bar_auto), Settings.RAIL_LEFT to stringResource(R.string.setup_choice_left), Settings.RAIL_RIGHT to stringResource(R.string.setup_choice_right), Settings.RAIL_BOTTOM to stringResource(R.string.setup_choice_bottom)), rail) {
                 rail = it; settings.railPosition = it
