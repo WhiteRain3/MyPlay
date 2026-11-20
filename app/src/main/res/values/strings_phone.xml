@@ -21,6 +21,15 @@
     <string name="phone_home_maps_unavailable" translatable="false">This maps app is hidden or no longer installed, so the home screen shows the maps buttons instead.</string>
     <string name="phone_cards_order" translatable="false">Shown, in this order</string>
     <string name="phone_part_wallpaper" translatable="false">Wallpaper</string>
+    <string name="phone_wallpaper_edit_title" translatable="false">Edit the photo</string>
+    <string name="phone_wallpaper_edit_none" translatable="false">No photo yet. Choose one first.</string>
+    <string name="phone_wallpaper_edit_hint" translatable="false">Drag to move the photo, pinch to zoom. The frame is the car screen\'s shape.</string>
+    <string name="phone_wallpaper_edit_dim" translatable="false">Darker: %1$d %%</string>
+    <string name="phone_wallpaper_edit_blur" translatable="false">Blur: %1$d</string>
+    <string name="phone_wallpaper_edit_reset" translatable="false">Start again</string>
+    <string name="phone_wallpaper_edit_use" translatable="false">Use as wallpaper</string>
+    <string name="phone_wallpaper_edit_saving" translatable="false">Saving…</string>
+    <string name="phone_wallpaper_edit_button" translatable="false">Edit the photo</string>
     <string name="phone_wallpaper_other_photo" translatable="false">Choose another photo</string>
     <string name="phone_part_colours" translatable="false">Colours</string>
     <string name="phone_colours_phone_accent" translatable="false">Use the phone\'s colours</string>

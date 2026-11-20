@@ -70,15 +70,19 @@ fun WallpaperPage(savePhoto: (Uri) -> Boolean) {
     val settings = remember { Settings(ctx) }
     var chosen by remember { mutableStateOf(settings.wallpaper) }
     var photoVersion by remember { mutableIntStateOf(0) }
+    var editing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val failed = stringResource(R.string.setup_wallpaper_failed)
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) scope.launch {
-            if (withContext(Dispatchers.IO) { savePhoto(uri) }) {
+            if (withContext(Dispatchers.IO) { savePhoto(uri) && WallpaperFiles.keepSource(ctx) }) {
                 // Through "none", as the Car screen page does, so the car reloads the photo even if one was already set.
                 settings.wallpaper = "none"; settings.wallpaper = Settings.WALLPAPER_CUSTOM
+                settings.myplayWallpaperEdit = WallpaperEdit()
                 chosen = Settings.WALLPAPER_CUSTOM
                 photoVersion++
+                // A new photo goes straight to the editor, to place it in the car screen's shape.
+                editing = true
             } else {
                 Toast.makeText(ctx, failed, Toast.LENGTH_SHORT).show()
             }
@@ -110,9 +114,13 @@ fun WallpaperPage(savePhoto: (Uri) -> Boolean) {
         }
         if (chosen == Settings.WALLPAPER_CUSTOM) {
             Spacer(Modifier.height(12.dp))
-            PillButton(stringResource(R.string.phone_wallpaper_other_photo), main = false) { picker.launch("image/*") }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PillButton(stringResource(R.string.phone_wallpaper_edit_button)) { editing = true }
+                PillButton(stringResource(R.string.phone_wallpaper_other_photo), main = false) { picker.launch("image/*") }
+            }
         }
     }
+    if (editing) WallpaperEditorDialog { saved -> editing = false; if (saved) photoVersion++ }
 }
 
 @Composable

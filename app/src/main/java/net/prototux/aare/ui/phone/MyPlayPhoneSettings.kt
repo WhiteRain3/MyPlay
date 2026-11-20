@@ -21,3 +21,10 @@ var Settings.myplayWhatsNewSeen: String?
     set(v) = prefs.edit { if (v == null) remove(KEY_WHATS_NEW_SEEN) else putString(KEY_WHATS_NEW_SEEN, v) }
 
 internal const val KEY_WHATS_NEW_SEEN = "myplay_whats_new_seen"
+
+/** How the wallpaper photo was placed, darkened and blurred (plan F5). Not in backups: the photo itself is not either. */
+var Settings.myplayWallpaperEdit: WallpaperEdit
+    get() = WallpaperEdit.decode(prefs.getString(KEY_WALLPAPER_EDIT, null))
+    set(v) = prefs.edit { putString(KEY_WALLPAPER_EDIT, v.clamped().encode()) }
+
+internal const val KEY_WALLPAPER_EDIT = "myplay_wallpaper_edit"
