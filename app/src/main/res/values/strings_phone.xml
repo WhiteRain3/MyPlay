@@ -325,7 +325,7 @@
     <string name="phone_check_steps" translatable="false">Steps</string>
     <string name="phone_check_nothing_arrived" translatable="false">nothing arrived</string>
     <string name="phone_check_share" translatable="false">Share the log</string>
-    <string name="phone_check_private" translatable="false">The shared log leaves out who messages were auto-replied to, Bluetooth device and Wi-Fi names, addresses, e-mails, phone numbers and VINs. The car\'s own name and its certificate\'s name stay. Read it before you send it.</string>
+    <string name="phone_check_private" translatable="false">The shared log leaves out who messages were auto-replied to, Bluetooth device and Wi-Fi names, addresses (a Bluetooth address keeps its last two pairs), e-mails, phone numbers and VINs. The car\'s own name and its certificate\'s name stay. Read it before you send it.</string>
     <string name="phone_check_knob_right" translatable="false">Turn the dash knob right, a few clicks</string>
     <string name="phone_check_knob_left" translatable="false">Turn the dash knob left, a few clicks</string>
     <string name="phone_check_knob_push" translatable="false">Push the dash knob once</string>

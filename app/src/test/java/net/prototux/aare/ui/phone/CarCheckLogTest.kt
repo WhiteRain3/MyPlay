@@ -57,6 +57,7 @@ class CarCheckLogTest {
             "20/11 16:04:03  video codec: H.264 (car offers H264_BP, VP9)",
             "car input channel 3: display 0, touch screen 1280x720, touchpad none, keys it says it sends: BACK (4), key 65536",
             "USB: head unit back after 1500 ms",
+            "up for 123456789 ms, wrote 52428800 bytes, 48000000 Hz",
             "version 0.1.21, sha256 3f2a9c0e4b1d7f8a6c5e0b9d2a4f7e1c3b8d6a0f5e2c9b7a4d1f8e6c3a0b5d9e",
         )
         lines.forEach { assertEquals(it, CarCheckLog.withoutPrivate(it)) }

@@ -12,8 +12,8 @@ object CarCheckLog {
     /** Written out, or shortened with "::" (which needs one at least). */
     private val IPV6 = Regex("""\b(?:[0-9A-Fa-f]{1,4}:){3,7}[0-9A-Fa-f]{1,4}\b|(?:\b[0-9A-Fa-f]{1,4})?(?::[0-9A-Fa-f]{1,4})*::(?:[0-9A-Fa-f]{1,4}(?::[0-9A-Fa-f]{1,4})*)?\b""")
     private val EMAIL = Regex("""[\w.+-]+@[\w-]+(?:\.[\w-]+)+""")
-    /** Digits in groups split by spaces, dashes, dots or brackets, maybe after a plus: a phone number when 7 digits or more. */
-    private val PHONE = Regex("""(?<![\w.:/])\+?\(?\d[\d ().-]{4,}\d(?![\w:/])""")
+    /** Digits in groups split by spaces, dashes, dots or brackets, maybe after a plus: a phone number when 7 digits or more (not times, sizes or rates). */
+    private val PHONE = Regex("""(?<![\w.:/])\+?\(?\d[\d ().-]{4,}\d(?![\w:/])(?! ?(?:ms|bytes|B|Hz|kbps)\b)""")
     private val DATE = Regex("""\d{4}-\d{2}-\d{2}""")
     /** A vehicle identification number: 17 capitals and digits, both. */
     private val VIN = Regex("""\b(?=[A-HJ-NPR-Z0-9]*[A-HJ-NPR-Z])(?=[A-HJ-NPR-Z0-9]*\d)[A-HJ-NPR-Z0-9]{17}\b""")
