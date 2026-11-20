@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Backup
+import androidx.compose.material.icons.rounded.Gamepad
+import net.prototux.aare.car.myplayButtons
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Forum
@@ -43,7 +45,7 @@ import net.prototux.aare.host.CarAppCatalog
 import net.prototux.aare.host.MyPlayAppList
 
 /** The "Behind the scenes" tiles on the start screen (plan E4), in the order they are shown. */
-enum class BehindTile { UPDATES, CONNECTION, APPS, SOUND, MESSAGES, VOICE, CERTIFICATES, BACKUP, ADVANCED, CAR_DATA, ABOUT }
+enum class BehindTile { UPDATES, CONNECTION, APPS, BUTTONS, SOUND, MESSAGES, VOICE, CERTIFICATES, BACKUP, ADVANCED, CAR_DATA, ABOUT }
 
 /** What the Sound tile says. */
 enum class SoundValue { OFF, NOT_SET_UP, BEST, ALL_SOUND, MUSIC_ONLY }
@@ -152,6 +154,10 @@ fun BehindTheScenesTiles(connected: Boolean, audioCapture: Boolean, refresh: Int
             stringResource(if (connected) R.string.phone_tile_connected else R.string.phone_tile_waiting)),
         TileSpec(BehindTile.APPS, Icons.Rounded.Apps, TileTone.VIOLET, stringResource(R.string.phone_tile_apps),
             apps?.let { stringResource(R.string.phone_tile_apps_count, it) }),
+        TileSpec(BehindTile.BUTTONS, Icons.Rounded.Gamepad, TileTone.PINK, stringResource(R.string.phone_tile_buttons),
+            remember(refresh) { changedCount(settings.myplayButtons) }.let { n ->
+                if (n == 0) stringResource(R.string.phone_tile_buttons_default) else stringResource(R.string.phone_tile_buttons_changed, n)
+            }),
         TileSpec(BehindTile.SOUND, Icons.AutoMirrored.Rounded.VolumeUp, TileTone.AMBER, stringResource(R.string.phone_tile_sound),
             stringResource(when (sound) {
                 SoundValue.OFF -> R.string.phone_tile_off

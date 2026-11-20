@@ -130,6 +130,47 @@
     <string name="phone_size_density_hint" translatable="false">A higher number draws everything larger, so less fits. 213 is what Google\'s Android Auto used for the Audi. The picture above follows the choice.</string>
     <string name="phone_whats_new_title" translatable="false">What\'s new in %1$s</string>
     <string name="phone_whats_new_close" translatable="false">Got it</string>
+    <string name="phone_tile_buttons" translatable="false">Buttons</string>
+    <string name="phone_tile_buttons_default" translatable="false">Default</string>
+    <string name="phone_tile_buttons_changed" translatable="false">%1$d changed</string>
+    <string name="phone_page_buttons" translatable="false">Car buttons</string>
+    <string name="phone_buttons_hint" translatable="false">Tap a part of the drawing to see what it does and change it. Changes apply in the car at once.</string>
+    <string name="phone_buttons_steering" translatable="false">Steering wheel</string>
+    <string name="phone_buttons_dash" translatable="false">Dash knob</string>
+    <string name="phone_control_knob" translatable="false">Knob push</string>
+    <string name="phone_control_wheel" translatable="false">Wheel click</string>
+    <string name="phone_control_menu" translatable="false">Menu</string>
+    <string name="phone_control_back" translatable="false">Back</string>
+    <string name="phone_control_pad" translatable="false">Pad on the knob</string>
+    <string name="phone_buttons_pad_text" translatable="false">Up, down, left and right move the ring in that direction, like a TV remote; holding one keeps moving. Turning the knob or the wheel moves the ring to the next or previous item. These are not changed here.</string>
+    <string name="phone_gesture_press" translatable="false">Press</string>
+    <string name="phone_gesture_hold" translatable="false">Press and hold</string>
+    <string name="phone_gesture_double" translatable="false">Double press</string>
+    <string name="phone_gesture_hold_turn" translatable="false">Hold and turn</string>
+    <string name="phone_buttons_default" translatable="false">Default</string>
+    <string name="phone_buttons_changed" translatable="false">Changed</string>
+    <string name="phone_buttons_choose" translatable="false">Does</string>
+    <string name="phone_action_select" translatable="false">Press what has the ring</string>
+    <string name="phone_action_back" translatable="false">Back</string>
+    <string name="phone_action_home" translatable="false">Home</string>
+    <string name="phone_action_home_or_apps" translatable="false">Home, then the app grid</string>
+    <string name="phone_action_assistant" translatable="false">Voice assistant</string>
+    <string name="phone_action_play_pause" translatable="false">Play or pause</string>
+    <string name="phone_action_next" translatable="false">Next song</string>
+    <string name="phone_action_previous" translatable="false">Previous song</string>
+    <string name="phone_action_skip_songs" translatable="false">Skip songs, one per step</string>
+    <string name="phone_action_open_navigation" translatable="false">Open the maps app</string>
+    <string name="phone_action_open_media" translatable="false">Open the music app</string>
+    <string name="phone_action_open_phone" translatable="false">Open the phone</string>
+    <string name="phone_action_nothing" translatable="false">Nothing</string>
+    <string name="phone_buttons_double_wait" translatable="false">With a double press set to do something, every single press of the knob waits the double-press time to see if a second one follows.</string>
+    <string name="phone_buttons_hold_turn_unknown" translatable="false">Hold and turn works only if the car sends knob turns while the knob is held down. Not known yet for this car.</string>
+    <string name="phone_buttons_back_double" translatable="false">Two quick presses of Back always leave an app that ignores Back, so a double press is not offered here.</string>
+    <string name="phone_buttons_timing" translatable="false">Timing</string>
+    <string name="phone_buttons_hold_time" translatable="false">A hold is a press longer than %1$d ms</string>
+    <string name="phone_buttons_double_time" translatable="false">A double press is two presses within %1$d ms</string>
+    <string name="phone_buttons_codes_unknown" translatable="false">Which signals the box sends for each button is not known until a connection log from the car. If the wheel and the knob send the same signal, they share one set of gestures.</string>
+    <string name="phone_buttons_reset" translatable="false">Reset to the defaults</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->

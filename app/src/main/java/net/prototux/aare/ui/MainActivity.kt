@@ -166,6 +166,7 @@ import net.prototux.aare.ui.phone.WhatsNewDialog
 import net.prototux.aare.ui.phone.myplayWhatsNewSeen
 import net.prototux.aare.ui.phone.BackupPage
 import net.prototux.aare.ui.phone.BarPage
+import net.prototux.aare.ui.phone.ButtonsScreen
 import net.prototux.aare.ui.phone.CardsPage
 import net.prototux.aare.ui.phone.ClockPage
 import net.prototux.aare.ui.phone.SizePage
@@ -245,6 +246,7 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     SIZE(R.string.phone_part_size, R.string.phone_part_size, Icons.Rounded.Dashboard),
     CLOCK(R.string.phone_part_clock, R.string.phone_part_clock, Icons.Rounded.Dashboard),
     STATUS(R.string.phone_part_status, R.string.phone_part_status, Icons.Rounded.Dashboard),
+    BUTTONS(R.string.phone_page_buttons, R.string.phone_page_buttons, Icons.Rounded.Tune),
     BACKUP(R.string.setup_section_backup, R.string.setup_section_backup, Icons.Rounded.Tune),
     CERTIFICATES(R.string.cert_section_title, R.string.phone_certificates_subtitle, Icons.Rounded.VerifiedUser),
     ABOUT(R.string.setup_page_about_title, R.string.setup_page_about_subtitle, Icons.Rounded.Info),
@@ -331,6 +333,7 @@ private fun Home() {
                         Page.SIZE -> item { SizePage() }
                         Page.STATUS -> item { StatusIconsPage() }
                         Page.WALLPAPER -> item { WallpaperPage { uri -> saveWallpaper(ctx, uri) } }
+                        Page.BUTTONS -> item { ButtonsScreen() }
                         Page.BACKUP -> item { BackupPage { settingsGeneration++ } }
                         Page.CERTIFICATES -> item { CertificatesCard(certs, state) }
                         Page.ABOUT -> {
@@ -370,6 +373,7 @@ private fun pageOf(tile: BehindTile): Page = when (tile) {
     BehindTile.VOICE -> Page.ASSISTANT
     BehindTile.CERTIFICATES -> Page.CERTIFICATES
     BehindTile.BACKUP -> Page.BACKUP
+    BehindTile.BUTTONS -> Page.BUTTONS
     BehindTile.ADVANCED -> Page.ADVANCED
     BehindTile.CAR_DATA -> Page.CAR_DATA
 }
