@@ -11,7 +11,11 @@ import net.prototux.aare.SettingsBackup.Type
 internal object MyPlayBackupKeys {
     val ALLOWED: Map<String, Type> = mapOf(
         // Car screen (car-side code)
-        "rail_widgets" to Type.STRING, // upstream's rail widgets, not yet in upstream's list
+        // Upstream's, from branches taken into MyPlay but not yet on upstream's own list:
+        "rail_widgets" to Type.STRING,
+        "car_density" to Type.INT,
+        "car_text_size" to Type.STRING,
+        "car_control_size" to Type.STRING,
         "log_car_input" to Type.BOOLEAN,
         "myplay_maps_follow_car_lights" to Type.BOOLEAN,
         "myplay_layout_spec" to Type.STRING,

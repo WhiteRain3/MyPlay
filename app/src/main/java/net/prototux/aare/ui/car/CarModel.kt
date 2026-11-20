@@ -145,6 +145,10 @@ class CarUiState {
     var statusStyle by mutableStateOf(StatusStyle())
     /** MyPlay (M1/M3): the options of the "map behind" layout (a setting). */
     var layoutSpec by mutableStateOf(CarLayoutSpec.DEFAULT)
+    /** Font-scale multiplier for the car screen's text (a setting). Independent of [controlScale]. */
+    var textScale by mutableStateOf(1f)
+    /** Multiplier for [net.prototux.aare.ui.theme.CarDimens] (touch targets, icons…) (a setting). */
+    var controlScale by mutableStateOf(1f)
 
     fun app(id: String?): CarAppEntry? = apps.firstOrNull { it.id == id }
 }

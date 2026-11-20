@@ -25,6 +25,8 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.CoroutineScope
@@ -64,9 +66,11 @@ import net.prototux.aare.ui.car.RailWidget
 import net.prototux.aare.ui.car.CarDataScreen
 import net.prototux.aare.ui.car.PhoneScreen
 import net.prototux.aare.ui.car.StandaloneAppScreen
+import net.prototux.aare.ui.theme.CarControlSize
+import net.prototux.aare.ui.theme.CarTextSize
 import net.prototux.aare.ui.theme.CarTheme
 import net.prototux.aare.ui.theme.CarThemes
-import net.prototux.aare.ui.theme.LocalCarDimens
+import net.prototux.aare.ui.theme.LocalCarControlScale
 import net.prototux.aare.ui.theme.forPhone
 import net.prototux.aare.ui.theme.withAccent
 
@@ -305,6 +309,8 @@ class CarRuntime(
         ui.layout = CarLayout.byId(settings.carLayoutId)
         ui.layoutSpec = settings.myplayLayoutSpec // MyPlay (M3)
         ui.statusStyle = settings.statusStyle // MyPlay (F4)
+        ui.textScale = CarTextSize.byId(settings.carTextSize).fontScale
+        ui.controlScale = CarControlSize.byId(settings.carControlSize).scale
         ui.darkBar = settings.darkBar
         ui.dashboardCards = DashCard.parse(settings.dashboardCards)
         ui.weatherInBar = settings.showWeather
@@ -331,7 +337,8 @@ class CarRuntime(
     private val settingsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
             // MyPlay (K11-1): the map apps' day/night switch too.
-            "car_theme", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets" -> main.post { applyScreenSettings() }
+            "car_theme", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
+            "car_text_size", "car_control_size" -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
             "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }
@@ -744,12 +751,15 @@ class CarRuntime(
     @Composable
     fun Root(modifier: Modifier = Modifier) {
         val mediaApps by media.apps.collectAsState()
-        CarTheme(night = ui.night, theme = ui.theme) {
-            CompositionLocalProvider(
-                LocalCarDimens provides LocalCarDimens.current,
-                // MyPlay (M3): the "map behind" layout's next-turn card loads maneuver icons here.
-                LocalTurnIcon provides { icon, px, owner -> icons.load(icon, px, owner) },
-            ) {
+        // Ambient, not reset by a nested CarTheme (the dark-bar rail calls it again): see LocalCarControlScale.
+        val baseDensity = LocalDensity.current
+        CompositionLocalProvider(
+            LocalDensity provides Density(baseDensity.density, baseDensity.fontScale * ui.textScale),
+            LocalCarControlScale provides ui.controlScale,
+            // MyPlay (M3): the "map behind" layout's next-turn card loads maneuver icons here.
+            LocalTurnIcon provides { icon, px, owner -> icons.load(icon, px, owner) },
+        ) {
+            CarTheme(night = ui.night, theme = ui.theme) {
                 CarShell(
                     state = ui,
                     actions = actions,

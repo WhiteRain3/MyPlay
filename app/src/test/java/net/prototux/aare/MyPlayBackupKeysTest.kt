@@ -32,9 +32,12 @@ class MyPlayBackupKeysTest {
     @Test fun everyMyPlaySettingInTheSourceIsListed() {
         val root = listOf("src/main/java", "app/src/main/java").map(::File).first { it.isDirectory }
         val read = Regex(""""(myplay_[a-z0-9_]+)"""")
+        // Every "myplay_" literal, not only those on a prefs line (F6-2): a key kept in a constant
+        // is found too. Prefixes (ending in "_") and values that are not keys are left aside.
         val keys = root.walkTopDown().filter { it.isFile && it.extension == "kt" }
-            .flatMap { f -> f.readLines().filter { "prefs." in it }.flatMap { line -> read.findAll(line).map { it.groupValues[1] } } }
-            .toSet()
+            .flatMap { f -> read.findAll(f.readText()).map { it.groupValues[1] } }
+            .filterNot { it.endsWith("_") }
+            .toSet() - NOT_KEYS
         assertTrue("found no keys under $root", keys.isNotEmpty())
         val missing = keys - MyPlayBackupKeys.ALLOWED.keys - NOT_BACKED_UP
         assertTrue("MyPlay settings missing from MyPlayBackupKeys: $missing", missing.isEmpty())
@@ -43,5 +46,10 @@ class MyPlayBackupKeysTest {
     private companion object {
         /** MyPlay settings left out of backups on purpose, each with its reason. None yet. */
         val NOT_BACKED_UP: Set<String> = emptySet()
+
+        /** "myplay_" strings that are not settings keys. */
+        val NOT_KEYS: Set<String> = setOf(
+            "myplay_map_behind", // a value of car_layout (CarLayout.MAP_BEHIND), not a key
+        )
     }
 }
