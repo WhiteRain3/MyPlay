@@ -84,6 +84,46 @@ class MapAreasTest {
         }
     }
 
+    /** M2-2: the stable area never touches a reserved place, and always nests in the visible one. */
+    @Test fun stableIsClearOfEveryReservedPlace() {
+        val shownSets = listOf(emptyList(), listOf(Box(0f, 0f, 96f, 720f)), listOf(Box(900f, 0f, 1280f, 720f), Box(0f, 600f, 600f, 720f)))
+        val reservedSets = listOf(listOf(Box(500f, 200f, 800f, 720f)), listOf(Box(0f, 0f, 1280f, 100f), Box(300f, 300f, 700f, 500f)), listOf(Box(96f, 400f, 456f, 720f)))
+        for (shown in shownSets) for (reserved in reservedSets) {
+            val a = MapAreas.compute(map, shown, reserved)
+            assertTrue("$a", inside(a.stable, a.visible))
+            for (r in reserved) assertTrue("$a touches $r", a.stable.intersect(r) == null)
+        }
+    }
+
+    // ---- M2-1: the registry moves a place between "covers now" and "may cover" ----
+
+    @Test fun aCardAppearingInItsReservedSlotIsReported() {
+        val reg = MapCoverRegistry()
+        val slot = androidx.compose.ui.geometry.Rect(96f, 400f, 456f, 720f)
+        reg.place("music", slot, now = false)
+        assertTrue(reg.shown.isEmpty())
+        assertEquals(slot, reg.reserved["music"])
+        // The card appears exactly where its slot was: no new position, only "now" changes.
+        reg.setNow("music", true)
+        assertEquals(slot, reg.shown["music"])
+        reg.setNow("music", false)
+        assertTrue(reg.shown.isEmpty())
+        assertEquals(slot, reg.reserved["music"])
+    }
+
+    @Test fun nothingToMoveBeforeAPlaceIsKnown() {
+        val reg = MapCoverRegistry()
+        reg.setNow("bar", true)
+        assertTrue(reg.shown.isEmpty() && reg.reserved.isEmpty())
+    }
+
+    @Test fun removingForgetsBoth() {
+        val reg = MapCoverRegistry()
+        reg.place("bar", androidx.compose.ui.geometry.Rect(0f, 0f, 96f, 720f), now = true)
+        reg.remove("bar")
+        assertTrue(reg.shown.isEmpty() && reg.reserved.isEmpty())
+    }
+
     @Test fun areasAreGivenInTheMapsOwnPixels() =
         assertEquals(listOf(360, 0, 1184, 620), MapAreas.inSurface(Box(96f, 100f, 1280f, 720f), Box(456f, 100f, 1280f, 720f)))
 }

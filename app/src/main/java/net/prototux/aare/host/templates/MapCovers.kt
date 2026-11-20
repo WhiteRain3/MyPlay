@@ -2,8 +2,10 @@ package net.prototux.aare.host.templates
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
@@ -20,9 +22,11 @@ import kotlin.math.roundToInt
  * over it. A screen that draws them provides a [MapCoverRegistry] through [LocalMapCovers] and
  * marks each of them:
  *  - [coversMap] for something drawn over the map now (a card that is showing, the bar);
- *  - [mayCoverMap] for a place where something may appear (the slot of the music card while no
- *    music is playing), so the stable area already leaves it out and the map does not jump when
- *    the card appears.
+ *  - [coversMap] with `now = false` (or [mayCoverMap]) for a place where something may appear (the
+ *    slot of the music card while no music is playing), so the stable area already leaves it out
+ *    and the map does not jump when the card appears. A card that comes and goes in one place
+ *    passes whether it shows as `now`, from the same call, so its rectangle moves between the two
+ *    lists even when the card does not move on screen (M2-1).
  *
  * Nothing here knows any particular layout: it only collects rectangles. Without a registry (all
  * of today's layouts), both modifiers do nothing and the areas are as before.
@@ -32,34 +36,46 @@ internal class MapCoverRegistry {
     val shown = mutableStateMapOf<Any, Rect>()
     /** May be drawn over the map (also everything in [shown]). */
     val reserved = mutableStateMapOf<Any, Rect>()
+
+    /** [key] is at [rect]; it covers the map now when [now]. */
+    fun place(key: Any, rect: Rect, now: Boolean) {
+        reserved[key] = rect
+        if (now) shown[key] = rect else shown.remove(key)
+    }
+
+    /** [key] now covers the map or not, at the place it was last given ([place]); nothing if it has none yet. */
+    fun setNow(key: Any, now: Boolean) {
+        val rect = reserved[key] ?: return
+        if (now) shown[key] = rect else shown.remove(key)
+    }
+
+    fun remove(key: Any) {
+        shown.remove(key)
+        reserved.remove(key)
+    }
 }
 
 internal val LocalMapCovers = staticCompositionLocalOf<MapCoverRegistry?> { null }
 
-/** Marks this as drawn over the map now; see [MapCoverRegistry]. Bounds in root coordinates, as the map's. */
+/**
+ * Marks this as a place over the map: drawn over it now when [now], else only a place where
+ * something may appear. See [MapCoverRegistry]. Bounds in root coordinates, as the map's.
+ */
 @Composable
-internal fun Modifier.coversMap(): Modifier = markCover(shownNow = true)
-
-/** Marks this place as one where something may be drawn over the map; see [MapCoverRegistry]. */
-@Composable
-internal fun Modifier.mayCoverMap(): Modifier = markCover(shownNow = false)
-
-@Composable
-private fun Modifier.markCover(shownNow: Boolean): Modifier {
+internal fun Modifier.coversMap(now: Boolean = true): Modifier {
     val registry = LocalMapCovers.current ?: return this
     val key = remember { Any() }
-    DisposableEffect(registry, shownNow) {
-        onDispose {
-            registry.shown.remove(key)
-            registry.reserved.remove(key)
-        }
-    }
-    return onGloballyPositioned {
-        val r = it.boundsInRoot()
-        if (shownNow) registry.shown[key] = r else registry.shown.remove(key)
-        registry.reserved[key] = r
-    }
+    val nowState = rememberUpdatedState(now)
+    DisposableEffect(registry) { onDispose { registry.remove(key) } }
+    // M2-1: when only [now] changes, the place does not move and is not positioned again, so the
+    // last known rectangle is moved between the two lists here.
+    LaunchedEffect(registry, now) { registry.setNow(key, now) }
+    return onGloballyPositioned { registry.place(key, it.boundsInRoot(), nowState.value) }
 }
+
+/** Marks this place as one where something may be drawn over the map: `coversMap(now = false)`. */
+@Composable
+internal fun Modifier.mayCoverMap(): Modifier = coversMap(now = false)
 
 /** MyPlay (M2): the two areas a maps app is told, worked out from what covers its map. Pure. */
 internal object MapAreas {
@@ -68,12 +84,12 @@ internal object MapAreas {
     /**
      * [map] is the map's own rectangle; [shown] covers it now; [reserved] may cover it (whatever
      * is in [shown] counts as reserved too). The visible area is the largest free rectangle
-     * around [shown]; the stable area the largest free one around both. The stable area is never
-     * larger than the visible one: where the two would not nest, it is cut to fit inside it.
+     * around [shown]; the stable area is the largest free rectangle inside the visible area that
+     * is clear of every reserved place (M2-2), so it always nests in the visible area.
      */
     fun compute(map: MapGeometry.Box, shown: List<MapGeometry.Box>, reserved: List<MapGeometry.Box>): Areas {
         val visible = MapGeometry.unobstructed(map, shown)
-        val stable = MapGeometry.unobstructed(map, shown + reserved).intersect(visible) ?: visible
+        val stable = MapGeometry.unobstructed(visible, reserved)
         return Areas(visible, stable)
     }
 
