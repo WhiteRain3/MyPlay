@@ -76,8 +76,9 @@ fun rememberSettingsChanges(): Int {
 /** The "hide after" choices: never (null) or a number of seconds. */
 val HIDE_CHOICES: List<Int?> = listOf(null, 5, 15, 30, 60)
 
-/** A stored "hide after" value as one of [HIDE_CHOICES] (the nearest one; null stays never). */
-fun hideChoiceOf(seconds: Int?): Int? = seconds?.let { s -> HIDE_CHOICES.filterNotNull().minBy { kotlin.math.abs(it - s) } }
+/** The "hide after" pills: [HIDE_CHOICES], plus the stored value in its place when it is not one of them, so it shows as it is. */
+fun hideOptions(stored: Int?): List<Int?> =
+    if (stored in HIDE_CHOICES) HIDE_CHOICES else listOf(null) + (HIDE_CHOICES.filterNotNull() + stored!!).sorted()
 
 /** The rows of the layout's card list: the shown ones in their order, then the others. */
 fun specCardRows(cards: List<SpecCard>): List<SpecCard> = cards + SpecCard.entries.filter { it !in cards }
@@ -119,6 +120,7 @@ fun LayoutScreen() {
             ),
             layoutId,
         ) { layoutId = it; settings.carLayoutId = it }
+        HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_layout_at_once))
         if (layoutId == CarLayout.MAP_BEHIND.id) MapBehindOptions(spec, preset, { settings.chooseLayoutPreset(it) }, ::change)
     }
 }
@@ -147,9 +149,13 @@ fun MapBehindOptions(spec: CarLayoutSpec, preset: String, onPreset: (String) -> 
         RowGroup(rows = listOf(
             { SwitchRow(Icons.Rounded.Map, stringResource(R.string.phone_layout_map_background), spec.mapBackground, TileTone.GREEN,
                 stringResource(R.string.phone_layout_map_background_sub)) { on -> change { it.copy(mapBackground = on) } } },
-            { SwitchRow(Icons.Rounded.Splitscreen, stringResource(R.string.phone_layout_map_under), spec.mapUnderBar, TileTone.GREEN,
-                stringResource(if (spec.mapBackground) R.string.phone_layout_map_under_sub else R.string.phone_layout_map_under_needs)) { on ->
-                change { it.copy(mapUnderBar = on) } } },
+            {
+                // Only with the map behind everything (the layout's rule): otherwise shown off and not switchable.
+                if (spec.mapBackground) SwitchRow(Icons.Rounded.Splitscreen, stringResource(R.string.phone_layout_map_under), spec.mapUnderBar, TileTone.GREEN,
+                    stringResource(R.string.phone_layout_map_under_sub)) { on -> change { it.copy(mapUnderBar = on) } }
+                else SimpleRow(Icons.Rounded.Splitscreen, stringResource(R.string.phone_layout_map_under), TileTone.GREEN,
+                    stringResource(R.string.phone_layout_map_under_needs)) { PhoneSwitch(false, null) }
+            },
         ))
 
         SectionHeading(stringResource(R.string.phone_layout_bar))
@@ -174,10 +180,11 @@ fun MapBehindOptions(spec: CarLayoutSpec, preset: String, onPreset: (String) -> 
         PartCard(padding = 16.dp) {
             Column {
                 val never = stringResource(R.string.phone_layout_hide_never)
-                val options = HIDE_CHOICES.map { (it?.toString() ?: "") to (it?.let { s -> stringResource(R.string.phone_layout_hide_seconds, s) } ?: never) }
-                PhoneChoices(stringResource(R.string.phone_layout_hide_music), options, hideChoiceOf(spec.hideMusicAfterS)?.toString() ?: "") { v ->
+                val seconds = stringResource(R.string.phone_layout_hide_seconds)
+                fun options(stored: Int?) = hideOptions(stored).map { (it?.toString() ?: "") to (it?.let { s -> seconds.format(s) } ?: never) }
+                PhoneChoices(stringResource(R.string.phone_layout_hide_music), options(spec.hideMusicAfterS), spec.hideMusicAfterS?.toString() ?: "") { v ->
                     change { it.copy(hideMusicAfterS = v.toIntOrNull()) } }
-                PhoneChoices(stringResource(R.string.phone_layout_hide_arrival), options, hideChoiceOf(spec.hideArrivalAfterS)?.toString() ?: "") { v ->
+                PhoneChoices(stringResource(R.string.phone_layout_hide_arrival), options(spec.hideArrivalAfterS), spec.hideArrivalAfterS?.toString() ?: "") { v ->
                     change { it.copy(hideArrivalAfterS = v.toIntOrNull()) } }
             }
         }
@@ -234,14 +241,15 @@ fun MapBehindCardRows(spec: CarLayoutSpec, change: ((CarLayoutSpec) -> CarLayout
     RowGroup(rows = cardRows + oneExtra)
 }
 
-/** How see-through the cards are, in steps of 10 %; written when the finger lets go. */
+/** How see-through the cards are, in whole percents; written when the finger lets go. */
 @Composable
 private fun SeeThrough(value: Int, onChange: (Int) -> Unit) {
     var dragging by remember(value) { mutableFloatStateOf(value.toFloat()) }
     Text(stringResource(R.string.phone_layout_see_through, dragging.toInt()), color = PhoneColors.Text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     Slider(
-        dragging, { dragging = (it / 10f).toInt() * 10f },
-        valueRange = 0f..100f, steps = 9,
+        // Whole percents, no fixed steps, so a stored value such as 14 % stays what it is.
+        dragging, { dragging = kotlin.math.round(it) },
+        valueRange = 0f..100f,
         onValueChangeFinished = { onChange(dragging.toInt()) },
         colors = SliderDefaults.colors(thumbColor = PhoneColors.Accent, activeTrackColor = PhoneColors.Accent, inactiveTrackColor = PhoneColors.SwitchOff),
     )
@@ -251,7 +259,9 @@ private fun SeeThrough(value: Int, onChange: (Int) -> Unit) {
 @Composable
 private fun PresetPicture(name: String, spec: CarLayoutSpec, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val ctx = LocalContext.current
-    val ui = remember(name) {
+    // Drawn again when any setting changes (look, wallpaper, bar), like the big picture.
+    val version = rememberSettingsChanges()
+    val ui = remember(name, spec, version) {
         sampleCarState().apply {
             applyPictureSettings(this, Settings(ctx), ctx)
             layout = CarLayout.MAP_BEHIND

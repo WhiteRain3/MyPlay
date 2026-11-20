@@ -2,21 +2,19 @@ package net.prototux.aare.ui.phone
 
 import net.prototux.aare.ui.car.CarLayoutSpec.SpecCard
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
 class LayoutScreenTest {
     @Test
-    fun neverStaysNever() {
-        assertNull(hideChoiceOf(null))
+    fun aStoredChoiceShowsTheUsualPills() {
+        assertEquals(HIDE_CHOICES, hideOptions(null))
+        assertEquals(HIDE_CHOICES, hideOptions(15))
     }
 
     @Test
-    fun aStoredTimeShowsAsTheNearestChoice() {
-        assertEquals(15, hideChoiceOf(15))
-        assertEquals(5, hideChoiceOf(7))
-        assertEquals(30, hideChoiceOf(25))
-        assertEquals(60, hideChoiceOf(60))
+    fun aStoredTimeThatIsNotAChoiceGetsItsOwnPillInOrder() {
+        assertEquals(listOf(null, 5, 15, 20, 30, 60), hideOptions(20))
+        assertEquals(listOf(null, 5, 7, 15, 30, 60), hideOptions(7))
     }
 
     @Test

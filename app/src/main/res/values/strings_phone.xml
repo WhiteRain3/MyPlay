@@ -24,6 +24,7 @@
     <string name="phone_part_layout" translatable="false">Layout</string>
     <string name="phone_layout_kind" translatable="false">Kind of layout</string>
     <string name="phone_layout_kind_hint" translatable="false">How the home screen is laid out</string>
+    <string name="phone_layout_at_once" translatable="false">Changes here show on a connected car at once.</string>
     <string name="phone_layout_presets" translatable="false">Ready-made layouts</string>
     <string name="phone_layout_preset_name" translatable="false">Layout %1$s</string>
     <string name="phone_layout_preset_hint" translatable="false">Tap one to use it. Each option below can then be changed on its own.</string>
