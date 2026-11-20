@@ -668,6 +668,14 @@ class CarRuntime(
     /** Set by a screen with its own back stack (a conversation in a messaging app): true if it handled back. */
     var screenBack: (() -> Boolean)? = null
 
+    private val backEscape = BackEscape()
+
+    /** MyPlay: Back held on the car: close the assistant's bar if it is open, and show the home screen. */
+    fun assistantClosedThenHome() {
+        ui.assistantAppId = null
+        ui.screen = CarScreen.Dashboard
+    }
+
     /** Back key from the car. */
     fun back() {
         if (ui.assistantAppId != null) { ui.assistantAppId = null; return }
@@ -676,7 +684,11 @@ class CarRuntime(
             is CarScreen.App -> {
                 val conn = connections[s.appId]
                 // An app still connecting or that failed has no screen to go back in: leave it.
-                if (conn != null && conn.status == CarAppConnection.Status.READY) conn.back() else ui.screen = CarScreen.Dashboard
+                if (conn != null && conn.status == CarAppConnection.Status.READY) {
+                    // MyPlay: a second Back on the same page within two seconds leaves an app that ignores Back.
+                    if (backEscape.leaves(android.os.SystemClock.uptimeMillis(), s.appId, conn.templateId)) ui.screen = CarScreen.Dashboard
+                    else conn.back()
+                } else ui.screen = CarScreen.Dashboard
             }
             CarScreen.Launcher -> ui.screen = CarScreen.Dashboard
             CarScreen.Dashboard -> Unit

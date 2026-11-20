@@ -629,6 +629,9 @@ class CarSession(
     /** HOME goes to the dashboard; held, it hands the screen back to the car. */
     private val homeKey = LongPressKey(onPress = { runtime.actions.goHome() }, onLongPress = ::exitToCar)
 
+    /** MyPlay: Back goes back; held, it goes home from anywhere (a way out of an app that ignores Back). */
+    private val backKey = HeldKey(SystemClock::uptimeMillis, onPress = ::back, onHold = { runtime.assistantClosedThenHome() })
+
     private fun onKey(code: Int, down: Boolean, longPress: Boolean) {
         // Some head units send a media key while they set up, before AARE has a car screen (a
         // play as the session starts): acting on it would start the music the driver didn't ask
@@ -640,7 +643,7 @@ class CarSession(
         }
         when (code) {
             KeyEvent.KEYCODE_HOME -> homeKey.onKey(down, longPress)
-            KeyEvent.KEYCODE_BACK -> if (!down) back()
+            KeyEvent.KEYCODE_BACK -> backKey.onKey(down, longPress)
             KeyEvent.KEYCODE_SEARCH, KeyEvent.KEYCODE_VOICE_ASSIST, KeyEvent.KEYCODE_ASSIST -> if (!down) runtime.assistant()
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_HEADSETHOOK -> if (!down) media.playPause()
             KeyEvent.KEYCODE_MEDIA_PLAY -> if (!down && runtime.ui.nowPlaying?.playing != true) media.playPause()
