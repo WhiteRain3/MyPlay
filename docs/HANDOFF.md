@@ -241,7 +241,9 @@ Planner did not download the APK.)
   exactly that commit.
 - **After pushing a version change, push nothing else to the branch until the release is
   confirmed** at `https://github.com/WhiteRain3/MyPlay/releases/latest`. This includes documents.
-- So far the owner has been asked before each release (open question 8).
+- **Releases are automatic.** The owner's standing rule (2026-11-20): "Always release, dont ask
+  me." Once the Reviewer has called the exact branch tip CLEAN, the Worker cuts the release
+  without asking and reports it; the owner is then told what is in it and how to test it.
 
 ### Possible later, not decided
 
@@ -348,8 +350,9 @@ One worker can hold two areas while the work is small. `ui/MainActivity.kt` (1,5
   upstream AARE first, then a fork's version, then write our own. Keep the author of any commit
   taken and credit them on the About page. Do not copy what that report's "what not to do" lists.
 - Workers do not change the version.
-- Whether releases go out automatically after a clean review, as in the earlier project, is open
-  question 8. Until answered, the owner is asked before each release.
+- Releases go out automatically after a CLEAN review of the exact tip; nobody asks the owner
+  first (owner's rule, 2026-11-20). The Worker cuts them and reports; the owner is told
+  afterwards what is in the release and how to test it.
 - Documents are pushed like code: fetch first, build on the tip, never while a release is waiting
   to be confirmed, and never touching `myplay-version.txt`.
 - Hand-offs are carried by the session that created them, with the Claude Code Remote
@@ -365,7 +368,7 @@ One worker can hold two areas while the work is small. `ui/MainActivity.kt` (1,5
    stay as it is, be hidden, or be removed from MyPlay?
 7. **Google's Android Auto.** Does it stay installed as the daily driver while MyPlay is built?
    (The plan assumes yes.)
-8. **Releases.** Automatic after a clean review, as in the earlier project, or ask you each time?
+8. *(Answered, see below.)*
 9. **Languages.** AARE is translated into 20 languages. Is English only fine for everything new?
 13. **Private repository and your own update server.** You are considering it; to be looked at
     again after the parked test.
@@ -381,6 +384,7 @@ The numbers are kept from earlier messages so they still match.
 | 4 | Signing key | A new key was made; fingerprint under "Releases" |
 | 5 | Package id | `io.github.whiterain3.myplay`, used in 0.1.0 and now fixed for good |
 | 6 | The Tester's PC | Windows |
+| 8 | Releases | Automatic after a clean review, never ask: "Always release, dont ask me." (2026-11-20) |
 | 10 | Cover art | Stays on (2026-11-19) |
 | 12 | Places that still say AARE | No longer a question; listed under "The owner's rules" |
 | - | Where updates come from | `WhiteRain3/MyPlay` on GitHub (confirmed 2026-11-19) |
