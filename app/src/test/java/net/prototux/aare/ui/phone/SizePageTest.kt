@@ -32,4 +32,13 @@ class SizePageTest {
         assertEquals(CarPictureSize.WIDTH_DP, w, 1f)
         assertEquals(CarPictureSize.HEIGHT_DP, h, 1f)
     }
+
+    @Test
+    fun aDensityTheCarIgnoresCountsAsAuto() {
+        assertEquals(0, effectiveDensity(20000))
+        assertEquals(0, effectiveDensity(40))
+        assertEquals(0, effectiveDensity(0))
+        assertEquals(213, effectiveDensity(213))
+        assertEquals(CarPictureSize.layoutSizeDp(0), CarPictureSize.layoutSizeDp(20000))
+    }
 }

@@ -117,6 +117,7 @@
     <string name="phone_size_text_controls" translatable="false">Text and controls</string>
     <string name="phone_size_text_controls_hint" translatable="false">Text size makes the words larger; control size makes buttons, the bar and icons larger. They change the car screen at once.</string>
     <string name="phone_size_density_title" translatable="false">How much fits on the car screen</string>
+    <string name="phone_size_density_ignored" translatable="false">The stored %1$d dpi is outside 80 to 640, so the car ignores it and uses Auto.</string>
     <string name="phone_size_dpi" translatable="false">%1$d dpi</string>
     <string name="phone_size_density_hint" translatable="false">A higher number draws everything larger, so less fits. 213 is what Google\'s Android Auto used for the Audi. The picture above follows the choice.</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>

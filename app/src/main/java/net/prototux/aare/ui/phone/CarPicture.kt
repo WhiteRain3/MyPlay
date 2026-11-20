@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.prototux.aare.Settings
+import net.prototux.aare.car.CarSession
 import net.prototux.aare.car.NextEvent
 import net.prototux.aare.car.Weather
 import net.prototux.aare.ui.car.CarActions
@@ -94,12 +95,18 @@ object CarPictureSize {
     const val HEIGHT_DP = 543f
     const val ASPECT = WIDTH_DP / HEIGHT_DP
 
-    /** The car screen's size in layout units (dp) at [dpi] (0: Auto), as the car code lays out: pixels × 160 / dpi. */
+    /**
+     * The car screen's size in layout units (dp) at [dpi], as the car code lays out: pixels × 160 / dpi.
+     * 0 or a value the car ignores (outside CarSession.SETTING_DPI_RANGE) is Auto.
+     */
     fun layoutSizeDp(dpi: Int): Pair<Float, Float> {
-        val d = if (dpi > 0) dpi else AUTO_DPI
+        val d = effectiveDensity(dpi).takeIf { it > 0 } ?: AUTO_DPI
         return WIDTH_PX * 160f / d to HEIGHT_PX * 160f / d
     }
 }
+
+/** The density setting as the car uses it: a value outside the range it accepts counts as Auto (0). */
+fun effectiveDensity(stored: Int): Int = if (stored in CarSession.SETTING_DPI_RANGE) stored else 0
 
 /** Whether the picture is drawn at night, from the car-screen colour setting (automatic is drawn dark). */
 fun pictureNight(carTheme: String): Boolean = carTheme != Settings.THEME_LIGHT

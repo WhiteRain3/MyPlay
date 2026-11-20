@@ -35,7 +35,9 @@ fun SizePage() {
     val settings = remember { Settings(ctx) }
     var text by remember { mutableStateOf(CarTextSize.byId(settings.carTextSize).id) }
     var controls by remember { mutableStateOf(CarControlSize.byId(settings.carControlSize).id) }
-    var density by remember { mutableIntStateOf(settings.carDensity) }
+    // A stored value the car ignores (outside 80 to 640 dpi, from an old file) shows as Auto, with a line saying so.
+    val ignoredDensity = remember { settings.carDensity.takeIf { it != 0 && effectiveDensity(it) == 0 } }
+    var density by remember { mutableIntStateOf(effectiveDensity(settings.carDensity)) }
     Column {
         PartPicture()
         SectionHeading(stringResource(R.string.phone_size_text_controls))
@@ -61,6 +63,7 @@ fun SizePage() {
                 ) { v -> v.toIntOrNull()?.let { density = it; settings.carDensity = it } }
             }
         }
+        if (ignoredDensity != null && density == 0) HintLine(Icons.Rounded.Info, stringResource(R.string.phone_size_density_ignored, ignoredDensity))
         HintLine(Icons.Rounded.Info, stringResource(R.string.phone_size_density_hint))
         HintLine(Icons.Rounded.Info, stringResource(R.string.setup_hint_density))
     }
