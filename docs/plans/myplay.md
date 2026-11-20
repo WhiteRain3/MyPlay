@@ -491,6 +491,10 @@ up), and walks `gestures` and `pad`.
 wheel, the knob push, the pad, Menu and Back; if the wheel and knob share codes, say so to the
 owner and give them one set. Kept as a rule for this box (`vehicles.json` style), so another
 car does not inherit it.
+- Back's hold (R2): today the hold fires at 0.6 s while Back is still held, so a lost key-up
+  also goes home (Reviewer R2-2). When the owner's log shows whether the box repeats downs while
+  a key is held: if it does, fire early only after a repeat down (proof it is still held) and
+  otherwise on release; if it does not, keep it as it is. (Dispatcher's decision, 2026-11-20.)
 - Verified by: the owner in the car.
 
 For the Phone app worker (after R3 is in):
