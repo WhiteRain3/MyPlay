@@ -4,7 +4,7 @@ import android.view.KeyEvent
 
 /**
  * MyPlay (IN-1): the keys that take their long press from the car only, never from KeyInjector's
- * synthetic one. HOME, as upstream; and BACK, whose hold MyPlay measures itself (HeldKey, 0.7 s):
+ * synthetic one. HOME, as upstream; and BACK, whose hold MyPlay measures itself (GestureEngine, the hold setting, 0.6 s by default):
  * the system's long-press timeout (0.4 s) would turn a slightly long Back, or a late key-up, into
  * "home".
  */

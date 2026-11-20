@@ -641,7 +641,7 @@ class CarSession(
         override fun postDelayed(task: Runnable, delayMs: Long) { main.postDelayed(task, delayMs) }
         override fun cancel(task: Runnable) = main.removeCallbacks(task)
         override fun uptimeMillis() = SystemClock.uptimeMillis()
-    }, carLongPressOnly = CAR_LONG_PRESS_ONLY, emit = ::onKey) // MyPlay (IN-1): BACK too
+    }, carLongPressOnly = CAR_LONG_PRESS_ONLY, emit = ::onKey) // MyPlay (IN-1, R2): BACK too, timed by the gesture engine
 
     private val inputListener = object : InputChannel.Listener {
         override fun onInput(report: InputReport) {
@@ -679,8 +679,32 @@ class CarSession(
     /** HOME goes to the dashboard; held, it hands the screen back to the car. */
     private val homeKey = LongPressKey(onPress = { runtime.actions.goHome() }, onLongPress = ::exitToCar)
 
-    /** MyPlay: Back goes back; held, it goes home from anywhere (a way out of an app that ignores Back). */
-    private val backKey = HeldKey(SystemClock::uptimeMillis, onPress = ::back, onHold = { runtime.assistantClosedThenHome() })
+    /**
+     * MyPlay (R2): the car's keys as gestures. For now only Back goes through it: a press goes back;
+     * held, it goes home from anywhere (a way out of an app that ignores Back). Main thread.
+     */
+    private val gestures = GestureEngine(
+        timings = { settings.gestureTimings },
+        doubleCapable = { false },
+        clock = object : GestureEngine.Clock {
+            override fun now() = SystemClock.uptimeMillis()
+            override fun after(delayMs: Long, task: () -> Unit): () -> Unit {
+                val r = Runnable { if (!closed) task() }
+                main.postDelayed(r, delayMs)
+                return { main.removeCallbacks(r) }
+            }
+        },
+        emit = ::onGesture,
+    )
+
+    private fun onGesture(g: GestureEngine.Gesture) {
+        if (g.code != KeyEvent.KEYCODE_BACK) return
+        when (g) {
+            is GestureEngine.Gesture.Press -> back()
+            is GestureEngine.Gesture.Hold -> runtime.assistantClosedThenHome()
+            else -> Unit
+        }
+    }
 
     /**
      * `Settings.carKeyMap` and the codes of `Settings.carKeysSeen`, kept here: [onKey] runs on
@@ -720,8 +744,8 @@ class CarSession(
         }
         when (code) {
             KeyEvent.KEYCODE_HOME -> homeKey.onKey(down, key.longPress)
-            // MyPlay: held or twice, Back goes home (K3); the long press flag may now also be upstream's synthesised one.
-            KeyEvent.KEYCODE_BACK -> backKey.onKey(down, key.longPress)
+            // MyPlay: held, Back goes home (K3, R2); twice in a row on a page that does not change, see BackEscape.
+            KeyEvent.KEYCODE_BACK -> gestures.onKey(code, down, key.longPress)
             KeyEvent.KEYCODE_SEARCH, KeyEvent.KEYCODE_VOICE_ASSIST, KeyEvent.KEYCODE_ASSIST -> if (!down) runtime.assistant()
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_HEADSETHOOK -> if (!down) media.playPause()
             KeyEvent.KEYCODE_MEDIA_PLAY -> if (!down && runtime.ui.nowPlaying?.playing != true) media.playPause()
