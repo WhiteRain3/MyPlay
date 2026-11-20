@@ -78,6 +78,7 @@ import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import net.prototux.aare.ui.theme.LocalCarControlScale
 import androidx.compose.ui.text.TextStyle
@@ -684,13 +685,20 @@ private fun MediaCard(state: CarUiState, actions: CarActions, compact: Boolean, 
 }
 
 @Composable
-private fun Art(np: NowPlaying?, sizeDp: Int) {
+private fun Art(np: NowPlaying?, sizeDp: Int) = Art(np, sizeDp.dp)
+
+/** Marks the song's artwork on screen, for tests. */
+internal const val SONG_ART_TAG = "song_art"
+
+/** The song's artwork, or a music note when the app gave none. Also the spec layouts' music card's (MyPlay). */
+@Composable
+internal fun Art(np: NowPlaying?, size: Dp) {
     val shape = MaterialTheme.shapes.small
     if (np?.art != null) {
-        Image(np.art.asImageBitmap(), null, Modifier.size(sizeDp.dp).clip(shape), contentScale = ContentScale.Crop)
+        Image(np.art.asImageBitmap(), null, Modifier.size(size).clip(shape).testTag(SONG_ART_TAG), contentScale = ContentScale.Crop)
     } else {
-        Box(Modifier.size(sizeDp.dp).clip(shape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
-            Icon(Icons.Rounded.MusicNote, null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size((sizeDp / 2).dp))
+        Box(Modifier.size(size).clip(shape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
+            Icon(Icons.Rounded.MusicNote, null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(size / 2))
         }
     }
 }

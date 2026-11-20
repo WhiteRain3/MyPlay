@@ -423,6 +423,9 @@ private fun Arrival(state: CarUiState) {
 private fun Music(state: CarUiState, actions: CarActions, knob: CardKnob?) {
     val np = state.nowPlaying ?: return
     Row(verticalAlignment = Alignment.CenterVertically) {
+        // MyPlay: the song's artwork, as tall as the buttons so the card keeps its height.
+        Art(np, LocalCarDimens.current.touchTarget)
+        Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(np.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(np.subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
