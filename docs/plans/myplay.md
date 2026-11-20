@@ -530,6 +530,20 @@ that do not scroll with the ring).
 **R5. The local meanings.** Map move mode (from JVKeller `570a67de`), seeking on the music
 progress bar, push to answer a call; the pointer for mirrored apps comes with G2.
 - Verified by: bench walks per screen; car for the map.
+- Built (after 0.1.28, with the Reviewer):
+  - Map move mode: in a hosted maps app the map is the knob's last stop. A push enters
+    "moving the map": the pad pans a fifth of the screen, turning zooms ×1.25 or ×0.8, push or
+    Back leaves, and a hint line shows meanwhile.
+  - Seeking: with the ring on the now-playing progress bar, left and right on the pad seek 10 s.
+- R5-5 (note for later layouts, phase N included): on the progress bar, left and right seek
+  instead of moving the ring sideways. Harmless while the bar spans the full width. A layout
+  that puts something beside the bar must reach it another way, or the ring is trapped there
+  sideways; up, down and the knob's turns still leave the bar.
+- Bench checks:
+  - Organic Maps and Waze (once W1 works) really pan and zoom, in the right directions
+    (walk `maps`, with `dpad:` and `rotate:` events after the push).
+  - R5-2: after a call is answered or declined, the ring comes back somewhere sensible, not on
+    nothing, once Answer and Decline leave the screen. Check in Map behind and Taskbar.
 
 **R6. The on-screen line for gestures.**
 - Verified by: bench pictures after a hold and a double push.
