@@ -69,7 +69,16 @@ object WallpaperFiles {
     /** Keeps the photo just set as the wallpaper as the untouched copy to edit from. */
     fun keepSource(context: Context): Boolean = keepSource(shown(context), source(context))
 
-    internal fun keepSource(shown: File, source: File): Boolean = runCatching { shown.copyTo(source, overwrite = true); true }.getOrDefault(false)
+    /** Copies to a temporary file renamed only once complete, so a copy cut short (a full disk) never becomes the source. */
+    internal fun keepSource(shown: File, source: File): Boolean {
+        val tmp = File(source.path + ".tmp")
+        return runCatching {
+            shown.copyTo(tmp, overwrite = true)
+            if (source.exists()) source.delete()
+            check(tmp.renameTo(source))
+            true
+        }.getOrElse { tmp.delete(); false }
+    }
 
     /**
      * The file to edit from: the untouched copy. A photo set before the editor existed has no copy

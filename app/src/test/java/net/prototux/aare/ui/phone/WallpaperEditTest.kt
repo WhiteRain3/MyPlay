@@ -92,4 +92,15 @@ class WallpaperEditTest {
         assertEquals(null, WallpaperFiles.sourceFile(java.io.File(dir, "wallpaper.jpg"), java.io.File(dir, WallpaperFiles.SOURCE)))
         dir.deleteRecursively()
     }
+
+    @Test
+    fun aFailedCopyLeavesNoSourceBehind() {
+        val dir = kotlin.io.path.createTempDirectory("wp").toFile()
+        val source = java.io.File(dir, WallpaperFiles.SOURCE)
+        // Nothing to copy: the copy fails, and neither the source nor its temporary file is left.
+        assertEquals(false, WallpaperFiles.keepSource(java.io.File(dir, "missing.jpg"), source))
+        assertEquals(false, source.exists())
+        assertEquals(false, java.io.File(source.path + ".tmp").exists())
+        dir.deleteRecursively()
+    }
 }
