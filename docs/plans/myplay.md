@@ -522,6 +522,10 @@ the places where the ring cannot get out (rows that trap, the bar not reachable 
 that do not scroll with the ring).
 - Verified by: bench walks with `dpad:` events on home, grid, Settings, a hosted map app, music;
   each screen reachable in all four directions.
+- R4-2 (the dispatcher's decision, 2026-11-20): the music browser is walked on the bench (walk
+  `music`), not in unit tests, because the tests cannot host a media app. The phone and mirror
+  screens are walked in phase N, whose new screens get test seams from the start. The rule of
+  small edits to AARE's files no longer applies to the car UI (owner, 2026-11-20).
 
 **R5. The local meanings.** Map move mode (from JVKeller `570a67de`), seeking on the music
 progress bar, push to answer a call; the pointer for mirrored apps comes with G2.

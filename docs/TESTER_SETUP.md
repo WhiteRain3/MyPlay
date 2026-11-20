@@ -127,7 +127,7 @@ The path of the head unit folder must not contain a space (`C:\myplay\aare-headu
 |---|---|
 | `-HeadUnitDir <folder>` | the unpacked `aare-headunit` folder from the release zip. Needed |
 | `-Walk <name>` | which knob walk to play; see the table below. Default `home` |
-| `-Tile <n>` | for the walks `settings`, `maps` and `back-out`: the app's place in the app grid, counted from 1 in the order the ring visits the tiles. Run `grid-end` first; its pictures give the numbers. Default 1 |
+| `-Tile <n>` | for the walks `settings`, `maps`, `back-out` and `music`: the app's place in the app grid, counted from 1 in the order the ring visits the tiles. Run `grid-end` first; its pictures give the numbers. Default 1 |
 | `-Version <name>` | name of the result folder, normally the MyPlay version |
 | `-Seconds <n>` | how long to let the head unit run. Default: the walk's last event plus 18 seconds |
 | `-OutRoot <folder>` | where results go. Default: a folder `myplay-bench` next to the head unit folder (for `C:\myplay\aare-headunit` that is `C:\myplay\myplay-bench`), so not inside the checkout |
@@ -144,6 +144,7 @@ The path of the head unit folder must not contain a space (`C:\myplay\aare-headu
 | `settings` | opens the grid, goes to tile `-Tile`, presses, then 20 turns inside | K1, K2, K6 (give MyPlay's car Settings tile) |
 | `maps` | the same for a maps app's tile | K1, K2 (give Organic Maps' tile) |
 | `back-out` | opens tile `-Tile`, then Back twice in quick succession | K3 |
+| `music` | opens tile `-Tile` (give a music app with folders), 15 clicks forward through its top level, a press to open what is ringed, 10 clicks through that level, 10 back, then Back. The ring should reach every row and button, stay fully on screen, and Back should go up one level | R4 (the music browser) |
 
 The script cannot hold a key down, so "holding Back goes home" (part of K3) cannot be checked
 with it. All text files it writes are UTF-8.
