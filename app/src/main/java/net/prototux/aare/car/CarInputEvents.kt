@@ -63,9 +63,12 @@ object CarInputEvents {
         _report.value = lines
     }
 
-    /** The picture started with configuration [index]: one "chosen" line, replacing an earlier one. */
-    internal fun chosen(index: Int, c: VideoConfiguration) =
+    /** [session]'s picture started with configuration [index]: one "chosen" line, replacing an earlier one (I4-5: not an older session's). */
+    @Synchronized
+    internal fun chosen(session: Any, index: Int, c: VideoConfiguration) {
+        if (owner !== session) return
         _report.update { lines -> lines.filterNot { it.startsWith(CHOSEN) } + chosenLine(index, c) }
+    }
 
     /** [session] ended: its report goes, unless a newer session has started since. */
     @Synchronized
