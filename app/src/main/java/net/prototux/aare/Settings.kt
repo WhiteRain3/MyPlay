@@ -21,6 +21,14 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("verbose_protocol_log", false)
         set(v) = prefs.edit { putBoolean("verbose_protocol_log", v) }
 
+    /**
+     * MyPlay (K11/F2): map apps follow the car's day/night signal even when the car screen's own
+     * colours do not (always dark or always light), so a map is light by day. On by default.
+     */
+    var mapsFollowCarLights: Boolean
+        get() = prefs.getBoolean("myplay_maps_follow_car_lights", true)
+        set(v) = prefs.edit { putBoolean("myplay_maps_follow_car_lights", v) }
+
     /** MyPlay: write the car's keys and knob turns to the connection log (see car/CarInputLog). On by default. */
     var logCarInput: Boolean
         get() = prefs.getBoolean("log_car_input", true)
@@ -178,9 +186,13 @@ class Settings(context: Context) {
         }
         set(v) = prefs.edit { putString("dashboard_cards", v.joinToString(",")) }
 
-    /** Car screen colors: follow the car's day/night signal ([THEME_AUTO]), or always [THEME_DARK] / [THEME_LIGHT]. */
+    /**
+     * Car screen colors: follow the car's day/night signal ([THEME_AUTO]), or always [THEME_DARK] / [THEME_LIGHT].
+     * MyPlay (K11/F2): always dark unless chosen otherwise. Following the car started every
+     * connection dark and then turned it light when the car reported day.
+     */
     var carTheme: String
-        get() = prefs.getString("car_theme", THEME_AUTO) ?: THEME_AUTO
+        get() = prefs.getString("car_theme", THEME_DARK) ?: THEME_DARK
         set(v) = prefs.edit { putString("car_theme", v) }
 
     /** Stream phone audio to the car (needs the screen-capture consent for audio). */

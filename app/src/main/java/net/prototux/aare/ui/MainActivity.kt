@@ -742,6 +742,11 @@ private fun CarScreenSettings(settings: Settings, refresh: Int) {
             Choices(stringResource(R.string.setup_choice_colors), listOf(Settings.THEME_AUTO to stringResource(R.string.setup_choice_colors_auto), Settings.THEME_DARK to stringResource(R.string.setup_choice_dark), Settings.THEME_LIGHT to stringResource(R.string.setup_choice_light)), theme) {
                 theme = it; settings.carTheme = it
             }
+            // MyPlay (K11/F2)
+            var mapsFollow by remember { mutableStateOf(settings.mapsFollowCarLights) }
+            Toggle(stringResource(R.string.myplay_toggle_maps_follow_car_title), stringResource(R.string.myplay_toggle_maps_follow_car_subtitle), mapsFollow) {
+                mapsFollow = it; settings.mapsFollowCarLights = it
+            }
             Spacer(Modifier.height(12.dp))
             Choices(stringResource(R.string.setup_choice_bar), listOf(Settings.RAIL_AUTO to stringResource(R.string.setup_choice_bar_auto), Settings.RAIL_LEFT to stringResource(R.string.setup_choice_left), Settings.RAIL_RIGHT to stringResource(R.string.setup_choice_right), Settings.RAIL_BOTTOM to stringResource(R.string.setup_choice_bottom)), rail) {
                 rail = it; settings.railPosition = it
@@ -986,6 +991,12 @@ private fun AppsCard(settings: Settings) {
                 l.messaging.forEach { app -> AppRow(app.icon, app.label, messagingKind, app.packageName !in hidden) { toggle(app.packageName, it) } }
             }
             AppGroup(stringResource(R.string.setup_app_group_aare))
+            // Phone and Notifications are built in (CarRuntime.applyApps), so they have no package
+            // to key on; hiddenApps takes their fixed ids instead, like it already does for every
+            // other app here. Settings isn't offered: hiding it would lock the user out of the
+            // car-side settings from the car itself.
+            AppRow(null, stringResource(R.string.setup_app_entry_phone), stringResource(R.string.setup_app_builtin_subtitle), CarRuntime.PHONE_ID !in hidden) { toggle(CarRuntime.PHONE_ID, it) }
+            AppRow(null, stringResource(R.string.setup_app_entry_notifications), stringResource(R.string.setup_app_builtin_subtitle), CarRuntime.NOTIFICATIONS_ID !in hidden) { toggle(CarRuntime.NOTIFICATIONS_ID, it) }
             AppRow(null, stringResource(R.string.phone_section_title), stringResource(R.string.phone_app_row_subtitle), phoneScreen) { phoneScreen = it; settings.phoneScreen = it }
             AppRow(null, stringResource(R.string.browser_app_label), stringResource(R.string.browser_app_row_subtitle), browser) { browser = it; settings.browser = it }
             if (browser) {
@@ -1022,9 +1033,10 @@ private fun AppOrder(settings: Settings, l: LauncherLists, hidden: Set<String>, 
         l.media.forEach { add(Triple(it.packageName, it.label, it.icon)) }
         l.messaging.forEach { add(Triple(it.packageName, it.label, it.icon)) }
     }.filter { it.first !in hidden } + listOfNotNull(
-        Triple(CarRuntime.PHONE_ID, stringResource(R.string.setup_app_entry_phone), null),
+        if (CarRuntime.PHONE_ID !in hidden) Triple(CarRuntime.PHONE_ID, stringResource(R.string.setup_app_entry_phone), null) else null,
+        // Settings is always in the car's list (never hidden): always in this order too.
         Triple(CarRuntime.SETTINGS_ID, stringResource(R.string.setup_app_entry_settings), null),
-        Triple(CarRuntime.NOTIFICATIONS_ID, stringResource(R.string.setup_app_entry_notifications), null),
+        if (CarRuntime.NOTIFICATIONS_ID !in hidden) Triple(CarRuntime.NOTIFICATIONS_ID, stringResource(R.string.setup_app_entry_notifications), null) else null,
         if (phoneScreen) Triple(CarRuntime.PHONE_SCREEN_ID, stringResource(R.string.phone_section_title), null) else null,
         if (browser) Triple(CarRuntime.BROWSER_ID, stringResource(R.string.browser_app_label), null) else null,
     )

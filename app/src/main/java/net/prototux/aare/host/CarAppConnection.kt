@@ -370,7 +370,8 @@ class CarAppConnection(
         densityDpi = env.densityDpi
         orientation = if (env.screenWidthDp >= env.screenHeightDp) Configuration.ORIENTATION_LANDSCAPE else Configuration.ORIENTATION_PORTRAIT
         uiMode = (uiMode and Configuration.UI_MODE_NIGHT_MASK.inv()) or
-            (if (env.night) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO)
+            // MyPlay (K11/F2): a map app may follow the car's lights apart from MyPlay's own colours.
+            (if (if (info.isNavigation) env.mapNight else env.night) Configuration.UI_MODE_NIGHT_YES else Configuration.UI_MODE_NIGHT_NO)
     }
 
     private fun onAppDied() {

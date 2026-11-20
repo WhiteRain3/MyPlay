@@ -192,30 +192,40 @@ private fun CompactMapScaffold(modifier: Modifier, overlay: (@Composable BoxWith
     ReportAreas(registry, remember { mutableStateOf(false) })
 }
 
-/** Sends visible/stable area changes (map-surface px) to the app, deduplicated. */
+/**
+ * Sends visible/stable area changes (map-surface px) to the app, deduplicated.
+ * MyPlay (M2): also counts what MyPlay's own screen draws over the map ([LocalMapCovers]), and
+ * the stable area leaves out every place a card may appear, not only what shows now (MapAreas).
+ */
 @Composable
 private fun ReportAreas(registry: ObstructionRegistry, panState: androidx.compose.runtime.State<Boolean>) {
     val host = LocalTemplateHost.current
-    LaunchedEffect(registry, host) {
+    val covers = LocalMapCovers.current
+    LaunchedEffect(registry, host, covers) {
         var lastVisible: List<Int>? = null
         var lastStable: List<Int>? = null
-        snapshotFlow { Triple(registry.map, registry.rects.values.toList(), panState.value) }
+        snapshotFlow {
+            listOf(registry.map, registry.rects.values.toList(), panState.value,
+                covers?.shown?.values?.toList().orEmpty(), covers?.reserved?.values?.toList().orEmpty())
+        }
             .distinctUntilChanged()
-            .collect { (map, rects, pan) ->
+            .collect { _ ->
+                val map = registry.map
+                val pan = panState.value
                 if (map.width <= 0f || map.height <= 0f) return@collect
-                val free = MapGeometry.unobstructed(map.toBox(), rects.map { it.toBox() })
-                val area = listOf(
-                    (free.left - map.left).roundToInt(), (free.top - map.top).roundToInt(),
-                    (free.right - map.left).roundToInt(), (free.bottom - map.top).roundToInt(),
-                )
+                val shown = registry.rects.values.map { it.toBox() } + covers?.shown?.values?.map { it.toBox() }.orEmpty()
+                val reserved = covers?.reserved?.values?.map { it.toBox() }.orEmpty()
+                val areas = MapAreas.compute(map.toBox(), shown, reserved)
+                val area = MapAreas.inSurface(map.toBox(), areas.visible)
                 if (area != lastVisible) {
                     lastVisible = area
                     safeCall("setVisibleArea") { host.setVisibleArea(area[0], area[1], area[2], area[3]) }
                 }
                 // stable area: the layout with all chrome shown, i.e. outside pan mode
-                if (!pan && area != lastStable) {
-                    lastStable = area
-                    safeCall("setStableArea") { host.setStableArea(area[0], area[1], area[2], area[3]) }
+                val stable = MapAreas.inSurface(map.toBox(), areas.stable)
+                if (!pan && stable != lastStable) {
+                    lastStable = stable
+                    safeCall("setStableArea") { host.setStableArea(stable[0], stable[1], stable[2], stable[3]) }
                 }
             }
     }

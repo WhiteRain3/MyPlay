@@ -111,6 +111,9 @@ class CarRuntime(
 
     override val driving: Boolean get() = ui.drivingRestricted
     override val night: Boolean get() = ui.night
+    override val mapNight: Boolean get() = MyPlayNight.forMaps(ui.night, carNight, settings.mapsFollowCarLights)
+    /** The last [mapNight] the apps were told, to tell them again when only it changes. */
+    private var toldMapNight: Boolean? = null
     override var screenWidthDp by mutableIntStateOf(1280)
     override var screenHeightDp by mutableIntStateOf(720)
     override var densityDpi by mutableIntStateOf(160)
@@ -284,8 +287,10 @@ class CarRuntime(
             Settings.THEME_LIGHT -> false
             else -> carNight ?: true
         }
-        if (ui.night != night) {
+        val mapNightNow = MyPlayNight.forMaps(night, carNight, settings.mapsFollowCarLights)
+        if (ui.night != night || toldMapNight != mapNightNow) {
             ui.night = night
+            toldMapNight = mapNightNow
             configurationChanged()
         }
         val position = settings.railPosition
@@ -385,6 +390,12 @@ class CarRuntime(
         }
     }
 
+    /** MyPlay (K8): the name of the app [packageName] belongs to, or "" when it cannot be read. */
+    private fun appLabel(packageName: String): String = runCatching {
+        val pm = context.packageManager
+        pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
+    }.getOrDefault("")
+
     private fun applyApps(found: List<CarAppInfo>, messaging: List<PhoneApp>) {
         val hidden = settings.hiddenApps
         val assistantPkg = assistantPackage()
@@ -394,6 +405,8 @@ class CarRuntime(
             val id = carId(app)
             carApps[id] = app
             if (app.packageName in hidden) continue
+            // MyPlay (K8): Google's Android Auto app's own car screens cannot be shown here.
+            if (!MyPlayAppList.canShow(app.packageName)) continue
             val kind = when {
                 app.isNavigation -> CarAppKind.NAVIGATION
                 app.packageName == assistantPkg -> CarAppKind.ASSISTANT
@@ -405,9 +418,14 @@ class CarRuntime(
         for (m in media.apps.value) {
             // An app that has a car UI of its own is shown once, as that; a messaging app, as messaging.
             if (m.packageName in hidden || m.packageName in messagingOnly || entries.any { it.packageName == m.packageName }) continue
+            if (!MyPlayAppList.canShow(m.packageName)) continue // MyPlay (K8)
             entries += CarAppEntry(mediaId(m.packageName), m.packageName, m.label, m.icon, CarAppKind.MEDIA)
         }
-        // Built in, like Android Auto's: calls and the car-side settings.
+        // Built in, like Android Auto's: calls, the car-side settings and notifications. Always in
+        // the list, even when the user hid Phone or Notifications: the bell, the notification card,
+        // the call card, the rail's phone button and the steering-wheel call key all open them from
+        // here. Hiding them (keyed by their fixed id, see launcherHidden below) only takes them off
+        // the app grid.
         entries += CarAppEntry(PHONE_ID, context.packageName, context.getString(R.string.setup_app_entry_phone), builtinIcon(R.drawable.ic_car_phone), CarAppKind.PHONE)
         entries += CarAppEntry(SETTINGS_ID, context.packageName, context.getString(R.string.setup_app_entry_settings), builtinIcon(R.drawable.ic_car_settings), CarAppKind.SETTINGS)
         entries += CarAppEntry(NOTIFICATIONS_ID, context.packageName, context.getString(R.string.setup_app_entry_notifications), builtinIcon(R.drawable.ic_car_notifications), CarAppKind.NOTIFICATIONS)
@@ -432,6 +450,7 @@ class CarRuntime(
         }
         for (m in messaging) {
             if (m.packageName in hidden || entries.any { it.packageName == m.packageName }) continue
+            if (!MyPlayAppList.canShow(m.packageName)) continue // MyPlay (K8)
             entries += CarAppEntry(messagingId(m.packageName), m.packageName, m.label, m.icon, CarAppKind.MESSAGING)
         }
         // The order chosen on the phone first, then alphabetical.
@@ -442,8 +461,12 @@ class CarRuntime(
             entries += CarAppEntry(EXIT_ID, context.packageName, context.getString(R.string.dash_menu_exit_to_car),
                 builtinIcon(R.drawable.ic_car_exit), CarAppKind.EXIT)
         }
+        // MyPlay (K8): entries that would show the same name get their app's name in front.
+        val names = MyPlayAppList.names(entries.map { MyPlayAppList.Named(it.packageName, it.label, appLabel(it.packageName)) }, context.packageName)
+        val shown = entries.mapIndexed { i, e -> if (names[i] == e.label) e else CarAppEntry(e.id, e.packageName, names[i], e.icon, e.kind) }
         ui.apps.clear()
-        ui.apps.addAll(entries)
+        ui.apps.addAll(shown)
+        ui.launcherHidden = launcherHiddenIds(hidden)
         // Restore the last navigation and media apps, so the dashboard isn't empty. Not a navigation app that
         // finished itself: its map card would stay blank instead of offering the picker.
         if (ui.activeNavAppId == null) {
@@ -620,7 +643,8 @@ class CarRuntime(
         }
 
         override fun goHome() { ui.screen = CarScreen.Dashboard }
-        override fun openLauncher() { ui.screen = CarScreen.Launcher }
+        override fun openLauncher() { ui.launcherKinds = null; ui.screen = CarScreen.Launcher }
+        override fun openMusicApps() { ui.launcherKinds = setOf(CarAppKind.MEDIA); ui.screen = CarScreen.Launcher }
         override fun assistant() { this@CarRuntime.assistant() }
         override fun mediaPlayPause() = media.playPause()
         override fun mediaNext() = media.next()
@@ -758,6 +782,18 @@ class CarRuntime(
         const val SETTINGS_ID = "car-settings"
         const val NOTIFICATIONS_ID = "notifications"
         const val EXIT_ID = "exit-to-car"
+
+        /**
+         * Built-in apps the user may hide from the car's app grid, the same way as any third-party
+         * app (`Settings.hiddenApps`, keyed by these fixed ids instead of a package). Only the grid:
+         * they stay in [CarUiState.apps] for the bell, the call card and the call keys.
+         * [SETTINGS_ID] is deliberately not here: hiding it would lock the user out of the car-side
+         * settings from the car itself, with no way back in short of reconnecting and using the phone.
+         */
+        val HIDEABLE_BUILTIN_IDS = setOf(PHONE_ID, NOTIFICATIONS_ID)
+
+        /** The built-ins of [hidden] (Settings.hiddenApps) the app grid leaves out; never Settings. */
+        fun launcherHiddenIds(hidden: Set<String>): Set<String> = HIDEABLE_BUILTIN_IDS intersect hidden
 
         /** Started runtimes, oldest first. Main thread. */
         private val running = ArrayList<CarRuntime>()
