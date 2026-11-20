@@ -196,6 +196,10 @@
     <string name="phone_update_fail_version" translatable="false">The download is not the expected version, so it was deleted and not installed.</string>
     <string name="phone_update_fail_signer" translatable="false">The download is not signed by MyPlay\'s key, so it was deleted and not installed.</string>
     <string name="phone_update_fail_install" translatable="false">Android didn\'t install it (cancelled or refused). Nothing was changed.</string>
+    <string name="phone_colour_before" translatable="false">Before</string>
+    <string name="phone_colour_now" translatable="false">Now</string>
+    <string name="phone_colour_hex" translatable="false">Hex (RRGGBB)</string>
+    <string name="phone_colour_use" translatable="false">Use colour</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->
