@@ -159,4 +159,11 @@ class GestureEngineTest {
         advance(GestureEngine.HOLD_MS)
         assertEquals(listOf(Gesture.Press(ENTER), Gesture.Hold(BACK)), got)
     }
+
+    @Test fun aTurnWhileAKeyThatTakesNoTurnIsDownMovesTheRing() {
+        engine.onKey(BACK, true)
+        assertFalse(engine.onTurn(1) { it == ENTER })
+        engine.onKey(BACK, false)
+        assertEquals(listOf(Gesture.Press(BACK)), got)
+    }
 }

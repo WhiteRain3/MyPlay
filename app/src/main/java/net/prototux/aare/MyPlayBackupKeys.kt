@@ -33,5 +33,7 @@ internal object MyPlayBackupKeys {
         "myplay_home_maps" to Type.STRING,
         "myplay_gesture_hold_ms" to Type.LONG,
         "myplay_gesture_double_ms" to Type.LONG,
+        "myplay_buttons" to Type.STRING,
+        "myplay_button_codes" to Type.STRING,
     )
 }

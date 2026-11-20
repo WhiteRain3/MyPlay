@@ -22,3 +22,18 @@ var Settings.myplayGestureDoubleMs: Long
 
 internal val Settings.gestureTimings: GestureEngine.Timings
     get() = GestureEngine.Timings(holdMs = myplayGestureHoldMs, doubleMs = myplayGestureDoubleMs)
+
+/** MyPlay (R3): the owner's changes to the button table, "control.gesture=action;..." (see [ButtonTable]). */
+var Settings.myplayButtons: String
+    get() = prefs.getString("myplay_buttons", "") ?: ""
+    set(v) = prefs.edit { putString("myplay_buttons", v) }
+
+/** MyPlay (R3, R8): which key codes each control sends, "control=code,code;..."; empty for the standard ones. */
+var Settings.myplayButtonCodes: String
+    get() = prefs.getString("myplay_button_codes", "") ?: ""
+    set(v) = prefs.edit { putString("myplay_button_codes", v) }
+
+internal val Settings.buttonTable: ButtonTable
+    get() = ButtonTable(ButtonTable.decodeOverrides(myplayButtons), ButtonTable.decodeCodes(myplayButtonCodes))
+
+internal fun isButtonTableKey(key: String?) = key == "myplay_buttons" || key == "myplay_button_codes" || key?.startsWith("myplay_gesture_") == true

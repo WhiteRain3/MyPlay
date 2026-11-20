@@ -190,6 +190,7 @@ class CarSession(
         }
         runtime.start()
         settings.registerListener(carKeyPrefsListener)
+        settings.registerListener(buttonPrefsListener) // MyPlay (R3)
         listener.onStatus(this, context.getString(R.string.notif_status_connecting_to, transport.name))
     }
 
@@ -641,7 +642,9 @@ class CarSession(
         override fun postDelayed(task: Runnable, delayMs: Long) { main.postDelayed(task, delayMs) }
         override fun cancel(task: Runnable) = main.removeCallbacks(task)
         override fun uptimeMillis() = SystemClock.uptimeMillis()
-    }, carLongPressOnly = CAR_LONG_PRESS_ONLY, emit = ::onKey) // MyPlay (IN-1, R2): BACK too, timed by the gesture engine
+        // MyPlay (IN-1, R2, R3): HOME, BACK and the button table's keys take their long press only
+        // from the car; the gesture engine measures their holds, with the owner's timing.
+    }, carLongPressOnly = LiveCodes { CAR_LONG_PRESS_ONLY + buttonCodes }, emit = ::onKey)
 
     private val inputListener = object : InputChannel.Listener {
         override fun onInput(report: InputReport) {
@@ -664,6 +667,8 @@ class CarSession(
                 // order, like Android Auto. Compose maps Tab to "focus next" and Shift+Tab to
                 // "focus previous" (not D-pad up/down, which is 2D spatial and wrong for a knob).
                 for (r in report.relativeEvent.dataList) {
+                    // MyPlay (R3): turned while a button whose hold takes the turn is down: the hold's.
+                    if (gestureTurn(r.delta)) continue
                     val meta = if (r.delta < 0) KeyEvent.META_SHIFT_ON else 0
                     repeat(kotlin.math.abs(r.delta)) {
                         val t = SystemClock.uptimeMillis()
@@ -680,12 +685,19 @@ class CarSession(
     private val homeKey = LongPressKey(onPress = { runtime.actions.goHome() }, onLongPress = ::exitToCar)
 
     /**
-     * MyPlay (R2): the car's keys as gestures. For now only Back goes through it: a press goes back;
-     * held, it goes home from anywhere (a way out of an app that ignores Back). Main thread.
+     * MyPlay (R2, R3): the keys of the button table (knob push, wheel click, Menu, Back) as
+     * gestures, each doing what the table says. Main thread.
      */
+    private var buttonTable = settings.buttonTable
+    /** [buttonTable]'s codes, read for every key from the car (the injector's set below). */
+    @Volatile private var buttonCodes: Set<Int> = buttonTable.allCodes
+    private val buttonPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (isButtonTableKey(key)) main.post { buttonTable = settings.buttonTable; buttonCodes = buttonTable.allCodes }
+    }
+
     private val gestures = GestureEngine(
         timings = { settings.gestureTimings },
-        doubleCapable = { false },
+        doubleCapable = { buttonTable.doubleCapable(it) },
         clock = object : GestureEngine.Clock {
             override fun now() = SystemClock.uptimeMillis()
             override fun after(delayMs: Long, task: () -> Unit): () -> Unit {
@@ -697,12 +709,38 @@ class CarSession(
         emit = ::onGesture,
     )
 
+    private fun gestureTurn(steps: Int) = gestures.onTurn(steps, buttonTable::turnCapable)
+
     private fun onGesture(g: GestureEngine.Gesture) {
-        if (g.code != KeyEvent.KEYCODE_BACK) return
-        when (g) {
-            is GestureEngine.Gesture.Press -> back()
-            is GestureEngine.Gesture.Hold -> runtime.assistantClosedThenHome()
-            else -> Unit
+        val gesture = when (g) {
+            is GestureEngine.Gesture.Press -> ButtonTable.Gesture.PRESS
+            is GestureEngine.Gesture.Hold -> ButtonTable.Gesture.HOLD
+            is GestureEngine.Gesture.Double -> ButtonTable.Gesture.DOUBLE
+            is GestureEngine.Gesture.HoldTurn -> ButtonTable.Gesture.HOLD_TURN
+        }
+        val action = buttonTable.resolve(g.code, gesture) ?: return
+        DiagLog.add("button ${KeyEvent.keyCodeToString(g.code)} ${gesture.id}: ${action.id}")
+        when (action) {
+            ButtonAction.SELECT -> {
+                val t = SystemClock.uptimeMillis()
+                dispatchCarKey(CarKey(g.code, true, downTime = t))
+                dispatchCarKey(CarKey(g.code, false, downTime = t))
+            }
+            ButtonAction.BACK -> back()
+            ButtonAction.HOME -> runtime.assistantClosedThenHome()
+            ButtonAction.HOME_OR_APPS -> if (runtime.ui.screen == net.prototux.aare.ui.car.CarScreen.Dashboard) runtime.actions.openLauncher() else runtime.assistantClosedThenHome()
+            ButtonAction.ASSISTANT -> runtime.assistant()
+            ButtonAction.PLAY_PAUSE -> media.playPause()
+            ButtonAction.NEXT -> media.next()
+            ButtonAction.PREVIOUS -> media.previous()
+            ButtonAction.SKIP_SONGS -> {
+                val steps = (g as? GestureEngine.Gesture.HoldTurn)?.steps ?: 0
+                repeat(kotlin.math.abs(steps)) { if (steps > 0) media.next() else media.previous() }
+            }
+            ButtonAction.OPEN_NAVIGATION -> performCarKeyAction(CarKeyAction.OPEN_NAVIGATION)
+            ButtonAction.OPEN_MEDIA -> performCarKeyAction(CarKeyAction.OPEN_MEDIA)
+            ButtonAction.OPEN_PHONE -> performCarKeyAction(CarKeyAction.OPEN_PHONE)
+            ButtonAction.NOTHING -> Unit
         }
     }
 
@@ -742,10 +780,14 @@ class CarSession(
             if (!down) performCarKeyAction(action)
             return
         }
+        // MyPlay (R3): the button table's keys (Back among them: held, home; twice on a page that
+        // does not change, see BackEscape) go through the gesture engine.
+        if (code in buttonCodes) {
+            gestures.onKey(code, down, key.longPress)
+            return
+        }
         when (code) {
             KeyEvent.KEYCODE_HOME -> homeKey.onKey(down, key.longPress)
-            // MyPlay: held, Back goes home (K3, R2); twice in a row on a page that does not change, see BackEscape.
-            KeyEvent.KEYCODE_BACK -> gestures.onKey(code, down, key.longPress)
             KeyEvent.KEYCODE_SEARCH, KeyEvent.KEYCODE_VOICE_ASSIST, KeyEvent.KEYCODE_ASSIST -> if (!down) runtime.assistant()
             KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_HEADSETHOOK -> if (!down) media.playPause()
             KeyEvent.KEYCODE_MEDIA_PLAY -> if (!down && runtime.ui.nowPlaying?.playing != true) media.playPause()
@@ -1109,6 +1151,7 @@ class CarSession(
     private fun teardown() {
         closed = true
         settings.unregisterListener(carKeyPrefsListener)
+        settings.unregisterListener(buttonPrefsListener) // MyPlay (R3)
         // Session ending while music fed the car: pause it, so it doesn't jump to the phone speaker.
         pauseIfFeedingCar(media, feedingCar = audioOuts.containsKey(AudioStreamType.AUDIO_STREAM_MEDIA))
         main.removeCallbacks(focusCheck)

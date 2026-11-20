@@ -87,13 +87,13 @@ internal class GestureEngine(
     }
 
     /**
-     * A knob turn of [steps]. True when it belongs to a held key (a hold and turn, reported);
-     * false when no key is down, so the turn moves the ring as usual.
+     * A knob turn of [steps]. True when it belongs to a held key that [takesTurn] (a hold and turn,
+     * reported); false otherwise, so the turn moves the ring as usual.
      */
-    fun onTurn(steps: Int): Boolean {
+    fun onTurn(steps: Int, takesTurn: (code: Int) -> Boolean = { true }): Boolean {
         if (steps == 0) return false
         val now = clock.now()
-        val (code, d) = downs.entries.filter { now - it.value.lastSeen <= timings().staleMs }
+        val (code, d) = downs.entries.filter { now - it.value.lastSeen <= timings().staleMs && takesTurn(it.key) }
             .maxByOrNull { it.value.at }?.toPair() ?: return false
         d.cancelHold()
         d.used = true
