@@ -90,6 +90,7 @@
     <string name="phone_size_large" translatable="false">Large</string>
     <string name="phone_size_larger" translatable="false">Larger</string>
     <string name="phone_status_colour" translatable="false">Colour</string>
+    <string name="phone_status_colour_hint" translatable="false">Default follows the look by day and by night. A fixed colour stays the same, so white can be hard to see with light day colours.</string>
     <string name="phone_colour_n" translatable="false">Colour %1$d</string>
     <string name="phone_status_by_level" translatable="false">Colour by level</string>
     <string name="phone_status_low" translatable="false">Low, up to %1$d %%</string>

@@ -41,5 +41,6 @@ fun ClockPage() {
         })
         SectionHeading(stringResource(R.string.phone_status_colour))
         StatusColourDots(style.clockColor) { settings.myplayClockColor = it }
+        HintLine(Icons.Rounded.FormatBold, stringResource(R.string.phone_status_colour_hint))
     }
 }

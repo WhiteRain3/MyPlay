@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -91,14 +92,16 @@ fun StatusZoom(style: StatusStyle) {
     val night = remember(version) { pictureNight(settings.carTheme) }
     val status = rememberPhoneStatus() ?: PhoneStatusInfo(signal = 3, wifi = false, battery = 87, charging = false)
     val density = LocalDensity.current
-    Box(
+    BoxWithConstraints(
         Modifier.fillMaxWidth().height(116.dp).clip(RoundedCornerShape(20.dp))
             .background(Brush.linearGradient(listOf(Color(0xFF17306B), Color(0xFF5B2A86))))
             .border(1.dp, Color(0xFF2F3650), RoundedCornerShape(20.dp)),
         contentAlignment = Alignment.Center,
     ) {
-        // Drawn half as large again as on the car, so the details can be seen.
-        CompositionLocalProvider(LocalDensity provides Density(density.density * 1.5f, density.fontScale)) {
+        // Drawn larger than on the car so the details can be seen: half as large again, a little less
+        // on a narrow phone so the largest clock and icons still fit side by side.
+        val zoom = zoomFor(maxWidth.value)
+        CompositionLocalProvider(LocalDensity provides Density(density.density * zoom, density.fontScale)) {
             CarTheme(night = night, theme = theme) {
                 CompositionLocalProvider(LocalStatusStyle provides style) {
                     Row(
@@ -118,6 +121,9 @@ fun StatusZoom(style: StatusStyle) {
         }
     }
 }
+
+/** How much larger than on the car the status strip is drawn, for a strip [widthDp] wide. */
+fun zoomFor(widthDp: Float): Float = if (widthDp < 380f) 1.2f else 1.5f
 
 /** A row of size buttons, each drawing [sample] at its size; the chosen one green. */
 @Composable
@@ -193,6 +199,7 @@ fun StatusIconsPage() {
         }
         SectionHeading(stringResource(R.string.phone_status_colour))
         StatusColourDots(style.color) { settings.myplayStatusColor = it }
+        HintLine(Icons.Rounded.Battery5Bar, stringResource(R.string.phone_status_colour_hint))
         SectionHeading(stringResource(R.string.phone_status_by_level), end = {
             PhoneSwitch(style.colorByLevel) { settings.myplayStatusColorByLevel = it }
         })

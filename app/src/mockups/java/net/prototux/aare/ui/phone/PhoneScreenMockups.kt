@@ -154,6 +154,18 @@ class PhoneScreenMockups {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { ClockPage() } } }
     }
 
+    /** The status strip at its largest (clock and icons Larger), for a narrow phone: see that nothing spills. */
+    @Test fun statusZoomLargest() = paparazzi.snapshot {
+        MyPlayPhoneTheme {
+            Surface(Modifier.fillMaxSize()) {
+                androidx.compose.foundation.layout.Box(Modifier.padding(18.dp).size(width = 324.dp, height = 200.dp)) {
+                    StatusZoom(net.prototux.aare.ui.car.StatusStyle(percentSign = true, size = net.prototux.aare.ui.car.StatusSize.LARGER,
+                        clockSize = net.prototux.aare.ui.car.StatusSize.LARGER, clockBold = true))
+                }
+            }
+        }
+    }
+
     @Test fun parts() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { PhonePartsSample {} } }
     }

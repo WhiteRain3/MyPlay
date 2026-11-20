@@ -39,4 +39,10 @@ class StatusIconsPageTest {
         assertEquals(1f, high)
         assertTrue(low < mid && mid < high)
     }
+
+    @Test
+    fun theStripIsDrawnSmallerOnANarrowPhone() {
+        assertEquals(1.2f, zoomFor(324f))
+        assertEquals(1.5f, zoomFor(400f))
+    }
 }
