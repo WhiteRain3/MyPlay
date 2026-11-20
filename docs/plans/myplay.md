@@ -7,21 +7,69 @@ checks each before relying on it. Commit ids of other people's work are as the f
 them; nothing from them has been built or run by us. Where something is not known, it says "not
 known".
 
-## Where things stand (2026-11-19, evening)
+## Where things stand (2026-11-20, afternoon)
+
+Released up to **0.1.16** (tags `myplay-v0.1.0` to `myplay-v0.1.16`). As reported by the
+dispatcher; the Planner has not checked each release's contents.
 
 | Tasks | State |
 |---|---|
-| A1 rename, A2 network defaults, A3 release chain | Done, released in 0.1.0 |
-| B1 head unit margins, B2 Tester script | Done, in 0.1.0. The script ran on the owner's Windows PC without errors |
-| A4 first release and Tester smoke run | 0.1.0 released and run on the PC bench: report `test-reports/0.1.0/REPORT.md` on branch `claude/test-reports` |
-| A7 the car's buttons in the phone's own log | Done, released in 0.1.1: buttons and knob in the connection log on the phone, at most 120 such lines per connection; the log keeps 1000 lines. Not yet seen on the bench |
-| Bench round 1 fixes (K1 to K11 below) | **K2 to K7 are pushed (`ba428ec..9ffeff3`) and under review. Not seen on any device yet.** K1 (the Tester's long walks) is still to do. K8 to K11 not started |
-| The owner's parked test | **Passed with 0.1.0 (2026-11-19): "just checked on the car, this thing works!"** Details (knob, tilt, buttons, sound, screen size) not reported yet; they come with the 0.1.1 log |
-| The owner's three requests after the test (W and M below) | Not started |
+| A1 to A4, A7, B1, B2 (bench) | Done |
+| The owner's parked test | Passed with 0.1.0 (2026-11-19). The connection log with buttons, knob, screen size and sound has **not** arrived yet |
+| K2 to K11 (bench round 1) | Done. K1 (the Tester's long walks) not reported |
+| W1 (Waze host shims) | Done, shipped since 0.1.2. Not yet tried by the owner as far as known |
+| Phase E (phone app design) | Done, except B2 ("press it in the car"), which needs R8 |
+| M1 to M4, M6 first half, M3-3 | Done |
+| F2, F4, F6, D3, K9 | Done |
+| R1, R2, R3 | Done. R4 to R7 with the car Worker now |
+| B1 (Buttons page) | Pushed after 0.1.16, under review |
+| P1, P2 | Done (tasks given by the dispatcher outside this plan) |
 
-Next, in this order: K2 to K7 (the Worker is on them); W1 (Waze, small); K8; M1 and M2 (the map
-behind everything); then the rest of M with the settings. The 0.1.1 log from the car is needed
-before panes, the knob pointer, the buttons' actions and final sizes.
+What is left, and what waits for the car, is in the next section.
+
+## Next, safe without the car (2026-11-20)
+
+**Phone app worker** (idle now), most valuable first:
+1. **F3, colours for a look.** A user's own look stored as data, edited with the colour picker
+   from AA-Experiments (`ThemeUi.kt`, `ColoursUi.kt`), each colour tied to the part of the car
+   picture it paints, with a readable-contrast warning. Phone files plus a small data file on
+   the car side for the stored look (ask the car Worker to add it, or agree the file first).
+2. **F7 (new), whole looks.** A named look bundles everything visible: theme colours, layout
+   preset (M1), wallpaper, status icons and clock (F4), bar items. Pick from a few built in,
+   save your own, and share one as a file (built on F6's backup format, holding only the look).
+3. **F5, wallpaper editor.** Crop, darken and blur from AA-Experiments (`CarWallpaperEditor.kt`,
+   `core/ImageBlur.kt`), writing the file the car already reads.
+4. **I2, an updater that installs.** Download and install the new release when the owner taps,
+   instead of opening the release page (AA-Experiments `Updater.kt`, `core/UpdateCheck.kt`).
+
+**Car Worker**, after R4 to R7:
+1. **G1, keys into mirrored apps**, then **G2, the pointer**, driven by the pad's arrow keys. The
+   bench sends arrow keys, so this can be built and tested now; only the Audi's actual codes wait
+   for R8.
+2. **M6 second half** (choosable bar items from upstream's `feat/rail-status-widgets`).
+3. **F1, MyPlay's own dark looks** (themes in `ui/theme/`), which F7 then bundles.
+4. **I4, a log the owner can send without a PC.**
+5. **W3**, music apps through the host shims, one app at a time, if the owner wants them.
+
+## Waits for the owner's connection log from the car
+
+What to do: with 0.1.1 or newer, connect in the car, then turn the dash knob both ways, push it,
+hold it in, push the pad up, down, left and right, press Menu and Back, hold Back, scroll and
+click the steering-wheel wheel and hold it; then *Advanced > Connection log*, save and send it.
+Also say: what the screen looked like (a photo), whether sound came through the car, whether
+Waze opened (with the host shims module), and whether Google's Android Auto got in the way.
+
+| Waits | Why |
+|---|---|
+| R8 (real button codes, Back's early hold), B2 | Which code each button sends; whether a held key repeats |
+| C5 (was "the Audi's buttons") | Now part of R8 |
+| Hold-and-turn gestures | Whether a knob turn arrives while a button is held |
+| D2 final sizes, the free area for M | The screen size and margins the box really reports, and a photo |
+| M5 / R5 moving the map with the pad | Only the codes; the behaviour itself is built with R5 |
+| C4 | Whether the knob works with the phone locked in the car |
+| W2 | Only if Waze still refuses with the module installed |
+| A5, A6, A8 | Only if the log shows a start-up problem, a wrong picture, or Google's app interfering |
+| H2 (sound) | Where sound goes while MyPlay is connected |
 
 ## Bench round 1: what the Tester found on 0.1.0, and what to do about it
 
