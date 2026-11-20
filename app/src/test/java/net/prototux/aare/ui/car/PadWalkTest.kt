@@ -98,6 +98,10 @@ class PadWalkTest {
                 n.children.any { c -> c.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text.contains("Night Drive") } }
         }
         assertTrue("the music card cannot hold the ring", focus(card.id))
+        // In the car, the projection display marks key input just before handing the key on
+        // (ProjectionDisplay); the press reads that mark, so set it here as the display would,
+        // whatever another test class left in it.
+        rule.runOnIdle { CarFocusVisibility.keyInput = true }
         rule.onNode(isFocused()).performKeyInput { pressKey(Key.Enter) }
         settle()
         assertTrue("pressed: the ring is not on the first button but on ${focusedLabel()}", focusedLabel() == previous)
