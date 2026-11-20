@@ -41,4 +41,20 @@ class CardsPageTest {
         assertEquals(listOf("last", "app:com.waze", "app:gone.maps", "ask"), options.map { it.first })
         assertEquals(null, options[2].second)
     }
+
+    @Test
+    fun aChosenAppTheCarCannotShowIsSaidToBeUnavailable() {
+        val apps = listOf("com.waze" to "Waze")
+        assertTrue(homeMapsUnavailable("app:gone.maps", apps))
+        assertFalse(homeMapsUnavailable("app:com.waze", apps))
+        assertFalse(homeMapsUnavailable("last", apps))
+        assertFalse(homeMapsUnavailable("ask", emptyList()))
+    }
+
+    @Test
+    fun thePictureShowsItsOwnMapForAChosenApp() {
+        assertEquals("app:" + SAMPLE_MAPS_PACKAGE, pictureHomeMaps("app:com.waze"))
+        assertEquals("last", pictureHomeMaps("last"))
+        assertEquals("ask", pictureHomeMaps("ask"))
+    }
 }

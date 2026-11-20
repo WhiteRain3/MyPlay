@@ -84,8 +84,8 @@ data class BarControls(val taskbarSide: Boolean, val items: Boolean, val darkBar
 
 fun barControlsFor(layout: CarLayout): BarControls = when (layout) {
     CarLayout.TASKBAR -> BarControls(taskbarSide = true, items = true, darkBar = true, weather = true, mapBehindBar = false)
-    CarLayout.MAP_BEHIND -> BarControls(taskbarSide = false, items = false, darkBar = false, weather = true, mapBehindBar = true)
-    CarLayout.DOCK -> BarControls(taskbarSide = false, items = false, darkBar = false, weather = true, mapBehindBar = false)
+    CarLayout.MAP_BEHIND -> BarControls(taskbarSide = false, items = true, darkBar = false, weather = true, mapBehindBar = true)
+    CarLayout.DOCK -> BarControls(taskbarSide = false, items = true, darkBar = false, weather = true, mapBehindBar = false)
     CarLayout.CLASSIC -> BarControls(taskbarSide = false, items = false, darkBar = false, weather = false, mapBehindBar = false)
 }
 
@@ -169,7 +169,7 @@ fun BarPage(openLayout: () -> Unit) {
                     }
                 }
             })
-            HintLine(Icons.Rounded.Info, stringResource(R.string.phone_bar_items_hint))
+            if (layout == CarLayout.TASKBAR) HintLine(Icons.Rounded.Info, stringResource(R.string.phone_bar_items_hint))
             HintLine(Icons.Rounded.WbSunny, stringResource(R.string.phone_bar_items_weather_hint))
         }
         val rows = buildList<@Composable () -> Unit> {

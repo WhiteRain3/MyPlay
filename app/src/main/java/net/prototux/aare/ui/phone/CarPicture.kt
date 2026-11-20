@@ -48,6 +48,7 @@ import net.prototux.aare.ui.car.CarPart
 import net.prototux.aare.ui.car.CarPartRegistry
 import net.prototux.aare.ui.car.LocalCarParts
 import net.prototux.aare.ui.car.RailWidget
+import net.prototux.aare.ui.car.HomeMaps
 import net.prototux.aare.ui.car.myplayHomeMaps
 import net.prototux.aare.ui.car.statusStyle
 import net.prototux.aare.ui.car.myplayLayoutSpec
@@ -136,6 +137,13 @@ fun picturePartOf(part: CarPart?): PicturePart = when (part) {
 fun partAt(regions: List<Pair<CarPart, Rect>>, point: Offset): Pair<CarPart, Rect>? =
     regions.filter { (_, r) -> r.contains(point) && r.width > 0f && r.height > 0f }.minByOrNull { (_, r) -> r.width * r.height }
 
+/** The made-up maps app the picture shows on its home screen. */
+const val SAMPLE_MAPS_PACKAGE = "sample.maps"
+
+/** The home-maps setting for the picture: a chosen maps app is drawn as the picture's own made-up one, so the picture shows a map as the car would. */
+fun pictureHomeMaps(stored: String): String =
+    if (stored.startsWith(HomeMaps.APP_PREFIX)) HomeMaps.chosen(SAMPLE_MAPS_PACKAGE) else stored
+
 /**
  * Fills [ui] from the settings the same way the car does, without a car. A copy of the look part
  * of CarRuntime.applyScreenSettings (host/, the car's file): when a car-screen setting is added
@@ -149,7 +157,7 @@ internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: C
     ui.darkBar = settings.darkBar
     ui.railWidgets = RailWidget.parse(settings.railWidgets)
     ui.statusStyle = settings.statusStyle
-    ui.homeMaps = settings.myplayHomeMaps
+    ui.homeMaps = pictureHomeMaps(settings.myplayHomeMaps)
     ui.dashboardCards = DashCard.parse(settings.dashboardCards)
     ui.weatherInBar = settings.showWeather
     ui.weather = if (settings.showWeather) Weather(18, "°C", 1, day = !ui.night) else null

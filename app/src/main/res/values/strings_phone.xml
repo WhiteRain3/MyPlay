@@ -18,6 +18,7 @@
     <string name="phone_home_maps_question" translatable="false">Which map the home screen shows</string>
     <string name="phone_slots_hint" translatable="false">Drag a card to a place, or down here to hide it. The first place is the most important. The rows below do the same with arrows.</string>
     <string name="phone_slots_tray_empty" translatable="false">Not shown: none. Drag a card here to hide it.</string>
+    <string name="phone_home_maps_unavailable" translatable="false">This maps app is hidden or no longer installed, so the home screen shows the maps buttons instead.</string>
     <string name="phone_cards_order" translatable="false">Shown, in this order</string>
     <string name="phone_part_wallpaper" translatable="false">Wallpaper</string>
     <string name="phone_wallpaper_other_photo" translatable="false">Choose another photo</string>
@@ -69,10 +70,10 @@
     <string name="phone_layout_in_use" translatable="false">You use the %1$s layout</string>
     <string name="phone_layout_change" translatable="false">Change the layout</string>
     <string name="phone_bar_note_taskbar" translatable="false">Everything on this page changes it.</string>
-    <string name="phone_bar_note_map_behind" translatable="false">Its bar has its own look and side, below. The clock and status show only in its \"Clock and status\" card: keep that card on (Cards page), or there is no clock.</string>
-    <string name="phone_bar_note_dock" translatable="false">The dock shows the weather if it is on. Side, bar items and the dark bar belong to the Taskbar layout.</string>
+    <string name="phone_bar_note_map_behind" translatable="false">Its bar has its own look and side, below, and shows the items you choose. With the \"Clock and status\" card on, the clock, battery and weather are in that card and the bar shows only the other items (today, the outside temperature); with that card off, the bar shows them all.</string>
+    <string name="phone_bar_note_dock" translatable="false">The dock shows the items you choose below, and the weather if it is on. Side and the dark bar belong to the Taskbar layout.</string>
     <string name="phone_bar_note_classic" translatable="false">Nothing on this page changes it: side, bar items, dark bar and weather belong to other layouts.</string>
-    <string name="phone_bar_items_weather_hint" translatable="false">Weather shows only with the Weather switch below on. Outside temperature uses the car\'s own sensor; a car without one needs the Weather switch too.</string>
+    <string name="phone_bar_items_weather_hint" translatable="false">Weather shows only with the Weather switch below on. Outside temperature uses the car\'s own sensor; a car without one needs the Weather switch, and until there is a reading it shows –°.</string>
     <string name="phone_cards_weather_still_on" translatable="false">The Taskbar\'s weather card is still on</string>
     <string name="phone_cards_weather_off" translatable="false">Switch the weather card off</string>
     <string name="phone_cards_note_taskbar" translatable="false">The cards below are its home screen.</string>

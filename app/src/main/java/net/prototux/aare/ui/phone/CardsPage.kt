@@ -152,9 +152,10 @@ private fun HomeMapsChoice(settings: Settings) {
     val ctx = LocalContext.current
     var stored by remember { mutableStateOf(settings.myplayHomeMaps) }
     // The maps apps the car can host, by the car's own rules (CarRuntime.applyApps): Google's Android
-    // Auto and apps hidden on the Apps page left out. A chosen app hidden later keeps a choice of its
-    // own here; the car then acts as for "Last used".
-    val apps by produceState<List<Pair<String, String>>>(emptyList()) {
+    // Auto and apps hidden on the Apps page left out. A chosen app that is hidden later, or gone,
+    // keeps a choice of its own here; the car then shows the maps buttons (as for "Always ask"),
+    // and a line under the choices says so. Null until the list is read.
+    val loaded by produceState<List<Pair<String, String>>?>(null) {
         val hidden = settings.hiddenApps
         value = withContext(Dispatchers.IO) {
             runCatching {
@@ -163,6 +164,7 @@ private fun HomeMapsChoice(settings: Settings) {
             }.getOrDefault(emptyList())
         }
     }
+    val apps = loaded.orEmpty()
     val last = stringResource(R.string.myplay_home_maps_last)
     val ask = stringResource(R.string.myplay_home_maps_ask)
     SectionHeading(stringResource(R.string.myplay_home_maps_title))
@@ -179,6 +181,13 @@ private fun HomeMapsChoice(settings: Settings) {
                 },
                 stored,
             ) { stored = it; settings.myplayHomeMaps = it }
+            if (loaded != null && homeMapsUnavailable(stored, apps)) {
+                Text(stringResource(R.string.phone_home_maps_unavailable), color = PhoneColors.Warning, fontSize = 13.sp)
+            }
         }
     }
 }
+
+/** Whether [stored] names a maps app the car cannot show now (hidden or gone): the car then shows the maps buttons. */
+fun homeMapsUnavailable(stored: String, apps: List<Pair<String, String>>): Boolean =
+    stored.startsWith(HomeMaps.APP_PREFIX) && apps.none { HomeMaps.chosen(it.first) == stored }
