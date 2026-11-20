@@ -31,7 +31,7 @@ class WirelessReceiver : BroadcastReceiver() {
     }
 
     private fun start(context: Context, device: BluetoothDevice) {
-        DiagLog.add("wireless: ${nameOf(device)} offers Android Auto wireless, connecting")
+        DiagLog.add("wireless: a paired device offers Android Auto wireless, connecting")
         ProjectionService.startWireless(context, device.address)
     }
 
@@ -48,7 +48,7 @@ class WirelessReceiver : BroadcastReceiver() {
             main.removeCallbacksAndMessages(null)
             runCatching { app.unregisterReceiver(answer) }
             if (found != null) start(app, found)
-            else DiagLog.add("wireless: ${nameOf(device)} connected over Bluetooth but doesn't offer Android Auto wireless")
+            else DiagLog.add("wireless: a paired device connected over Bluetooth but doesn't offer Android Auto wireless")
             pending.finish()
         }
         answer = object : BroadcastReceiver() {
@@ -67,8 +67,6 @@ class WirelessReceiver : BroadcastReceiver() {
     private fun bonded(device: BluetoothDevice) = runCatching { device.bondState == BluetoothDevice.BOND_BONDED }.getOrDefault(false)
 
     @SuppressLint("MissingPermission")
-    private fun nameOf(device: BluetoothDevice) = runCatching { device.name }.getOrNull() ?: device.address
-
     private companion object {
         /** A receiver may run for about 10 s; SDP answers in a few. */
         const val SDP_TIMEOUT_MS = 8_000L

@@ -84,7 +84,7 @@ internal class HeadUnitNetwork(
         pending = result
         val cb = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(n: Network) {
-                log.i("wireless: \"${credentials.ssid}\" available as $n")
+                log.i("wireless: the head unit's network is available as $n")
                 network = n
                 connectivity.getLinkProperties(n)?.let { if (ipv4(it) != null) result.complete(joined(it)) }
             }
@@ -97,12 +97,12 @@ internal class HeadUnitNetwork(
             // Not found within the timeout, or the user declined the dialog.
             override fun onUnavailable() {
                 result.complete(JoinResult.Failed(WppStatus.WIFI_NETWORK_UNAVAILABLE,
-                    "network \"${credentials.ssid}\" not found, or the connection request was declined"))
+                    "the head unit's network was not found, or the connection request was declined"))
             }
 
             override fun onLost(n: Network) {
                 if (n != network) return
-                log.w("wireless: lost the head unit's network \"${credentials.ssid}\"")
+                log.w("wireless: lost the head unit's network")
                 if (!result.isDone) {
                     network = null
                 } else {
@@ -111,7 +111,7 @@ internal class HeadUnitNetwork(
             }
         }
         callback = cb
-        log.i("wireless: requesting network \"${credentials.ssid}\" (${credentials.security}); Android may ask the user to approve")
+        log.i("wireless: requesting the head unit's network (${credentials.security}); Android may ask the user to approve")
         connectivity.requestNetwork(request, cb, timeoutMs.toInt())
         if (released) { // raced with release()
             runCatching { connectivity.unregisterNetworkCallback(cb) }
@@ -120,7 +120,7 @@ internal class HeadUnitNetwork(
         return try {
             result.get(timeoutMs + 5_000, TimeUnit.MILLISECONDS)
         } catch (e: TimeoutException) {
-            JoinResult.Failed(WppStatus.WIFI_NETWORK_UNAVAILABLE, "no address on \"${credentials.ssid}\" after ${timeoutMs / 1000} s")
+            JoinResult.Failed(WppStatus.WIFI_NETWORK_UNAVAILABLE, "no address on the head unit's network after ${timeoutMs / 1000} s")
         }
     }
 
@@ -164,9 +164,9 @@ internal class HeadUnitNetwork(
             }
         }
         val id = wm.addNetwork(conf)
-        if (id == -1) return JoinResult.Failed(WppStatus.WIFI_NETWORK_UNAVAILABLE, "Android refused to add \"${c.ssid}\"")
+        if (id == -1) return JoinResult.Failed(WppStatus.WIFI_NETWORK_UNAVAILABLE, "Android refused to add the head unit's network")
         legacyNetworkId = id
-        log.i("wireless: joining \"${c.ssid}\" (Android 8/9)")
+        log.i("wireless: joining the head unit's network (Android 8/9)")
 
         val result = CompletableFuture<JoinResult>()
         pending = result
@@ -191,7 +191,7 @@ internal class HeadUnitNetwork(
 
             override fun onLost(n: Network) {
                 if (n != network) return
-                log.w("wireless: lost the head unit's network \"${c.ssid}\"")
+                log.w("wireless: lost the head unit's network")
                 if (result.isDone) onLost?.invoke() else network = null
             }
         }
@@ -203,7 +203,7 @@ internal class HeadUnitNetwork(
         return try {
             result.get(timeoutMs + 5_000, TimeUnit.MILLISECONDS)
         } catch (e: TimeoutException) {
-            JoinResult.Failed(WppStatus.WIFI_NETWORK_UNAVAILABLE, "no address on \"${c.ssid}\" after ${timeoutMs / 1000} s")
+            JoinResult.Failed(WppStatus.WIFI_NETWORK_UNAVAILABLE, "no address on the head unit's network after ${timeoutMs / 1000} s")
         }
     }
 
@@ -266,7 +266,7 @@ internal class HeadUnitNetwork(
             return null
         }
         // Keep the listen callback for the session: it reports when that network goes away.
-        log.i("wireless: already connected to \"$ssid\", using that network")
+        log.i("wireless: already on the head unit's network, using it")
         network = n
         callback = cb
         return joined(lp)
@@ -274,7 +274,7 @@ internal class HeadUnitNetwork(
 
     private fun onExistingLost(n: Network, found: CompletableFuture<Network>) {
         if (n != network || !found.isDone) return
-        log.w("wireless: lost the head unit's network \"$ssid\"")
+        log.w("wireless: lost the head unit's network")
         onLost?.invoke()
     }
 

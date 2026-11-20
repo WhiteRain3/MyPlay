@@ -220,7 +220,7 @@ class ProjectionService : Service() {
             return
         }
         lastWirelessAddress = address
-        log("wireless: connecting to ${runCatching { device.name }.getOrNull() ?: address}")
+        log("wireless: connecting to the paired device")
         _state.update { it.copy(status = getString(R.string.notif_status_connecting_wirelessly)) }
         wirelessJob = scope.launch {
             // Right after the Bluetooth link comes up some cars accept the connection but don't
@@ -268,7 +268,7 @@ class ProjectionService : Service() {
             scheduleIdleStop()
             return
         }
-        log("wireless: ${runCatching { device.name }.getOrNull() ?: device.address} already connected over Bluetooth, connecting")
+        log("wireless: the paired device is already connected over Bluetooth, connecting")
         connectWireless(device.address)
     }
 
