@@ -30,8 +30,10 @@ internal object WazeTypeHook {
             // This module's own signing certificates, read once from its APK file when first needed.
             val modulePath = try { xposed.moduleApplicationInfo?.sourceDir } catch (_: Throwable) { null }
             val moduleCerts by lazy { PackageFacts.certsOfFile(modulePath) }
-            // Each uid is judged once: its package and key do not change while this app runs.
+            // Each uid is judged once: its package and key do not change while this app runs. Only
+            // definite answers are kept (W1-7); "could not be read" is asked again next time.
             val judged = java.util.concurrent.ConcurrentHashMap<Int, Boolean>()
+            val told = java.util.Collections.newSetFromMap(java.util.concurrent.ConcurrentHashMap<String, Boolean>())
             xposed.hook(method).setExceptionMode(XposedInterface.ExceptionMode.PROTECTIVE).intercept { chain ->
                 val info = chain.getArg(0)
                 val accepted = try {
@@ -41,8 +43,9 @@ internal object WazeTypeHook {
                         val known = uid?.let { judged[it] }
                         known ?: HostCheck.verdict(HostCheck.hostPackage(info), uid, PackageFacts::packagesForUid,
                             PackageFacts::certsOf, moduleCerts).let { v ->
-                            Log.i(TAG, if (v.accepted) "$app: MyPlay accepted as host" else "$app: MyPlay not accepted: ${v.why}")
-                            if (uid != null) judged[uid] = v.accepted
+                            // Each different answer is logged once, so a repeated unreadable one does not fill the log.
+                            if (told.add(v.why)) Log.i(TAG, if (v.accepted) "$app: MyPlay accepted as host" else "$app: MyPlay not accepted: ${v.why}")
+                            if (uid != null && v.definite) judged[uid] = v.accepted
                             v.accepted
                         }
                     }

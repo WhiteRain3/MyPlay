@@ -47,8 +47,12 @@ internal object HostCheck {
     /** Whether the host an app is asked about names itself MyPlay. Anything unreadable is "no". */
     fun isMyPlay(hostInfo: Any?): Boolean = hostPackage(hostInfo) == MYPLAY_PACKAGE
 
-    /** The answer for one host: [accepted], and why not when it is not. */
-    data class Verdict(val accepted: Boolean, val why: String)
+    /**
+     * The answer for one host: [accepted], and why not when it is not. [definite] is false when the
+     * answer only says something could not be read, which may change (W1-7): such an answer is not
+     * remembered.
+     */
+    data class Verdict(val accepted: Boolean, val why: String, val definite: Boolean = true)
 
     /**
      * MyPlay (W1-2): whether a host that names itself MyPlay really is MyPlay. A name alone can be
@@ -68,12 +72,12 @@ internal object HostCheck {
         moduleCerts: Set<String>,
     ): Verdict {
         if (name != MYPLAY_PACKAGE) return Verdict(false, "the host is not MyPlay")
-        if (uid == null) return Verdict(false, "the host's uid could not be read")
-        val packages = packagesForUid(uid) ?: return Verdict(false, "the packages of uid $uid could not be read")
+        if (uid == null) return Verdict(false, "the host's uid could not be read", definite = false)
+        val packages = packagesForUid(uid) ?: return Verdict(false, "the packages of uid $uid could not be read", definite = false)
         if (MYPLAY_PACKAGE !in packages) return Verdict(false, "uid $uid is not MyPlay's (it is ${packages.joinToString()})")
-        if (moduleCerts.isEmpty()) return Verdict(false, "this module's own signing certificate could not be read")
+        if (moduleCerts.isEmpty()) return Verdict(false, "this module's own signing certificate could not be read", definite = false)
         val certs = certsOf(MYPLAY_PACKAGE)
-        if (certs.isNullOrEmpty()) return Verdict(false, "MyPlay's signing certificate could not be read")
+        if (certs.isNullOrEmpty()) return Verdict(false, "MyPlay's signing certificate could not be read", definite = false)
         if (certs != moduleCerts) return Verdict(false, "MyPlay is not signed with the same key as this module")
         return Verdict(true, "MyPlay, signed like this module")
     }
