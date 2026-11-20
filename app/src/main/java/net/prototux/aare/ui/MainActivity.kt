@@ -152,6 +152,7 @@ import net.prototux.aare.ui.phone.CustomiseScreen
 import net.prototux.aare.ui.phone.MyPlayPhoneTheme
 import net.prototux.aare.ui.phone.PhoneChoices
 import net.prototux.aare.ui.phone.PhoneSection
+import net.prototux.aare.ui.phone.PhoneSwitch
 import net.prototux.aare.ui.phone.PhoneToggle
 import net.prototux.aare.ui.phone.PhoneTopBar
 import net.prototux.aare.ui.phone.PicturePart
@@ -1167,7 +1168,7 @@ private fun AppRow(icon: android.graphics.Bitmap?, label: String, kind: String, 
             Text(label, style = MaterialTheme.typography.bodyLarge)
             Text(kind, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Switch(checked = visible, onCheckedChange = onVisible)
+        PhoneSwitch(visible, onVisible) // MyPlay (E7)
     }
 }
 
