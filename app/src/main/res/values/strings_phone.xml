@@ -3,6 +3,12 @@
 <resources>
     <string name="phone_parts_help" translatable="false">Help</string>
 
+    <!-- The start screen (Customise). -->
+    <string name="phone_customise_title" translatable="false">Customise</string>
+    <string name="phone_customise_hint" translatable="false">Tap the picture to change the car screen</string>
+    <string name="phone_customise_picture_description" translatable="false">Picture of the car screen. Tap to change how it looks.</string>
+    <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
+
     <!-- The sample page of every shared part (for screenshots only; changes nothing). -->
     <string name="phone_parts_title" translatable="false">Phone parts</string>
     <string name="phone_parts_hint" translatable="false">A sample of every part. Nothing here changes a setting.</string>

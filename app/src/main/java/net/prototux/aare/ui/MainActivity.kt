@@ -147,7 +147,10 @@ import net.prototux.aare.ui.car.DashCard
 import net.prototux.aare.ui.car.DashboardCardsEditor
 import net.prototux.aare.ui.car.StyleChoices
 import net.prototux.aare.ui.car.WALLPAPER_NAMES
+import net.prototux.aare.ui.phone.CustomiseScreen
 import net.prototux.aare.ui.phone.MyPlayPhoneTheme
+import net.prototux.aare.ui.phone.PageLink
+import net.prototux.aare.ui.phone.TileTone
 import net.prototux.aare.ui.phone.PhonePartsSample
 import rikka.shizuku.Shizuku
 import java.text.DateFormat
@@ -231,19 +234,20 @@ private fun Home() {
 
     AnimatedContent(page, label = "page", transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(100)) }) { p ->
         if (p == null) {
-            LazyColumn(
-                Modifier.fillMaxSize().systemBarsPadding(),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+            // MyPlay (E2): the start screen is the Customise screen. Tapping the car picture opens
+            // the Car screen page; every other page is listed under it.
+            CustomiseScreen(
+                pages = Page.entries.filter { it != Page.CAR_SCREEN }.map { pg ->
+                    PageLink(pg.icon, stringResource(pg.titleRes), stringResource(pg.subtitleRes), pageTone(pg)) { page = pg }
+                },
+                onPicture = { page = Page.CAR_SCREEN },
             ) {
-                item { Header() }
-                item { UpdateBanner() }
-                item { CertificateExpiryBanner() }
-                item { StatusCard(state) }
-                item { Setup(state, refresh, { refresh++ }) { page = it } }
                 item {
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainer)) {
-                        Page.entries.forEach { CategoryRow(it) { page = it } }
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        UpdateBanner()
+                        CertificateExpiryBanner()
+                        StatusCard(state)
+                        Setup(state, refresh, { refresh++ }) { page = it }
                     }
                 }
             }
@@ -279,6 +283,17 @@ private fun Home() {
             }
         }
     }
+}
+
+/** MyPlay (E2): each page's colour on the start screen. */
+private fun pageTone(page: Page): TileTone = when (page) {
+    Page.CAR_SCREEN, Page.APPS -> TileTone.VIOLET
+    Page.ASSISTANT -> TileTone.PINK
+    Page.MESSAGES, Page.CONNECTION -> TileTone.BLUE
+    Page.AUDIO -> TileTone.AMBER
+    Page.CAR_DATA -> TileTone.GREEN
+    Page.ADVANCED -> TileTone.CORAL
+    Page.ABOUT -> TileTone.BLUE
 }
 
 @Composable
