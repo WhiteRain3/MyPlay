@@ -14,3 +14,10 @@ var Settings.myplayBackupLastSaved: Long?
     set(v) = prefs.edit { if (v == null) remove(KEY_BACKUP_LAST_SAVED) else putLong(KEY_BACKUP_LAST_SAVED, v) }
 
 internal const val KEY_BACKUP_LAST_SAVED = "myplay_backup_last_saved"
+
+/** The version whose "What's new" was last shown, or null. Not in backups: it belongs to this install. */
+var Settings.myplayWhatsNewSeen: String?
+    get() = prefs.getString(KEY_WHATS_NEW_SEEN, null)
+    set(v) = prefs.edit { if (v == null) remove(KEY_WHATS_NEW_SEEN) else putString(KEY_WHATS_NEW_SEEN, v) }
+
+internal const val KEY_WHATS_NEW_SEEN = "myplay_whats_new_seen"

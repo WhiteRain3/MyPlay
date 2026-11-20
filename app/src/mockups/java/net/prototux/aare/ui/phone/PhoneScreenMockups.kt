@@ -170,6 +170,15 @@ class PhoneScreenMockups {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { SizePage() } } }
     }
 
+    @Test fun whatsNew() = paparazzi.snapshot {
+        val notes = listOf("../docs/releases/0.1.8.md", "docs/releases/0.1.8.md").map { java.io.File(it) }.first { it.isFile }.readText()
+        MyPlayPhoneTheme {
+            Surface(Modifier.fillMaxSize()) {
+                androidx.compose.foundation.layout.Column(Modifier.padding(20.dp)) { ReleaseNotesText(ReleaseNotes.parse(notes)) }
+            }
+        }
+    }
+
     @Test fun parts() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { PhonePartsSample {} } }
     }

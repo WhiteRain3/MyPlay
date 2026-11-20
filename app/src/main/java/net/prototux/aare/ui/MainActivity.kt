@@ -158,6 +158,12 @@ import net.prototux.aare.ui.phone.PhoneSwitch
 import net.prototux.aare.ui.phone.PhoneToggle
 import net.prototux.aare.ui.phone.PhoneTopBar
 import net.prototux.aare.ui.phone.PicturePart
+import net.prototux.aare.ui.phone.ReleaseNotes
+import net.prototux.aare.ui.phone.RowGroup
+import net.prototux.aare.ui.phone.SimpleRow
+import net.prototux.aare.ui.phone.TileTone
+import net.prototux.aare.ui.phone.WhatsNewDialog
+import net.prototux.aare.ui.phone.myplayWhatsNewSeen
 import net.prototux.aare.ui.phone.BackupPage
 import net.prototux.aare.ui.phone.BarPage
 import net.prototux.aare.ui.phone.CardsPage
@@ -255,6 +261,16 @@ private fun Home() {
     // MyPlay (E8, from upstream's settings backup): bumped after a settings import, so every page is
     // rebuilt and reads Settings again instead of showing (and writing back) what it remembered.
     var settingsGeneration by remember { mutableIntStateOf(0) }
+    // MyPlay: "What's new" once after an update (never on a fresh install), and from About.
+    val version = net.prototux.aare.BuildConfig.VERSION_NAME
+    val notes = remember { ReleaseNotes.read(ctx, version) }
+    var whatsNew by rememberSaveable {
+        val pkg = runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0) }.getOrNull()
+        val fresh = pkg != null && pkg.firstInstallTime == pkg.lastUpdateTime
+        if (fresh) settings.myplayWhatsNewSeen = version
+        mutableStateOf(ReleaseNotes.showOnOpen(version, settings.myplayWhatsNewSeen, notes != null, fresh))
+    }
+    if (whatsNew && notes != null) WhatsNewDialog(version, notes) { whatsNew = false; settings.myplayWhatsNewSeen = version }
     LaunchedEffect(Unit) { ProjectionService.startIdleIfEnabled(ctx); ProjectionService.probeUsb(ctx); ProjectionService.probeWireless(ctx); UpdateChecker.refresh(ctx); CertificateUpdates.refresh(ctx) }
     // Re-check permissions and capture methods whenever the user comes back to the app.
     val lifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current
@@ -317,7 +333,15 @@ private fun Home() {
                         Page.WALLPAPER -> item { WallpaperPage { uri -> saveWallpaper(ctx, uri) } }
                         Page.BACKUP -> item { BackupPage { settingsGeneration++ } }
                         Page.CERTIFICATES -> item { CertificatesCard(certs, state) }
-                        Page.ABOUT -> item { AboutScreen() }
+                        Page.ABOUT -> {
+                            if (notes != null) item {
+                                RowGroup(rows = listOf {
+                                    SimpleRow(Icons.Rounded.Info, stringResource(R.string.phone_whats_new_title, version), TileTone.VIOLET,
+                                        onClick = { whatsNew = true })
+                                })
+                            }
+                            item { AboutScreen() }
+                        }
                     }
                 }
             }

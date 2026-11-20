@@ -121,6 +121,8 @@
     <string name="phone_size_density_ignored" translatable="false">The stored %1$d dpi is outside 80 to 640, so the car ignores it and uses Auto.</string>
     <string name="phone_size_dpi" translatable="false">%1$d dpi</string>
     <string name="phone_size_density_hint" translatable="false">A higher number draws everything larger, so less fits. 213 is what Google\'s Android Auto used for the Audi. The picture above follows the choice.</string>
+    <string name="phone_whats_new_title" translatable="false">What\'s new in %1$s</string>
+    <string name="phone_whats_new_close" translatable="false">Got it</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->

@@ -47,6 +47,7 @@ class MyPlayBackupKeysTest {
         /** MyPlay settings left out of backups on purpose, each with its reason. */
         val NOT_BACKED_UP: Set<String> = setOf(
             "myplay_backup_last_saved", // when this phone last saved a backup: belongs to the phone, not to the settings
+            "myplay_whats_new_seen", // which release notes this install has shown: belongs to the install
         )
 
         /** "myplay_" strings that are not settings keys. */

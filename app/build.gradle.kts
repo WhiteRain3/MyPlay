@@ -101,9 +101,29 @@ val phoneIdentityAssets = tasks.register<PhoneIdentityAssets>("phoneIdentityAsse
     key.set(providers.environmentVariable("AARE_PHONE_KEY"))
 }
 
+// MyPlay: the release notes (docs/releases/<version>.md) go into the app as assets
+// (release_notes/<version>.md), so the phone can show "What's new" after an update without the network.
+abstract class ReleaseNotesAssets : DefaultTask() {
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val notes: ConfigurableFileCollection
+    @get:OutputDirectory abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun copy() {
+        val dir = outputDir.get().asFile.resolve("release_notes")
+        dir.deleteRecursively()
+        dir.mkdirs()
+        notes.files.filter { it.isFile && it.extension == "md" }.forEach { it.copyTo(dir.resolve(it.name)) }
+    }
+}
+
+val releaseNotesAssets = tasks.register<ReleaseNotesAssets>("releaseNotesAssets") {
+    notes.from(rootProject.fileTree("docs/releases") { include("*.md") })
+}
+
 androidComponents {
     onVariants { variant ->
         variant.sources.assets?.addGeneratedSourceDirectory(phoneIdentityAssets, PhoneIdentityAssets::outputDir)
+        variant.sources.assets?.addGeneratedSourceDirectory(releaseNotesAssets, ReleaseNotesAssets::outputDir)
     }
 }
 
