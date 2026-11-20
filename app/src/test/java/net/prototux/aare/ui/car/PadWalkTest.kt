@@ -66,6 +66,57 @@ class PadWalkTest {
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun knobLauncherAudi() = knob(CarLayout.MAP_BEHIND, CarScreen.Launcher)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun knobSettingsAudi() = knob(CarLayout.MAP_BEHIND, CarScreen.App("settings"))
 
+    /**
+     * R4-2: the "map behind" music card's inside mode (M3-6). The card is one stop; the knob's
+     * press goes inside, the ring on its first button; turning goes through its three buttons and
+     * then leaves the card, whose buttons are no stops again; turning back onto it lands on the
+     * card, not on a button.
+     */
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun knobMusicCardInsideAudi() {
+        show(CarLayout.MAP_BEHIND, CarScreen.Dashboard)
+        val res = org.robolectric.RuntimeEnvironment.getApplication().resources
+        val previous = res.getString(net.prototux.aare.R.string.media_action_previous)
+        val playPause = res.getString(net.prototux.aare.R.string.media_action_play_pause)
+        val next = res.getString(net.prototux.aare.R.string.media_action_next)
+        val buttons = setOf(previous, playPause, next)
+        fun focusedLabel() = rule.onAllNodes(isFocused()).fetchSemanticsNodes().firstOrNull()?.let { label(it) }
+        fun turn(back: Boolean = false) {
+            rule.onNode(isFocused()).performKeyInput { if (back) withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } else pressKey(Key.Tab) }
+            settle()
+        }
+        // A button that can hold the ring now (trying puts the ring there: put it back after).
+        fun buttonStops(): List<String> {
+            val back = focusedId()
+            val held = focusables().filter { label(it) in buttons }.filter { focus(it.id) }.map { label(it) }
+            back?.let { focus(it) }
+            return held
+        }
+        // Outside, the buttons are no stops: only the card is.
+        assertTrue("buttons are stops before the card is pressed: ${buttonStops()}", buttonStops().isEmpty())
+        val card = focusables().firstOrNull { label(it).contains("Night Drive") } ?: focusables().first { n ->
+            n.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text.contains("Night Drive") } ||
+                n.children.any { c -> c.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text.contains("Night Drive") } }
+        }
+        assertTrue("the music card cannot hold the ring", focus(card.id))
+        rule.onNode(isFocused()).performKeyInput { pressKey(Key.Enter) }
+        settle()
+        assertTrue("pressed: the ring is not on the first button but on ${focusedLabel()}", focusedLabel() == previous)
+        turn(); assertTrue("second stop is ${focusedLabel()}", focusedLabel() == playPause)
+        turn(); assertTrue("third stop is ${focusedLabel()}", focusedLabel() == next)
+        turn()
+        val after = focusedLabel()
+        assertTrue("turning past the last button stays in the card: $after", after != null && after !in buttons && focusedId() != card.id)
+        settle()
+        assertTrue("left the card, its buttons are still stops: ${buttonStops()}", buttonStops().isEmpty())
+        // Back onto the card: the card itself, not a button.
+        var clicks = 0
+        while (focusedId() != card.id && clicks++ < MAX_KNOB_CLICKS) {
+            turn(back = true)
+            assertTrue("turning back reached a button without a press: ${focusedLabel()}", focusedLabel() !in buttons)
+        }
+        assertTrue("turning back never reaches the card", focusedId() == card.id)
+    }
+
     private fun knob(layout: CarLayout, screen: CarScreen = CarScreen.Dashboard) {
         show(layout, screen)
         val holdable = focusables().filter { focus(it.id) }
