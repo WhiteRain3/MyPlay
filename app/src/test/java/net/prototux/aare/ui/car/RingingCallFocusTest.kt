@@ -22,6 +22,10 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w901dp-h543dp-land-mdpi")
 class RingingCallFocusTest {
+    // R5-3: the key/touch mark is one flag for the whole test process; every test starts and ends on touch.
+    @org.junit.Before fun touchInputFirst() { CarFocusVisibility.keyInput = false }
+    @org.junit.After fun touchInputAfter() { CarFocusVisibility.keyInput = false }
+
     @get:Rule val rule = createComposeRule()
 
     @Test fun mapBehind() = answerHasTheRing(CarLayout.MAP_BEHIND)
