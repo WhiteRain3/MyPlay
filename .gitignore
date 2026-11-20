@@ -50,3 +50,6 @@ google-services.json
 
 # Claude Code agent worktrees
 .claude/
+
+# MyPlay: results of tools/tester/Run-AudiBench.ps1, if someone points it into the checkout
+myplay-bench/

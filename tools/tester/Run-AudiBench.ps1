@@ -15,18 +15,22 @@
     1. adb forward tcp:5277 localabstract:aare_hu
     2. starts aare-headunit.bat with the Audi profile, --headless <folder> and --script "<events>"
     3. waits, takes a phone screenshot, then stops the head unit and its Java process
-    4. saves the phone's log lines that mention aare, AareAap, myplay or AndroidRuntime (crashes)
+    4. saves the phone's log lines written by MyPlay's own process, and the system's lines
+       about that process starting, dying or crashing
   Result: <OutRoot>\<version>\<walk>\  with screen-000.png ..., latest.png, phone.png,
-  phone-log.txt, headunit-out.txt, headunit-err.txt and summary.txt.
+  phone-log.txt, headunit-out.txt, headunit-err.txt and summary.txt. All text files are UTF-8.
+  <OutRoot> is, unless you give -OutRoot, a folder "myplay-bench" next to the head unit folder
+  (for C:\myplay\aare-headunit that is C:\myplay\myplay-bench), so not inside the checkout.
 
-  Windows does not run downloaded scripts by default, so start it like this:
-    powershell -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
+  Windows does not run downloaded scripts by default, so start it like this. -NoProfile keeps
+  your own PowerShell start-up file out of it (its output got mixed into the results):
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
 
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
 
 .EXAMPLE
-  powershell -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -ListWalks
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -ListWalks
 #>
 [CmdletBinding()]
 param(
@@ -40,8 +44,11 @@ param(
     # How long to let the head unit run, in seconds. Default: the walk's last event plus 18
     # (10 for connecting, 8 after the last event).
     [int]$Seconds = 0,
-    # Where result folders go.
-    [string]$OutRoot = (Join-Path (Get-Location) 'myplay-bench'),
+    # Where result folders go. Default: a folder "myplay-bench" next to the head unit folder.
+    [string]$OutRoot,
+    # For the walks settings, maps and back-out: the place of the app to open in the app grid,
+    # counted from 1 in the order the ring moves through the grid (see the grid-end pictures).
+    [int]$Tile = 1,
     # Leave out the margin option of the profile.
     [switch]$NoMargins,
     # Only print the walks and stop.
@@ -49,6 +56,13 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Text as UTF-8 everywhere: what adb prints is read as UTF-8, and Java (the head unit) is told to
+# write UTF-8. Without this, letters outside plain English came out garbled in headunit-out.txt.
+$Utf8 = New-Object System.Text.UTF8Encoding($false)
+try { [Console]::OutputEncoding = $Utf8 } catch { }
+$OutputEncoding = $Utf8
+$env:JAVA_OPTS = ("$env:JAVA_OPTS -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8").Trim()
 
 # ----------------------------------------------------------------------------------------------
 # The Audi profile. Change it here, in one place.
@@ -71,21 +85,53 @@ $AudiMargins = @('--margins', '0,0,80,0')   # left,top,right,bottom
 # least 3 seconds between events.
 # Add your own walks here.
 # ----------------------------------------------------------------------------------------------
+if ($Tile -lt 1) { $Tile = 1 }
+
+# Opens the app grid from the home screen with the knob alone. It assumes what the code says and
+# the first bench round saw, but nobody has checked the count: the first click puts the ring on
+# the first thing of the home screen; two clicks back from there is the bar's Apps button (one
+# click back is the voice button). If the pictures show otherwise, correct the -2 here.
+$OpenGrid = 'park@2 rotate:1@5 rotate:-2@8 dpad:center@11'
+
+# From the open grid: move to tile number $Tile and press. Ready at 17 seconds.
+$ToTile = $(if ($Tile -gt 1) { "rotate:$($Tile - 1)@14 " } else { '' }) + 'dpad:center@17'
+
+# N single clicks forward, 3 seconds apart, the first at $From seconds.
+function Get-Turns([int]$From, [int]$Count) {
+    $list = @()
+    for ($i = 0; $i -lt $Count; $i++) { $list += "rotate:1@$($From + 3 * $i)" }
+    return ($list -join ' ')
+}
+
 $Walks = [ordered]@{
     # Parked, then 12 single clicks forward: the ring should move to each element of the home screen.
-    'home'       = 'park@2 rotate:1@5 rotate:1@8 rotate:1@11 rotate:1@14 rotate:1@17 rotate:1@20 rotate:1@23 rotate:1@26 rotate:1@29 rotate:1@32 rotate:1@35 rotate:1@38'
+    'home'       = 'park@2 ' + (Get-Turns 5 12)
     # One click, press the knob to open what is ringed, wait, then Back.
     'open-back'  = 'park@2 rotate:1@5 dpad:center@8 key:4@17'
     # Driving, wait, parked again: what is restricted while moving should hide and come back.
     'drive-park' = 'park@2 drive@5 park@14'
     # Night colours, then day colours.
     'night-day'  = 'park@2 night@5 day@11'
+    # Open the app grid, then 30 single clicks forward: the ring should stay fully on screen down
+    # to the grid's last tile, then go to the bar. The pictures also give each app's -Tile number.
+    'grid-end'   = "$OpenGrid " + (Get-Turns 14 30)
+    # Open the app grid, open tile -Tile (give the place of Settings), then 20 single clicks
+    # forward: the ring should start on the first option and reach every option in order.
+    'settings'   = "$OpenGrid $ToTile " + (Get-Turns 23 20)
+    # The same for a maps app (give the place of Organic Maps as -Tile): the ring should start
+    # inside the app and reach its buttons.
+    'maps'       = "$OpenGrid $ToTile " + (Get-Turns 23 20)
+    # Open the app grid, open tile -Tile, then Back twice within a second: the home screen should
+    # show, also for an app that ignores Back. (Holding Back cannot be played from here.)
+    'back-out'   = "$OpenGrid $ToTile key:4@26 key:4@27"
 }
 
 $Package = 'io.github.whiterain3.myplay'
 
 if ($ListWalks) {
     foreach ($name in $Walks.Keys) { Write-Host ("{0,-12} {1}" -f $name, $Walks[$name]) }
+    Write-Host ''
+    Write-Host "settings, maps and back-out open tile number -Tile of the app grid (now $Tile)."
     exit 0
 }
 
@@ -102,6 +148,11 @@ if (-not $HeadUnitDir) { Stop-WithMessage 'Give -HeadUnitDir: the unpacked aare-
 if ($HeadUnitDir.Contains(' ')) { Stop-WithMessage "The path '$HeadUnitDir' contains a space, which the head unit's start file cannot take. Move the aare-headunit folder to a path without spaces, for example C:\myplay\aare-headunit" }
 $Bat = Join-Path (Join-Path $HeadUnitDir 'bin') 'aare-headunit.bat'
 if (-not (Test-Path -LiteralPath $Bat)) { Stop-WithMessage "No head unit at $Bat" }
+
+if (-not $OutRoot) {
+    # Next to the head unit folder: outside the checkout, and a path without spaces.
+    $OutRoot = Join-Path (Split-Path -Parent ((Resolve-Path -LiteralPath $HeadUnitDir).Path)) 'myplay-bench'
+}
 
 foreach ($tool in @('adb', 'java', 'ffmpeg')) {
     if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) { Stop-WithMessage "$tool was not found on the PATH" }
@@ -147,6 +198,15 @@ if (Test-Path -LiteralPath $OutDir) {
 New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 $OutDir = (Resolve-Path -LiteralPath $OutDir).Path
 
+# MyPlay's process numbers on the phone, for picking its lines out of the phone's log.
+function Get-MyPlayPids {
+    $text = (& adb shell pidof $Package | Out-String).Trim()
+    if ($text) { return @($text -split '\s+') }
+    return @()
+}
+$appPids = New-Object 'System.Collections.Generic.HashSet[string]'
+foreach ($one in (Get-MyPlayPids)) { [void]$appPids.Add($one) }
+
 # --- run ---------------------------------------------------------------------------------------
 Write-Host "MyPlay $Version, walk '$Walk', $Seconds seconds. Results: $OutDir"
 
@@ -183,13 +243,37 @@ $endedEarly = $proc.HasExited
 # The head unit never exits by itself: stop it together with its Java process.
 if (-not $proc.HasExited) { & taskkill /PID $proc.Id /T /F | Out-Null }
 
-# The phone's log for this run: the lines about MyPlay's connection, and crash reports.
-& adb logcat -d -T "$phoneStart" | Select-String -Pattern 'aare|AareAap|myplay|AndroidRuntime' |
-    ForEach-Object { $_.Line } | Out-File -FilePath (Join-Path $OutDir 'phone-log.txt') -Encoding utf8
+# The phone's log for this run. Kept: every line written by MyPlay's own process (also one that
+# started or crashed during the run), and the system's lines about that process starting, dying
+# or not answering. Lines of other apps that only mention a similar word are left out.
+foreach ($one in (Get-MyPlayPids)) { [void]$appPids.Add($one) }
+$allLines = @(& adb logcat -d -v threadtime -T "$phoneStart")
+$startProc = 'Start proc (\d+):' + [regex]::Escape($Package) + '[/:]'
+foreach ($line in $allLines) {
+    if ($line -match $startProc) { [void]$appPids.Add($Matches[1]) }
+}
+# A log line: date, time, process number, thread number, level, tag, text.
+$lineForm = '^\d\d-\d\d \d\d:\d\d:\d\d\.\d+\s+(\d+)\s+\d+\s+[A-Z]\s'
+$aboutProcess = 'Start proc|has died|Killing|ANR in|Force stopping|FATAL EXCEPTION|Process: '
+$kept = New-Object 'System.Collections.Generic.List[string]'
+if ($appPids.Count -gt 0) {
+    $logFilter = "lines of MyPlay's process (" + (@($appPids) -join ', ') + ') and system lines about it'
+    foreach ($line in $allLines) {
+        if (($line -match $lineForm) -and $appPids.Contains($Matches[1])) { $kept.Add($line) }
+        elseif ($line.Contains($Package) -and ($line -match $aboutProcess)) { $kept.Add($line) }
+    }
+} else {
+    # MyPlay's process was not found: fall back to picking lines by name.
+    $logFilter = "by name (MyPlay's process was not found on the phone)"
+    foreach ($line in $allLines) {
+        if ($line -match 'aare|AareAap|myplay|AndroidRuntime') { $kept.Add($line) }
+    }
+}
+[System.IO.File]::WriteAllLines((Join-Path $OutDir 'phone-log.txt'), $kept, $Utf8)
 
 # --- what happened -----------------------------------------------------------------------------
 $headUnitText = ''
-if (Test-Path -LiteralPath $outFile) { $headUnitText = Get-Content -LiteralPath $outFile -Raw }
+if (Test-Path -LiteralPath $outFile) { $headUnitText = Get-Content -LiteralPath $outFile -Raw -Encoding UTF8 }
 if ($null -eq $headUnitText) { $headUnitText = '' }
 $connected = $headUnitText.Contains('video started')
 $pictures = @(Get-ChildItem -LiteralPath $OutDir -Filter 'screen-*.png').Count
@@ -202,9 +286,10 @@ $summary = @(
     "Ran for: $Seconds seconds" + $(if ($endedEarly) { ' (the head unit stopped by itself before that)' } else { '' })
     "Phone connected and sent video: $connected"
     "Pictures saved: $pictures"
+    "Phone log: $($kept.Count) of $($allLines.Count) lines kept, $logFilter"
     "Taken: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 )
-$summary | Out-File -FilePath (Join-Path $OutDir 'summary.txt') -Encoding utf8
+[System.IO.File]::WriteAllLines((Join-Path $OutDir 'summary.txt'), [string[]]$summary, $Utf8)
 $summary | ForEach-Object { Write-Host $_ }
 
 if (-not $connected) {
