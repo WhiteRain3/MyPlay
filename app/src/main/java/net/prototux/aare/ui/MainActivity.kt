@@ -21,6 +21,7 @@ import android.provider.OpenableColumns
 import android.provider.Settings as AndroidSettings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -34,7 +35,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -147,7 +147,8 @@ import net.prototux.aare.ui.car.DashCard
 import net.prototux.aare.ui.car.DashboardCardsEditor
 import net.prototux.aare.ui.car.StyleChoices
 import net.prototux.aare.ui.car.WALLPAPER_NAMES
-import net.prototux.aare.ui.theme.PhoneTheme
+import net.prototux.aare.ui.phone.MyPlayPhoneTheme
+import net.prototux.aare.ui.phone.PhonePartsSample
 import rikka.shizuku.Shizuku
 import java.text.DateFormat
 import kotlin.math.roundToInt
@@ -155,16 +156,31 @@ import kotlin.math.roundToInt
 /** The phone side: what's connected, what's set up, and the settings. */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        // Always dark (the owner's choice), so the phone's own bars get light symbols whatever the phone is set to.
+        enableEdgeToEdge(SystemBarStyle.dark(android.graphics.Color.TRANSPARENT), SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
         super.onCreate(savedInstanceState)
         applyDebugExtras(intent)
-        setContent { PhoneTheme(dark = isSystemInDarkTheme()) { Surface(Modifier.fillMaxSize()) { Home() } } }
+        showParts = intent?.getBooleanExtra(EXTRA_PHONE_PARTS, false) == true
+        setContent {
+            MyPlayPhoneTheme {
+                Surface(Modifier.fillMaxSize()) {
+                    if (showParts) {
+                        BackHandler { showParts = false }
+                        PhonePartsSample { showParts = false }
+                    } else Home()
+                }
+            }
+        }
     }
+
+    /** The sample page of every shared phone part, for screenshots ([EXTRA_PHONE_PARTS]). */
+    private var showParts by mutableStateOf(false)
 
     // singleTask: when AARE is already open, ./headunit.sh's intent arrives here.
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        if (intent.getBooleanExtra(EXTRA_PHONE_PARTS, false)) showParts = true
         if (applyDebugExtras(intent)) {
             ProjectionService.startIdleIfEnabled(this)
             recreate() // the settings screen shows the new state
@@ -178,6 +194,9 @@ class MainActivity : ComponentActivity() {
         return true
     }
 }
+
+/** Intent extra (true) that opens the sample page of every shared phone part; it changes no setting. */
+private const val EXTRA_PHONE_PARTS = "phone_parts"
 
 /** The settings pages, Android Auto style: one per topic, opened from the home page. */
 private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: ImageVector) {

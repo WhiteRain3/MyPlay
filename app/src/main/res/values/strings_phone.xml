@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text of MyPlay's new phone screens (plan phase E). English only for now, so not to be translated. -->
+<resources>
+    <string name="phone_parts_help" translatable="false">Help</string>
+
+    <!-- The sample page of every shared part (for screenshots only; changes nothing). -->
+    <string name="phone_parts_title" translatable="false">Phone parts</string>
+    <string name="phone_parts_hint" translatable="false">A sample of every part. Nothing here changes a setting.</string>
+    <string name="phone_parts_tiles" translatable="false">Symbol tiles</string>
+    <string name="phone_parts_buttons" translatable="false">Big symbol buttons</string>
+    <string name="phone_parts_colour" translatable="false">Colour dots</string>
+    <string name="phone_parts_rows" translatable="false">Simple rows</string>
+    <string name="phone_parts_default" translatable="false">Default</string>
+    <string name="phone_parts_saved" translatable="false">Saved.</string>
+    <string name="phone_parts_saved_plain" translatable="false">Tap anything above to see the Saved bar.</string>
+    <string name="phone_parts_undo" translatable="false">Undo</string>
+    <string name="phone_parts_sample_updates" translatable="false">Updates</string>
+    <string name="phone_parts_sample_saved" translatable="false">Saved</string>
+    <string name="phone_parts_sample_backup" translatable="false">Backup</string>
+    <string name="phone_parts_sample_waiting" translatable="false">Waiting</string>
+    <string name="phone_parts_sample_connection" translatable="false">Connection</string>
+    <string name="phone_parts_sample_flags" translatable="false">Flags</string>
+    <string name="phone_parts_sample_long" translatable="false">A value much too long for a tile</string>
+    <string name="phone_parts_sample_quick" translatable="false">Quick switches</string>
+    <string name="phone_parts_sample_system" translatable="false">System</string>
+    <string name="phone_parts_sample_icon" translatable="false">Icon</string>
+    <string name="phone_parts_sample_number" translatable="false">Number</string>
+    <string name="phone_parts_sample_sign" translatable="false">Sign</string>
+    <string name="phone_parts_sample_update" translatable="false">Update</string>
+    <string name="phone_parts_sample_ready" translatable="false">0.1.3 is ready</string>
+    <string name="phone_parts_sample_install" translatable="false">Install</string>
+    <string name="phone_parts_sample_check" translatable="false">Check when the app opens</string>
+    <string name="phone_parts_sample_look" translatable="false">Look file</string>
+    <string name="phone_parts_sample_look_when" translatable="false">Saved today 14:02</string>
+    <string name="phone_parts_sample_save" translatable="false">Save</string>
+    <string name="phone_parts_sample_changed" translatable="false">3 changed</string>
+    <string name="phone_parts_sample_two_on" translatable="false">2 on</string>
+    <string name="phone_parts_sample_wide" translatable="false">A wide button</string>
+</resources>
