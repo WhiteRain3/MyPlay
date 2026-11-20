@@ -24,6 +24,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -32,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
@@ -64,6 +68,12 @@ internal fun CallOverlay(state: CarUiState, actions: CarActions, modifier: Modif
 
 @Composable
 private fun Ringing(call: CarCall, actions: CarActions, modifier: Modifier) {
+    // MyPlay (R5): the ring starts on Answer, so the knob's push answers; Back declines (CallKeys).
+    val answer = remember { FocusRequester() }
+    LaunchedEffect(call.sinceMs) {
+        withFrameNanos { }
+        runCatching { answer.requestFocus() }
+    }
     Row(
         modifier.padding(16.dp).widthIn(max = 760.dp).clip(MaterialTheme.shapes.extraLarge)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest).padding(24.dp),
@@ -79,7 +89,7 @@ private fun Ringing(call: CarCall, actions: CarActions, modifier: Modifier) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (Calls.canEnd) RoundButton(Icons.Rounded.CallEnd, stringResource(R.string.phone_action_decline), LocalCarColors.current.decline) { actions.endCall() }
-            RoundButton(Icons.Rounded.Call, stringResource(R.string.phone_action_answer), LocalCarColors.current.accept) { actions.answerCall() }
+            RoundButton(Icons.Rounded.Call, stringResource(R.string.phone_action_answer), LocalCarColors.current.accept, modifier = Modifier.focusRequester(answer)) { actions.answerCall() }
         }
     }
 }
@@ -129,8 +139,8 @@ private fun InCall(call: CarCall, state: CarUiState, actions: CarActions, modifi
 
 @Composable
 private fun RoundButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, color: Color,
-                        size: androidx.compose.ui.unit.Dp = LocalCarDimens.current.touchTarget, onClick: () -> Unit) {
-    Box(Modifier.size(size).clip(CircleShape).background(color).carFocusHighlight(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+                        size: androidx.compose.ui.unit.Dp = LocalCarDimens.current.touchTarget, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(modifier.size(size).clip(CircleShape).background(color).carFocusHighlight(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
         Icon(icon, label, tint = LocalCarColors.current.onCall)
     }
 }
