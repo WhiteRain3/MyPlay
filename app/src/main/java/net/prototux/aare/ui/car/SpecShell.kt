@@ -261,8 +261,8 @@ private fun onClick(card: SpecCard, state: CarUiState, actions: CarActions): (()
 
 /**
  * The music card's knob state (M3-6): the card is one stop; pressing it with the knob goes
- * [inside], where its buttons are the stops. Turning past them leaves the card, which is then
- * one stop again.
+ * [inside], where its buttons are stops too and the ring moves to the first of them. Turning past
+ * them leaves the card, which is then one stop again.
  */
 private class CardKnob {
     var inside by mutableStateOf(false)
@@ -287,7 +287,10 @@ private fun SpecCard(card: SpecCard, spec: CarLayoutSpec, state: CarUiState, act
             runCatching { knob.first.requestFocus() }
         }
     }
-    SpecCardBox(spec, press, knobStop = !knob.inside, modifier.onFocusChanged { if (!it.hasFocus) knob.inside = false }) {
+    // H1: the card stays a stop even inside. Making it unfocusable while it held the focus made
+    // Compose clear the focus, which reset "inside" before the ring could reach the buttons.
+    // Turning back from the first button lands on the card again, which is harmless.
+    SpecCardBox(spec, press, knobStop = true, modifier.onFocusChanged { if (!it.hasFocus) knob.inside = false }) {
         CardContent(card, state, actions, knob)
     }
 }
