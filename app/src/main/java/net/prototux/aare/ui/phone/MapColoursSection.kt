@@ -24,7 +24,9 @@ import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import android.content.SharedPreferences
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +49,9 @@ import net.prototux.aare.R
 import net.prototux.aare.Settings
 import net.prototux.aare.ui.theme.MapColourFilter
 import net.prototux.aare.ui.theme.myplayMapFilter
+
+/** The map filter's setting, as the car side stores it (Settings.myplayMapFilter). */
+private const val MAP_FILTER_KEY = "myplay_map_filter"
 
 /** The made-up map the preview draws: land, water, park, small and main roads, the route, a label. */
 enum class SampleMapPart { LAND, WATER, PARK, ROAD, MAIN_ROAD, ROUTE, LABEL }
@@ -86,6 +91,14 @@ private val PRESET_NAMES = mapOf(
 @Composable
 fun MapColoursSection(settings: Settings, night: Boolean) {
     var filter by remember { mutableStateOf(settings.myplayMapFilter) }
+    // Follows a change made elsewhere while the page stays open (a look chosen, a backup restored).
+    DisposableEffect(settings) {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == null || key == MAP_FILTER_KEY) filter = settings.myplayMapFilter
+        }
+        settings.prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { settings.prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
     var pickingTint by remember { mutableStateOf(false) }
     fun save(f: MapColourFilter) { filter = f.clamped(); settings.myplayMapFilter = filter }
 
