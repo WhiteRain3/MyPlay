@@ -542,7 +542,7 @@ progress bar, push to answer a call; the pointer for mirrored apps comes with G2
 - Bench checks:
   - R5-8: Organic Maps and Waze (once W1 works) really pan and zoom when MyPlay asks, outside
     their own pan mode, and in the right direction: pad right shows more of what is to the
-    right. Walk `maps` gets a push on the map followed by `dpad:` and `rotate:` events.
+    right. Bench walk `map-move` (`docs/TESTER_SETUP.md`).
   - R5-2: after a call is answered or declined, the ring comes back somewhere sensible, not on
     nothing, once Answer and Decline leave the screen. Check in Map behind and Taskbar.
 
