@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -140,11 +141,12 @@ private object NoCarActions : CarActions {
 }
 
 /**
- * The live picture of the car screen, as wide as it is given. [onTap] runs when it is tapped;
- * the car screen inside never sees the touch. [description] is what TalkBack reads.
+ * The live picture of the car screen, as wide as it is given. [onTap] runs when it is tapped
+ * (null: only a picture); the car screen inside never sees the touch. [description] is what
+ * TalkBack reads.
  */
 @Composable
-fun CarPicture(description: String, modifier: Modifier = Modifier, onTap: () -> Unit) {
+fun CarPicture(description: String, modifier: Modifier = Modifier, onTap: (() -> Unit)?) {
     val context = LocalContext.current
     val settings = remember { Settings(context) }
     val ui = remember { sampleCarState() }
@@ -167,7 +169,7 @@ fun CarPicture(description: String, modifier: Modifier = Modifier, onTap: () -> 
 
 /** Draws [ui] at the car's size, scaled down to the width it is given. */
 @Composable
-internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modifier = Modifier, onTap: () -> Unit) {
+internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modifier = Modifier, onTap: (() -> Unit)?) {
     val shape = RoundedCornerShape(20.dp)
     BoxWithConstraints(
         modifier
@@ -176,7 +178,7 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
             .clip(shape)
             .border(BorderStroke(1.dp, Color(0xFF2F3650)), shape)
             .background(PhoneColors.Card)
-            .clearAndSetSemantics { contentDescription = description; role = Role.Button },
+            .clearAndSetSemantics { contentDescription = description; if (onTap != null) role = Role.Button },
     ) {
         val scale = maxWidth.value / CarPictureSize.WIDTH_DP
         // Laid out at the car's own size and centred, then scaled about its centre to fill this box.
@@ -190,7 +192,12 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
             }
         }
         // Over everything, so the car screen inside never gets the touch.
-        Box(Modifier.fillMaxSize().clickable(onClick = onTap))
+        Box(
+            Modifier.fillMaxSize().then(
+                if (onTap != null) Modifier.clickable(onClick = onTap)
+                else Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } },
+            ),
+        )
     }
 }
 

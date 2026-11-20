@@ -150,6 +150,7 @@ import net.prototux.aare.ui.car.StyleChoices
 import net.prototux.aare.ui.car.WALLPAPER_NAMES
 import net.prototux.aare.ui.phone.CustomiseScreen
 import net.prototux.aare.ui.phone.MyPlayPhoneTheme
+import net.prototux.aare.ui.phone.BarPage
 import net.prototux.aare.ui.phone.BehindTile
 import net.prototux.aare.ui.phone.BehindTheScenesTiles
 import net.prototux.aare.ui.phone.PhonePartsSample
@@ -213,6 +214,8 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     CAR_DATA(R.string.setup_page_car_data_title, R.string.setup_page_car_data_subtitle, Icons.Rounded.DirectionsCar),
     ADVANCED(R.string.setup_page_advanced_title, R.string.setup_page_advanced_subtitle, Icons.Rounded.Tune),
     // MyPlay (E4): the certificates card on a page of its own, for its tile (it stays on Advanced too).
+    // MyPlay (E5): one page per part of the car picture.
+    BAR(R.string.phone_part_bar, R.string.phone_part_bar, Icons.Rounded.Dashboard),
     CERTIFICATES(R.string.cert_section_title, R.string.phone_certificates_subtitle, Icons.Rounded.VerifiedUser),
     ABOUT(R.string.setup_page_about_title, R.string.setup_page_about_subtitle, Icons.Rounded.Info),
 }
@@ -241,6 +244,7 @@ private fun Home() {
             // the Car screen page; every other page has a tile under it.
             CustomiseScreen(
                 onPicture = { page = Page.CAR_SCREEN },
+                parts = listOf(Page.BAR).map { pg -> stringResource(pg.titleRes) to { page = pg } },
                 behind = { BehindTheScenesTiles(state.connected, state.audioCapture, refresh) { page = pageOf(it) } },
                 top = {
                     item {
@@ -279,6 +283,7 @@ private fun Home() {
                             item { VehicleOverridesCard() }
                             item { LogCard() }
                         }
+                        Page.BAR -> item { BarPage() }
                         Page.CERTIFICATES -> item { CertificatesCard(certs, state) }
                         Page.ABOUT -> item { AboutScreen() }
                     }

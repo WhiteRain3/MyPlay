@@ -1,5 +1,8 @@
 package net.prototux.aare.ui.phone
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,9 +24,11 @@ import net.prototux.aare.R
  * setting up"), then the picture of the car screen to tap, then everything that cannot be seen
  * on the car screen ([behind]: the tiles).
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CustomiseScreen(
     onPicture: () -> Unit,
+    parts: List<Pair<String, () -> Unit>>,
     behind: @Composable () -> Unit,
     top: LazyListScope.() -> Unit,
 ) {
@@ -38,6 +43,12 @@ fun CustomiseScreen(
             CarPicture(stringResource(R.string.phone_customise_picture_description), Modifier.padding(top = 8.dp), onTap = onPicture)
         }
         item { HintLine(Icons.Rounded.TouchApp, stringResource(R.string.phone_customise_hint)) }
+        // Each part's own page, also reachable without tapping the picture.
+        item {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                parts.forEach { (label, open) -> PillButton(label, main = false, onClick = open) }
+            }
+        }
         item { SectionHeading(stringResource(R.string.phone_customise_behind)) }
         item { behind() }
     }

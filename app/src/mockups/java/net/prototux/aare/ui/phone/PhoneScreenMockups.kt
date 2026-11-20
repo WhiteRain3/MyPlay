@@ -16,6 +16,8 @@ import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.VerifiedUser
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import org.junit.Rule
 import org.junit.Test
 
@@ -35,7 +37,7 @@ class PhoneScreenMockups {
     @Test fun customise() = paparazzi.snapshot {
         MyPlayPhoneTheme {
             Surface(Modifier.fillMaxSize()) {
-                CustomiseScreen(onPicture = {}, behind = {
+                CustomiseScreen(onPicture = {}, parts = listOf("Bar" to {}, "Cards" to {}, "Wallpaper" to {}, "Colours" to {}), behind = {
                     TileGrid(listOf(
                         TileSpec(BehindTile.UPDATES, Icons.Rounded.SystemUpdate, TileTone.BLUE, "Updates", "0.1.4", attention = true),
                         TileSpec(BehindTile.CONNECTION, Icons.Rounded.Bluetooth, TileTone.GREEN, "Connection", "Waiting"),
@@ -51,6 +53,10 @@ class PhoneScreenMockups {
                 }) {}
             }
         }
+    }
+
+    @Test fun bar() = paparazzi.snapshot {
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { BarPage() } } }
     }
 
     @Test fun parts() = paparazzi.snapshot {
