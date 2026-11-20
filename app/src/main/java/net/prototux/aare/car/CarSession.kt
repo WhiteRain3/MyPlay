@@ -641,7 +641,7 @@ class CarSession(
         override fun postDelayed(task: Runnable, delayMs: Long) { main.postDelayed(task, delayMs) }
         override fun cancel(task: Runnable) = main.removeCallbacks(task)
         override fun uptimeMillis() = SystemClock.uptimeMillis()
-    }, carLongPressOnly = setOf(KeyEvent.KEYCODE_HOME), emit = ::onKey)
+    }, carLongPressOnly = CAR_LONG_PRESS_ONLY, emit = ::onKey) // MyPlay (IN-1): BACK too
 
     private val inputListener = object : InputChannel.Listener {
         override fun onInput(report: InputReport) {
