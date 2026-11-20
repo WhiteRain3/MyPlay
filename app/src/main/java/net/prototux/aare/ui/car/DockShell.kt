@@ -121,7 +121,7 @@ private fun Dock(state: CarUiState, actions: CarActions, horizontal: Boolean = f
             // MyPlay: the bar items chosen in the settings (upstream's rail widgets), as on the taskbar.
             val phoneStatus = rememberPhoneStatus()
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                RailWidgets(state.railWidgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = true, spacing = 8.dp)
+                RailWidgets(state.railWidgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = true, spacing = 8.dp, weatherOn = state.weatherInBar)
                 NetworkStatusIcons(phoneStatus)
             }
             Spacer(Modifier.weight(1f))
@@ -139,7 +139,7 @@ private fun Dock(state: CarUiState, actions: CarActions, horizontal: Boolean = f
     ) {
         // MyPlay: the bar items chosen in the settings (upstream's rail widgets), as on the taskbar.
         val phoneStatus = rememberPhoneStatus()
-        RailWidgets(state.railWidgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = false, spacing = 6.dp)
+        RailWidgets(state.railWidgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = false, spacing = 6.dp, weatherOn = state.weatherInBar)
         NetworkStatusIcons(phoneStatus)
         // Only the apps are weighted: on a short screen they scroll, and voice and home keep their size.
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {

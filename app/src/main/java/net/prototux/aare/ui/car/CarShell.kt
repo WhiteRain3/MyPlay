@@ -289,7 +289,7 @@ private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Bool
             // On a tight bar the weather gives up its spot first; the clock and battery stay.
             val widgets = if (tightBar) state.railWidgets - RailWidget.WEATHER else state.railWidgets
             val status: @Composable () -> Unit = { Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                RailWidgets(widgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = true, spacing = 10.dp)
+                RailWidgets(widgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = true, spacing = 10.dp, weatherOn = state.weatherInBar)
                 NetworkStatusIcons(phoneStatus)
                 NotificationBell(state) { bell() }
             } }
@@ -307,7 +307,7 @@ private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Bool
         ) {
             // Short on room: only the clock stays, the rest (and the network icons) give up their place.
             val widgets = if (fit.status) state.railWidgets else state.railWidgets.filter { it == RailWidget.CLOCK }
-            RailWidgets(widgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = false, spacing = 6.dp)
+            RailWidgets(widgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = false, spacing = 6.dp, weatherOn = state.weatherInBar)
             if (fit.status) {
                 Spacer(Modifier.height(4.dp))
                 NetworkStatusIcons(phoneStatus)

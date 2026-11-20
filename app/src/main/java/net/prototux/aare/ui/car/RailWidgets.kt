@@ -82,7 +82,7 @@ internal fun outsideTemperatureLabel(celsius: Float, fahrenheit: Boolean): Strin
  * one polled phone status (rememberPhoneStatus), shared with its network icons.
  */
 @Composable
-internal fun RailWidgets(widgets: List<RailWidget>, weather: Weather?, phone: PhoneStatusInfo?, horizontal: Boolean, spacing: Dp) {
+internal fun RailWidgets(widgets: List<RailWidget>, weather: Weather?, phone: PhoneStatusInfo?, horizontal: Boolean, spacing: Dp, weatherOn: Boolean = weather != null) {
     val car by CarData.state.collectAsState()
     val carTemperature = car.environment?.value?.temperatureC
     val content: @Composable () -> Unit = {
@@ -91,8 +91,10 @@ internal fun RailWidgets(widgets: List<RailWidget>, weather: Weather?, phone: Ph
                 RailWidget.CLOCK -> Clock()
                 RailWidget.TEMPERATURE -> OutsideTemperatureWidget(carTemperature, weather)
                 RailWidget.BATTERY -> BatteryWidget(phone)
-                // MyPlay (P1): a dimmed placeholder rather than nothing when there is no reading.
-                RailWidget.WEATHER -> if (weather != null) WeatherChip(weather) else NoReading(Icons.Rounded.Cloud)
+                // MyPlay (P1, P1-1): a dimmed placeholder when the weather is on but has no reading yet
+                // (first fetch, no location); with the weather switched off, nothing, as before
+                // (the weather item is in the default list, so most bars would show it otherwise).
+                RailWidget.WEATHER -> if (weather != null) WeatherChip(weather) else if (weatherOn) NoReading(Icons.Rounded.Cloud)
             }
         }
     }

@@ -198,9 +198,12 @@ private fun SpecBar(state: CarUiState, actions: CarActions, spec: CarLayoutSpec,
     val phoneStatus = rememberPhoneStatus()
     // The bar items chosen in the settings (upstream's rail widgets), as on the taskbar; a ribbon
     // or dock along an edge has room for them in its row, a side bar stacks them.
+    // P2-1: with a "Clock and status" card, the card keeps the clock, weather and phone status
+    // and the bar leaves them out, so they are not shown twice.
+    val cardHasStatus = SpecCard.CLOCK_STATUS in spec.cards
     val items: @Composable () -> Unit = {
-        RailWidgets(state.railWidgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = !vertical, spacing = if (vertical) 6.dp else 10.dp)
-        NetworkStatusIcons(phoneStatus)
+        RailWidgets(barItems(state.railWidgets, cardHasStatus), state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = !vertical, spacing = if (vertical) 6.dp else 10.dp, weatherOn = state.weatherInBar)
+        if (!cardHasStatus) NetworkStatusIcons(phoneStatus)
     }
     val buttons: @Composable () -> Unit = {
         MicButton(state.listening) { actions.assistant() }
@@ -436,3 +439,7 @@ private fun CardButton(icon: ImageVector, label: String, filled: Boolean, knobSt
         contentAlignment = Alignment.Center,
     ) { Icon(icon, label, tint = fg, modifier = Modifier.size(d.iconSize)) }
 }
+
+/** MyPlay (P2-1): the bar items for "map behind": without those the "Clock and status" card already shows. */
+internal fun barItems(chosen: List<RailWidget>, cardHasStatus: Boolean): List<RailWidget> =
+    if (cardHasStatus) chosen - setOf(RailWidget.CLOCK, RailWidget.WEATHER, RailWidget.BATTERY) else chosen

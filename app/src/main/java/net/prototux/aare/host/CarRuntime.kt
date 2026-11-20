@@ -830,7 +830,8 @@ class CarRuntime(
                 // back as soon as it does send a screen. Watched from the runtime's scope: this
                 // composable leaves the screen with the app.
                 scope.launch {
-                    snapshotFlow { conn.template != null }.first { it }
+                    // K9-7: bounded, as the connection may be replaced and this one never show.
+                    kotlinx.coroutines.withTimeoutOrNull(HomeMaps.LATE_WATCH_MS) { snapshotFlow { conn.template != null }.first { it } } ?: return@launch
                     if (app.id in ui.navShowsNothing) {
                         DiagLog.add("home screen: ${app.label} sent a screen after all, back on the home screen")
                         ui.navShowsNothing = ui.navShowsNothing - app.id
