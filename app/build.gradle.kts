@@ -6,7 +6,8 @@ plugins {
 // Car screen mockups for the README (tools/mockups.sh): Paparazzi draws them on the JVM. Only with
 // -Pmockups, so ordinary builds and CI don't carry it; it doesn't support the configuration cache here.
 val mockups = providers.gradleProperty("mockups").isPresent
-if (mockups) apply(plugin = libs.plugins.paparazzi.get().pluginId)
+// MyPlay (I5): the plugin is on the classpath only with -Pmockups, see the root build.gradle.kts.
+if (mockups) apply(plugin = "app.cash.paparazzi")
 
 android {
     namespace = "net.prototux.aare"
