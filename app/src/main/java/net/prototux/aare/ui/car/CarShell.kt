@@ -238,7 +238,7 @@ private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Bool
         settings?.takeIf { withSettings }?.let { RailApp(it, Icons.Rounded.Settings, on(it)) { actions.openApp(it) } }
     }
     val menu: @Composable () -> Unit = {
-        if (state.screen == CarScreen.Dashboard) RailButton(Icons.Rounded.Apps, stringResource(R.string.dash_menu_apps), selected = false) { actions.openLauncher() }
+        if (state.screen == CarScreen.Dashboard) Box(Modifier.carPart(CarPart.AppsButton)) { RailButton(Icons.Rounded.Apps, stringResource(R.string.dash_menu_apps), selected = false) { actions.openLauncher() } }
         else RailButton(Icons.Rounded.Home, stringResource(R.string.dash_menu_home), selected = false) { actions.goHome() }
     }
     val mic: @Composable () -> Unit = { MicButton(state.listening) { actions.assistant() } }
@@ -246,7 +246,7 @@ private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Bool
     val container = MaterialTheme.colorScheme.surfaceContainerLowest
     if (horizontal) {
         Row(
-            Modifier.fillMaxWidth().height(d.railWidth).background(container).padding(horizontal = 16.dp),
+            Modifier.fillMaxWidth().height(d.railWidth).carPart(CarPart.Bar).background(container).padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val driverEnd: @Composable () -> Unit = { Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -264,7 +264,7 @@ private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Bool
     } else {
         val fit = sideRailFit(area.height - 32.dp)
         Column(
-            Modifier.fillMaxHeight().width(d.railWidth).background(container).padding(vertical = 16.dp),
+            Modifier.fillMaxHeight().width(d.railWidth).carPart(CarPart.Bar).background(container).padding(vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Clock()
@@ -304,8 +304,10 @@ internal fun Clock() {
     val text = android.text.format.DateFormat.format(
         if (android.text.format.DateFormat.is24HourFormat(androidx.compose.ui.platform.LocalContext.current)) "H:mm" else "h:mm", now,
     ).toString()
-    if (LocalCarTheme.current.segmentClock) SegmentClock(text)
-    else Text(text, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
+    Box(Modifier.carPart(CarPart.Clock)) { // MyPlay: a part for the phone's picture
+        if (LocalCarTheme.current.segmentClock) SegmentClock(text)
+        else Text(text, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
+    }
 }
 
 /**
@@ -444,6 +446,7 @@ private fun DashSlot(
     modifier: Modifier,
     compact: Boolean,
 ) {
+    val modifier = modifier.carPart(CarPart.DashboardCard(card)) // MyPlay: a part for the phone's picture
     when (card) {
         DashCard.MAP -> NavCard(state, actions, navMap, modifier)
         DashCard.MEDIA -> MediaCard(state, actions, compact = compact, modifier = modifier)

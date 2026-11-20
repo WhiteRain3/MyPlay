@@ -114,6 +114,7 @@ val WALLPAPER_NAMES = WALLPAPERS.keys.toList()
 /** The dashboard's wallpaper, filling [modifier]; nothing for "none". */
 @Composable
 internal fun Wallpaper(ui: CarUiState, modifier: Modifier) {
+    val modifier = modifier.carPart(CarPart.Wallpaper) // MyPlay: a part for the phone's picture
     val image = ui.wallpaperImage
     when {
         ui.wallpaper == net.prototux.aare.Settings.WALLPAPER_CUSTOM && image != null ->

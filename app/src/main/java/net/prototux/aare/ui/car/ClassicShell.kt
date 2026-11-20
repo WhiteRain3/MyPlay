@@ -80,7 +80,7 @@ internal fun ClassicShell(
 private fun BottomBar(state: CarUiState, actions: CarActions) {
     val d = LocalCarDimens.current
     Row(
-        Modifier.fillMaxWidth().height(d.touchTarget + 8.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(horizontal = 12.dp),
+        Modifier.fillMaxWidth().height(d.touchTarget + 8.dp).carPart(CarPart.Bar).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
