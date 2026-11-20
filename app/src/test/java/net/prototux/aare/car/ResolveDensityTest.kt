@@ -26,4 +26,14 @@ class ResolveDensityTest {
         assertEquals(CarSession.defaultDensity(720), CarSession.resolveDensity(vehicleDpi = null, settingDpi = 0, headUnitDensity = 0, shortSide = 720))
         assertEquals(CarSession.defaultDensity(1440), CarSession.resolveDensity(vehicleDpi = null, settingDpi = 0, headUnitDensity = 0, shortSide = 1440))
     }
+
+    /** MyPlay (D3-1): an imported density out of range falls through to the head unit's. */
+    @Test
+    fun aSettingOutOfRangeIsIgnored() {
+        for (bad in listOf(5, 79, 641, 20_000)) {
+            assertEquals(240, CarSession.resolveDensity(vehicleDpi = null, settingDpi = bad, headUnitDensity = 240, shortSide = 720))
+        }
+        assertEquals(80, CarSession.resolveDensity(vehicleDpi = null, settingDpi = 80, headUnitDensity = 240, shortSide = 720))
+        assertEquals(640, CarSession.resolveDensity(vehicleDpi = null, settingDpi = 640, headUnitDensity = 240, shortSide = 720))
+    }
 }
