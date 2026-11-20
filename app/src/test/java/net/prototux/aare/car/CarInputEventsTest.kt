@@ -52,7 +52,7 @@ class CarInputEventsTest {
     }
 
     @Test fun eventsReachACollectorWithNoCap() = runBlocking {
-        CarInputEvents.start(emptyList())
+        CarInputEvents.start(Any(), emptyList())
         val n = 300
         val got = async(start = CoroutineStart.UNDISPATCHED) { CarInputEvents.events.take(n).toList() }
         // A collector that keeps up gets every event: no cap, unlike the connection log.
@@ -67,7 +67,8 @@ class CarInputEventsTest {
         val c1 = VideoConfiguration.newBuilder().setCodecResolution(VideoCodecResolutionType.VIDEO_800x480)
             .setFrameRate(VideoFrameRateType.VIDEO_FPS_30).build()
         val input = Service.newBuilder().setId(5).setInputSourceService(InputSourceService.newBuilder().addKeycodesSupported(4)).build()
-        CarInputEvents.start(CarInputEvents.sessionLines(listOf(c0, c1), listOf(input), input))
+        val session = Any()
+        CarInputEvents.start(session, CarInputEvents.sessionLines(listOf(c0, c1), listOf(input), input))
         val lines = CarInputEvents.report.value
         assertEquals(3, lines.size)
         assertEquals("car offers screen #0: 1920x1080 60 fps H264_BP, margins 0x360, density 200, content insets top 1 bottom 2 left 3 right 4", lines[0])
@@ -79,7 +80,19 @@ class CarInputEventsTest {
         assertEquals(4, CarInputEvents.report.value.size)
         assertEquals("chosen: screen #1, 800x480 30 fps H264_BP, margins 0x0, density not given", CarInputEvents.report.value.last())
 
-        CarInputEvents.end()
+        CarInputEvents.end(session)
+        assertTrue(CarInputEvents.report.value.isEmpty())
+    }
+
+    /** I4-4: a reconnect before the old session closed keeps the new session's report. */
+    @Test fun anOldSessionsEndLeavesTheNewOnesReport() {
+        val old = Any()
+        val new = Any()
+        CarInputEvents.start(old, listOf("old"))
+        CarInputEvents.start(new, listOf("new"))
+        CarInputEvents.end(old)
+        assertEquals(listOf("new"), CarInputEvents.report.value)
+        CarInputEvents.end(new)
         assertTrue(CarInputEvents.report.value.isEmpty())
     }
 }
