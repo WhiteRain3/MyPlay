@@ -170,6 +170,13 @@ private val PLAY_SIZE = 96.dp
 /** MyPlay (R5): how far one press of left or right on the pad seeks, on the progress bar. */
 internal const val SEEK_STEP_MS = 10_000L
 
+/** MyPlay (R5-4): how long a pad seek counts as the position before the app confirms it. */
+internal const val SEEK_PENDING_MS = 2_000L
+
+/** MyPlay (R5-4): the next pad seek, from the last one still unconfirmed ([pendingMs]) or else from [positionMs]. */
+internal fun nextSeek(pendingMs: Long?, positionMs: Long, durationMs: Long, stepMs: Long): Long =
+    seekTarget(pendingMs ?: positionMs, durationMs, stepMs)
+
 /** MyPlay (R5): where a seek of [stepMs] from [positionMs] lands, kept inside the song. */
 internal fun seekTarget(positionMs: Long, durationMs: Long, stepMs: Long): Long =
     (positionMs + stepMs).coerceIn(0L, if (durationMs > 0) durationMs else Long.MAX_VALUE)
@@ -189,6 +196,11 @@ private fun Progress(info: PlaybackInfo, canSeek: Boolean, seekTo: (Long) -> Uni
     val pos = if (info.durationMs > 0) raw.coerceIn(0, info.durationMs) else raw.coerceAtLeast(0)
     var dragging by remember { mutableStateOf(false) }
     var dragValue by remember { mutableFloatStateOf(0f) }
+    // R5-4: where the last pad seek went, until the app reports a new position (or 2 s pass), so
+    // quick presses add up instead of each starting from the same old position.
+    var pendingSeek by remember { mutableStateOf<Long?>(null) }
+    LaunchedEffect(info.sampledAtMs) { pendingSeek = null }
+    LaunchedEffect(pendingSeek) { if (pendingSeek != null) { delay(SEEK_PENDING_MS); pendingSeek = null } }
     if (info.durationMs > 0) {
         val fraction = pos.toFloat() / info.durationMs
         if (canSeek) {
@@ -207,7 +219,11 @@ private fun Progress(info: PlaybackInfo, canSeek: Boolean, seekTo: (Long) -> Uni
                             Key.DirectionRight -> SEEK_STEP_MS
                             else -> return@onPreviewKeyEvent false
                         }
-                        if (e.type == KeyEventType.KeyDown) seekTo(seekTarget(pos, info.durationMs, step))
+                        if (e.type == KeyEventType.KeyDown) {
+                            val target = nextSeek(pendingSeek, pos, info.durationMs, step)
+                            pendingSeek = target
+                            seekTo(target)
+                        }
                         true
                     },
             )
