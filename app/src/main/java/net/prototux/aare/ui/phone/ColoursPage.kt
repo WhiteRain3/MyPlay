@@ -190,6 +190,18 @@ val ColourRole.label: Int
         ColourRole.TEXT_DIM -> R.string.phone_role_text_dim
     }
 
+/** What a colour role paints on the car screen (the car shares some colours between parts). */
+val ColourRole.what: Int
+    get() = when (this) {
+        ColourRole.BACKGROUND -> R.string.phone_role_background_what
+        ColourRole.CARD -> R.string.phone_role_card_what
+        ColourRole.BAR -> R.string.phone_role_bar_what
+        ColourRole.ACCENT -> R.string.phone_role_accent_what
+        ColourRole.ON_ACCENT -> R.string.phone_role_on_accent_what
+        ColourRole.TEXT -> R.string.phone_role_text_what
+        ColourRole.TEXT_DIM -> R.string.phone_role_text_dim_what
+    }
+
 /** One colour role: its colour as the car paints it, whose it is, and a way back to the look's own when the owner set it. */
 @Composable
 private fun OwnColourRow(role: ColourRole, colour: Int, yours: Boolean, onPick: () -> Unit, onBack: () -> Unit) {
@@ -201,6 +213,7 @@ private fun OwnColourRow(role: ColourRole, colour: Int, yours: Boolean, onPick: 
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text(stringResource(role.label), color = PhoneColors.Text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(role.what), color = PhoneColors.Muted, fontSize = 13.sp)
             Text(
                 stringResource(if (yours) R.string.phone_own_colours_yours else R.string.phone_own_colours_looks_own) + " · #" + ColourMath.toHex(colour),
                 color = PhoneColors.Muted, fontSize = 13.sp,

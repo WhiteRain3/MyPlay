@@ -279,4 +279,11 @@
     <string name="phone_role_on_accent" translatable="false">Text on the accent</string>
     <string name="phone_role_text" translatable="false">Text</string>
     <string name="phone_role_text_dim" translatable="false">Dim text</string>
+    <string name="phone_role_background_what" translatable="false">Behind everything, where there is no wallpaper</string>
+    <string name="phone_role_card_what" translatable="false">Cards, tiles and panels; also the floating pills bar</string>
+    <string name="phone_role_bar_what" translatable="false">The bar or dock, the music list\'s header and the keyboard</string>
+    <string name="phone_role_accent_what" translatable="false">Buttons that stand out, the focus ring, progress</string>
+    <string name="phone_role_on_accent_what" translatable="false">Text and symbols on the accent colour</string>
+    <string name="phone_role_text_what" translatable="false">Most text and symbols</string>
+    <string name="phone_role_text_dim_what" translatable="false">Second lines and quieter text</string>
 </resources>
