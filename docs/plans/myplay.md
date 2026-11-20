@@ -42,7 +42,7 @@ What is left, and what waits for the car, is in the next section.
 4. **I2, an updater that installs.** Download and install the new release when the owner taps,
    instead of opening the release page (AA-Experiments `Updater.kt`, `core/UpdateCheck.kt`).
 
-**Car Worker**, after R4 to R7:
+**Car Worker**, after R4 to R7 (then phase N, one layout system, below the M and R sections):
 1. **G1, keys into mirrored apps**, then **G2, the pointer**, driven by the pad's arrow keys. The
    bench sends arrow keys, so this can be built and tested now; only the Audi's actual codes wait
    for R8.
@@ -561,6 +561,200 @@ R8.
 
 Safe now, on the bench: R1 to R7 and B1. Needs the car: R8, B2, and whether "hold and turn" is
 possible at all.
+
+## Phase N: one layout system (planned 2026-11-20)
+
+The owner's words: "Sounds like you didn't actually change the original layout and stuff. What
+would it be hard to maybe like remove all of the old one and redo with fully our custom layout
+setup? Because there are more things that are different that I dislike."
+
+The goal: MyPlay's layout-as-data shell (`SpecShell`, `CarLayoutSpec`, `SpecPlacement`) becomes
+the only car screen. "Map behind" becomes one option of it, not the name of a whole layout.
+AARE's three shells (taskbar, dock, classic) stop being choosable.
+
+**What switching shells does not change.** The four shells already share most screens:
+`SpecShell` draws apps, the app grid, notifications, calls, car settings and the music browser
+through the same AARE code as the taskbar (`ContentArea`, `Launcher`, `NoticeOverlay`,
+`CallOverlay` in `CarShell.kt`, and the screens in `ui/car/`). Hiding the old shells removes
+the old *home screens and bars*. The rest of what the owner dislikes is in those shared screens,
+and step N8 restyles them. Before N8 starts, the dispatcher asks the owner which screens and
+details they dislike, with pictures if possible (open question below).
+
+### N-inventory: what the old shells do that the spec shell does not yet
+
+From the code at 0.1.22 (`ui/car/CarShell.kt`, `DockShell.kt`, `ClassicShell.kt`,
+`SpecShell.kt`, `CarLayoutSpec.kt`).
+
+| Piece | Old shell(s) | Spec shell today | Gap |
+|---|---|---|---|
+| Home without a maps app | taskbar: dashboard with the "Where to?" map card | wallpaper plus the maps buttons panel (M3-3) | Small. No "plain colour" choice; covered by N1 |
+| Home as cards | taskbar: map, media, calendar, notification, weather cards in a chosen order (`DashCard`, `DashboardOrder.kt`, `DashboardWidgets.kt`) | next turn, arrival, music, clock and status | **Calendar, notification and weather cards, and the map as a card**, are missing (N1, N2) |
+| Home as an app grid | classic: home *is* the app grid (`launcherHome`). Dock: an icon grid as home (`DockShell.Home`) | home is always the cards | Missing as a choice (N4) |
+| App grid (launcher) | all, the same `Launcher` | the same `Launcher` | None in function. Its look is AARE's (N8) |
+| Full-screen app with the bar | all, the same `ContentArea` | the same, bar beside it, no cards | None in function |
+| Notifications | all: `NoticeOverlay` banner, notifications app | the same, plus a bell in the bar | None in function. Look is AARE's (N8) |
+| Calls | all: `CallOverlay`, `CallCard.kt`, `PhoneScreen.kt` | the same | None in function. Look is AARE's (N8) |
+| Car settings screens | all: `CarSettingsScreen.kt`, `CarDataScreen.kt`, `DashboardSettings.kt`, `MyPlayStatusSettings.kt` | the same | They offer the layout choice (taskbar, dock, classic, map behind); that choice goes in N7. Look is AARE's (N8) |
+| Voice button | taskbar rail, dock, classic bottom bar | in the bar (`MicButton`) | None |
+| Music browser | all: `BrowserScreen.kt` | the same | None in function |
+| Bar items (rail widgets) | taskbar rail: clock, temperature, battery, weather (`RailWidgets.kt`), segment clock, phone status | the same items (`barItems`), phone status, network icons | None. The `sideRailFit` shrinking for short screens is taskbar-only (N5) |
+| App shortcuts in the bar | taskbar: nav, media, phone, settings. Dock: a column of app icons, recent apps first | nav, media, phone, notifications | **A row/column of chosen or recent apps** is missing (N3) |
+| Now-playing pill and turn badge in the bar | classic bottom bar (`ActivityPill`, `TurnBadge`) | not in the bar (cards show them) | Optional bar items (N3) |
+| Driver on the right | dock and taskbar swap sides | the bar side is fixed by the preset (left/right/top/bottom) | Mirror "left/right" to "driver side / passenger side" (N5) |
+| Portrait screens | dock moves to the bottom; taskbar goes horizontal | `SpecPlacement` works on any size; presets are drawn for landscape | Check and fix placement on tall screens (N5) |
+| Split views | none: no shell shows two apps side by side. The map card next to other cards is the closest | — | Not ported; new work if the owner wants it (not in this phase) |
+| Phone picture of the car screen | `CarPicture.kt` draws whichever shell is chosen | works with map behind | Follows automatically. Remove the old choices from it (N6) |
+| Car check (phone) | `CarCheckPage.kt`, `CarCheckLog.kt` | does not depend on the layout | None |
+| Knob walks and tests | `PadWalkTest` walks taskbar, dock, classic, map behind; `CarStylesTest`, `BarPageTest`, `MyPlayWeatherTest` name `CarLayout.TASKBAR` etc. | `mapBehindHome`, `mapBehindHomeAudi`, `launcherAudi`, `settingsScreenAudi` | Move every old-shell case to a preset (each step's tests) |
+| R4 (pad like a TV remote) | walked on all shells | walked | Each new card and bar item gets a pad walk |
+| R5 (map move mode, seeking) | the map card is a stop on the taskbar home | the map behind is not a knob stop (`LocalMapTapIsKnobStop` false) | With "map as a card" (N1) the map card must be a stop for R5. With the map behind, R5 needs its own way in (a long press, R5's own task) |
+| Styles that pick a shell | `CarStyle`: AARE, Android Auto, Material You → taskbar; Android Auto 2019 → classic; CarPlay → dock | — | Styles must stop choosing a shell (N7) |
+| Phone pages | `LayoutScreen.kt` (four choices), `BarPage.kt` and `CardsPage.kt` (notes per shell), setup wizard | map behind options with presets | Show only the spec options (N6) |
+
+### N1. "Map behind" becomes one option of the background (1 chunk, car Worker)
+
+Option 1 of the sheet, today `mapBackground: Boolean`, becomes **Background**:
+
+| Value | What is behind the bar and cards |
+|---|---|
+| Map | The maps app's picture fills the screen (today's "on") |
+| Wallpaper | The wallpaper (today's "off", F5 edits it) |
+| Plain | One solid colour from the look (F3) |
+
+Plus a new card, **Map card**: the maps app's picture in a card, in the card slots like any
+other card. Allowed only when the background is not Map (`allowed()` drops it otherwise).
+It reports its area to the maps app the same way the taskbar's map card does today.
+
+- Stored text: keep the key `map` readable (`1` → Map, `0` → Wallpaper) and add `bg=map|wallpaper|plain`;
+  a new build reads old settings without a change. Never change released keys.
+- "Map under the bar" stays allowed only with Background = Map.
+- No maps app installed: Background Map falls back to Wallpaper on screen (as today), and the
+  Map card shows the "Where to?" panel instead.
+- Tests: encode/decode round trips for all three backgrounds and old strings; `allowed()` rules;
+  a Robolectric screenshot per background; pad walk with the Map card as a stop.
+- Bench: `home` walk with each background, chosen on the phone before the run.
+
+### N2. The taskbar's other cards (2 chunks, car Worker)
+
+Port calendar, notification and weather from the taskbar dashboard (`DashboardWidgets.kt`,
+`DashSlot`) into `SpecCard`, drawn in MyPlay's card style and fitting every card place
+(column, corners, stage, banner). The taskbar's saved card order (`DashCard` ids) feeds N7's
+migration, so keep those ids.
+
+- Chunk 1: the card kinds and their drawing; chunk 2: their sizes in each card place at
+  1200x723 and 1280x720, and the hide-after rule for each (option 8 extended).
+- Tests: each card with and without data; `SpecPlacement` with 2 to 7 cards; pad walk
+  (read-only cards are not stops; buttons are).
+- Bench: `home` and `night-day` with a preset that shows all cards.
+
+### N3. Bar items the old shells had (1 chunk, car Worker)
+
+Optional bar items: **apps in the bar** (chosen apps, or recent apps first as on the dock),
+**now playing** (the classic pill) and **next turn** (the classic badge). Chosen with the bar
+items page (M6 second half), not as new layout options.
+
+- Tests: `barItems` choices; the bar never overflows (it scrolls today; check it fits at 723 px
+  high with every item on); pad walk through a full bar.
+- Bench: `home` with a full bar, side and bottom.
+
+### N4. What home shows (1 chunk, car Worker)
+
+New option 9, **Home**: *cards* (today) or *app grid* (the classic and dock way: home opens on
+the app grid, over the background, with the bar). Back from an app goes to that home.
+
+- Tests: Home and Back with both values; K2 (the knob starts on the first stop) on the grid home.
+- Bench: `home`, `open-back`, `back-out` with each value.
+
+### N5. Screen shapes and the driver's side (1 chunk, car Worker)
+
+- Bar side becomes *driver side / passenger side / top / bottom*, mirrored by `driverOnRight`
+  (stored `left`/`right` still read).
+- `SpecPlacement` on tall screens (portrait head units) and very short ones; take over
+  `sideRailFit`'s shrinking of text and buttons in a narrow bar.
+- Tests: `SpecPlacement` unit tests for 800x1280, 1280x720, 1200x723, 1920x720 and both driver
+  sides; screenshot per preset at the Audi size.
+- Bench: `home` with the Audi profile and with `--res 720x1280` (no margins).
+
+### N6. Phone side shows only the spec system (1 to 2 chunks, phone worker)
+
+- `LayoutScreen.kt`: no list of four layouts; presets A to F (and any added by N7) plus the
+  options, including N1's background and N4's home.
+- `BarPage.kt`, `CardsPage.kt`: one set of notes, for the spec shell; the taskbar's dashboard
+  order page becomes the card list of option 7.
+- Setup wizard: picks a preset, not a layout.
+- `CarPicture.kt` follows by itself; check it draws each preset.
+- Tests: `BarPageTest` and the phone page tests without old layouts.
+- Bench: phone screenshots of each page (`phone.png` of any walk).
+
+### N7. The switch: one shell for everyone (1 chunk, car Worker; settings migration in its own extension file)
+
+1. `CarShell` sends every layout to `SpecShell` (one change in the `when` at `CarShell.kt:129`).
+2. **Migration, once, on first start of the new version**, keeping what the user chose before:
+
+   | Stored layout | Becomes | Carried over |
+   |---|---|---|
+   | taskbar (and styles AARE, Android Auto, Material You) | preset A with Background = Wallpaper and the Map card first | the dashboard card order, rail widgets, rail side |
+   | dock (style CarPlay) | preset B, Home = app grid, apps in the bar | bar items |
+   | classic (style Android Auto 2019) | preset B, Home = app grid, now playing and next turn in the bar | — |
+   | map behind | unchanged | everything |
+
+   The stored id becomes `myplay_map_behind` afterwards; the old ids stay readable by
+   `CarLayout.byId` (it maps them to the spec shell) so a restored backup (F6) of an old version
+   still works. A setting records that the migration ran.
+3. `CarStyle` keeps choosing colours and shapes, never a shell.
+4. The car settings screen and the phone pages no longer offer old layouts (N6 first).
+5. Tests: migration from each old id and style, with and without saved card orders; a backup
+   from 0.1.22 restored; `PadWalkTest`, `CarStylesTest`, `MyPlayWeatherTest` cases moved to
+   presets; all old-shell cases removed from the walks.
+6. Bench: the full set of walks on the migrated presets (all eight), the owner's phone
+   updated from 0.1.22 with the taskbar chosen.
+
+**Delete AARE's old shell code, or leave it unused?** Recommendation: **leave it unused** for
+now.
+
+- Deleting `DockShell.kt` and `ClassicShell.kt` and the taskbar parts of `CarShell.kt` makes
+  every upstream change to those files a conflict at the next merge of `main` (I1). Upstream
+  edits `CarShell.kt` often; a deleted file conflicts on every such change, an unused one merges
+  by itself.
+- `CarShell.kt` cannot be deleted anyway: the spec shell uses its `ContentArea`, `Launcher`,
+  `NoticeOverlay`, `Clock`, `AppIcon`, `RailButton`, `MicButton` and `RoundIcon`.
+- Unused code costs a little APK size and nothing on screen; the release build can strip it.
+- The cost of keeping it: two shells' worth of code a worker must know not to change, and
+  upstream fixes to those files are taken but do nothing. A header comment in each unused file
+  says so.
+- Revisit when upstream merges stop (if the owner ever chooses that) or when a later N8 step
+  needs to move the shared parts out of `CarShell.kt`; then delete in one commit.
+
+### N8. Restyle the shared screens (3 to 4 chunks, car Worker, after the owner's list)
+
+The screens all layouts share, in MyPlay's design (Phase F's looks, the Design reviewer's
+sheet): (1) app grid; (2) notifications list and banner; (3) call card and phone screen;
+(4) car settings and the music browser. One chunk each, in the order of the owner's list.
+Keep AARE's behaviour and knob order; change the drawing. Each in its own new file where it
+can be (a MyPlay drawing called from the shared code) so upstream merges stay small.
+
+- Tests: screenshot per screen, day and night, Audi size; pad walk per screen (R4).
+- Bench: `grid-end`, `settings`, `maps`, `back-out`, `night-day`.
+
+### Order and size
+
+| Step | Who | Chunks | Needs |
+|---|---|---|---|
+| N1 background option, map card | car Worker | 1 | — |
+| N2 the other cards | car Worker | 2 | N1 |
+| N3 bar items | car Worker | 1 | M6 second half |
+| N4 home choice | car Worker | 1 | — |
+| N5 shapes, driver's side | car Worker | 1 | — |
+| N6 phone pages | phone worker | 1 to 2 | N1, N4 (options exist) |
+| N7 the switch and migration | car Worker | 1 | N1 to N6 |
+| N8 restyle shared screens | car Worker | 3 to 4 | the owner's list; can start after N7 |
+
+About **11 to 13 chunks** in all; a chunk is one change that gets one review and one release.
+N1 to N5 can go in any order after N1; nothing old disappears until N7, so each release before it
+is safe. Old-shell work stops now: no new features in the taskbar, dock or classic shells.
+
+Open question for the owner (through the dispatcher): which screens and details do you dislike
+besides the home screen and bar? A list, or pictures from the car or the bench, sets N8's order.
 
 ## Standing rules for every task
 
