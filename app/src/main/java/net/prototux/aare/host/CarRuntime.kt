@@ -385,6 +385,12 @@ class CarRuntime(
         }
     }
 
+    /** MyPlay (K8): the name of the app [packageName] belongs to, or "" when it cannot be read. */
+    private fun appLabel(packageName: String): String = runCatching {
+        val pm = context.packageManager
+        pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
+    }.getOrDefault("")
+
     private fun applyApps(found: List<CarAppInfo>, messaging: List<PhoneApp>) {
         val hidden = settings.hiddenApps
         val assistantPkg = assistantPackage()
@@ -394,6 +400,8 @@ class CarRuntime(
             val id = carId(app)
             carApps[id] = app
             if (app.packageName in hidden) continue
+            // MyPlay (K8): Google's Android Auto app's own car screens cannot be shown here.
+            if (!MyPlayAppList.canShow(app.packageName)) continue
             val kind = when {
                 app.isNavigation -> CarAppKind.NAVIGATION
                 app.packageName == assistantPkg -> CarAppKind.ASSISTANT
@@ -405,6 +413,7 @@ class CarRuntime(
         for (m in media.apps.value) {
             // An app that has a car UI of its own is shown once, as that; a messaging app, as messaging.
             if (m.packageName in hidden || m.packageName in messagingOnly || entries.any { it.packageName == m.packageName }) continue
+            if (!MyPlayAppList.canShow(m.packageName)) continue // MyPlay (K8)
             entries += CarAppEntry(mediaId(m.packageName), m.packageName, m.label, m.icon, CarAppKind.MEDIA)
         }
         // Built in, like Android Auto's: calls, the car-side settings and notifications. Always in
@@ -436,6 +445,7 @@ class CarRuntime(
         }
         for (m in messaging) {
             if (m.packageName in hidden || entries.any { it.packageName == m.packageName }) continue
+            if (!MyPlayAppList.canShow(m.packageName)) continue // MyPlay (K8)
             entries += CarAppEntry(messagingId(m.packageName), m.packageName, m.label, m.icon, CarAppKind.MESSAGING)
         }
         // The order chosen on the phone first, then alphabetical.
@@ -446,8 +456,11 @@ class CarRuntime(
             entries += CarAppEntry(EXIT_ID, context.packageName, context.getString(R.string.dash_menu_exit_to_car),
                 builtinIcon(R.drawable.ic_car_exit), CarAppKind.EXIT)
         }
+        // MyPlay (K8): entries that would show the same name get their app's name in front.
+        val names = MyPlayAppList.names(entries.map { MyPlayAppList.Named(it.packageName, it.label, appLabel(it.packageName)) }, context.packageName)
+        val shown = entries.mapIndexed { i, e -> if (names[i] == e.label) e else CarAppEntry(e.id, e.packageName, names[i], e.icon, e.kind) }
         ui.apps.clear()
-        ui.apps.addAll(entries)
+        ui.apps.addAll(shown)
         ui.launcherHidden = launcherHiddenIds(hidden)
         // Restore the last navigation and media apps, so the dashboard isn't empty. Not a navigation app that
         // finished itself: its map card would stay blank instead of offering the picker.
