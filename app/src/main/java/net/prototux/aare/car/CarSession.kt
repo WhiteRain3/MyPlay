@@ -240,6 +240,7 @@ class CarSession(
         // a cluster/second screen lists one input service per display, several of them empty.
         val inputServices = ArrayList<Service>()
         var mainDisplayId = 0
+        var mainConfigs: List<VideoConfiguration> = emptyList()
         val quirks = vehicleOverride
         for (s in response.channelsList) {
             val kind = AapSession.serviceKind(s)
@@ -253,6 +254,7 @@ class CarSession(
                     when (s.mediaSinkService.displayType.number) {
                         0 -> if (video == null) {
                             mainDisplayId = s.mediaSinkService.displayId
+                            mainConfigs = s.mediaSinkService.videoConfigsList
                             videoCodec = pickVideoCodec(s.mediaSinkService.videoConfigsList)
                             video = VideoChannel(s, videoListener(rhd), videoType(videoCodec)).also { channels += it }
                         }
@@ -298,6 +300,8 @@ class CarSession(
         val hasTouch = mainInput?.let(::realTouch) == true
         main.post { runtime.touchscreen = hasTouch }
         if (settings.logCarInput) for (s in inputServices) DiagLog.add(CarInputLog.serviceLine(s, used = s === mainInput))
+        // MyPlay (I4): what the car said about itself, for the phone's car check.
+        CarInputEvents.start(CarInputEvents.sessionLines(mainConfigs, inputServices, mainInput))
         mainInput?.let { s ->
             inputChannelId = s.id
             InputChannel(s, inputListener).also { ch ->
@@ -392,6 +396,7 @@ class CarSession(
         val rejected = session.certificateRefusal
         val refusal = session.pinRefusal
         inputLog.end()
+        CarInputEvents.end()
         main.post {
             teardown()
             listener.onEnded(this, reason, rejected, refusal)
@@ -417,6 +422,7 @@ class CarSession(
                 vehicleOverride?.prefer60fps ?: settings.prefer60fps, videoType(videoCodec))
 
         override fun onVideoStart(index: Int, config: VideoConfiguration) {
+            CarInputEvents.chosen(index, config)
             main.post {
                 if (closed) return@post
                 try {
@@ -649,6 +655,7 @@ class CarSession(
     private val inputListener = object : InputChannel.Listener {
         override fun onInput(report: InputReport) {
             inputLog.report(inputChannelId, report)
+            CarInputEvents.report(inputChannelId, report, SystemClock.elapsedRealtime())
             if (report.hasTouchEvent()) {
                 val ev = touch?.map(report.touchEvent) ?: return
                 display?.dispatchTouch(ev)
