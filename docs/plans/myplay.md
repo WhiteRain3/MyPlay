@@ -15,7 +15,7 @@ known".
 | B1 head unit margins, B2 Tester script | Done, in 0.1.0. The script ran on the owner's Windows PC without errors |
 | A4 first release and Tester smoke run | 0.1.0 released and run on the PC bench: report `test-reports/0.1.0/REPORT.md` on branch `claude/test-reports` |
 | A7 the car's buttons in the phone's own log | Done, released in 0.1.1: buttons and knob in the connection log on the phone, at most 120 such lines per connection; the log keeps 1000 lines. Not yet seen on the bench |
-| Bench round 1 fixes (K1 to K11 below) | Not started. K1 to K8 can be done before the parked test |
+| Bench round 1 fixes (K1 to K11 below) | **K2 to K7 are pushed (`ba428ec..9ffeff3`) and under review. Not seen on any device yet.** K1 (the Tester's long walks) is still to do. K8 to K11 not started |
 | The owner's parked test | **Passed with 0.1.0 (2026-11-19): "just checked on the car, this thing works!"** Details (knob, tilt, buttons, sound, screen size) not reported yet; they come with the 0.1.1 log |
 | The owner's three requests after the test (W and M below) | Not started |
 
@@ -55,7 +55,8 @@ and `a08c2073`, which were read, not run.
 - Tells us: whether K2 is only "start in the right place" or also "the content cannot be entered
   at all".
 
-**K2. When an app or a new page opens, the ring starts on its first item.**
+**K2. When an app or a new page opens, the ring starts on its first item.** *(Pushed, under
+review, not seen on a device. Not called done until the Tester's K1 walks are in.)*
 - Finding: same as K1, and it is the Tester's "fix first".
 - From the code: `ui/car/CarShell.kt:153-157` asks for focus on the content when the screen
   changes, but does so before the new screen is laid out, and silently gives up if it fails. The
@@ -72,7 +73,9 @@ and `a08c2073`, which were read, not run.
   turning: every option gets the ring in order, the page scrolls with it, then the bar, then
   back to the first option. Same in Organic Maps for Search, Categories and the zoom buttons.
 
-**K3. Back never traps.**
+**K3. Back never traps.** *(Pushed, under review, not seen on a device. "Holding Back" relies on
+the car sending a long press; whether the box does is not known, and the bench script cannot
+play it. The double press does not depend on that.)*
 - Finding: Back did nothing in Fermata Mirror.
 - From the code: in a hosted app Back is handed to the app and nothing else happens
   (`host/CarRuntime.kt:671-682`, `host/CarAppConnection.kt:183`). An app that is on its first
@@ -82,7 +85,7 @@ and `a08c2073`, which were read, not run.
 - Bench check: open Fermata Mirror, Back twice: home screen. In Organic Maps, open Search, Back
   once: back to the map, still inside the app.
 
-**K4. A ring you can see, on everything.**
+**K4. A ring you can see, on everything.** *(Pushed, under review, not seen on a device.)*
 - Findings: the play button only gets slightly darker; the app grid shows a faint grey tile and
   no ring; the "Car audio" message's close button was never reached.
 - From the code: the ring is a 3 dp border in the accent colour (`ui/car/CarFocus.kt`); on a
@@ -94,7 +97,8 @@ and `a08c2073`, which were read, not run.
   test that fails when something tappable has no ring.
 - Bench check: the `home` walk and a grid walk: every stop shows a clear ring, including play.
 
-**K5. No stop without a visible ring on the home screen; maps buttons that fit.**
+**K5. No stop without a visible ring on the home screen; maps buttons that fit.** *(Pushed,
+under review, not seen on a device.)*
 - Findings: one stop on the home screen shows nothing; "Organic Maps" is cut to "Organ / ic /
   M…".
 - From the code: the card draws up to four maps buttons in a row that cannot scroll
@@ -105,7 +109,10 @@ and `a08c2073`, which were read, not run.
   opens the list when some are left out.
 - Bench check: `home` walk: the number of stops equals the number of things you can see.
 
-**K6. The ringed thing is always on screen.**
+**K6. The ringed thing is always on screen.** *(Pushed, under review, not seen on a device. The
+Worker's open points: it may or may not cure the ring drawn below the edge, which only the
+bench can show; and text below the last item that can take focus still cannot be reached with
+the knob, because the knob moves from item to item and does not scroll by itself.)*
 - Findings: the grid's last entry ("Exit to car") is ringed below the bottom edge; the Settings
   page continues below the edge.
 - Do: when focus moves, scroll so the focused item is fully visible, in the app grid and in
@@ -113,7 +120,8 @@ and `a08c2073`, which were read, not run.
 - Bench check: walk the grid to its end and the Settings page to its end: the ring is always
   fully visible.
 
-**K7. The bench script's small faults.**
+**K7. The bench script's small faults.** *(Pushed, under review, not run on Windows yet. New
+option `-Tile`; see `docs/TESTER_SETUP.md`.)*
 - Findings: garbled characters in `headunit-out.txt`; the PowerShell profile's output mixed in;
   results land inside the repository checkout; the log filter lets unrelated lines through.
 - Do: write the file as UTF-8, add `-NoProfile` to the documented command, default the results

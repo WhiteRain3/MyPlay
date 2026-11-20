@@ -104,14 +104,19 @@ Keep the window in front while testing by hand: keys only reach it while it has 
 command: the adb forward, the head unit with the Audi profile and a named knob walk, stopping it
 after a set time, a phone screenshot and the phone's log.
 
-**This script has never been run, and has not even been read by PowerShell yet.** It was written
-in a cloud session with no Windows and no phone. Expect the first run to need fixes; report what
-happened, with the error text. Steps 6 and 7 below do the same by hand and are the fallback.
+The script's first version ran on the owner's Windows PC without errors (2026-11-19, report
+`test-reports/0.1.0/REPORT.md`). The version after plan task K7 (new walks, `-Tile`, UTF-8
+output, the new results folder) was written in a cloud session and **has not been run yet**;
+report what happens, with the error text. Steps 6 and 7 below do the same by hand and are the
+fallback.
 
 ```powershell
 cd <your checkout of WhiteRain3/MyPlay, branch claude/myplay>\tools\tester
-powershell -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Run-AudiBench.ps1 -HeadUnitDir C:\myplay\aare-headunit -Walk home
 ```
+
+`-NoProfile` keeps your own PowerShell start-up file out of the run; its output got mixed into
+the results before.
 
 Add `-ListWalks` to see the walks, `-Version <version>` to name the result folder.
 
@@ -121,12 +126,27 @@ The path of the head unit folder must not contain a space (`C:\myplay\aare-headu
 | Option | Meaning |
 |---|---|
 | `-HeadUnitDir <folder>` | the unpacked `aare-headunit` folder from the release zip. Needed |
-| `-Walk <name>` | `home` (default), `open-back`, `drive-park` or `night-day` |
+| `-Walk <name>` | which knob walk to play; see the table below. Default `home` |
+| `-Tile <n>` | for the walks `settings`, `maps` and `back-out`: the app's place in the app grid, counted from 1 in the order the ring visits the tiles. Run `grid-end` first; its pictures give the numbers. Default 1 |
 | `-Version <name>` | name of the result folder, normally the MyPlay version |
 | `-Seconds <n>` | how long to let the head unit run. Default: the walk's last event plus 18 seconds |
-| `-OutRoot <folder>` | where results go (default `.\myplay-bench`) |
+| `-OutRoot <folder>` | where results go. Default: a folder `myplay-bench` next to the head unit folder (for `C:\myplay\aare-headunit` that is `C:\myplay\myplay-bench`), so not inside the checkout |
 | `-NoMargins` | leave out the margin part of the profile |
 | `-ListWalks` | list the walks and stop |
+
+| Walk | What it plays | Checks plan task |
+|---|---|---|
+| `home` | 12 single turns on the home screen | K4, K5 |
+| `open-back` | turn, press, then Back | |
+| `drive-park` | the car reports moving, then parked | |
+| `night-day` | the car's lights on, then off | |
+| `grid-end` | opens the app grid and turns 30 times, past its end | K6; also gives the tile numbers for `-Tile` |
+| `settings` | opens the grid, goes to tile `-Tile`, presses, then 20 turns inside | K1, K2, K6 (give MyPlay's car Settings tile) |
+| `maps` | the same for a maps app's tile | K1, K2 (give Organic Maps' tile) |
+| `back-out` | opens tile `-Tile`, then Back twice in quick succession | K3 |
+
+The script cannot hold a key down, so "holding Back goes home" (part of K3) cannot be checked
+with it. All text files it writes are UTF-8.
 
 `adb`, `java` and `ffmpeg` must be on the PATH (step 1). Step 3 and the Trust tap in step 4 must
 have been done once, by hand; the script does not do them.
