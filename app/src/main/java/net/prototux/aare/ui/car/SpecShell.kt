@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -43,6 +45,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,6 +59,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,6 +75,7 @@ import net.prototux.aare.ui.car.CarLayoutSpec.BarSide
 import net.prototux.aare.ui.car.CarLayoutSpec.BarStyle
 import net.prototux.aare.ui.car.CarLayoutSpec.CardPlace
 import net.prototux.aare.ui.car.CarLayoutSpec.SpecCard
+import net.prototux.aare.ui.theme.LocalCarDimens
 
 /**
  * MyPlay (M3): loads a navigation app's maneuver icon (CarRuntime provides it; without it, cards
@@ -231,7 +236,7 @@ private fun shownNow(card: SpecCard, spec: CarLayoutSpec, state: CarUiState): Bo
 private fun CardSlot(card: SpecCard, spec: CarLayoutSpec, state: CarUiState, actions: CarActions, modifier: Modifier) {
     val shown = shownNow(card, spec, state)
     Box(modifier.coversMap(now = shown).carPart(CarPart.MapBehindCard(card))) {
-        if (shown) SpecCardBox(spec, onClick(card, state, actions), Modifier.fillMaxSize()) { CardContent(card, state, actions) }
+        if (shown) SpecCard(card, spec, state, actions, Modifier.fillMaxSize())
     }
 }
 
@@ -242,9 +247,7 @@ private fun StageSlot(spec: CarLayoutSpec, state: CarUiState, actions: CarAction
     Box(modifier.coversMap(now = shownCards.isNotEmpty())) {
         if (shownCards.isNotEmpty()) {
             Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(SpecPlacement.GAP.dp)) {
-                shownCards.forEach { card ->
-                    SpecCardBox(spec, onClick(card, state, actions), Modifier.weight(1f).fillMaxWidth()) { CardContent(card, state, actions) }
-                }
+                shownCards.forEach { card -> SpecCard(card, spec, state, actions, Modifier.weight(1f).fillMaxWidth()) }
             }
         }
     }
@@ -256,15 +259,51 @@ private fun onClick(card: SpecCard, state: CarUiState, actions: CarActions): (()
     SpecCard.CLOCK_STATUS -> null
 }
 
-/** A card's frame: always a dark base, the theme's card colour over it as see-through as the spec says. */
+/**
+ * The music card's knob state (M3-6): the card is one stop; pressing it with the knob goes
+ * [inside], where its buttons are the stops. Turning past them leaves the card, which is then
+ * one stop again.
+ */
+private class CardKnob {
+    var inside by mutableStateOf(false)
+    val first = FocusRequester()
+}
+
+/** One card: its frame and content, and for the music card its knob behaviour. */
 @Composable
-private fun SpecCardBox(spec: CarLayoutSpec, onClick: (() -> Unit)?, modifier: Modifier, content: @Composable () -> Unit) {
+private fun SpecCard(card: SpecCard, spec: CarLayoutSpec, state: CarUiState, actions: CarActions, modifier: Modifier) {
+    val open = onClick(card, state, actions)
+    if (card != SpecCard.MUSIC) {
+        SpecCardBox(spec, open, knobStop = false, modifier) { CardContent(card, state, actions, null) }
+        return
+    }
+    val knob = remember { CardKnob() }
+    // The knob's press goes inside; a touch opens the app, as on the other cards.
+    val press = { if (CarFocusVisibility.keyInput) knob.inside = true else open?.invoke() ?: Unit }
+    // The buttons become stops only once that change is drawn: ask for the focus after it.
+    LaunchedEffect(knob.inside) {
+        if (knob.inside) {
+            withFrameNanos { }
+            runCatching { knob.first.requestFocus() }
+        }
+    }
+    SpecCardBox(spec, press, knobStop = !knob.inside, modifier.onFocusChanged { if (!it.hasFocus) knob.inside = false }) {
+        CardContent(card, state, actions, knob)
+    }
+}
+
+/**
+ * A card's frame: always a dark base, the theme's card colour over it as see-through as the spec
+ * says. A tap runs [onClick]; the knob stops on the card only when [knobStop] (M4: cards that are
+ * only read are passed by).
+ */
+@Composable
+private fun SpecCardBox(spec: CarLayoutSpec, onClick: (() -> Unit)?, knobStop: Boolean, modifier: Modifier, content: @Composable () -> Unit) {
     val shape: Shape = MaterialTheme.shapes.large
     val card = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 1f - spec.cardSeeThrough / 100f)
-    // A tap opens the card's app; the knob passes the card itself by (M4), only its buttons are stops.
     Box(
         modifier.clip(shape).background(Color.Black.copy(alpha = DARK_BASE)).background(card)
-            .let { if (onClick != null) it.focusProperties { canFocus = false }.carFocusHighlight(shape).clickable(onClick = onClick) else it }
+            .let { if (onClick != null) it.focusProperties { canFocus = knobStop }.carFocusHighlight(shape).clickable(onClick = onClick) else it }
             .padding(16.dp),
         contentAlignment = Alignment.CenterStart,
     ) { content() }
@@ -274,11 +313,11 @@ private fun SpecCardBox(spec: CarLayoutSpec, onClick: (() -> Unit)?, modifier: M
 private const val DARK_BASE = 0.55f
 
 @Composable
-private fun CardContent(card: SpecCard, state: CarUiState, actions: CarActions) {
+private fun CardContent(card: SpecCard, state: CarUiState, actions: CarActions, knob: CardKnob?) {
     when (card) {
         SpecCard.NEXT_TURN -> NextTurn(state)
         SpecCard.ARRIVAL -> Arrival(state)
-        SpecCard.MUSIC -> Music(state, actions)
+        SpecCard.MUSIC -> Music(state, actions, knob)
         SpecCard.CLOCK_STATUS -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Clock()
             WeatherChip(state.weather.takeIf { state.weatherInBar })
@@ -333,15 +372,31 @@ private fun Arrival(state: CarUiState) {
 }
 
 @Composable
-private fun Music(state: CarUiState, actions: CarActions) {
+private fun Music(state: CarUiState, actions: CarActions, knob: CardKnob?) {
     val np = state.nowPlaying ?: return
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(np.title, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(np.subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        RoundIcon(Icons.Rounded.SkipPrevious, stringResource(R.string.media_action_previous), filled = false) { actions.mediaPrevious() }
-        RoundIcon(if (np.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, stringResource(R.string.media_action_play_pause), filled = true) { actions.mediaPlayPause() }
-        RoundIcon(Icons.Rounded.SkipNext, stringResource(R.string.media_action_next), filled = false) { actions.mediaNext() }
+        // Stops for the knob only inside the card (M3-6); a touch reaches them always.
+        val stop = knob == null || knob.inside
+        CardButton(Icons.Rounded.SkipPrevious, stringResource(R.string.media_action_previous), filled = false, stop, knob?.first) { actions.mediaPrevious() }
+        CardButton(if (np.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, stringResource(R.string.media_action_play_pause), filled = true, stop) { actions.mediaPlayPause() }
+        CardButton(Icons.Rounded.SkipNext, stringResource(R.string.media_action_next), filled = false, stop) { actions.mediaNext() }
     }
+}
+
+/** A round button on a card, like [RoundIcon], that is a knob stop only when [knobStop]. */
+@Composable
+private fun CardButton(icon: ImageVector, label: String, filled: Boolean, knobStop: Boolean, requester: FocusRequester? = null, onClick: () -> Unit) {
+    val d = LocalCarDimens.current
+    val bg = if (filled) MaterialTheme.colorScheme.primary else Color.Transparent
+    val fg = if (filled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    Box(
+        Modifier.size(d.touchTarget).clip(CircleShape).background(bg)
+            .let { if (requester != null) it.focusRequester(requester) else it }
+            .focusProperties { canFocus = knobStop }.carFocusHighlight(CircleShape).clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, label, tint = fg, modifier = Modifier.size(d.iconSize)) }
 }
