@@ -13,4 +13,11 @@ class CallKeysTest {
         assertFalse(CallKeys.backDeclines(CarCall(ringing = false, name = "A", sinceMs = 0), canEnd = true))
         assertFalse(CallKeys.backDeclines(null, canEnd = true))
     }
+
+    /** R5-1: without the permission to end calls, nothing is declined and Back keeps its job. */
+    @Test fun endingNeedsAndroid9AndThePermission() {
+        assertTrue(Calls.canEnd(28, permitted = true))
+        assertFalse(Calls.canEnd(28, permitted = false))
+        assertFalse(Calls.canEnd(27, permitted = true))
+    }
 }

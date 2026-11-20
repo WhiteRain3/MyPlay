@@ -35,8 +35,15 @@ object Calls {
         runCatching { context.getSystemService(TelecomManager::class.java).endCall() }
     }
 
-    /** Whether [end] works on this phone. */
-    val canEnd: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
+    /**
+     * Whether [end] works on this phone: Android 9 or later, and (MyPlay, R5-1) the permission to
+     * end calls granted. Without it [end] fails quietly, so Decline is not offered and Back keeps
+     * its usual job while a call rings.
+     */
+    fun canEnd(context: Context): Boolean = canEnd(Build.VERSION.SDK_INT,
+        context.checkSelfPermission(android.Manifest.permission.ANSWER_PHONE_CALLS) == android.content.pm.PackageManager.PERMISSION_GRANTED)
+
+    internal fun canEnd(sdk: Int, permitted: Boolean): Boolean = sdk >= Build.VERSION_CODES.P && permitted
 
     /** TelephonyManager.CALL_STATE_IDLE, _RINGING or _OFFHOOK. */
     @Suppress("DEPRECATION")

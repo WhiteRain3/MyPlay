@@ -88,7 +88,7 @@ private fun Ringing(call: CarCall, actions: CarActions, modifier: Modifier) {
             Text(call.name, style = MaterialTheme.typography.headlineSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            if (Calls.canEnd) RoundButton(Icons.Rounded.CallEnd, stringResource(R.string.phone_action_decline), LocalCarColors.current.decline) { actions.endCall() }
+            if (Calls.canEnd(LocalContext.current)) RoundButton(Icons.Rounded.CallEnd, stringResource(R.string.phone_action_decline), LocalCarColors.current.decline) { actions.endCall() }
             RoundButton(Icons.Rounded.Call, stringResource(R.string.phone_action_answer), LocalCarColors.current.accept, modifier = Modifier.focusRequester(answer)) { actions.answerCall() }
         }
     }
@@ -132,7 +132,7 @@ private fun InCall(call: CarCall, state: CarUiState, actions: CarActions, modifi
             Text(stringResource(R.string.phone_in_call_elapsed, call.name, timeStr), color = LocalCarColors.current.onCall,
                 style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 420.dp))
             Spacer(Modifier.width(12.dp))
-            if (Calls.canEnd) RoundButton(Icons.Rounded.CallEnd, stringResource(R.string.phone_action_hang_up), LocalCarColors.current.decline, size = LocalCarDimens.current.touchTarget - 16.dp) { actions.endCall() }
+            if (Calls.canEnd(LocalContext.current)) RoundButton(Icons.Rounded.CallEnd, stringResource(R.string.phone_action_hang_up), LocalCarColors.current.decline, size = LocalCarDimens.current.touchTarget - 16.dp) { actions.endCall() }
         }
     }
 }

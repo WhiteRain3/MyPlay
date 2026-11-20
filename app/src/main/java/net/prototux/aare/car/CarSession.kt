@@ -856,7 +856,7 @@ class CarSession(
      */
     private fun back() {
         // MyPlay (R5): a ringing call is declined by Back.
-        if (CallKeys.backDeclines(runtime.ui.call, Calls.canEnd)) { runtime.actions.endCall(); return }
+        if (CallKeys.backDeclines(runtime.ui.call, Calls.canEnd(context))) { runtime.actions.endCall(); return }
         if (runtime.ui.assistantAppId == null && display?.back() == true) return
         runtime.back()
     }
