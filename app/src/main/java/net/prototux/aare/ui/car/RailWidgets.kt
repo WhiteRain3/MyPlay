@@ -118,6 +118,9 @@ internal fun OutsideTemperatureWidget(carTemperature: Float?, weather: Weather?)
 @Composable
 internal fun BatteryWidget(status: PhoneStatusInfo?) {
     val s = status ?: return
+    // MyPlay (F4-5): with the icon and the number both off, only charging still shows something.
+    val look = LocalStatusStyle.current
+    if (!look.batteryIcon && look.batteryText(s.battery) == null && !s.charging) return
     // MyPlay (F4): drawn as the status style says, like PhoneStatusIcons.
     Row(Modifier.carPart(CarPart.Status), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         BatteryIcons(s)

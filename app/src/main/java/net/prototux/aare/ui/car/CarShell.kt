@@ -78,6 +78,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -225,12 +227,21 @@ internal data class SideRailFit(val recentSlots: Int, val status: Boolean, val s
  * the phone status and weather go first, then Settings (the launcher has it); below that the apps
  * scroll. Dropping items rather than shrinking them keeps every button a full touch target.
  */
-internal fun sideRailFit(height: Dp) = SideRailFit(
-    // A recent app only on tall screens: what an 800 dp screen leaves inside the padding.
-    recentSlots = if (height >= 768.dp) 1 else 0,
-    status = height >= 614.dp,
-    settings = height >= 560.dp,
-)
+internal fun sideRailFit(height: Dp, look: StatusStyle = StatusStyle()): SideRailFit {
+    // MyPlay (F4-2): a larger clock or larger status icons take more of the height (the clock's
+    // line is about 30 dp of its 72, the status and weather 54), so everything else goes sooner.
+    val extra = CLOCK_LINE * (look.clockSize.scale - 1f) + STATUS_LINES * (look.size.scale - 1f)
+    val h = height - extra
+    return SideRailFit(
+        // A recent app only on tall screens: what an 800 dp screen leaves inside the padding.
+        recentSlots = if (h >= 768.dp) 1 else 0,
+        status = h >= 614.dp,
+        settings = h >= 560.dp,
+    )
+}
+
+private val CLOCK_LINE = 30.dp
+private val STATUS_LINES = 54.dp
 
 @Composable
 private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Boolean, area: DpSize) {
@@ -285,7 +296,7 @@ private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Bool
             if (state.driverOnRight) driverEnd() else status()
         }
     } else {
-        val fit = sideRailFit(area.height - 32.dp)
+        val fit = sideRailFit(area.height - 32.dp, LocalStatusStyle.current)
         Column(
             Modifier.fillMaxHeight().width(d.railWidth).carPart(CarPart.Bar).background(container).padding(vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -330,15 +341,23 @@ internal fun Clock() {
     // MyPlay (F4): size, weight and colour from the status style.
     val look = LocalStatusStyle.current
     val color = look.clockColor?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurface
-    Box(Modifier.carPart(CarPart.Clock)) { // MyPlay: a part for the phone's picture
-        if (LocalCarTheme.current.segmentClock) SegmentClock(text, look.clockSize.scale, color)
-        else {
-            val base = MaterialTheme.typography.titleMedium
-            Text(text, style = base.copy(fontSize = base.fontSize * look.clockSize.scale, fontWeight = if (look.clockBold) FontWeight.Bold else base.fontWeight),
-                color = color, maxLines = 1)
-        }
+    val segment = LocalCarTheme.current.segmentClock
+    val base = MaterialTheme.typography.titleMedium
+    val plain = base.copy(fontSize = base.fontSize * look.clockSize.scale, fontWeight = if (look.clockBold) FontWeight.Bold else base.fontWeight)
+    // MyPlay (F4-1): a larger clock than the place has width for (the 96 dp side bar) shrinks to fit
+    // instead of being cut off; measured on its widest time, "88:88".
+    val measurer = rememberTextMeasurer()
+    BoxWithConstraints(Modifier.carPart(CarPart.Clock)) { // MyPlay: a part for the phone's picture
+        val widest = if (segment) segmentStyle(look.clockSize.scale) else plain
+        val needed = measurer.measure("88:88", widest, maxLines = 1).size.width
+        val room = constraints.maxWidth
+        val fit = if (constraints.hasBoundedWidth && needed > room && needed > 0) room.toFloat() / needed else 1f
+        if (segment) SegmentClock(text, look.clockSize.scale * fit, color)
+        else Text(text, style = plain.copy(fontSize = plain.fontSize * fit), color = color, maxLines = 1)
     }
 }
+
+private fun segmentStyle(scale: Float) = TextStyle(fontFamily = SegmentFont, fontSize = 22.sp * scale, letterSpacing = 0.sp)
 
 /**
  * The time on a seven-segment display: the lit digits over the unlit "88:88", as on an old digital
@@ -346,7 +365,7 @@ internal fun Clock() {
  */
 @Composable
 private fun SegmentClock(time: String, scale: Float = 1f, lit: Color = MaterialTheme.colorScheme.onSurface) {
-    val style = MaterialTheme.typography.titleMedium.copy(fontFamily = SegmentFont, fontSize = 22.sp * scale, letterSpacing = 0.sp)
+    val style = MaterialTheme.typography.titleMedium.merge(segmentStyle(scale))
     Box(contentAlignment = Alignment.CenterEnd) {
         Text("88:88", style = style.copy(shadow = null), color = lit.copy(alpha = 0.12f), maxLines = 1)
         // "!" is the font's digit-wide blank: "9:41" becomes "!9:41", over "88:88".

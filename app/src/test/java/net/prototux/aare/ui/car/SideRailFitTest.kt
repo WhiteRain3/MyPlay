@@ -22,4 +22,14 @@ class SideRailFitTest {
         assertEquals(SideRailFit(recentSlots = 0, status = false, settings = false), sideRailFit(508.dp))
         assertEquals(SideRailFit(recentSlots = 0, status = false, settings = false), sideRailFit(300.dp))
     }
+
+    /** MyPlay (F4-2): a larger clock and status icons need more height, so items go sooner. */
+    @Test
+    fun largerStatusAndClockLeaveLessRoom() {
+        val larger = StatusStyle(size = StatusSize.LARGER, clockSize = StatusSize.LARGER)
+        // 768 dp fits the recent app at the normal sizes; 1.5x takes about 42 dp more.
+        assertEquals(SideRailFit(recentSlots = 0, status = true, settings = true), sideRailFit(768.dp, larger))
+        assertEquals(SideRailFit(recentSlots = 1, status = true, settings = true), sideRailFit(810.dp, larger))
+        assertEquals(SideRailFit(recentSlots = 0, status = false, settings = true), sideRailFit(640.dp, larger))
+    }
 }
