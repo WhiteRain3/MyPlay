@@ -60,6 +60,7 @@ import net.prototux.aare.media.Pill
 import net.prototux.aare.media.Placeholder
 import net.prototux.aare.ui.car.AppIcon
 import net.prototux.aare.ui.car.CarAppEntry
+import net.prototux.aare.ui.car.carFocusHighlight
 import net.prototux.aare.ui.theme.LocalCarDimens
 
 /**
@@ -138,7 +139,7 @@ private fun ConversationList(list: List<Conversation>, app: CarAppEntry, driving
         items(list, key = { it.key }) { c ->
             Row(
                 Modifier.fillMaxWidth().heightIn(min = LocalCarDimens.current.touchTarget).clip(MaterialTheme.shapes.medium)
-                    .clickable { onOpen(c) }.padding(horizontal = 8.dp, vertical = 8.dp),
+                    .carFocusHighlight(MaterialTheme.shapes.medium).clickable { onOpen(c) }.padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Avatar(c, app)

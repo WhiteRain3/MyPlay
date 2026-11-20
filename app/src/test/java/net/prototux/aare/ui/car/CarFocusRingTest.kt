@@ -62,7 +62,7 @@ class CarFocusRingTest {
 
     private companion object {
         /** Where the car screens live, under the app's source root. */
-        val CAR_SCREEN_DIRS = listOf("ui/car", "host", "media", "mirror")
+        val CAR_SCREEN_DIRS = listOf("ui/car", "host", "media", "mirror", "notify")
 
         /** File to the text of each tappable place that has no ring on purpose. Say why. */
         val ALLOWED: Map<String, List<String>> = emptyMap()
