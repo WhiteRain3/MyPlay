@@ -62,4 +62,36 @@ class ButtonsScreenTest {
             assertTrue("$k $v", v in actionsFor(k.second))
         }
     }
+
+    @Test
+    fun theDefaultsLeaveAWayOut() {
+        assertTrue(leavesAWayOut(""))
+    }
+
+    @Test
+    fun backCannotLoseBothItsWaysOut() {
+        val pressNothing = withAction("", Control.BACK, Gesture.PRESS, ButtonAction.NOTHING)
+        assertTrue(leavesAWayOut(pressNothing))
+        // With press already set to nothing, the hold may not become something that is not back or home.
+        assertFalse(ButtonAction.NOTHING in allowedActions(pressNothing, Control.BACK, Gesture.HOLD))
+        assertFalse(ButtonAction.PLAY_PAUSE in allowedActions(pressNothing, Control.BACK, Gesture.HOLD))
+        assertTrue(ButtonAction.BACK in allowedActions(pressNothing, Control.BACK, Gesture.HOLD))
+        assertTrue(ButtonAction.HOME in allowedActions(pressNothing, Control.BACK, Gesture.HOLD))
+    }
+
+    @Test
+    fun theLastWayHomeCannotBeTakenAway() {
+        // Home is Back's hold and Menu's press by default; with Menu's press changed, Back's hold must stay home.
+        val noMenuHome = withAction("", Control.MENU, Gesture.PRESS, ButtonAction.PLAY_PAUSE)
+        assertTrue(leavesAWayOut(noMenuHome))
+        assertFalse(ButtonAction.BACK in allowedActions(noMenuHome, Control.BACK, Gesture.HOLD))
+        assertTrue(ButtonAction.HOME in allowedActions(noMenuHome, Control.BACK, Gesture.HOLD))
+    }
+
+    @Test
+    fun everyOfferedChoiceKeepsAWayOut() {
+        Control.entries.forEach { c -> gesturesFor(c).forEach { g ->
+            allowedActions("", c, g).forEach { a -> assertTrue("$c $g $a", leavesAWayOut(withAction("", c, g, a))) }
+        } }
+    }
 }

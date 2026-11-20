@@ -86,6 +86,21 @@ internal fun withAction(stored: String, control: Control, gesture: Gesture, acti
     return ButtonTable.encodeOverrides(overrides)
 }
 
+/**
+ * Whether the buttons in [stored] still leave a way out: Back's press or hold goes back or home
+ * (so an app that ignores the screen can still be left), and some gesture somewhere goes home.
+ */
+internal fun leavesAWayOut(stored: String): Boolean {
+    val t = ButtonTable(ButtonTable.decodeOverrides(stored))
+    val backOut = listOf(Gesture.PRESS, Gesture.HOLD).any { t.action(Control.BACK, it) in setOf(ButtonAction.BACK, ButtonAction.HOME) }
+    val home = Control.entries.any { c -> Gesture.entries.any { g -> t.action(c, g) in setOf(ButtonAction.HOME, ButtonAction.HOME_OR_APPS) } }
+    return backOut && home
+}
+
+/** The actions offered for [control] and [gesture] given the other choices in [stored]: none that would leave no way out. */
+internal fun allowedActions(stored: String, control: Control, gesture: Gesture): List<ButtonAction> =
+    actionsFor(gesture).filter { it == ButtonTable(ButtonTable.decodeOverrides(stored)).action(control, gesture) || leavesAWayOut(withAction(stored, control, gesture, it)) }
+
 /** How many gestures differ from the defaults, for the Buttons tile. */
 fun changedCount(stored: String): Int =
     ButtonTable.decodeOverrides(stored).count { (k, v) -> v != defaultAction(k.first, k.second) }
@@ -171,7 +186,7 @@ fun ButtonsScreen() {
                                 Column {
                                     PhoneChoices(
                                         stringResource(R.string.phone_buttons_choose),
-                                        actionsFor(g).map { it.id to stringResource(actionName(it)) },
+                                        allowedActions(stored, control, g).map { it.id to stringResource(actionName(it)) },
                                         action.id,
                                     ) { id ->
                                         ButtonAction.byId(id)?.let { a ->
@@ -184,10 +199,10 @@ fun ButtonsScreen() {
                         }
                     }
                 })
-                if (control == Control.KNOB_PUSH) {
-                    HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_double_wait))
-                    HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_hold_turn_unknown))
-                }
+                // Any control with a double press set makes its single press wait (B1-3).
+                if (Gesture.DOUBLE in gesturesFor(control)) HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_double_wait))
+                if (control == Control.KNOB_PUSH) HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_hold_turn_unknown))
+                if (control == Control.BACK || control == Control.MENU) HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_way_out))
                 if (control == Control.BACK) HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_back_double))
             }
         }
