@@ -121,7 +121,7 @@ internal fun SpecShell(
             val p = remember(spec, maxWidth, maxHeight) { SpecPlacement.place(spec, maxWidth.value, maxHeight.value) }
             CompositionLocalProvider(LocalMapCovers provides covers) {
                 if (state.screen == CarScreen.Dashboard) {
-                    val nav = state.app(state.activeNavAppId)
+                    val nav = state.app(state.homeNavAppId) // MyPlay (K9)
                     CompositionLocalProvider(LocalMapTapIsKnobStop provides false) {
                         if (spec.mapBackground && nav != null) navMap(nav, Modifier.at(p.map))
                         else Wallpaper(state, Modifier.at(p.map))
