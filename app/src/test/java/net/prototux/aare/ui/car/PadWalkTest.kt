@@ -93,10 +93,10 @@ class PadWalkTest {
         }
         // Outside, the buttons are no stops: only the card is.
         assertTrue("buttons are stops before the card is pressed: ${buttonStops()}", buttonStops().isEmpty())
-        val card = focusables().firstOrNull { label(it).contains("Night Drive") } ?: focusables().first { n ->
-            n.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text.contains("Night Drive") } ||
-                n.children.any { c -> c.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text.contains("Night Drive") } }
-        }
+        val card = focusables().firstOrNull { label(it).contains(PadWalkStates.SONG_TITLE) } ?: focusables().firstOrNull { n ->
+            n.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text.contains(PadWalkStates.SONG_TITLE) } ||
+                n.children.any { c -> c.config.getOrNull(SemanticsProperties.Text).orEmpty().any { it.text.contains(PadWalkStates.SONG_TITLE) } }
+        } ?: throw AssertionError("no music card showing \"${PadWalkStates.SONG_TITLE}\" on the home screen")
         assertTrue("the music card cannot hold the ring", focus(card.id))
         // In the car, the projection display marks key input just before handing the key on
         // (ProjectionDisplay); the press reads that mark, so set it here as the display would,
@@ -259,6 +259,9 @@ class PadWalkTest {
 
 /** Made-up car apps and music for the walks, as in the README mockups. */
 internal object PadWalkStates {
+    /** The song playing in every fixture (R4-6: tests find the music card by it). */
+    const val SONG_TITLE = "Night Drive"
+
     fun state(layout: CarLayout, screen: CarScreen) = CarUiState().apply {
         night = true
         this.screen = screen
@@ -281,7 +284,7 @@ internal object PadWalkStates {
         activeNavAppId = maps.id
         activeMediaAppId = music.id
         recentAppIds += listOf("podcasts", "messages")
-        nowPlaying = NowPlaying(music.id, "Night Drive", "The Synthwaves", icon, playing = true,
+        nowPlaying = NowPlaying(music.id, SONG_TITLE, "The Synthwaves", icon, playing = true,
             positionMs = 95_000, durationMs = 240_000, updatedAtMs = 0)
     }
 
