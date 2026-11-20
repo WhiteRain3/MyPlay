@@ -107,7 +107,7 @@ private fun Dock(state: CarUiState, actions: CarActions, horizontal: Boolean = f
     // The home button: the app grid, or the dashboard when already on it.
     val homeButton: @Composable () -> Unit = {
         val home = state.screen == CarScreen.Launcher
-        Box(Modifier.size(52.dp).clip(LocalCarTheme.current.appIcon).background(MaterialTheme.colorScheme.secondaryContainer)
+        Box(Modifier.size(52.dp).carPart(CarPart.AppsButton).clip(LocalCarTheme.current.appIcon).background(MaterialTheme.colorScheme.secondaryContainer)
             .carFocusHighlight(LocalCarTheme.current.appIcon).clickable { if (home) actions.goHome() else actions.openLauncher() }, contentAlignment = Alignment.Center) {
             Icon(if (home) Icons.Rounded.SpaceDashboard else Icons.Rounded.Apps, if (home) "Dashboard" else "Home",
                 tint = MaterialTheme.colorScheme.onSecondaryContainer)
@@ -115,7 +115,7 @@ private fun Dock(state: CarUiState, actions: CarActions, horizontal: Boolean = f
     }
     if (horizontal) {
         Row(
-            Modifier.fillMaxWidth().height(96.dp).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(horizontal = 14.dp),
+            Modifier.fillMaxWidth().height(96.dp).carPart(CarPart.Bar).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) { Clock(); PhoneStatusIcons() }
@@ -129,7 +129,7 @@ private fun Dock(state: CarUiState, actions: CarActions, horizontal: Boolean = f
         return@CarTheme
     }
     Column(
-        Modifier.fillMaxHeight().width(96.dp).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(vertical = 14.dp),
+        Modifier.fillMaxHeight().width(96.dp).carPart(CarPart.Bar).background(MaterialTheme.colorScheme.surfaceContainerLowest).padding(vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Clock()

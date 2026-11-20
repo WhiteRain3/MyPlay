@@ -166,14 +166,14 @@ private fun SpecBar(state: CarUiState, actions: CarActions, spec: CarLayoutSpec,
     fun on(app: CarAppEntry?) = app != null && state.screen == CarScreen.App(app.id)
     val buttons: @Composable () -> Unit = {
         MicButton(state.listening) { actions.assistant() }
-        if (state.screen == CarScreen.Dashboard) RailButton(Icons.Rounded.Apps, stringResource(R.string.dash_menu_apps), selected = false) { actions.openLauncher() }
+        if (state.screen == CarScreen.Dashboard) Box(Modifier.carPart(CarPart.AppsButton)) { RailButton(Icons.Rounded.Apps, stringResource(R.string.dash_menu_apps), selected = false) { actions.openLauncher() } }
         else RailButton(Icons.Rounded.Home, stringResource(R.string.dash_menu_home), selected = false) { actions.goHome() }
         RailApp(nav, Icons.Rounded.Map, on(nav)) { nav?.let(actions::openApp) ?: actions.openLauncher() }
         RailApp(media, Icons.Rounded.MusicNote, on(media)) { media?.let(actions::openApp) ?: actions.openMusicApps() }
         phone?.let { RailApp(it, Icons.Rounded.Call, on(it)) { actions.openApp(it) } }
         NotificationBell(state) { state.apps.firstOrNull { it.kind == CarAppKind.NOTIFICATIONS }?.let(actions::openApp) }
     }
-    Box(modifier.clip(shape).background(background), contentAlignment = Alignment.Center) {
+    Box(modifier.carPart(CarPart.Bar).clip(shape).background(background), contentAlignment = Alignment.Center) {
         if (vertical) {
             Column(
                 Modifier.verticalScroll(rememberScrollState()).padding(vertical = 8.dp),
@@ -230,7 +230,7 @@ private fun shownNow(card: SpecCard, spec: CarLayoutSpec, state: CarUiState): Bo
 @Composable
 private fun CardSlot(card: SpecCard, spec: CarLayoutSpec, state: CarUiState, actions: CarActions, modifier: Modifier) {
     val shown = shownNow(card, spec, state)
-    Box(modifier.coversMap(now = shown)) {
+    Box(modifier.coversMap(now = shown).carPart(CarPart.MapBehindCard(card))) {
         if (shown) SpecCardBox(spec, onClick(card, state, actions), Modifier.fillMaxSize()) { CardContent(card, state, actions) }
     }
 }
