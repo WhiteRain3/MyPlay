@@ -17,6 +17,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
+import androidx.compose.ui.test.withKeyDown
 import net.prototux.aare.ui.theme.CarTheme
 import net.prototux.aare.ui.theme.CarThemes
 import org.junit.Assert.assertTrue
@@ -57,7 +58,49 @@ class PadWalkTest {
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun dockHomeAudi() = walk(CarLayout.DOCK)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun classicHomeAudi() = walk(CarLayout.CLASSIC)
 
-    private fun walk(layout: CarLayout, screen: CarScreen = CarScreen.Dashboard) {
+    // R4-2: the knob (Tab and Shift+Tab, one per click) visits every item, both ways.
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun knobTaskbarHome() = knob(CarLayout.TASKBAR)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun knobMapBehindHomeAudi() = knob(CarLayout.MAP_BEHIND)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun knobDockHomeAudi() = knob(CarLayout.DOCK)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun knobClassicHomeAudi() = knob(CarLayout.CLASSIC)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun knobLauncherAudi() = knob(CarLayout.MAP_BEHIND, CarScreen.Launcher)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun knobSettingsAudi() = knob(CarLayout.MAP_BEHIND, CarScreen.App("settings"))
+
+    private fun knob(layout: CarLayout, screen: CarScreen = CarScreen.Dashboard) {
+        show(layout, screen)
+        val holdable = focusables().filter { focus(it.id) }
+        assertTrue("$layout $screen: nothing can hold the ring", holdable.isNotEmpty())
+        // Rows of a long list are made anew as they scroll back into view, with new ids: the knob's
+        // walk compares items by what they say.
+        val want = holdable.map { label(it) }.toSet()
+        for (back in listOf(false, true)) {
+            focus(startId(holdable))
+            val seen = HashSet<String>()
+            fun look() { rule.onAllNodes(isFocused()).fetchSemanticsNodes().firstOrNull()?.let { seen += label(it) } }
+            look()
+            // Turned back from the first item, a long list wraps to its end first: keep turning
+            // until every item was seen, or a full lap of even the longest screen.
+            var clicks = 0
+            while (!seen.containsAll(want) && clicks++ < MAX_KNOB_CLICKS) {
+                rule.onNode(isFocused()).performKeyInput {
+                    if (back) withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } else pressKey(Key.Tab)
+                }
+                settle()
+                look()
+            }
+            val missed = want - seen
+            assertTrue("$layout $screen: the knob turned ${if (back) "back" else "on"} never reaches: $missed", missed.isEmpty())
+        }
+    }
+
+    /** What an item says (its description or text, its own or its first child's), with its place in a row of the same. */
+    private fun label(n: SemanticsNode): String =
+        n.config.getOrNull(SemanticsProperties.ContentDescription)?.firstOrNull()
+            ?: n.config.getOrNull(SemanticsProperties.Text)?.firstOrNull()?.text
+            ?: n.children.firstNotNullOfOrNull { c -> c.config.getOrNull(SemanticsProperties.ContentDescription)?.firstOrNull() ?: c.config.getOrNull(SemanticsProperties.Text)?.firstOrNull()?.text }
+            ?: "? at ${n.boundsInRoot.left.toInt()},${n.boundsInRoot.top.toInt()}"
+
+    private fun show(layout: CarLayout, screen: CarScreen) {
         val state = PadWalkStates.state(layout, screen)
         val settings = net.prototux.aare.Settings(org.robolectric.RuntimeEnvironment.getApplication())
         rule.mainClock.autoAdvance = false
@@ -77,7 +120,10 @@ class PadWalkTest {
         rule.mainClock.advanceTimeBy(FocusSettle.GIVE_UP_AFTER_MS + 1_000)
         settle()
         focusedIdAtStart = focusedId()
+    }
 
+    private fun walk(layout: CarLayout, screen: CarScreen = CarScreen.Dashboard) {
+        show(layout, screen)
         val nodes = focusables()
         assertTrue("$layout $screen: nothing can hold the ring", nodes.isNotEmpty())
         // Where each direction leads from each item.
@@ -102,6 +148,10 @@ class PadWalkTest {
         val moves = { holdable.joinToString("\n") { n -> "  ${describe(setOf(n.id), nodes)} -> " + edges[n.id].orEmpty().joinToString { describe(setOf(it), nodes) } } }
         assertTrue("$layout $screen: out of reach with the pad: ${describe(unreachable, nodes)}\nmoves:\n${moves()}", unreachable.isEmpty())
         assertTrue("$layout $screen: the ring cannot get back from: ${describe(traps, nodes)}\nmoves:\n${moves()}", traps.isEmpty())
+    }
+
+    private companion object {
+        const val MAX_KNOB_CLICKS = 400
     }
 
     private fun settle() {
