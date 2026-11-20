@@ -13,6 +13,7 @@ protobuf = "4.36.2"
 protobufPlugin = "0.10.1"
 coroutines = "1.11.0"
 junit = "4.13.2"
+robolectric = "4.18.1"
 # The real org.json for JVM unit tests (Android's is a stub there); public domain.
 orgJson = "20260814"
 shizuku = "13.1.5"
@@ -39,6 +40,9 @@ protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protob
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 org-json = { group = "org.json", name = "json", version.ref = "orgJson" }
 shizuku-api = { group = "dev.rikka.shizuku", name = "api", version.ref = "shizuku" }
 shizuku-provider = { group = "dev.rikka.shizuku", name = "provider", version.ref = "shizuku" }

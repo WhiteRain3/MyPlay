@@ -60,6 +60,8 @@ android {
     if (mockups) sourceSets["test"].kotlin.srcDir("src/mockups/java")
     testOptions {
         unitTests.isReturnDefaultValues = true
+        // MyPlay (R4): Compose focus tests run on Robolectric, which needs the app's resources.
+        unitTests.isIncludeAndroidResources = true
     }
     packaging {
         resources.excludes += setOf("META-INF/*.kotlin_module", "META-INF/versions/**")
@@ -151,5 +153,10 @@ dependencies {
     testImplementation(libs.junit)
     // vehicles.json is parsed with the platform's org.json, which unit tests only see as a stub.
     testImplementation(libs.org.json)
+    // MyPlay (R4): D-pad and knob focus walks tested off-device (Compose on Robolectric).
+    testImplementation(libs.robolectric)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

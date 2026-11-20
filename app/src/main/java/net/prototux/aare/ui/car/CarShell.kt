@@ -62,6 +62,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -626,7 +627,10 @@ fun AppIcon(app: CarAppEntry, sizeDp: Int) {
 private fun MediaCard(state: CarUiState, actions: CarActions, compact: Boolean, modifier: Modifier) {
     val np = state.nowPlaying
     val media = state.app(np?.appId ?: state.activeMediaAppId)
-    Card(modifier, onClick = { media?.let(actions::openApp) ?: actions.openMusicApps() }) {
+    // MyPlay (R4): the card holds the ring as a whole, with its buttons inside it, where the pad's
+    // search never looks. Down on the card goes to its first button (Up from them leaves again).
+    val firstButton = remember { FocusRequester() }
+    Card(modifier.focusProperties { down = firstButton }, onClick = { media?.let(actions::openApp) ?: actions.openMusicApps() }) {
         if (np?.art != null && !compact) {
             Image(np.art.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.35f)
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.surfaceContainer))))
@@ -646,7 +650,7 @@ private fun MediaCard(state: CarUiState, actions: CarActions, compact: Boolean, 
                 Art(np, 80)
                 Spacer(Modifier.width(16.dp))
                 Column(Modifier.weight(1f)) { content() }
-                MediaButtons(np, actions)
+                MediaButtons(np, actions, firstButton)
             }
         } else {
             Column(Modifier.fillMaxSize().padding(24.dp)) {
@@ -673,7 +677,7 @@ private fun MediaCard(state: CarUiState, actions: CarActions, compact: Boolean, 
                     )
                     Spacer(Modifier.height(12.dp))
                 }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) { MediaButtons(np, actions) }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) { MediaButtons(np, actions, firstButton) }
             }
         }
     }
@@ -692,18 +696,19 @@ private fun Art(np: NowPlaying?, sizeDp: Int) {
 }
 
 @Composable
-private fun MediaButtons(np: NowPlaying?, actions: CarActions) {
-    RoundIcon(Icons.Rounded.SkipPrevious, stringResource(R.string.media_action_previous), filled = false) { actions.mediaPrevious() }
+private fun MediaButtons(np: NowPlaying?, actions: CarActions, first: FocusRequester? = null) {
+    RoundIcon(Icons.Rounded.SkipPrevious, stringResource(R.string.media_action_previous), filled = false,
+        modifier = if (first != null) Modifier.focusRequester(first) else Modifier) { actions.mediaPrevious() }
     RoundIcon(if (np?.playing == true) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, stringResource(R.string.media_action_play_pause), filled = true) { actions.mediaPlayPause() }
     RoundIcon(Icons.Rounded.SkipNext, stringResource(R.string.media_action_next), filled = false) { actions.mediaNext() }
 }
 
 @Composable
-fun RoundIcon(icon: ImageVector, label: String, filled: Boolean, onClick: () -> Unit) {
+fun RoundIcon(icon: ImageVector, label: String, filled: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val d = LocalCarDimens.current
     val bg = if (filled) MaterialTheme.colorScheme.primary else Color.Transparent
     val fg = if (filled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-    Box(Modifier.size(d.touchTarget).clip(CircleShape).background(bg).carFocusHighlight(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(modifier.size(d.touchTarget).clip(CircleShape).background(bg).carFocusHighlight(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
         Icon(icon, label, tint = fg, modifier = Modifier.size(d.iconSize))
     }
 }
