@@ -12,29 +12,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import net.prototux.aare.R
 
-/** One "behind the scenes" page as the start screen lists it. */
-class PageLink(
-    val icon: ImageVector,
-    val title: String,
-    val subtitle: String,
-    val tone: TileTone,
-    val open: () -> Unit,
-)
-
 /**
  * The start screen (plan E2): what needs doing first ([top]: banners, the connection and "Finish
  * setting up"), then the picture of the car screen to tap, then everything that cannot be seen
- * on the car screen ([pages]).
+ * on the car screen ([behind]: the tiles).
  */
 @Composable
 fun CustomiseScreen(
-    pages: List<PageLink>,
     onPicture: () -> Unit,
+    behind: @Composable () -> Unit,
     top: LazyListScope.() -> Unit,
 ) {
     LazyColumn(
@@ -49,8 +39,6 @@ fun CustomiseScreen(
         }
         item { HintLine(Icons.Rounded.TouchApp, stringResource(R.string.phone_customise_hint)) }
         item { SectionHeading(stringResource(R.string.phone_customise_behind)) }
-        item {
-            RowGroup(rows = pages.map { p -> { SimpleRow(p.icon, p.title, p.tone, p.subtitle, onClick = p.open) } })
-        }
+        item { behind() }
     }
 }

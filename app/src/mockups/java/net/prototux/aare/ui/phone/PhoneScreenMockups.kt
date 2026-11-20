@@ -9,6 +9,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.DirectionsCar
+import androidx.compose.material.icons.rounded.Forum
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.Mic
+import androidx.compose.material.icons.rounded.SystemUpdate
+import androidx.compose.material.icons.rounded.VerifiedUser
 import org.junit.Rule
 import org.junit.Test
 
@@ -28,14 +35,20 @@ class PhoneScreenMockups {
     @Test fun customise() = paparazzi.snapshot {
         MyPlayPhoneTheme {
             Surface(Modifier.fillMaxSize()) {
-                CustomiseScreen(
-                    pages = listOf(
-                        PageLink(Icons.Rounded.Apps, "Apps", "Which apps the car shows", TileTone.VIOLET) {},
-                        PageLink(Icons.Rounded.Bluetooth, "Connection", "Wireless, USB", TileTone.BLUE) {},
-                        PageLink(Icons.Rounded.Tune, "Advanced", "Log, certificates", TileTone.CORAL) {},
-                    ),
-                    onPicture = {},
-                ) {}
+                CustomiseScreen(onPicture = {}, behind = {
+                    TileGrid(listOf(
+                        TileSpec(BehindTile.UPDATES, Icons.Rounded.SystemUpdate, TileTone.BLUE, "Updates", "0.1.4", attention = true),
+                        TileSpec(BehindTile.CONNECTION, Icons.Rounded.Bluetooth, TileTone.GREEN, "Connection", "Waiting"),
+                        TileSpec(BehindTile.APPS, Icons.Rounded.Apps, TileTone.VIOLET, "Apps", "12 apps"),
+                        TileSpec(BehindTile.SOUND, Icons.AutoMirrored.Rounded.VolumeUp, TileTone.AMBER, "Sound", "Best"),
+                        TileSpec(BehindTile.MESSAGES, Icons.Rounded.Forum, TileTone.BLUE, "Messages", "Set up", attention = true),
+                        TileSpec(BehindTile.VOICE, Icons.Rounded.Mic, TileTone.PINK, "Voice", "Google"),
+                        TileSpec(BehindTile.CERTIFICATES, Icons.Rounded.VerifiedUser, TileTone.GREEN, "Certificate", "MyPlay's"),
+                        TileSpec(BehindTile.ADVANCED, Icons.Rounded.Tune, TileTone.CORAL, "Advanced", "Log on"),
+                        TileSpec(BehindTile.CAR_DATA, Icons.Rounded.DirectionsCar, TileTone.AMBER, "Car data", "View"),
+                        TileSpec(BehindTile.ABOUT, Icons.Rounded.Info, TileTone.VIOLET, "About", "MyPlay"),
+                    )) {}
+                }) {}
             }
         }
     }

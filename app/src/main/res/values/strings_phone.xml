@@ -9,6 +9,34 @@
     <string name="phone_customise_picture_description" translatable="false">Picture of the car screen. Tap to change how it looks.</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
+    <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->
+    <string name="phone_tile_updates" translatable="false">Updates</string>
+    <string name="phone_tile_connection" translatable="false">Connection</string>
+    <string name="phone_tile_connected" translatable="false">Connected</string>
+    <string name="phone_tile_waiting" translatable="false">Waiting</string>
+    <string name="phone_tile_apps" translatable="false">Apps</string>
+    <string name="phone_tile_apps_count" translatable="false">%1$d apps</string>
+    <string name="phone_tile_sound" translatable="false">Sound</string>
+    <string name="phone_tile_sound_best" translatable="false">Best</string>
+    <string name="phone_tile_sound_all" translatable="false">All sound</string>
+    <string name="phone_tile_sound_music" translatable="false">Music only</string>
+    <string name="phone_tile_messages" translatable="false">Messages</string>
+    <string name="phone_tile_voice" translatable="false">Voice</string>
+    <string name="phone_tile_certificates" translatable="false">Certificate</string>
+    <string name="phone_tile_cert_own" translatable="false">MyPlay\'s</string>
+    <string name="phone_tile_advanced" translatable="false">Advanced</string>
+    <string name="phone_tile_log_on" translatable="false">Log on</string>
+    <string name="phone_tile_server_on" translatable="false">Server on</string>
+    <string name="phone_tile_normal" translatable="false">Normal</string>
+    <string name="phone_tile_car_data" translatable="false">Car data</string>
+    <string name="phone_tile_view" translatable="false">View</string>
+    <string name="phone_tile_about" translatable="false">About</string>
+    <string name="phone_tile_on" translatable="false">On</string>
+    <string name="phone_tile_off" translatable="false">Off</string>
+    <string name="phone_tile_none" translatable="false">None</string>
+    <string name="phone_tile_set_up" translatable="false">Set up</string>
+    <string name="phone_certificates_subtitle" translatable="false">Which certificate MyPlay shows the car</string>
+
     <!-- The sample page of every shared part (for screenshots only; changes nothing). -->
     <string name="phone_parts_title" translatable="false">Phone parts</string>
     <string name="phone_parts_hint" translatable="false">A sample of every part. Nothing here changes a setting.</string>

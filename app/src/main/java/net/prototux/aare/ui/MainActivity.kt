@@ -75,6 +75,7 @@ import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Tv
+import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -149,8 +150,8 @@ import net.prototux.aare.ui.car.StyleChoices
 import net.prototux.aare.ui.car.WALLPAPER_NAMES
 import net.prototux.aare.ui.phone.CustomiseScreen
 import net.prototux.aare.ui.phone.MyPlayPhoneTheme
-import net.prototux.aare.ui.phone.PageLink
-import net.prototux.aare.ui.phone.TileTone
+import net.prototux.aare.ui.phone.BehindTile
+import net.prototux.aare.ui.phone.BehindTheScenesTiles
 import net.prototux.aare.ui.phone.PhonePartsSample
 import rikka.shizuku.Shizuku
 import java.text.DateFormat
@@ -211,6 +212,8 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     CONNECTION(R.string.setup_page_connection_title, R.string.setup_page_connection_subtitle, Icons.Rounded.Bluetooth),
     CAR_DATA(R.string.setup_page_car_data_title, R.string.setup_page_car_data_subtitle, Icons.Rounded.DirectionsCar),
     ADVANCED(R.string.setup_page_advanced_title, R.string.setup_page_advanced_subtitle, Icons.Rounded.Tune),
+    // MyPlay (E4): the certificates card on a page of its own, for its tile (it stays on Advanced too).
+    CERTIFICATES(R.string.cert_section_title, R.string.phone_certificates_subtitle, Icons.Rounded.VerifiedUser),
     ABOUT(R.string.setup_page_about_title, R.string.setup_page_about_subtitle, Icons.Rounded.Info),
 }
 
@@ -234,23 +237,22 @@ private fun Home() {
 
     AnimatedContent(page, label = "page", transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(100)) }) { p ->
         if (p == null) {
-            // MyPlay (E2): the start screen is the Customise screen. Tapping the car picture opens
-            // the Car screen page; every other page is listed under it.
+            // MyPlay (E2, E4): the start screen is the Customise screen. Tapping the car picture opens
+            // the Car screen page; every other page has a tile under it.
             CustomiseScreen(
-                pages = Page.entries.filter { it != Page.CAR_SCREEN }.map { pg ->
-                    PageLink(pg.icon, stringResource(pg.titleRes), stringResource(pg.subtitleRes), pageTone(pg)) { page = pg }
-                },
                 onPicture = { page = Page.CAR_SCREEN },
-            ) {
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        UpdateBanner()
-                        CertificateExpiryBanner()
-                        StatusCard(state)
-                        Setup(state, refresh, { refresh++ }) { page = it }
+                behind = { BehindTheScenesTiles(state.connected, state.audioCapture, refresh) { page = pageOf(it) } },
+                top = {
+                    item {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            UpdateBanner()
+                            CertificateExpiryBanner()
+                            StatusCard(state)
+                            Setup(state, refresh, { refresh++ }) { page = it }
+                        }
                     }
-                }
-            }
+                },
+            )
         } else {
             Column(Modifier.fillMaxSize().systemBarsPadding()) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -277,6 +279,7 @@ private fun Home() {
                             item { VehicleOverridesCard() }
                             item { LogCard() }
                         }
+                        Page.CERTIFICATES -> item { CertificatesCard(certs, state) }
                         Page.ABOUT -> item { AboutScreen() }
                     }
                 }
@@ -285,15 +288,17 @@ private fun Home() {
     }
 }
 
-/** MyPlay (E2): each page's colour on the start screen. */
-private fun pageTone(page: Page): TileTone = when (page) {
-    Page.CAR_SCREEN, Page.APPS -> TileTone.VIOLET
-    Page.ASSISTANT -> TileTone.PINK
-    Page.MESSAGES, Page.CONNECTION -> TileTone.BLUE
-    Page.AUDIO -> TileTone.AMBER
-    Page.CAR_DATA -> TileTone.GREEN
-    Page.ADVANCED -> TileTone.CORAL
-    Page.ABOUT -> TileTone.BLUE
+/** MyPlay (E4): the page each start-screen tile opens. */
+private fun pageOf(tile: BehindTile): Page = when (tile) {
+    BehindTile.UPDATES, BehindTile.ABOUT -> Page.ABOUT
+    BehindTile.CONNECTION -> Page.CONNECTION
+    BehindTile.APPS -> Page.APPS
+    BehindTile.SOUND -> Page.AUDIO
+    BehindTile.MESSAGES -> Page.MESSAGES
+    BehindTile.VOICE -> Page.ASSISTANT
+    BehindTile.CERTIFICATES -> Page.CERTIFICATES
+    BehindTile.ADVANCED -> Page.ADVANCED
+    BehindTile.CAR_DATA -> Page.CAR_DATA
 }
 
 @Composable
