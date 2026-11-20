@@ -152,6 +152,7 @@ import net.prototux.aare.ui.phone.CustomiseScreen
 import net.prototux.aare.ui.phone.MyPlayPhoneTheme
 import net.prototux.aare.ui.phone.BarPage
 import net.prototux.aare.ui.phone.CardsPage
+import net.prototux.aare.ui.phone.WallpaperPage
 import net.prototux.aare.ui.phone.BehindTile
 import net.prototux.aare.ui.phone.BehindTheScenesTiles
 import net.prototux.aare.ui.phone.PhonePartsSample
@@ -218,6 +219,7 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     // MyPlay (E5): one page per part of the car picture.
     BAR(R.string.phone_part_bar, R.string.phone_part_bar, Icons.Rounded.Dashboard),
     CARDS(R.string.phone_part_cards, R.string.phone_part_cards, Icons.Rounded.Dashboard),
+    WALLPAPER(R.string.phone_part_wallpaper, R.string.phone_part_wallpaper, Icons.Rounded.Dashboard),
     CERTIFICATES(R.string.cert_section_title, R.string.phone_certificates_subtitle, Icons.Rounded.VerifiedUser),
     ABOUT(R.string.setup_page_about_title, R.string.setup_page_about_subtitle, Icons.Rounded.Info),
 }
@@ -246,7 +248,7 @@ private fun Home() {
             // the Car screen page; every other page has a tile under it.
             CustomiseScreen(
                 onPicture = { page = Page.CAR_SCREEN },
-                parts = listOf(Page.BAR, Page.CARDS).map { pg -> stringResource(pg.titleRes) to { page = pg } },
+                parts = listOf(Page.BAR, Page.CARDS, Page.WALLPAPER).map { pg -> stringResource(pg.titleRes) to { page = pg } },
                 behind = { BehindTheScenesTiles(state.connected, state.audioCapture, refresh) { page = pageOf(it) } },
                 top = {
                     item {
@@ -287,6 +289,7 @@ private fun Home() {
                         }
                         Page.BAR -> item { BarPage() }
                         Page.CARDS -> item { CardsPage() }
+                        Page.WALLPAPER -> item { WallpaperPage { uri -> saveWallpaper(ctx, uri) } }
                         Page.CERTIFICATES -> item { CertificatesCard(certs, state) }
                         Page.ABOUT -> item { AboutScreen() }
                     }

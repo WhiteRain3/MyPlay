@@ -14,6 +14,8 @@
     <string name="phone_part_cards" translatable="false">Cards</string>
     <string name="phone_cards_weather_note" translatable="false">While shown, sends a rough position (about 10 km) to Open-Meteo, even with the Weather switch off</string>
     <string name="phone_cards_order" translatable="false">Shown, in this order</string>
+    <string name="phone_part_wallpaper" translatable="false">Wallpaper</string>
+    <string name="phone_wallpaper_other_photo" translatable="false">Choose another photo</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->
