@@ -133,10 +133,14 @@ internal fun SpecShell(
                     KeepFocusInContent(state.screen, { homeFocused }, entry)
                     Box(Modifier.fillMaxSize().onFocusChanged { homeFocused = it.hasFocus }.focusRequester(entry).focusGroup()) {
                         val slots = if (spec.cardPlace == CardPlace.STAGE) p.slots.take(1) else p.slots
+                        // P2-3: the bar leaves out what the "Clock and status" card shows only while
+                        // that card is really on the screen (placed, and for a stage, the one shown).
+                        val stageShown = if (spec.cardPlace == CardPlace.STAGE) spec.cards.filter { shownNow(it, spec, state) } else null
+                        val clockCard = clockCardOnScreen(spec, p.slots.size, stageShown)
                         // M3-3: no maps app shown: the maps buttons in the largest free area, as on AARE's map card.
                         val panel = if (nav == null) SpecPlacement.freeArea(p).takeIf { it.area > 0f } else null
                         for (i in SpecPlacement.readingOrder(listOf(p.bar) + slots + listOfNotNull(panel))) {
-                            if (i == 0) SpecBar(state, actions, spec, Modifier.at(p.bar).coversMap())
+                            if (i == 0) SpecBar(state, actions, spec, clockCard, Modifier.at(p.bar).coversMap())
                             else if (i > slots.size) MapsPanel(state, actions, Modifier.at(panel!!))
                             else if (spec.cardPlace == CardPlace.STAGE) StageSlot(spec, state, actions, Modifier.at(slots[0]))
                             else CardSlot(spec.cards[i - 1], spec, state, actions, Modifier.at(slots[i - 1]))
@@ -144,7 +148,7 @@ internal fun SpecShell(
                     }
                 } else {
                     ContentArea(state, actions, appContent, navMap, Modifier.at(p.content))
-                    SpecBar(state, actions, spec, Modifier.at(p.bar).coversMap())
+                    SpecBar(state, actions, spec, cardHasStatus = false, Modifier.at(p.bar).coversMap()) // no cards over an app
                 }
             }
             overlay(Modifier.align(Alignment.BottomCenter))
@@ -182,7 +186,7 @@ private fun Modifier.at(b: SpecBox): Modifier = offset(b.left.dp, b.top.dp).size
 // ---------------------------------------------------------------- the bar
 
 @Composable
-private fun SpecBar(state: CarUiState, actions: CarActions, spec: CarLayoutSpec, modifier: Modifier) {
+private fun SpecBar(state: CarUiState, actions: CarActions, spec: CarLayoutSpec, cardHasStatus: Boolean, modifier: Modifier) {
     val vertical = spec.barSide == BarSide.LEFT || spec.barSide == BarSide.RIGHT
     val scheme = MaterialTheme.colorScheme
     val (shape, background) = when (spec.barStyle) {
@@ -198,9 +202,8 @@ private fun SpecBar(state: CarUiState, actions: CarActions, spec: CarLayoutSpec,
     val phoneStatus = rememberPhoneStatus()
     // The bar items chosen in the settings (upstream's rail widgets), as on the taskbar; a ribbon
     // or dock along an edge has room for them in its row, a side bar stacks them.
-    // P2-1: with a "Clock and status" card, the card keeps the clock, weather and phone status
-    // and the bar leaves them out, so they are not shown twice.
-    val cardHasStatus = SpecCard.CLOCK_STATUS in spec.cards
+    // P2-1: while a "Clock and status" card is on the screen, the card keeps the clock, weather
+    // and phone status and the bar leaves them out, so they are not shown twice.
     val items: @Composable () -> Unit = {
         RailWidgets(barItems(state.railWidgets, cardHasStatus), state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = !vertical, spacing = if (vertical) 6.dp else 10.dp, weatherOn = state.weatherInBar)
         if (!cardHasStatus) NetworkStatusIcons(phoneStatus)
@@ -443,3 +446,12 @@ private fun CardButton(icon: ImageVector, label: String, filled: Boolean, knobSt
 /** MyPlay (P2-1): the bar items for "map behind": without those the "Clock and status" card already shows. */
 internal fun barItems(chosen: List<RailWidget>, cardHasStatus: Boolean): List<RailWidget> =
     if (cardHasStatus) chosen - setOf(RailWidget.CLOCK, RailWidget.WEATHER, RailWidget.BATTERY) else chosen
+
+/**
+ * MyPlay (P2-3): whether the "Clock and status" card is on the screen: among the cards that got a
+ * slot ([slotCount]; a small screen cuts the last ones), or for a stage, among the ones it shows
+ * now ([stageShown], the cards with something to show, in order).
+ */
+internal fun clockCardOnScreen(spec: CarLayoutSpec, slotCount: Int, stageShown: List<SpecCard>?): Boolean =
+    if (stageShown != null) SpecCard.CLOCK_STATUS in stageShown.take(if (spec.oneExtraAtATime) 2 else 1)
+    else SpecCard.CLOCK_STATUS in spec.cards.take(slotCount)
