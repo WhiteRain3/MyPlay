@@ -14,6 +14,8 @@ package net.prototux.aare.car
  * - **Hold and turn**: a knob turn while a key is down. The turn is the hold's (it does not move
  *   the ring), each turn reported with its steps; the key's up then does nothing more.
  *
+ * Main thread only (R3-1): keys and knob turns are both posted to it, in the order they came.
+ *
  * Repeated downs while a key is held (the car's, or the ones fix/aa18-input synthesises) keep the
  * first down's time. A down whose up never came is forgotten once no down for that key has been
  * seen for [Timings.staleMs], so the next press is a press.
