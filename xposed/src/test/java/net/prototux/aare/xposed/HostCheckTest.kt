@@ -98,5 +98,36 @@ class HostCheckTest {
     @Test fun aUidWithSeveralPackagesIncludingMyPlayCounts() =
         assertTrue(verdict(packages = listOf("com.example.other", myplay)).accepted)
 
+    // ---- W1-3: shortened field names ----
+
+    /** As HostInfo would look if its build shortened the names. */
+    @Suppress("unused")
+    private class Shortened(private val a: String, private val b: Int) {
+        companion object { val c: String = "static, not counted" }
+    }
+
+    @Suppress("unused")
+    private class TwoStrings(private val a: String, private val b: String, private val c: Int)
+
+    @Test fun shortenedNamesFallBackToTheOnlyFieldOfThatType() {
+        val info = Shortened(HostCheck.MYPLAY_PACKAGE, 10123)
+        assertEquals(HostCheck.MYPLAY_PACKAGE, HostCheck.hostPackage(info))
+        assertEquals(10123, HostCheck.hostUid(info))
+        assertTrue(HostCheck.isMyPlay(info))
+    }
+
+    @Test fun twoCandidateFieldsMeanNothingIsRead() {
+        val info = TwoStrings(HostCheck.MYPLAY_PACKAGE, "other", 10123)
+        assertNull(HostCheck.hostPackage(info))
+        assertFalse(HostCheck.isMyPlay(info))
+        assertEquals(10123, HostCheck.hostUid(info))
+    }
+
+    @Test fun theRealNamesStillWin() {
+        val info = HostInfo("com.example.host", 10123)
+        assertEquals("com.example.host", HostCheck.hostPackage(info))
+        assertEquals(10123, HostCheck.hostUid(info))
+    }
+
     @Test fun theAppIdIsMyPlays() = assertEquals("io.github.whiterain3.myplay", HostCheck.MYPLAY_PACKAGE)
 }

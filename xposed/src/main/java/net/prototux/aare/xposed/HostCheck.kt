@@ -18,8 +18,22 @@ internal object HostCheck {
     const val PACKAGE_FIELD = "mPackageName"
 
     /** The package name a `HostInfo` holds, or null when it cannot be read. */
-    fun hostPackage(hostInfo: Any?): String? = try {
-        hostInfo?.javaClass?.getDeclaredField(PACKAGE_FIELD)?.apply { isAccessible = true }?.get(hostInfo) as? String
+    fun hostPackage(hostInfo: Any?): String? = fieldValue(hostInfo, PACKAGE_FIELD, String::class.java) as? String
+
+    /**
+     * The value of field [name] of [obj]; if there is no such field (an app may shorten its
+     * internal names when it is built, W1-3), the value of the class's only instance field of
+     * [type]. Null when neither can be read, or when there is more than one such field to choose
+     * from.
+     */
+    fun fieldValue(obj: Any?, name: String, type: Class<*>): Any? = try {
+        val cls = obj?.javaClass ?: return null
+        val field = try {
+            cls.getDeclaredField(name)
+        } catch (_: NoSuchFieldException) {
+            cls.declaredFields.filter { it.type == type && !java.lang.reflect.Modifier.isStatic(it.modifiers) }.singleOrNull()
+        }
+        field?.takeIf { it.type == type }?.apply { isAccessible = true }?.get(obj)
     } catch (_: Throwable) {
         null
     }
@@ -28,11 +42,7 @@ internal object HostCheck {
     const val UID_FIELD = "mUid"
 
     /** The uid a `HostInfo` holds, or null when it cannot be read. */
-    fun hostUid(hostInfo: Any?): Int? = try {
-        hostInfo?.javaClass?.getDeclaredField(UID_FIELD)?.apply { isAccessible = true }?.get(hostInfo) as? Int
-    } catch (_: Throwable) {
-        null
-    }
+    fun hostUid(hostInfo: Any?): Int? = fieldValue(hostInfo, UID_FIELD, Int::class.javaPrimitiveType!!) as? Int
 
     /** Whether the host an app is asked about names itself MyPlay. Anything unreadable is "no". */
     fun isMyPlay(hostInfo: Any?): Boolean = hostPackage(hostInfo) == MYPLAY_PACKAGE
