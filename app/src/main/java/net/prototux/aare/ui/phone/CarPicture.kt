@@ -48,6 +48,7 @@ import net.prototux.aare.ui.car.CarPart
 import net.prototux.aare.ui.car.CarPartRegistry
 import net.prototux.aare.ui.car.LocalCarParts
 import net.prototux.aare.ui.car.RailWidget
+import net.prototux.aare.ui.car.myplayHomeMaps
 import net.prototux.aare.ui.car.statusStyle
 import net.prototux.aare.ui.car.myplayLayoutSpec
 import androidx.compose.ui.platform.LocalContext
@@ -148,6 +149,7 @@ internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: C
     ui.darkBar = settings.darkBar
     ui.railWidgets = RailWidget.parse(settings.railWidgets)
     ui.statusStyle = settings.statusStyle
+    ui.homeMaps = settings.myplayHomeMaps
     ui.dashboardCards = DashCard.parse(settings.dashboardCards)
     ui.weatherInBar = settings.showWeather
     ui.weather = if (settings.showWeather) Weather(18, "°C", 1, day = !ui.night) else null

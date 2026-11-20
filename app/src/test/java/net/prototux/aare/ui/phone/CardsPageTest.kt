@@ -25,4 +25,20 @@ class CardsPageTest {
         assertTrue(canSwitchCard(listOf(DashCard.MAP), DashCard.WEATHER))
         assertTrue(canSwitchCard(listOf(DashCard.MAP, DashCard.MEDIA), DashCard.MAP))
     }
+
+    @Test
+    fun homeMapsOffersLastUsedEachMapsAppThenAlwaysAsk() {
+        val apps = listOf("app.organicmaps" to "Organic Maps", "com.waze" to "Waze")
+        assertEquals(
+            listOf("last" to null, "app:app.organicmaps" to "Organic Maps", "app:com.waze" to "Waze", "ask" to null),
+            homeMapsOptions("last", apps),
+        )
+    }
+
+    @Test
+    fun aChosenMapsAppNoLongerInstalledKeepsItsOwnChoice() {
+        val options = homeMapsOptions("app:gone.maps", listOf("com.waze" to "Waze"))
+        assertEquals(listOf("last", "app:com.waze", "app:gone.maps", "ask"), options.map { it.first })
+        assertEquals(null, options[2].second)
+    }
 }

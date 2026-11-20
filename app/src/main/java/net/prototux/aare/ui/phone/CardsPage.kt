@@ -28,10 +28,28 @@ import net.prototux.aare.R
 import net.prototux.aare.Settings
 import net.prototux.aare.ui.car.CarLayout
 import net.prototux.aare.ui.car.DashCard
+import net.prototux.aare.ui.car.HomeMaps
+import net.prototux.aare.ui.car.myplayHomeMaps
+import net.prototux.aare.host.CarAppCatalog
+import net.prototux.aare.host.MyPlayAppList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.compose.runtime.produceState
 import net.prototux.aare.ui.car.changeLayout
 import net.prototux.aare.ui.car.myplayLayoutSpec
 import net.prototux.aare.ui.car.moved
 import net.prototux.aare.ui.car.withCard
+
+/**
+ * The "maps on the home screen" choices, as (stored value, label or null): the one used last, each
+ * maps app in [apps] (package, label), always ask; a stored app that is not installed any more keeps
+ * a choice of its own (label null: shown by its package) so the setting is never shown as something else.
+ */
+fun homeMapsOptions(stored: String, apps: List<Pair<String, String>>): List<Pair<String, String?>> {
+    val chosen = apps.map { (pkg, label) -> HomeMaps.chosen(pkg) to label }
+    val missing = if (stored.startsWith(HomeMaps.APP_PREFIX) && chosen.none { it.first == stored }) listOf(stored to null) else emptyList()
+    return listOf(HomeMaps.LAST to null) + chosen + missing + (HomeMaps.ASK to null)
+}
 
 /** The rows of the Cards page: the shown cards in their order, then the hidden ones. */
 fun cardRows(order: List<DashCard>): List<DashCard> = order + DashCard.entries.filter { it !in order }
@@ -103,6 +121,7 @@ fun CardsPage(openLayout: () -> Unit) {
                 }
             }
         }
+        if (layout == CarLayout.MAP_BEHIND || layout == CarLayout.TASKBAR) HomeMapsChoice(settings)
         if (layout == CarLayout.MAP_BEHIND) {
             SectionHeading(stringResource(R.string.phone_cards_order))
             MapBehindCardRows(spec) { f -> settings.changeLayout(f) }
@@ -124,5 +143,42 @@ fun CardsPage(openLayout: () -> Unit) {
             }
         })
         HintLine(Icons.Rounded.Map, stringResource(R.string.dash_cards_hint))
+    }
+}
+
+/** Which maps app the home screen shows (K9): the one used last, a chosen one, or always the maps buttons. Same setting as the car's. */
+@Composable
+private fun HomeMapsChoice(settings: Settings) {
+    val ctx = LocalContext.current
+    var stored by remember { mutableStateOf(settings.myplayHomeMaps) }
+    // The maps apps the car can host, by the car's own rules (CarRuntime.applyApps): Google's Android
+    // Auto and apps hidden on the Apps page left out. A chosen app hidden later keeps a choice of its
+    // own here; the car then acts as for "Last used".
+    val apps by produceState<List<Pair<String, String>>>(emptyList()) {
+        val hidden = settings.hiddenApps
+        value = withContext(Dispatchers.IO) {
+            runCatching {
+                CarAppCatalog.query(ctx).filter { it.isNavigation && MyPlayAppList.canShow(it.packageName) && it.packageName !in hidden }
+                    .map { it.packageName to it.label }.distinctBy { it.first }.sortedBy { it.second.lowercase() }
+            }.getOrDefault(emptyList())
+        }
+    }
+    val last = stringResource(R.string.myplay_home_maps_last)
+    val ask = stringResource(R.string.myplay_home_maps_ask)
+    SectionHeading(stringResource(R.string.myplay_home_maps_title))
+    PartCard(padding = 16.dp) {
+        Column {
+            PhoneChoices(
+                stringResource(R.string.phone_home_maps_question),
+                homeMapsOptions(stored, apps).map { (value, label) ->
+                    value to (label ?: when (value) {
+                        HomeMaps.LAST -> last
+                        HomeMaps.ASK -> ask
+                        else -> value.removePrefix(HomeMaps.APP_PREFIX)
+                    })
+                },
+                stored,
+            ) { stored = it; settings.myplayHomeMaps = it }
+        }
     }
 }
