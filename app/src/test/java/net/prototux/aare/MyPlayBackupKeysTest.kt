@@ -49,6 +49,7 @@ class MyPlayBackupKeysTest {
             "myplay_backup_last_saved", // when this phone last saved a backup: belongs to the phone, not to the settings
             "myplay_whats_new_seen", // which release notes this install has shown: belongs to the install
             "myplay_wallpaper_edit", // how the wallpaper photo is placed and treated: the photo is not in backups either
+            "myplay_debug_map_areas", // a check outline on the car screen (MF-4): should not travel to a new phone
         )
 
         /** "myplay_" strings that are not settings keys. */

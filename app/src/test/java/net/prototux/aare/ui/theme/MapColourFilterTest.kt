@@ -80,15 +80,4 @@ class MapColourFilterTest {
         assertEquals(MapColourFilter.PRESETS["muted"], MapColourFilter.decode("muted"))
         assertEquals(MapColourFilter(), MapColourFilter.decode(null))
     }
-
-    @Test fun perLookWithAFallbackForEveryOther() {
-        var all = MapColourFilter.withLook("", "*", MapColourFilter(saturation = 50))
-        all = MapColourFilter.withLook(all, "aare", MapColourFilter(hueShift = 30))
-        assertEquals(MapColourFilter(hueShift = 30), MapColourFilter.forLook(all, "aare"))
-        assertEquals(MapColourFilter(saturation = 50), MapColourFilter.forLook(all, "android_auto_2019"))
-        // Setting a look back to nothing removes its entry, so the fallback applies again.
-        all = MapColourFilter.withLook(all, "aare", MapColourFilter())
-        assertEquals(MapColourFilter(saturation = 50), MapColourFilter.forLook(all, "aare"))
-        assertEquals(MapColourFilter(), MapColourFilter.forLook("", "aare"))
-    }
 }

@@ -10,6 +10,8 @@ import kotlin.math.sin
  * MyPlay (map recolouring, option 1): a colour filter on a hosted maps app's picture, so any maps
  * app (Waze included) can be brought closer to the chosen look.
  *
+ * Each look carries its own filter (the setting is one of a look's, MF-3).
+ *
  * It works on colours only: it recolours everything the app draws on its map, its own buttons and
  * speed sign included, and cannot tell water from roads. Off unless the owner sets one.
  *
@@ -195,29 +197,15 @@ data class MapColourFilter(
             }
             return f.clamped()
         }
-
-        /**
-         * Per look: "lookId=filter|lookId=filter", with "*" for every look without its own.
-         * Returns the filter for [lookId].
-         */
-        fun forLook(all: String?, lookId: String): MapColourFilter {
-            val entries = all.orEmpty().split('|').mapNotNull { e ->
-                val i = e.indexOf('=')
-                if (i <= 0) null else e.substring(0, i).trim() to e.substring(i + 1)
-            }.toMap()
-            return decode(entries[lookId] ?: entries["*"])
-        }
-
-        /** [all] with [lookId]'s filter set to [f] (removed when it changes nothing). */
-        fun withLook(all: String?, lookId: String, f: MapColourFilter): String {
-            val entries = all.orEmpty().split('|').filter { it.contains('=') && it.substringBefore('=').trim() != lookId }
-            val mine = if (f.isIdentity(night = true)) emptyList() else listOf("$lookId=${encode(f.clamped())}")
-            return (entries + mine).joinToString("|")
-        }
     }
 }
 
-/** MyPlay: the map colour filters, per look ([MapColourFilter.forLook]); empty for none. */
-var Settings.myplayMapFilters: String
-    get() = prefs.getString("myplay_map_filters", "") ?: ""
-    set(v) = prefs.edit { putString("myplay_map_filters", v) }
+/**
+ * MyPlay: the map colour filter ([MapColourFilter.encode]); empty for none. It is one of a look's
+ * settings (F7, MyPlayLooks.KEYS), so each look carries its own filter (MF-3).
+ */
+var Settings.myplayMapFilter: MapColourFilter
+    get() = MapColourFilter.decode(prefs.getString("myplay_map_filter", ""))
+    set(v) = prefs.edit {
+        if (v.isIdentity(night = true)) remove("myplay_map_filter") else putString("myplay_map_filter", MapColourFilter.encode(v.clamped()))
+    }
