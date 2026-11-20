@@ -322,7 +322,8 @@ class CarRuntime(
 
     private val settingsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
-            "car_theme", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving" -> main.post { applyScreenSettings() }
+            // MyPlay (K11-1): the map apps' day/night switch too.
+            "car_theme", "myplay_maps_follow_car_lights", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving" -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
             "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }
