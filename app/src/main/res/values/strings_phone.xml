@@ -341,4 +341,6 @@
     <string name="phone_check_wheel_click" translatable="false">Click the steering-wheel wheel once</string>
     <string name="phone_check_wheel_hold" translatable="false">Click the steering-wheel wheel and hold it</string>
     <string name="phone_check_start" translatable="false">Start</string>
+    <string name="phone_map_areas_title" translatable="false">Show the map\'s free area</string>
+    <string name="phone_map_areas_hint" translatable="false">Outlines on the car screen the part of the map MyPlay tells the maps app is free (green: now, dashed yellow: always). For checking why a map is not centred.</string>
 </resources>

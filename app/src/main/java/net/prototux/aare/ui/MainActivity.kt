@@ -174,6 +174,7 @@ import net.prototux.aare.ui.phone.SizePage
 import net.prototux.aare.ui.phone.StatusIconsPage
 import net.prototux.aare.ui.phone.ColoursPage
 import net.prototux.aare.ui.phone.LooksPage
+import net.prototux.aare.ui.phone.MapAreasSwitch
 import net.prototux.aare.ui.phone.CarCheckPage
 import net.prototux.aare.ui.phone.toCheckInput
 import net.prototux.aare.car.CarInputEvents
@@ -334,6 +335,7 @@ private fun Home() {
                             item { HeadUnitServerSettings(settings) }
                             item { CertificatesCard(certs, state) }
                             item { VehicleOverridesCard() }
+                            item { MapAreasSwitch() }
                             item { LogCard() }
                         }
                         Page.BAR -> item { BarPage { page = Page.LAYOUT } }
