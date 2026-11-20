@@ -163,6 +163,7 @@ import net.prototux.aare.ui.phone.RowGroup
 import net.prototux.aare.ui.phone.SimpleRow
 import net.prototux.aare.ui.phone.TileTone
 import net.prototux.aare.ui.phone.WhatsNewDialog
+import net.prototux.aare.ui.phone.UpdateInstallButton
 import net.prototux.aare.ui.phone.myplayWhatsNewSeen
 import net.prototux.aare.ui.phone.BackupPage
 import net.prototux.aare.ui.phone.BarPage
@@ -295,6 +296,8 @@ private fun Home() {
                     item {
                         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                             UpdateBanner()
+                            // MyPlay (I2): install the update shown in the banner from here.
+                            UpdateChecker.available.collectAsState().value?.let { UpdateInstallButton(it.version) }
                             CertificateExpiryBanner()
                             StatusCard(state)
                             Setup(state, refresh, { refresh++ }) { page = it }

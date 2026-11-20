@@ -66,11 +66,16 @@ internal fun MyPlayCheckNow() {
             CheckResult.Checking -> Text(stringResource(R.string.myplay_update_checking), style = MaterialTheme.typography.bodySmall)
             CheckResult.UpToDate -> Text(stringResource(R.string.myplay_update_none, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.bodySmall)
             CheckResult.Failed -> Text(stringResource(R.string.myplay_update_failed), style = MaterialTheme.typography.bodySmall)
-            is CheckResult.Found -> Text(
-                stringResource(R.string.myplay_update_found, r.update.version, BuildConfig.VERSION_NAME),
-                Modifier.clickable { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.update.url))) } },
-                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary,
-            )
+            is CheckResult.Found -> Column {
+                Text(
+                    stringResource(R.string.myplay_update_found, r.update.version, BuildConfig.VERSION_NAME),
+                    Modifier.clickable { runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(r.update.url))) } },
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary,
+                )
+                // MyPlay (I2): or install it from here.
+                Spacer(Modifier.height(8.dp))
+                net.prototux.aare.ui.phone.UpdateInstallButton(r.update.version)
+            }
         }
     }
 }

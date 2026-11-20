@@ -180,6 +180,21 @@
     <string name="phone_buttons_double_time" translatable="false">A double press is two presses within %1$d ms</string>
     <string name="phone_buttons_codes_unknown" translatable="false">Which signals the box sends for each button is not known until a connection log from the car. If the wheel and the knob send the same signal, they share one set of gestures.</string>
     <string name="phone_buttons_reset" translatable="false">Reset to the defaults</string>
+    <string name="phone_update_install" translatable="false">Download and install %1$s</string>
+    <string name="phone_update_busy" translatable="false">Installing %1$s…</string>
+    <string name="phone_update_install_hint" translatable="false">Downloads the new MyPlay from its GitHub releases, checks it is MyPlay, that version and signed by the same key, then Android asks you to confirm. Your settings stay.</string>
+    <string name="phone_update_downloading" translatable="false">Downloading…</string>
+    <string name="phone_update_downloading_pct" translatable="false">Downloading… %1$d %%</string>
+    <string name="phone_update_checking" translatable="false">Checking the download…</string>
+    <string name="phone_update_installing" translatable="false">Confirm the install in Android\'s window.</string>
+    <string name="phone_update_permission" translatable="false">First allow MyPlay to install apps in the screen that opened, then tap again.</string>
+    <string name="phone_update_fail_network" translatable="false">Couldn\'t download it. Check the connection and try again.</string>
+    <string name="phone_update_fail_no_apk" translatable="false">This release has no MyPlay app file to install. Nothing was changed.</string>
+    <string name="phone_update_fail_checksum" translatable="false">The download didn\'t match the release\'s checksum, so it was deleted and not installed.</string>
+    <string name="phone_update_fail_not_myplay" translatable="false">The download is not MyPlay, so it was deleted and not installed.</string>
+    <string name="phone_update_fail_version" translatable="false">The download is not the expected version, so it was deleted and not installed.</string>
+    <string name="phone_update_fail_signer" translatable="false">The download is not signed by MyPlay\'s key, so it was deleted and not installed.</string>
+    <string name="phone_update_fail_install" translatable="false">Android didn\'t install it (cancelled or refused). Nothing was changed.</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->
