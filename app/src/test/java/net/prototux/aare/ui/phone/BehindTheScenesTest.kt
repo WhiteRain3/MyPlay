@@ -62,4 +62,10 @@ class BehindTheScenesTest {
     fun aMessagingOnlyAppIsCountedAsMessagingNotMedia() {
         assertEquals(1, carScreenAppCount(emptySet(), setOf("sms"), setOf("sms"), setOf("sms"), emptySet()))
     }
+
+    @Test
+    fun googlesAndroidAutoIsNotCountedAsTheCarLeavesItOut() {
+        val gearhead = "com.google.android.projection.gearhead"
+        assertEquals(1, carScreenAppCount(setOf(gearhead, "maps"), emptySet(), setOf(gearhead), emptySet(), emptySet()))
+    }
 }

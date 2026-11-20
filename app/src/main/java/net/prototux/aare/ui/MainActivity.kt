@@ -137,6 +137,7 @@ import net.prototux.aare.host.Assistants
 import net.prototux.aare.host.CarAppCatalog
 import net.prototux.aare.host.CarAppInfo
 import net.prototux.aare.host.CarRuntime
+import net.prototux.aare.host.MyPlayAppList
 import net.prototux.aare.host.PhoneApp
 import net.prototux.aare.host.UnsupportedCarApp
 import net.prototux.aare.mirror.MirrorTouchService
@@ -983,7 +984,9 @@ private fun AppsCard(settings: Settings) {
             val messagingOnly = AndroidAutoApps.messagingOnly(messaging)
             val media = AndroidAutoApps.mediaApps(ctx).filter { it.packageName !in carPkgs && it.packageName !in messagingOnly }
             val shown = carPkgs + media.map { it.packageName }
-            LauncherLists(car, media, messaging.filter { it.packageName !in shown })
+            // MyPlay (K8): leave out what the car's grid leaves out (Google's Android Auto).
+            LauncherLists(car.filter { MyPlayAppList.canShow(it.packageName) }, media.filter { MyPlayAppList.canShow(it.packageName) },
+                messaging.filter { it.packageName !in shown && MyPlayAppList.canShow(it.packageName) })
         }
     }
     fun toggle(pkg: String, visible: Boolean) {

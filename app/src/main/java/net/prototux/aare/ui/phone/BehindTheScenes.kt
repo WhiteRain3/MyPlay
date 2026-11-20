@@ -39,6 +39,7 @@ import net.prototux.aare.cert.CertificateStore
 import net.prototux.aare.host.AndroidAutoApps
 import net.prototux.aare.host.Assistants
 import net.prototux.aare.host.CarAppCatalog
+import net.prototux.aare.host.MyPlayAppList
 
 /** The "Behind the scenes" tiles on the start screen (plan E4), in the order they are shown. */
 enum class BehindTile { UPDATES, CONNECTION, APPS, SOUND, MESSAGES, VOICE, CERTIFICATES, ADVANCED, CAR_DATA, ABOUT }
@@ -88,13 +89,14 @@ fun advancedValue(verboseLog: Boolean, headUnitServer: Boolean): AdvancedValue =
  * How many phone apps the car screen lists, by the same rules as the car's app grid
  * (CarRuntime.applyApps and the Apps page): car apps, then media apps without a car app and not
  * messaging-only, then messaging apps not listed yet; hidden ones left out. Built-in entries
- * (Phone, Settings…) are not counted.
+ * (Phone, Settings…) are not counted, nor Google's Android Auto, which the car's grid leaves out.
  */
 fun carScreenAppCount(car: Set<String>, media: Set<String>, messaging: Set<String>, messagingOnly: Set<String>, hidden: Set<String>): Int {
     val listedMedia = media - car - messagingOnly
     val shown = car + listedMedia
     val listedMessaging = messaging - shown
-    return (shown + listedMessaging).count { it !in hidden }
+    // Google's Android Auto is never in the car's grid (K8).
+    return (shown + listedMessaging).count { it !in hidden && MyPlayAppList.canShow(it) }
 }
 
 private fun countCarScreenApps(context: Context, hidden: Set<String>): Int {
