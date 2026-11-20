@@ -373,6 +373,143 @@ Safe now, on the bench: M1, M2, M3, M4 (turn, press and Back), M6's placement ru
 car: the real screen size and margins (the free area must leave out what the car does not show),
 final card sizes for the Audi, moving the map with the knob.
 
+### R. Controls: the steering-wheel wheel, the dash knob, gestures and remapping
+
+The owner's words (2026-11-20): "Could you do holding the rotary clicked in (press and hold)
+changes the song? what other gestures can we add? As I just have a scroll with a click on the
+wheel, and I want to somehow make it fully usable, that I could use simply, intuitively and do
+stuff that I need. then a rotary on the dash, with dpad on top of the knob, menu and back works.
+want the dpad to work just as a tv remote does if possible."
+
+So the car has two controls:
+1. a **scroll wheel with a click** on the steering wheel;
+2. the **MMI knob** on the dash: turn, push, a four-way pad on top of it, and **Menu** and
+   **Back** buttons.
+
+**Not known until the owner sends a connection log from 0.1.1 or later** (it records every key
+and knob step with its code): which codes the box sends for each; whether the wheel and the knob
+send different codes (if they send the same, MyPlay cannot tell them apart and they share one
+set of gestures); whether a held button arrives as one long down, as repeated downs, or with a
+"long press" flag; whether the box passes Menu at all or keeps it for its own screen; whether a
+knob turn can arrive while a button is held (needed for "hold and turn"). Everything below is
+built so the codes are a table filled in later, not code.
+
+What exists, checked first (rule 6):
+- Upstream `fix/aa18-input` (6 commits, not merged): long presses made from a held key, repeats,
+  no long press on focus keys, the hold's start time kept. This is the base of the gesture
+  engine; take it.
+- Upstream `feat/car-key-remap` (`6c810cf`, 3 commits): a "Car buttons" page listing every key
+  seen from the car, each choosable from a list of actions; the lookup is a pure, tested function
+  (`car/CarKeyMap.kt`). Take it as the base of the action table; its page is replaced by the
+  phone worker's (B1).
+- MyPlay already has `car/HeldKey.kt` (press and hold measured, used for Back) and
+  `car/LongPressKey.kt` (Home).
+- The four-way pad is ordinary arrow keys. Arrow keys are already handed to the car screen
+  (`CarSession.onKey`, the `else` branch), and the screen's own focus search moves the ring in
+  the direction pressed. So "like a TV remote" mostly exists; it needs checking on every screen
+  (some rows trap). This is also what JVKeller's "panes" (`a08c2073`) needed a tilt for: with the
+  pad, jumping between the bar and the cards is just pressing toward them. Panes as such are not
+  needed.
+
+**Proposed default gestures** (for the owner to approve; every one can be changed on the phone):
+
+| Control | Gesture | Default |
+|---|---|---|
+| Dash knob | turn | move the ring to the next / previous item, in reading order |
+| | push | open or press what has the ring |
+| | push and hold (about 0.6 s) | **next song** (the owner's request) |
+| | double push | previous song |
+| | hold and turn | volume of the song in MyPlay's own player only if the car leaves volume to the phone; otherwise skip songs one by one. Only if the box allows it |
+| Pad on the knob | up / down / left / right | move the ring in that direction, like a TV remote; at the edge of an area, into the next area |
+| | hold a direction | keep moving (repeat) |
+| Menu | press | home; pressed on home, the app grid |
+| | hold | voice assistant |
+| Back | press | back |
+| | hold | home (built in K3) |
+| | two quick presses | leave an app that ignores Back (built in K3) |
+| Wheel on the steering wheel | turn | same as the knob's turn (if the codes are the same, it is the same) |
+| | click | play / pause |
+| | hold | next song |
+| | double click | previous song |
+
+Where a screen needs it, the same gestures do the obvious local thing:
+- **Hosted map app** (Organic Maps, Waze): turn moves through its buttons; push on the map itself
+  enters "move the map": the pad pans, turning zooms, push or Back leaves (JVKeller `570a67de`).
+- **Music** (now playing): left / right on the pad when the ring is on the progress bar seeks 10 s.
+- **Mirrored phone app** (YouTube): the pad moves a pointer (faster while held), push taps, turn
+  scrolls, Back goes back inside the app, two quick Backs leave (plan G2).
+- **A call ringing**: push answers, Back declines (JVKeller `deda4fb2` puts focus on Answer).
+
+**Feedback:** each gesture that does something away from the ring (next song, previous, volume,
+assistant) shows a short line at the top of the car screen for about 1.5 s ("Next song: <title>").
+No sound. A setting turns these off.
+
+**One trade-off to tell the owner:** a double push means a single push has to wait a moment
+(about a quarter of a second) to see whether a second one follows. So double push is off on the
+knob while the ring is on a list or a button, and only used where a single push has no other
+meaning (the music card, the home screen). If the owner finds even that slow, double push is
+turned off and "previous song" moves to the pad (left on the music card).
+
+Tasks for the car Worker, in order:
+
+**R1. Take upstream's input branches.** Merge `fix/aa18-input` and `feat/car-key-remap` as they
+are (one merge commit each, rule 6), drop or hide upstream's own buttons page.
+- Verified by: their tests; all existing tests; bench `open-back` and `back-out` walks unchanged.
+
+**R2. The gesture engine.** A pure class that turns the key and knob stream into press, hold,
+double, hold-and-turn and repeat, per key code, with the timings as settings (hold 0.6 s, double
+0.25 s). Built on R1's held-key handling; replaces `HeldKey` for Back without changing what Back
+does.
+- Verified by: unit tests for every gesture, a lost key-up, a hold with and without the car's
+  flag, repeated downs.
+
+**R3. The action table and its defaults.** One table: (control, gesture) to action, with the
+defaults above, stored through the car side's settings file. Codes for "wheel", "knob push",
+"pad", "Menu" start as the standard Android codes the bench sends (arrows, Enter or centre,
+Menu, Back, media keys) and are corrected from the owner's log in R8.
+- Verified by: unit tests (every default resolves; an unknown key does nothing; a remap wins).
+
+**R4. The pad like a TV remote, everywhere.** Walk every car screen with the arrow keys and fix
+the places where the ring cannot get out (rows that trap, the bar not reachable sideways, lists
+that do not scroll with the ring).
+- Verified by: bench walks with `dpad:` events on home, grid, Settings, a hosted map app, music;
+  each screen reachable in all four directions.
+
+**R5. The local meanings.** Map move mode (from JVKeller `570a67de`), seeking on the music
+progress bar, push to answer a call; the pointer for mirrored apps comes with G2.
+- Verified by: bench walks per screen; car for the map.
+
+**R6. The on-screen line for gestures.**
+- Verified by: bench pictures after a hold and a double push.
+
+**R7. The bench script learns holds.** New events: `hold:CODE,MS`, `double:CODE`,
+`holdturn:CODE,N` (needs a small change to the desktop head unit to send a key down, wait, then
+up), and walks `gestures` and `pad`.
+- Verified by: the Tester runs them.
+
+**R8. The real codes.** When the owner's connection log arrives: fill in which code is the
+wheel, the knob push, the pad, Menu and Back; if the wheel and knob share codes, say so to the
+owner and give them one set. Kept as a rule for this box (`vehicles.json` style), so another
+car does not inherit it.
+- Verified by: the owner in the car.
+
+For the Phone app worker (after R3 is in):
+
+**B1. The Buttons page** (`ui/phone/ButtonsScreen.kt`, new). In the "Edit the picture" style:
+a drawing of the two controls (wheel; knob with its pad, Menu and Back); tap a part, then see its
+gestures (push, hold, double, hold and turn) each with its current action; tap one to choose from
+the action list; "Reset to the defaults". Reads and writes only through the car side's table
+(R3); no setting of its own. A tile "Buttons" in "Behind the scenes" opens it.
+- Verified by: unit tests on what the page writes; Tester screenshots; the bench shows a changed
+  gesture doing the new action.
+
+**B2. "Press it in the car".** While connected, pressing a car button highlights it on the page
+(from the same log as A7), so the owner can see which part of the drawing a button is. Waits for
+R8.
+
+Safe now, on the bench: R1 to R7 and B1. Needs the car: R8, B2, and whether "hold and turn" is
+possible at all.
+
 ## Standing rules for every task
 
 1. Keep changes to AARE's existing files small, and put new MyPlay code in new files. The Kotlin
