@@ -231,7 +231,7 @@ private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Bool
     val tighterBar = tightBar && area.width < 640.dp
     val apps: @Composable (Int, Boolean) -> Unit = { recentSlots, withSettings ->
         RailApp(nav, Icons.Rounded.Map, on(nav)) { nav?.let(actions::openApp) ?: actions.openLauncher() }
-        RailApp(media, Icons.Rounded.MusicNote, on(media)) { media?.let(actions::openApp) ?: actions.openLauncher() }
+        RailApp(media, Icons.Rounded.MusicNote, on(media)) { media?.let(actions::openApp) ?: actions.openMusicApps() }
         recent.take(recentSlots).forEach { app -> RailApp(app, Icons.Rounded.Apps, on(app)) { actions.openApp(app) } }
         phone?.let { RailApp(it, Icons.Rounded.Call, on(it)) { actions.openApp(it) } }
         settings?.takeIf { withSettings }?.let { RailApp(it, Icons.Rounded.Settings, on(it)) { actions.openApp(it) } }
@@ -569,7 +569,7 @@ fun AppIcon(app: CarAppEntry, sizeDp: Int) {
 private fun MediaCard(state: CarUiState, actions: CarActions, compact: Boolean, modifier: Modifier) {
     val np = state.nowPlaying
     val media = state.app(np?.appId ?: state.activeMediaAppId)
-    Card(modifier, onClick = { media?.let(actions::openApp) ?: actions.openLauncher() }) {
+    Card(modifier, onClick = { media?.let(actions::openApp) ?: actions.openMusicApps() }) {
         if (np?.art != null && !compact) {
             Image(np.art.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.35f)
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.surfaceContainer))))

@@ -638,7 +638,8 @@ class CarRuntime(
         }
 
         override fun goHome() { ui.screen = CarScreen.Dashboard }
-        override fun openLauncher() { ui.screen = CarScreen.Launcher }
+        override fun openLauncher() { ui.launcherKinds = null; ui.screen = CarScreen.Launcher }
+        override fun openMusicApps() { ui.launcherKinds = setOf(CarAppKind.MEDIA); ui.screen = CarScreen.Launcher }
         override fun assistant() { this@CarRuntime.assistant() }
         override fun mediaPlayPause() = media.playPause()
         override fun mediaNext() = media.next()

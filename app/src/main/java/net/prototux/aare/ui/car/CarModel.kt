@@ -84,7 +84,13 @@ class CarUiState {
     /** Ids of built-in apps (CarRuntime.HIDEABLE_BUILTIN_IDS) the user hid from the app grid only. */
     var launcherHidden by mutableStateOf<Set<String>>(emptySet())
     /** What the app grid and launcher list show: [apps] without the ones in [launcherHidden]. */
-    val launcherApps: List<CarAppEntry> get() = apps.withoutLauncherHidden(launcherHidden)
+    val launcherApps: List<CarAppEntry> get() =
+        apps.withoutLauncherHidden(launcherHidden).onlyKinds(launcherKinds.takeIf { screen == CarScreen.Launcher })
+    /**
+     * MyPlay (K10): when set, the opened app grid lists only apps of these kinds (the Music button's
+     * list). Only while the screen is the grid: the grid drawn as the home screen always shows all.
+     */
+    var launcherKinds by mutableStateOf<Set<CarAppKind>?>(null)
     var nowPlaying by mutableStateOf<NowPlaying?>(null)
     /** The navigation app whose map is shown on the dashboard. */
     var activeNavAppId by mutableStateOf<String?>(null)
@@ -138,6 +144,15 @@ class CarUiState {
 }
 
 /** These apps without the [hidden] ones, for the app grid: everything else still reaches them. */
+/**
+ * MyPlay (K10): only the entries of [kinds]; all of them when [kinds] is null, or when none is of
+ * those kinds (an empty grid would leave the driver with nothing to choose).
+ */
+internal fun List<CarAppEntry>.onlyKinds(kinds: Set<CarAppKind>?): List<CarAppEntry> {
+    if (kinds == null) return this
+    return filter { it.kind in kinds }.ifEmpty { this }
+}
+
 internal fun List<CarAppEntry>.withoutLauncherHidden(hidden: Set<String>): List<CarAppEntry> =
     if (hidden.isEmpty()) this else filter { it.id !in hidden }
 
@@ -150,6 +165,8 @@ interface CarActions {
     fun openApp(app: CarAppEntry)
     fun goHome()
     fun openLauncher()
+    /** MyPlay (K10): the app grid with music apps only (Music pressed with no music app remembered). */
+    fun openMusicApps() = openLauncher()
     fun assistant()
     fun mediaPlayPause()
     fun mediaNext()
