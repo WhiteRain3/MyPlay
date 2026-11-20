@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
 import androidx.compose.material.icons.rounded.Apps
+import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.Bluetooth
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Forum
@@ -42,7 +43,7 @@ import net.prototux.aare.host.CarAppCatalog
 import net.prototux.aare.host.MyPlayAppList
 
 /** The "Behind the scenes" tiles on the start screen (plan E4), in the order they are shown. */
-enum class BehindTile { UPDATES, CONNECTION, APPS, SOUND, MESSAGES, VOICE, CERTIFICATES, ADVANCED, CAR_DATA, ABOUT }
+enum class BehindTile { UPDATES, CONNECTION, APPS, SOUND, MESSAGES, VOICE, CERTIFICATES, BACKUP, ADVANCED, CAR_DATA, ABOUT }
 
 /** What the Sound tile says. */
 enum class SoundValue { OFF, NOT_SET_UP, BEST, ALL_SOUND, MUSIC_ONLY }
@@ -167,6 +168,7 @@ fun BehindTheScenesTiles(connected: Boolean, audioCapture: Boolean, refresh: Int
             }), attention = messages == MessagesValue.NO_ACCESS),
         TileSpec(BehindTile.VOICE, Icons.Rounded.Mic, TileTone.PINK, stringResource(R.string.phone_tile_voice), voice ?: stringResource(R.string.phone_tile_none)),
         TileSpec(BehindTile.CERTIFICATES, Icons.Rounded.VerifiedUser, TileTone.GREEN, stringResource(R.string.phone_tile_certificates), certificateText),
+        TileSpec(BehindTile.BACKUP, Icons.Rounded.Backup, TileTone.GREEN, stringResource(R.string.phone_tile_backup), stringResource(R.string.phone_tile_file)),
         TileSpec(BehindTile.ADVANCED, Icons.Rounded.Tune, TileTone.CORAL, stringResource(R.string.phone_tile_advanced),
             stringResource(when (advanced) {
                 AdvancedValue.LOG_ON -> R.string.phone_tile_log_on

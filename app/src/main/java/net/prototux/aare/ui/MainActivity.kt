@@ -96,6 +96,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -157,6 +158,7 @@ import net.prototux.aare.ui.phone.PhoneSwitch
 import net.prototux.aare.ui.phone.PhoneToggle
 import net.prototux.aare.ui.phone.PhoneTopBar
 import net.prototux.aare.ui.phone.PicturePart
+import net.prototux.aare.ui.phone.BackupPage
 import net.prototux.aare.ui.phone.BarPage
 import net.prototux.aare.ui.phone.CardsPage
 import net.prototux.aare.ui.phone.ClockPage
@@ -235,6 +237,7 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     LAYOUT(R.string.phone_part_layout, R.string.phone_part_layout, Icons.Rounded.Dashboard),
     CLOCK(R.string.phone_part_clock, R.string.phone_part_clock, Icons.Rounded.Dashboard),
     STATUS(R.string.phone_part_status, R.string.phone_part_status, Icons.Rounded.Dashboard),
+    BACKUP(R.string.setup_section_backup, R.string.setup_section_backup, Icons.Rounded.Tune),
     CERTIFICATES(R.string.cert_section_title, R.string.phone_certificates_subtitle, Icons.Rounded.VerifiedUser),
     ABOUT(R.string.setup_page_about_title, R.string.setup_page_about_subtitle, Icons.Rounded.Info),
 }
@@ -247,6 +250,9 @@ private fun Home() {
     val state by ProjectionService.state.collectAsState()
     var refresh by remember { mutableIntStateOf(0) }
     var page by rememberSaveable { mutableStateOf<Page?>(null) }
+    // MyPlay (E8, from upstream's settings backup): bumped after a settings import, so every page is
+    // rebuilt and reads Settings again instead of showing (and writing back) what it remembered.
+    var settingsGeneration by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { ProjectionService.startIdleIfEnabled(ctx); ProjectionService.probeUsb(ctx); ProjectionService.probeWireless(ctx); UpdateChecker.refresh(ctx); CertificateUpdates.refresh(ctx) }
     // Re-check permissions and capture methods whenever the user comes back to the app.
     val lifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current
@@ -257,7 +263,7 @@ private fun Home() {
     }
     BackHandler(enabled = page != null) { page = null }
 
-    AnimatedContent(page, label = "page", transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(100)) }) { p ->
+    key(settingsGeneration) { AnimatedContent(page, label = "page", transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(100)) }) { p ->
         if (p == null) {
             // MyPlay (E2, E4): the start screen is the Customise screen. Tapping the car picture opens
             // the Car screen page; every other page has a tile under it.
@@ -306,13 +312,14 @@ private fun Home() {
                         Page.CLOCK -> item { ClockPage() }
                         Page.STATUS -> item { StatusIconsPage() }
                         Page.WALLPAPER -> item { WallpaperPage { uri -> saveWallpaper(ctx, uri) } }
+                        Page.BACKUP -> item { BackupPage { settingsGeneration++ } }
                         Page.CERTIFICATES -> item { CertificatesCard(certs, state) }
                         Page.ABOUT -> item { AboutScreen() }
                     }
                 }
             }
         }
-    }
+    } }
 }
 
 /** MyPlay (E3): the page a tapped part of the car picture opens. */
@@ -335,6 +342,7 @@ private fun pageOf(tile: BehindTile): Page = when (tile) {
     BehindTile.MESSAGES -> Page.MESSAGES
     BehindTile.VOICE -> Page.ASSISTANT
     BehindTile.CERTIFICATES -> Page.CERTIFICATES
+    BehindTile.BACKUP -> Page.BACKUP
     BehindTile.ADVANCED -> Page.ADVANCED
     BehindTile.CAR_DATA -> Page.CAR_DATA
 }

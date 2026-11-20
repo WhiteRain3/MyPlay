@@ -102,6 +102,17 @@
     <string name="phone_clock_style" translatable="false">Style</string>
     <string name="phone_clock_bold" translatable="false">Bold</string>
     <string name="phone_clock_bold_sub" translatable="false">Thicker digits. The Retro look keeps its own digits.</string>
+    <string name="phone_backup_save" translatable="false">Save settings to a file</string>
+    <string name="phone_backup_save_sub" translatable="false">Choose where; keep it somewhere safe</string>
+    <string name="phone_backup_save_button" translatable="false">Save</string>
+    <string name="phone_backup_load" translatable="false">Load settings from a file</string>
+    <string name="phone_backup_load_sub" translatable="false">Replaces the settings in the file; asks first</string>
+    <string name="phone_backup_load_button" translatable="false">Load</string>
+    <string name="phone_backup_restores_all" translatable="false">Loading restores every setting in the file, including ones that use the internet: the update check, the weather and the browser\'s address. If they were on when the file was saved, they are on again.</string>
+    <string name="phone_backup_no_photo" translatable="false">A wallpaper photo is not in the file. After loading, choose the photo again on the Wallpaper page.</string>
+    <string name="phone_backup_saved" translatable="false">Settings saved.</string>
+    <string name="phone_tile_backup" translatable="false">Backup</string>
+    <string name="phone_tile_file" translatable="false">File</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->
