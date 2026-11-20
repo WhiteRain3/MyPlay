@@ -195,6 +195,13 @@ private fun SpecBar(state: CarUiState, actions: CarActions, spec: CarLayoutSpec,
     val media = state.app(state.activeMediaAppId)
     val phone = state.apps.firstOrNull { it.kind == CarAppKind.PHONE }
     fun on(app: CarAppEntry?) = app != null && state.screen == CarScreen.App(app.id)
+    val phoneStatus = rememberPhoneStatus()
+    // The bar items chosen in the settings (upstream's rail widgets), as on the taskbar; a ribbon
+    // or dock along an edge has room for them in its row, a side bar stacks them.
+    val items: @Composable () -> Unit = {
+        RailWidgets(state.railWidgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = !vertical, spacing = if (vertical) 6.dp else 10.dp)
+        NetworkStatusIcons(phoneStatus)
+    }
     val buttons: @Composable () -> Unit = {
         MicButton(state.listening) { actions.assistant() }
         if (state.screen == CarScreen.Dashboard) Box(Modifier.carPart(CarPart.AppsButton)) { RailButton(Icons.Rounded.Apps, stringResource(R.string.dash_menu_apps), selected = false) { actions.openLauncher() } }
@@ -210,13 +217,13 @@ private fun SpecBar(state: CarUiState, actions: CarActions, spec: CarLayoutSpec,
                 Modifier.verticalScroll(rememberScrollState()).padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-            ) { buttons() }
+            ) { items(); buttons() }
         } else {
             Row(
                 Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
-            ) { buttons() }
+            ) { items(); buttons() }
         }
     }
 }
