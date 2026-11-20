@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.Cloud
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -81,7 +82,7 @@ internal fun outsideTemperatureLabel(celsius: Float, fahrenheit: Boolean): Strin
  * one polled phone status (rememberPhoneStatus), shared with its network icons.
  */
 @Composable
-internal fun RailWidgets(widgets: List<RailWidget>, weather: Weather?, phone: PhoneStatusInfo?, horizontal: Boolean, spacing: Dp) {
+internal fun RailWidgets(widgets: List<RailWidget>, weather: Weather?, phone: PhoneStatusInfo?, horizontal: Boolean, spacing: Dp, weatherOn: Boolean = weather != null) {
     val car by CarData.state.collectAsState()
     val carTemperature = car.environment?.value?.temperatureC
     val content: @Composable () -> Unit = {
@@ -90,7 +91,10 @@ internal fun RailWidgets(widgets: List<RailWidget>, weather: Weather?, phone: Ph
                 RailWidget.CLOCK -> Clock()
                 RailWidget.TEMPERATURE -> OutsideTemperatureWidget(carTemperature, weather)
                 RailWidget.BATTERY -> BatteryWidget(phone)
-                RailWidget.WEATHER -> WeatherChip(weather)
+                // MyPlay (P1, P1-1): a dimmed placeholder when the weather is on but has no reading yet
+                // (first fetch, no location); with the weather switched off, nothing, as before
+                // (the weather item is in the default list, so most bars would show it otherwise).
+                RailWidget.WEATHER -> if (weather != null) WeatherChip(weather) else if (weatherOn) NoReading(Icons.Rounded.Cloud)
             }
         }
     }
@@ -109,10 +113,29 @@ internal fun OutsideTemperatureWidget(carTemperature: Float?, weather: Weather?)
             Icon(Icons.Rounded.Thermostat, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
             Text(outsideTemperatureLabel(carTemperature, usesFahrenheit()), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
         }
-    } else {
+    } else if (weather != null) {
         WeatherChip(weather)
+    } else {
+        NoReading(Icons.Rounded.Thermostat) // MyPlay (P1)
     }
 }
+
+/**
+ * MyPlay (P1): a chosen bar item with no reading (no car sensor, weather off or not fetched yet):
+ * its icon and "–°", dimmed, so the driver sees the item is there but has nothing to show. The
+ * phone's Bar page says why.
+ */
+@Composable
+private fun NoReading(icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    val dim = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, null, tint = dim, modifier = Modifier.size(18.dp))
+        Text(NO_READING, style = MaterialTheme.typography.labelLarge, color = dim)
+    }
+}
+
+/** What a bar item without a reading shows (MyPlay, P1). */
+internal const val NO_READING = "–°"
 
 /** Just the phone's battery (gauge, charging bolt or percent): one of the rail's status widgets. */
 @Composable

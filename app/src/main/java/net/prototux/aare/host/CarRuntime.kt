@@ -812,8 +812,8 @@ class CarRuntime(
 
     /**
      * MyPlay (K9): a maps app on the home screen that shows nothing within [HomeMaps.WAIT_MS] (it
-     * failed to start, or never sent a screen) is left out there until it is opened on purpose, so
-     * the maps buttons come back instead of an empty card.
+     * failed to start, or never sent a screen) is left out there until it is opened on purpose or
+     * sends a screen after all, so the maps buttons come back instead of an empty card.
      */
     @Composable
     private fun WatchHomeMap(conn: CarAppConnection, app: CarAppEntry) {
@@ -826,6 +826,17 @@ class CarRuntime(
                 Log.i(TAG, line)
                 DiagLog.add(line)
                 ui.navShowsNothing = ui.navShowsNothing + app.id
+                // K9-1, K9-2: a slow start (a big maps app's first launch) still gets its place
+                // back as soon as it does send a screen. Watched from the runtime's scope: this
+                // composable leaves the screen with the app.
+                scope.launch {
+                    // K9-7: bounded, as the connection may be replaced and this one never show.
+                    kotlinx.coroutines.withTimeoutOrNull(HomeMaps.LATE_WATCH_MS) { snapshotFlow { conn.template != null }.first { it } } ?: return@launch
+                    if (app.id in ui.navShowsNothing) {
+                        DiagLog.add("home screen: ${app.label} sent a screen after all, back on the home screen")
+                        ui.navShowsNothing = ui.navShowsNothing - app.id
+                    }
+                }
             }
         }
     }

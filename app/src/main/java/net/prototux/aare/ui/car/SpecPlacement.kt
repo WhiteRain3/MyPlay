@@ -75,6 +75,16 @@ internal object SpecPlacement {
     }
 
     /**
+     * M3-3: the largest area beside the bar that no card slot covers (a gap from everything), for
+     * the maps buttons when no maps app is shown.
+     */
+    fun freeArea(p: Placement): Box {
+        val inner = Box(p.content.left + GAP, p.content.top + GAP, p.content.right - GAP, p.content.bottom - GAP)
+        val padded = p.slots.map { Box(it.left - GAP, it.top - GAP, it.right + GAP, it.bottom + GAP) }
+        return net.prototux.aare.host.templates.MapGeometry.unobstructed(inner, padded)
+    }
+
+    /**
      * M4: the order the knob goes through [boxes] (the bar and the card slots): reading order, top
      * to bottom, then left to right. Indices into [boxes].
      */

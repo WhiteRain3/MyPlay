@@ -153,6 +153,18 @@ class SpecPlacementTest {
         assertEquals(p.bar, order("C").first())
     }
 
+    // ---- M3-3: the free area for the maps buttons ----
+
+    @Test fun theFreeAreaIsClearOfTheBarAndEveryCard() {
+        for ((name, spec) in CarLayoutSpec.PRESETS) for ((w, h) in sizes) {
+            val p = SpecPlacement.place(spec, w, h)
+            val free = SpecPlacement.freeArea(p)
+            assertTrue("$name $w x $h: $free", free.area > 0f)
+            assertTrue("$name over the bar", free.intersect(p.bar) == null)
+            p.slots.forEach { assertTrue("$name $w x $h: $free over $it", free.intersect(it) == null) }
+        }
+    }
+
     @Test fun theMapGoesUnderTheBarOnlyWhenAsked() {
         assertEquals(Box(0f, 0f, 1280f, 720f), SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("D"), 1280f, 720f).map)
         assertEquals(Box(SpecPlacement.BAR, 0f, 1280f, 720f), SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("A"), 1280f, 720f).map)

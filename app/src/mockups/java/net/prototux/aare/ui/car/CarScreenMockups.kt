@@ -72,8 +72,12 @@ class CarScreenMockups {
     @Test fun mapBehindE() = mapBehind("E")
     @Test fun mapBehindF() = mapBehind("F")
 
-    private fun mapBehind(preset: String) {
+    /** M3-3: no maps app shown (here: "Always ask"): the maps buttons in the free area. */
+    @Test fun mapBehindNoMapsApp() = mapBehind("D", homeMaps = HomeMaps.ASK)
+
+    private fun mapBehind(preset: String, homeMaps: String = HomeMaps.LAST) {
         val state = mockState(night = true, screen = CarScreen.Dashboard).apply {
+            this.homeMaps = homeMaps
             theme = CarThemes.byId("aare")
             layout = CarLayout.MAP_BEHIND
             layoutSpec = CarLayoutSpec.PRESETS.getValue(preset)

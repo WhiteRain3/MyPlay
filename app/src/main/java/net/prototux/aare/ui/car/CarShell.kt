@@ -78,6 +78,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import net.prototux.aare.ui.theme.LocalCarControlScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.DpSize
@@ -227,12 +228,14 @@ internal data class SideRailFit(val recentSlots: Int, val status: Boolean, val s
  * the phone status and weather go first, then Settings (the launcher has it); below that the apps
  * scroll. Dropping items rather than shrinking them keeps every button a full touch target.
  */
-internal fun sideRailFit(height: Dp, look: StatusStyle = StatusStyle()): SideRailFit {
-    // MyPlay (F4-2): a larger clock or larger status icons take more of the height (the clock's
-    // line is about 30 dp of its 72, the status and weather 54), so everything else goes sooner.
-    // Smaller sizes give nothing back (F4-6): the thresholds stay as measured at the normal size.
-    val extra = (CLOCK_LINE * (look.clockSize.scale - 1f) + STATUS_LINES * (look.size.scale - 1f)).coerceAtLeast(0.dp)
-    val h = height - extra
+internal fun sideRailFit(height: Dp, look: StatusStyle = StatusStyle(), textScale: Float = 1f, controlScale: Float = 1f): SideRailFit {
+    // MyPlay (F4-2, D3-2): a larger clock or larger status icons take more of the height (the clock's
+    // line is about 30 dp of its 72, the status and weather 54), and so does larger text; larger
+    // controls (the apps, menu and mic: nearly all the rest) grow the whole rail. So everything
+    // else goes sooner. Smaller sizes give nothing back (F4-6): the thresholds stay as measured at
+    // the normal sizes. An estimate, not measured.
+    val extra = (CLOCK_LINE * (look.clockSize.scale * textScale - 1f) + STATUS_LINES * (look.size.scale * textScale - 1f)).coerceAtLeast(0.dp)
+    val h = (height - extra) / controlScale.coerceAtLeast(1f)
     return SideRailFit(
         // A recent app only on tall screens: what an 800 dp screen leaves inside the padding.
         recentSlots = if (h >= 768.dp) 1 else 0,
@@ -286,7 +289,7 @@ private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Bool
             // On a tight bar the weather gives up its spot first; the clock and battery stay.
             val widgets = if (tightBar) state.railWidgets - RailWidget.WEATHER else state.railWidgets
             val status: @Composable () -> Unit = { Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                RailWidgets(widgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = true, spacing = 10.dp)
+                RailWidgets(widgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = true, spacing = 10.dp, weatherOn = state.weatherInBar)
                 NetworkStatusIcons(phoneStatus)
                 NotificationBell(state) { bell() }
             } }
@@ -297,14 +300,14 @@ private fun RailContent(state: CarUiState, actions: CarActions, horizontal: Bool
             if (state.driverOnRight) driverEnd() else status()
         }
     } else {
-        val fit = sideRailFit(area.height - 32.dp, LocalStatusStyle.current)
+        val fit = sideRailFit(area.height - 32.dp, LocalStatusStyle.current, state.textScale, LocalCarControlScale.current)
         Column(
             Modifier.fillMaxHeight().width(d.railWidth).carPart(CarPart.Bar).background(container).padding(vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // Short on room: only the clock stays, the rest (and the network icons) give up their place.
             val widgets = if (fit.status) state.railWidgets else state.railWidgets.filter { it == RailWidget.CLOCK }
-            RailWidgets(widgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = false, spacing = 6.dp)
+            RailWidgets(widgets, state.weather.takeIf { state.weatherInBar }, phoneStatus, horizontal = false, spacing = 6.dp, weatherOn = state.weatherInBar)
             if (fit.status) {
                 Spacer(Modifier.height(4.dp))
                 NetworkStatusIcons(phoneStatus)

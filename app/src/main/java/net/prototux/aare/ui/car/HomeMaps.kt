@@ -37,6 +37,8 @@ internal object HomeMaps {
 
     /** How long a maps app has to show something on the home screen before the buttons come back. */
     const val WAIT_MS = 15_000L
+    /** K9-7: how long a maps app left off the home screen is watched for a late screen. */
+    const val LATE_WATCH_MS = 5 * 60_000L
 }
 
 /** MyPlay (K9): "last", "ask" or "app:<package>". */
