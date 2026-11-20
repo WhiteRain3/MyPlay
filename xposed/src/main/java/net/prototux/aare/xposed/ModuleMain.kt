@@ -1,12 +1,13 @@
 package net.prototux.aare.xposed
 
+import android.util.Log
 import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
-import io.github.libxposed.api.XposedModuleInterface.SystemServerStartingParam
+import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
 
 /**
- * libxposed entry point (listed in META-INF/xposed/java_init.list). Routes each hooked process to
- * the hooks meant for it: system_server on its own callback, every other scoped app on package load.
+ * libxposed entry point (listed in META-INF/xposed/java_init.list). MyPlay: installs the hooks in
+ * each app the module is switched on for, once that app's own classes are ready (onPackageReady,
+ * as in the owner's working module). Nothing is hooked in Android's system process.
  *
  * Every hook here is a compatibility shim for AARE itself (package [AARE_PACKAGE]), on a phone its
  * owner has rooted: it lets AARE stand in for Google's Android Auto host where an app or the system
@@ -18,20 +19,24 @@ import io.github.libxposed.api.XposedModuleInterface.SystemServerStartingParam
  */
 class ModuleMain : XposedModule() {
 
-    override fun onPackageLoaded(param: PackageLoadedParam) {
-        // One classloader per process is enough; skip extra loads of the same package.
-        if (!param.isFirstPackage) return
-        // Don't hook AARE's own process: it already knows it is the host.
-        if (param.packageName == AARE_PACKAGE) return
-        AppProcessHooks.install(this, param)
-        MediaHooks.install(this, param)
-    }
-
-    override fun onSystemServerStarting(param: SystemServerStartingParam) {
-        SystemHooks.install(this, param.classLoader)
+    // MyPlay, first version: only the Waze-type hook (WazeTypeHook.kt), in the apps the module is
+    // switched on for. AARE's other hooks are still in this folder but are not installed: the
+    // Google Maps and media hooks (AppProcessHooks.kt, MediaHooks.kt) wait until the Waze one is
+    // proven, and the hooks into Android's system process (SystemHooks.kt) are left out because a
+    // wrong one can stop the phone from starting.
+    override fun onPackageReady(param: PackageReadyParam) {
+        try {
+            // One classloader per process is enough; skip extra loads of the same package.
+            if (!param.isFirstPackage) return
+            // Don't hook MyPlay's own process: it already knows it is the host.
+            if (param.packageName == AARE_PACKAGE) return
+            WazeTypeHook.install(this, param.classLoader, param.packageName)
+        } catch (t: Throwable) {
+            Log.w(WazeTypeHook.TAG, "not installed: $t")
+        }
     }
 
     companion object {
-        const val AARE_PACKAGE = "io.github.whiterain3.myplay"
+        const val AARE_PACKAGE = HostCheck.MYPLAY_PACKAGE
     }
 }

@@ -1,45 +1,76 @@
-# AARE host shims (Xposed module)
+# MyPlay host shims (Xposed module)
 
-A separate, optional APK for **rooted phones**. It is not part of the AARE app and the app never
-depends on it. It uses [libxposed](https://github.com/libxposed) (LSPosed/Vector) to make AARE a
-drop-in for Google's Android Auto host where an app or the system only recognises Google's.
+A separate, optional APK for **rooted phones** with an LSPosed-type framework. MyPlay itself never
+depends on it. It comes from upstream AARE's "AARE host shims" module (by prototux and
+contributors, GPL-3.0-or-later), changed for MyPlay.
 
-Everything it does is already possible another way (the Magisk privileged-app module, Shizuku, or
-extracting the Android Auto certificate). The module just does it with hooks instead, for people who
-already run LSPosed and would rather not install the Magisk module.
+Each MyPlay release has it as `MyPlay-hostshims-<version>.apk`, signed with the same key as the app.
 
-## What it hooks
+> **Status:** builds and passes its tests. **Not yet tried on a device.**
 
-All four are gated on AARE's own package or uid; a real Google Android Auto session is never changed.
+## What this version does
 
-| Process | Hook | Effect |
-| --- | --- | --- |
-| each scoped client app | `HostValidator.isValidHost(HostInfo)` | returns true when the host is AARE, so a Car App Library app accepts AARE despite its non-Google certificate |
-| each scoped client app | `HostInfo.getPackageName()` | reports Google's package when the host is AARE, so an app that only compares the host package name string accepts AARE |
-| system_server | `AppOpsService.checkOperation` for `PROJECT_MEDIA` | AARE gets a MediaProjection token without the per-session consent dialog |
-| system_server | `PermissionManagerService…checkUidPermission` | AARE's declared privileged permissions report as granted, without the Magisk privapp allowlist |
+One thing only: it lets **Waze** accept MyPlay as the app that shows it on the car screen.
 
-The two system hooks only relax **framework-level** checks. Permissions the platform enforces
-natively (audio capture in `audioserver`) still need the native privileged grant, so the Magisk
-module remains the way to get system audio; see [docs/xposed.md](../docs/xposed.md).
+Waze is built with Google's Car App Library. Before it shows anything on a car screen, it asks
+`androidx.car.app.validation.HostValidator.isValidHost(HostInfo)` whether the app asking (the
+"host") is one it trusts, by name and signing key. MyPlay is not on its list, so Waze refuses
+("Waze only accepts Google's Android Auto" in MyPlay).
 
-## Scope
+The module makes that check answer **yes when the host is MyPlay** (`io.github.whiterain3.myplay`).
+For any other host, Google's Android Auto included, Waze's own check runs unchanged.
 
-`src/main/resources/META-INF/xposed/scope.list` lists `android` (for the system hooks) and a few
-common client apps. **Add your own car apps** to the module's scope in the LSPosed/Vector manager —
-a Car App Library app is only hooked if the module is enabled for it.
+It fails open: if Waze does not have that class or method under that name (an app can shorten
+its internal names when it is built), or anything else goes wrong, nothing is changed and Waze
+behaves as without the module.
+
+The phone's log says what happened, under the tag `MyPlayHostShims`:
+
+| Line | Meaning |
+| --- | --- |
+| `com.waze: host check hooked` | the hook is in place |
+| `com.waze: host check not hooked: …` | it is not, with the reason (for example a renamed class) |
+| `com.waze: MyPlay accepted as host` | Waze asked about MyPlay and got yes (once per start of Waze) |
+
+```sh
+adb logcat -s MyPlayHostShims
+```
+
+## Using it
+
+1. Install `MyPlay-hostshims-<version>.apk` on the phone.
+2. In the LSPosed-type manager, enable **MyPlay host shims** and tick **only Waze**.
+3. Force-stop Waze (or restart the phone).
+4. Connect to the car (or the test bench) and open Waze from MyPlay.
+
+## What is in this folder but not used
+
+Upstream's other hooks are still here and are **not installed** by this version:
+
+- `AppProcessHooks.kt`: Google Maps (a permission check) and the same Car App Library check.
+- `MediaHooks.kt`: music apps that only serve Google's Android Auto.
+- `SystemHooks.kt`: hooks into Android's own system process. Left out on purpose: a wrong one can
+  stop the phone from starting.
+
+They come back one at a time, each only after the one before is proven on a device.
+
+## Form
+
+`src/main/resources/META-INF/xposed/` holds the module's settings in the form the owner's
+framework is known to load (`minApiVersion=101`, `targetApiVersion=101`, `staticScope=true`), and
+the module is built against version 101 of the hooking library (`io.github.libxposed:api`,
+compile-only: the framework provides it). Its scope list holds only `com.waze`.
 
 ## Build
 
 ```sh
-./gradlew :xposed:assembleRelease
+./gradlew :xposed:testDebugUnitTest :xposed:assembleRelease
 ```
 
-Install the APK, enable it in your Xposed manager, tick the scope, and reboot (or restart the
-scoped apps). The module compiles against `io.github.libxposed:api` with `compileOnly`; the
-framework provides the API at runtime, so it is never bundled.
+Without the release key in the environment (`AARE_KEYSTORE` and the others, see
+`app/build.gradle.kts`) the release APK is unsigned; `:xposed:assembleDebug` gives a debug-signed
+one for trying.
 
-> **Status:** new and not yet verified on a device. The system_server hooks target framework
-> internals whose names change between Android versions; each is best-effort and skips a target it
-> can't find rather than crashing system_server, but which Android versions they work on is unknown
-> until tested. Treat this as a starting point.
+The tests check that the class and method the hook names exist in the Car App Library this
+project builds with, that only MyPlay is accepted, and that the settings files are in the form
+above.

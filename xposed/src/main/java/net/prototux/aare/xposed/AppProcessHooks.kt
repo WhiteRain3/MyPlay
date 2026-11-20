@@ -37,7 +37,7 @@ object AppProcessHooks {
      * accepts AARE despite its non-Google signing certificate. (Waze's rejection is exactly this.)
      */
     private fun hookHostValidator(xposed: XposedInterface, cl: ClassLoader) {
-        val hostValidator = runCatching { cl.loadClass("androidx.car.app.HostValidator") }.getOrNull() ?: return
+        val hostValidator = runCatching { cl.loadClass(HostCheck.HOST_VALIDATOR) }.getOrNull() ?: return
         val hostInfo = runCatching { cl.loadClass("androidx.car.app.HostInfo") }.getOrNull() ?: return
         val method = runCatching { hostValidator.getDeclaredMethod("isValidHost", hostInfo) }.getOrNull() ?: return
         xposed.hook(method).intercept { chain ->

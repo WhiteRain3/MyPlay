@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="module_name">AARE host shims</string>
+    <string name="module_name" translatable="false">MyPlay host shims</string>
+    <string name="module_description" translatable="false">Lets Waze accept MyPlay as the app that shows it on the car screen. For rooted phones with an LSPosed-type framework. Switch it on for Waze only.</string>
 </resources>

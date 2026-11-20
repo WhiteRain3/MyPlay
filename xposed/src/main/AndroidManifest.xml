@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- MyPlay: a module in the current libxposed form. What marks it as a module, its entry
+         point, the framework version and its scope are the files under META-INF/xposed, the same
+         form as the owner's working module; the old "xposedmodule" meta-data is not used. The
+         framework's manager shows the label and the description. -->
     <application
         android:allowBackup="false"
+        android:description="@string/module_description"
         android:label="@string/module_name">
-
-        <!-- Marks this APK as an Xposed/libxposed module. The hook entry point, the minimum
-             framework version and the client scope are declared under META-INF/xposed. -->
-        <meta-data
-            android:name="xposedmodule"
-            android:value="true" />
     </application>
 </manifest>

@@ -5,6 +5,8 @@
 # A release is tagged myplay-v<version> and holds:
 #   - MyPlay-<version>.apk             the Android app, signed with the owner's key
 #   - myplay-headunit-<version>.zip    the desktop test head unit
+#   - MyPlay-hostshims-<version>.apk   the optional Xposed module for rooted phones (xposed/),
+#                                      signed with the same key as the app
 #   - SHA256SUMS
 #
 # The APK is signed with the key in these repository secrets:
@@ -111,9 +113,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
         if: env.PUBLISH == 'true'
 
-      - name: Protocol, app and head unit tests
+      - name: Protocol, app, head unit and host shims tests
         if: env.PUBLISH == 'true'
-        run: ./gradlew --no-daemon :aap:test :app:testDebugUnitTest :headunit:test
+        run: ./gradlew --no-daemon :aap:test :app:testDebugUnitTest :headunit:test :xposed:testDebugUnitTest
 
       # app/build.gradle.kts reads the key from AARE_KEYSTORE (a file path), AARE_KEYSTORE_PASSWORD,
       # AARE_KEY_ALIAS and AARE_KEY_PASSWORD, so the MyPlay secrets are handed over under those names.
@@ -129,15 +131,22 @@ jobs:
           export AARE_KEYSTORE="$RUNNER_TEMP/myplay-release.keystore"
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$AARE_KEYSTORE"
           trap 'rm -f "$AARE_KEYSTORE"' EXIT
-          ./gradlew --no-daemon :app:assembleRelease -PversionName="$VERSION" -PversionCode="$VERSION_CODE"
+          ./gradlew --no-daemon :app:assembleRelease :xposed:assembleRelease -PversionName="$VERSION" -PversionCode="$VERSION_CODE"
           APK=app/build/outputs/apk/release/app-release.apk
           if [ ! -f "$APK" ]; then
             echo "::error::No signed APK at $APK (an unsigned one means the signing key was not used)"
             ls -l app/build/outputs/apk/release/ || true
             exit 1
           fi
+          SHIMS=xposed/build/outputs/apk/release/xposed-release.apk
+          if [ ! -f "$SHIMS" ]; then
+            echo "::error::No signed host shims APK at $SHIMS (an unsigned one means the signing key was not used)"
+            ls -l xposed/build/outputs/apk/release/ || true
+            exit 1
+          fi
           mkdir -p out
           cp "$APK" "out/MyPlay-$VERSION.apk"
+          cp "$SHIMS" "out/MyPlay-hostshims-$VERSION.apk"
 
       - name: The APK is signed, and not with a debug key
         if: env.PUBLISH == 'true'
@@ -147,6 +156,14 @@ jobs:
           "$APKSIGNER" verify --print-certs "out/MyPlay-$VERSION.apk" | tee certs.txt
           if grep -q "CN=Android Debug" certs.txt; then
             echo "::error::The APK is signed with a debug key"
+            exit 1
+          fi
+          # The host shims module: signed, and with exactly the same certificate as the app.
+          "$APKSIGNER" verify --print-certs "out/MyPlay-hostshims-$VERSION.apk" | tee certs-shims.txt
+          APP_CERT="$(grep -m1 'certificate SHA-256 digest' certs.txt)"
+          SHIMS_CERT="$(grep -m1 'certificate SHA-256 digest' certs-shims.txt)"
+          if [ -z "$APP_CERT" ] || [ "$APP_CERT" != "$SHIMS_CERT" ]; then
+            echo "::error::The host shims APK is not signed with the same key as the app"
             exit 1
           fi
 
@@ -186,6 +203,7 @@ jobs:
           |---|---|
           | \`MyPlay-$VERSION.apk\` | the Android app, signed with MyPlay's release key: open it on the phone, or \`adb install -r MyPlay-$VERSION.apk\` |
           | \`myplay-headunit-$VERSION.zip\` | the desktop test head unit, to try MyPlay without a car (needs Java 17 or newer, ffmpeg and adb) |
+          | \`MyPlay-hostshims-$VERSION.apk\` | optional, only for rooted phones with an LSPosed-type framework: lets Waze accept MyPlay. Install it, switch on "MyPlay host shims" for Waze only, force-stop Waze. Not yet tried on a device |
           | \`SHA256SUMS\` | checksums |
           NOTES
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
