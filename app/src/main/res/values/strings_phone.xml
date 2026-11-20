@@ -112,7 +112,7 @@
     <string name="phone_backup_no_photo" translatable="false">A wallpaper photo is not in the file. After loading, choose the photo again on the Wallpaper page.</string>
     <string name="phone_backup_saved" translatable="false">Settings saved.</string>
     <string name="phone_tile_backup" translatable="false">Backup</string>
-    <string name="phone_tile_file" translatable="false">File</string>
+    <string name="phone_tile_file" translatable="false">Save, load</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->

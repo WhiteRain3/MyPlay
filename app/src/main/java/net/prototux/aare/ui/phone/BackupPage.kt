@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -47,7 +48,8 @@ fun BackupPage(onImported: () -> Unit) {
     val ctx = LocalContext.current
     val settings = remember { Settings(ctx) }
     val scope = rememberCoroutineScope()
-    var pendingImport by remember { mutableStateOf<Uri?>(null) }
+    // Saveable: the file picker can outlive the activity, and the confirmation needs the chosen file.
+    var pendingImport by rememberSaveable { mutableStateOf<Uri?>(null) }
     val export = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         val json = SettingsBackup.export(settings.all).toString(2)
