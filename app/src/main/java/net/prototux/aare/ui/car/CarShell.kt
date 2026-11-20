@@ -153,7 +153,8 @@ internal fun ContentArea(
     val focusEntry = remember { FocusRequester() }
     var contentFocused by remember { mutableStateOf(false) }
     val inputMode = LocalInputModeManager.current.inputMode
-    LaunchedEffect(state.screen) { runCatching { focusEntry.requestFocus() } }
+    // MyPlay: asked again until the new screen holds the focus, and whenever nothing holds it.
+    KeepFocusInContent(state.screen, { contentFocused }, focusEntry)
     LaunchedEffect(inputMode) { if (!contentFocused) runCatching { focusEntry.requestFocus() } }
     AnimatedContent(
         targetState = state.screen,

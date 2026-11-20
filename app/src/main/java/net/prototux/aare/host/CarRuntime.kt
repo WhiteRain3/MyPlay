@@ -41,6 +41,7 @@ import net.prototux.aare.notify.CarNotificationListener
 import net.prototux.aare.notify.MessagingScreen
 import net.prototux.aare.launch.AppLauncher
 import net.prototux.aare.notify.PhoneGuidance
+import net.prototux.aare.ui.car.trackCarFocus
 import net.prototux.aare.ui.car.BrowserScreen
 import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarAppEntry
@@ -720,7 +721,8 @@ class CarRuntime(
                                 onExpand = { ui.assistantAppId = null; ui.screen = CarScreen.App(entry.id) })
                         }
                     },
-                    modifier = modifier,
+                    // MyPlay: so the content can take the focus back when nothing holds it (ui/car/MyPlayFocus.kt).
+                    modifier = modifier.trackCarFocus(),
                 )
             }
         }
