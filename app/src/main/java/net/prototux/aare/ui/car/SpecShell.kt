@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -132,8 +133,11 @@ internal fun SpecShell(
                     KeepFocusInContent(state.screen, { homeFocused }, entry)
                     Box(Modifier.fillMaxSize().onFocusChanged { homeFocused = it.hasFocus }.focusRequester(entry).focusGroup()) {
                         val slots = if (spec.cardPlace == CardPlace.STAGE) p.slots.take(1) else p.slots
-                        for (i in SpecPlacement.readingOrder(listOf(p.bar) + slots)) {
+                        // M3-3: no maps app shown: the maps buttons in the largest free area, as on AARE's map card.
+                        val panel = if (nav == null) SpecPlacement.freeArea(p).takeIf { it.area > 0f } else null
+                        for (i in SpecPlacement.readingOrder(listOf(p.bar) + slots + listOfNotNull(panel))) {
                             if (i == 0) SpecBar(state, actions, spec, Modifier.at(p.bar).coversMap())
+                            else if (i > slots.size) MapsPanel(state, actions, Modifier.at(panel!!))
                             else if (spec.cardPlace == CardPlace.STAGE) StageSlot(spec, state, actions, Modifier.at(slots[0]))
                             else CardSlot(spec.cards[i - 1], spec, state, actions, Modifier.at(slots[i - 1]))
                         }
@@ -146,6 +150,28 @@ internal fun SpecShell(
             overlay(Modifier.align(Alignment.BottomCenter))
             NoticeOverlay(state, actions, Modifier.align(Alignment.TopCenter))
             CallOverlay(state, actions, Modifier.align(Alignment.TopCenter))
+        }
+    }
+}
+
+/** M3-3: "Where to?" and the maps buttons (or how to get a maps app), over the wallpaper. */
+@Composable
+private fun MapsPanel(state: CarUiState, actions: CarActions, modifier: Modifier) {
+    val navApps = state.apps.filter { it.kind == CarAppKind.NAVIGATION }
+    Box(modifier, contentAlignment = Alignment.Center) {
+        Column(
+            Modifier.clip(MaterialTheme.shapes.large).background(Color.Black.copy(alpha = DARK_BASE))
+                .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.6f)).padding(24.dp),
+        ) {
+            Text(stringResource(if (navApps.isEmpty()) R.string.nav_dashboard_no_app_title else R.string.nav_dashboard_where_to),
+                style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(if (navApps.isEmpty()) R.string.nav_dashboard_install_hint else R.string.nav_dashboard_choose_app),
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (navApps.isNotEmpty()) {
+                Spacer(Modifier.height(16.dp))
+                MapsButtons(navApps, actions::openApp, actions::openLauncher)
+            }
         }
     }
 }
