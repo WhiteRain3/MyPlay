@@ -340,4 +340,5 @@
     <string name="phone_check_wheel_scroll" translatable="false">Scroll the steering-wheel wheel, both ways</string>
     <string name="phone_check_wheel_click" translatable="false">Click the steering-wheel wheel once</string>
     <string name="phone_check_wheel_hold" translatable="false">Click the steering-wheel wheel and hold it</string>
+    <string name="phone_check_start" translatable="false">Start</string>
 </resources>

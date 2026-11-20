@@ -1,5 +1,6 @@
 package net.prototux.aare.ui.phone
 
+import net.prototux.aare.car.CarInputEvent
 import net.prototux.aare.car.CarInputLog
 
 /** One thing the car sent, as the Car check page records it (from the car's input events). */
@@ -10,6 +11,14 @@ sealed interface CheckInput {
     data class Turn(override val channel: Int, val code: Int, val delta: Int, override val atMs: Long) : CheckInput
     data class Absolute(override val channel: Int, val code: Int, val value: Int, override val atMs: Long) : CheckInput
     data class Touchpad(override val channel: Int, override val atMs: Long) : CheckInput
+}
+
+/** The car's event as the check records it. */
+fun CarInputEvent.toCheckInput(): CheckInput = when (this) {
+    is CarInputEvent.Key -> CheckInput.Key(channel, code, down, longPress, atMs)
+    is CarInputEvent.Turn -> CheckInput.Turn(channel, code, delta, atMs)
+    is CarInputEvent.Absolute -> CheckInput.Absolute(channel, code, value, atMs)
+    is CarInputEvent.Touchpad -> CheckInput.Touchpad(channel, atMs)
 }
 
 /** The steps of the Car check, in order: what the owner does with each control (R8 needs each one's codes). */

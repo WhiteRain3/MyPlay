@@ -174,6 +174,11 @@ import net.prototux.aare.ui.phone.SizePage
 import net.prototux.aare.ui.phone.StatusIconsPage
 import net.prototux.aare.ui.phone.ColoursPage
 import net.prototux.aare.ui.phone.LooksPage
+import net.prototux.aare.ui.phone.CarCheckPage
+import net.prototux.aare.ui.phone.toCheckInput
+import net.prototux.aare.car.CarInputEvents
+import kotlinx.coroutines.flow.map
+import android.os.SystemClock
 import net.prototux.aare.ui.phone.LayoutScreen
 import net.prototux.aare.ui.phone.WallpaperPage
 import net.prototux.aare.ui.phone.BehindTile
@@ -245,6 +250,7 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     WALLPAPER(R.string.phone_part_wallpaper, R.string.phone_part_wallpaper, Icons.Rounded.Dashboard),
     COLOURS(R.string.phone_part_colours, R.string.phone_part_colours, Icons.Rounded.Dashboard),
     LOOKS(R.string.phone_part_looks, R.string.phone_part_looks, Icons.Rounded.Dashboard),
+    CAR_CHECK(R.string.phone_tile_car_check, R.string.phone_tile_car_check, Icons.Rounded.Dashboard),
     LAYOUT(R.string.phone_part_layout, R.string.phone_part_layout, Icons.Rounded.Dashboard),
     SIZE(R.string.phone_part_size, R.string.phone_part_size, Icons.Rounded.Dashboard),
     CLOCK(R.string.phone_part_clock, R.string.phone_part_clock, Icons.Rounded.Dashboard),
@@ -334,6 +340,11 @@ private fun Home() {
                         Page.CARDS -> item { CardsPage { page = Page.LAYOUT } }
                         Page.COLOURS -> item { ColoursPage() }
                         Page.LOOKS -> item { LooksPage() }
+                        Page.CAR_CHECK -> item {
+                            val report by CarInputEvents.report.collectAsState()
+                            val inputs = remember { CarInputEvents.events.map { it.toCheckInput() } }
+                            CarCheckPage(inputs, report, { DiagLog.lines.value }, state.connected) { SystemClock.elapsedRealtime() }
+                        }
                         Page.LAYOUT -> item { LayoutScreen() }
                         Page.CLOCK -> item { ClockPage() }
                         Page.SIZE -> item { SizePage() }
@@ -382,6 +393,7 @@ private fun pageOf(tile: BehindTile): Page = when (tile) {
     BehindTile.BUTTONS -> Page.BUTTONS
     BehindTile.ADVANCED -> Page.ADVANCED
     BehindTile.CAR_DATA -> Page.CAR_DATA
+    BehindTile.CAR_CHECK -> Page.CAR_CHECK
 }
 
 @Composable

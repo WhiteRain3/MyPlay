@@ -52,4 +52,12 @@ class CarCheckTest {
         assertEquals("menu: nothing arrived", summary[CheckStep.MENU.ordinal])
         assertEquals(CheckStep.entries.size, summary.size)
     }
+
+    @Test
+    fun theCarsEventsMapFieldForField() {
+        assertEquals(CheckInput.Key(3, 23, true, true, 7), net.prototux.aare.car.CarInputEvent.Key(3, 23, true, true, 7).toCheckInput())
+        assertEquals(CheckInput.Turn(3, 65536, -2, 8), net.prototux.aare.car.CarInputEvent.Turn(3, 65536, -2, 8).toCheckInput())
+        assertEquals(CheckInput.Absolute(4, 1, 9, 9), net.prototux.aare.car.CarInputEvent.Absolute(4, 1, 9, 9).toCheckInput())
+        assertEquals(CheckInput.Touchpad(5, 10), net.prototux.aare.car.CarInputEvent.Touchpad(5, 10).toCheckInput())
+    }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.Gamepad
@@ -45,7 +46,7 @@ import net.prototux.aare.host.CarAppCatalog
 import net.prototux.aare.host.MyPlayAppList
 
 /** The "Behind the scenes" tiles on the start screen (plan E4), in the order they are shown. */
-enum class BehindTile { UPDATES, CONNECTION, APPS, BUTTONS, SOUND, MESSAGES, VOICE, CERTIFICATES, BACKUP, ADVANCED, CAR_DATA, ABOUT }
+enum class BehindTile { UPDATES, CONNECTION, APPS, BUTTONS, CAR_CHECK, SOUND, MESSAGES, VOICE, CERTIFICATES, BACKUP, ADVANCED, CAR_DATA, ABOUT }
 
 /** What the Sound tile says. */
 enum class SoundValue { OFF, NOT_SET_UP, BEST, ALL_SOUND, MUSIC_ONLY }
@@ -158,6 +159,7 @@ fun BehindTheScenesTiles(connected: Boolean, audioCapture: Boolean, refresh: Int
             remember(refresh) { changedCount(settings.myplayButtons) }.let { n ->
                 if (n == 0) stringResource(R.string.phone_tile_buttons_default) else stringResource(R.string.phone_tile_buttons_changed, n)
             }),
+        TileSpec(BehindTile.CAR_CHECK, Icons.Rounded.Checklist, TileTone.CORAL, stringResource(R.string.phone_tile_car_check), stringResource(R.string.phone_check_start)),
         TileSpec(BehindTile.SOUND, Icons.AutoMirrored.Rounded.VolumeUp, TileTone.AMBER, stringResource(R.string.phone_tile_sound),
             stringResource(when (sound) {
                 SoundValue.OFF -> R.string.phone_tile_off
