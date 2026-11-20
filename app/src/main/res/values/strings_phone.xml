@@ -34,7 +34,7 @@
     <string name="phone_layout_map_background_sub" translatable="false">The maps app fills the screen. Off: a plain dark background</string>
     <string name="phone_layout_map_under" translatable="false">Map under the bar too</string>
     <string name="phone_layout_map_under_sub" translatable="false">Off: the map stops at the bar\'s edge</string>
-    <string name="phone_layout_map_under_needs" translatable="false">Needs "Map behind everything"</string>
+    <string name="phone_layout_map_under_needs" translatable="false">Needs \"Map behind everything\"</string>
     <string name="phone_layout_bar" translatable="false">Bar</string>
     <string name="phone_layout_bar_style" translatable="false">Look</string>
     <string name="phone_layout_style_solid" translatable="false">Solid rail</string>
@@ -66,10 +66,12 @@
     <string name="phone_layout_in_use" translatable="false">You use the %1$s layout</string>
     <string name="phone_layout_change" translatable="false">Change the layout</string>
     <string name="phone_bar_note_taskbar" translatable="false">Everything on this page changes it.</string>
-    <string name="phone_bar_note_map_behind" translatable="false">Its bar has its own look and side, below. The clock and status show in its "Clock and status" card (Cards page).</string>
+    <string name="phone_bar_note_map_behind" translatable="false">Its bar has its own look and side, below. The clock and status show only in its \"Clock and status\" card: keep that card on (Cards page), or there is no clock.</string>
     <string name="phone_bar_note_dock" translatable="false">The dock shows the weather if it is on. Side, bar items and the dark bar belong to the Taskbar layout.</string>
     <string name="phone_bar_note_classic" translatable="false">Nothing on this page changes it: side, bar items, dark bar and weather belong to other layouts.</string>
     <string name="phone_bar_items_weather_hint" translatable="false">Weather shows only with the Weather switch below on. Outside temperature uses the car\'s own sensor; a car without one needs the Weather switch too.</string>
+    <string name="phone_cards_weather_still_on" translatable="false">The Taskbar\'s weather card is still on</string>
+    <string name="phone_cards_weather_off" translatable="false">Switch the weather card off</string>
     <string name="phone_cards_note_taskbar" translatable="false">The cards below are its home screen.</string>
     <string name="phone_cards_note_map_behind" translatable="false">Its cards float over the map. Where they sit is on the Layout page.</string>
     <string name="phone_cards_note_none" translatable="false">This layout has no cards. The list below is for the Taskbar layout.</string>

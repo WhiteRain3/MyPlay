@@ -1,6 +1,12 @@
 package net.prototux.aare.ui.phone
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -81,6 +87,22 @@ fun CardsPage(openLayout: () -> Unit) {
             CarLayout.MAP_BEHIND -> R.string.phone_cards_note_map_behind
             else -> R.string.phone_cards_note_none
         }), openLayout)
+        // The taskbar's weather card still makes the car fetch the weather (a rough position to
+        // Open-Meteo) whatever layout is in use, so say so here and offer to switch it off.
+        if (layout != CarLayout.TASKBAR && DashCard.WEATHER in order) {
+            Spacer(Modifier.height(12.dp))
+            PartCard(padding = 14.dp) {
+                Column {
+                    Text(stringResource(R.string.phone_cards_weather_still_on), color = PhoneColors.Warning, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.phone_cards_weather_note), color = PhoneColors.Muted, fontSize = 13.sp)
+                    Spacer(Modifier.height(8.dp))
+                    PillButton(stringResource(R.string.phone_cards_weather_off), main = false) {
+                        if (canSwitchCard(order, DashCard.WEATHER)) change(order.withCard(DashCard.WEATHER, false))
+                        else change(DashCard.DEFAULT)
+                    }
+                }
+            }
+        }
         if (layout == CarLayout.MAP_BEHIND) {
             SectionHeading(stringResource(R.string.phone_cards_order))
             MapBehindCardRows(spec) { f -> settings.changeLayout(f) }

@@ -75,7 +75,11 @@ private val RailWidget.title: Int
         RailWidget.WEATHER -> R.string.rail_widget_weather
     }
 
-/** Which of the Bar page's controls the car screen's [layout] uses (read from the layouts' drawing code). */
+/**
+ * Which of the Bar page's controls the car screen's [layout] uses. Read by hand from the layouts'
+ * drawing code (CarShell, DockShell, ClassicShell, SpecShell); when a layout starts or stops
+ * reading one of these settings, change it here too.
+ */
 data class BarControls(val taskbarSide: Boolean, val items: Boolean, val darkBar: Boolean, val weather: Boolean, val mapBehindBar: Boolean)
 
 fun barControlsFor(layout: CarLayout): BarControls = when (layout) {
