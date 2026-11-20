@@ -632,8 +632,9 @@ private fun MediaCard(state: CarUiState, actions: CarActions, compact: Boolean, 
     // search never looks. Down on the card goes to its first button (Up from them leaves again).
     val firstButton = remember { FocusRequester() }
     Card(modifier.focusProperties { down = firstButton }, onClick = { media?.let(actions::openApp) ?: actions.openMusicApps() }) {
-        if (np?.art != null && !compact) {
-            Image(np.art.asImageBitmap(), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.35f)
+        val backdrop = np?.art?.takeIf { !compact }?.let { remember(it) { it.asImageBitmap() } }
+        if (backdrop != null) {
+            Image(backdrop, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.35f)
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, MaterialTheme.colorScheme.surfaceContainer))))
         }
         val content: @Composable () -> Unit = {
@@ -694,8 +695,10 @@ internal const val SONG_ART_TAG = "song_art"
 @Composable
 internal fun Art(np: NowPlaying?, size: Dp) {
     val shape = MaterialTheme.shapes.small
-    if (np?.art != null) {
-        Image(np.art.asImageBitmap(), null, Modifier.size(size).clip(shape).testTag(SONG_ART_TAG), contentScale = ContentScale.Crop)
+    // SA-2: wrapped once per picture, not on every progress tick.
+    val art = np?.art?.let { remember(it) { it.asImageBitmap() } }
+    if (art != null) {
+        Image(art, null, Modifier.size(size).clip(shape).testTag(SONG_ART_TAG), contentScale = ContentScale.Crop)
     } else {
         Box(Modifier.size(size).clip(shape).background(MaterialTheme.colorScheme.secondaryContainer), contentAlignment = Alignment.Center) {
             Icon(Icons.Rounded.MusicNote, null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(size / 2))
