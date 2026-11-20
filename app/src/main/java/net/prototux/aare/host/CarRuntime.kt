@@ -686,8 +686,13 @@ class CarRuntime(
                 // An app still connecting or that failed has no screen to go back in: leave it.
                 if (conn != null && conn.status == CarAppConnection.Status.READY) {
                     // MyPlay: a second Back on the same page within two seconds leaves an app that ignores Back.
-                    if (backEscape.leaves(android.os.SystemClock.uptimeMillis(), s.appId, conn.templateId)) ui.screen = CarScreen.Dashboard
-                    else conn.back()
+                    if (backEscape.leaves(android.os.SystemClock.uptimeMillis(), s.appId, conn.templateId)) {
+                        // In the connection log, so the test bench can see the escape fire.
+                        val line = "Back twice on the same page: leaving ${ui.app(s.appId)?.label ?: s.appId}"
+                        Log.i(TAG, line)
+                        DiagLog.add(line)
+                        ui.screen = CarScreen.Dashboard
+                    } else conn.back()
                 } else ui.screen = CarScreen.Dashboard
             }
             CarScreen.Launcher -> ui.screen = CarScreen.Dashboard
