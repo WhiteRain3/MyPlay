@@ -11,7 +11,6 @@ import android.graphics.Shader
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
@@ -34,6 +33,21 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.onClick
+import net.prototux.aare.ui.car.CarPart
+import net.prototux.aare.ui.car.CarPartRegistry
+import net.prototux.aare.ui.car.LocalCarParts
+import net.prototux.aare.ui.car.myplayLayoutSpec
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -77,11 +91,31 @@ fun pictureNight(carTheme: String): Boolean = carTheme != Settings.THEME_LIGHT
 /** Whether the bar is on the right in the picture: only when set so (automatic means left on the phone, which doesn't know the car). */
 fun pictureRailOnRight(railPosition: String): Boolean = railPosition == Settings.RAIL_RIGHT
 
+/** Which page a part of the picture opens. [WHOLE]: the Car screen page with every setting. */
+enum class PicturePart { BAR, CARDS, WALLPAPER, APPS, WHOLE }
+
+/** The page for a tapped car-screen part: the clock and status icons sit in the bar, so they open the Bar page for now. */
+fun picturePartOf(part: CarPart?): PicturePart = when (part) {
+    CarPart.Bar, CarPart.Clock, CarPart.Status -> PicturePart.BAR
+    CarPart.AppsButton -> PicturePart.APPS
+    CarPart.Wallpaper -> PicturePart.WALLPAPER
+    is CarPart.DashboardCard, is CarPart.MapBehindCard -> PicturePart.CARDS
+    null -> PicturePart.WHOLE
+}
+
+/**
+ * The part under [point] (both in the same coordinates): the smallest region containing it, so
+ * the clock wins over the bar it sits in and a card over the wallpaper behind it. Null when none.
+ */
+fun partAt(regions: List<Pair<CarPart, Rect>>, point: Offset): Pair<CarPart, Rect>? =
+    regions.filter { (_, r) -> r.contains(point) && r.width > 0f && r.height > 0f }.minByOrNull { (_, r) -> r.width * r.height }
+
 /** Fills [ui] from the settings the same way the car does (CarRuntime.applyScreenSettings), without a car. */
 internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: Context) {
     ui.night = pictureNight(settings.carTheme)
     ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
     ui.layout = CarLayout.byId(settings.carLayoutId)
+    ui.layoutSpec = settings.myplayLayoutSpec
     ui.darkBar = settings.darkBar
     ui.dashboardCards = DashCard.parse(settings.dashboardCards)
     ui.weatherInBar = settings.showWeather
@@ -141,12 +175,14 @@ private object NoCarActions : CarActions {
 }
 
 /**
- * The live picture of the car screen, as wide as it is given. [onTap] runs when it is tapped
- * (null: only a picture); the car screen inside never sees the touch. [description] is what
- * TalkBack reads.
+ * The live picture of the car screen, as wide as it is given. With [onPart], each part (bar,
+ * clock, cards, wallpaper, apps button) can be tapped on its own: it is outlined while pressed
+ * and [onPart] gets it. Without, it is only a picture. The car screen inside never sees the
+ * touch. [description] is what TalkBack reads; for TalkBack the picture is one button that opens
+ * [PicturePart.WHOLE].
  */
 @Composable
-fun CarPicture(description: String, modifier: Modifier = Modifier, onTap: (() -> Unit)?) {
+fun CarPicture(description: String, modifier: Modifier = Modifier, onPart: ((PicturePart) -> Unit)?) {
     val context = LocalContext.current
     val settings = remember { Settings(context) }
     val ui = remember { sampleCarState() }
@@ -164,13 +200,17 @@ fun CarPicture(description: String, modifier: Modifier = Modifier, onTap: (() ->
             runCatching { BitmapFactory.decodeFile(java.io.File(context.filesDir, Settings.WALLPAPER_FILE).path) }.getOrNull()
         } else null
     }
-    CarPictureFrame(ui, description, modifier, onTap)
+    CarPictureFrame(ui, description, modifier, onPart)
 }
 
-/** Draws [ui] at the car's size, scaled down to the width it is given. */
+/** Draws [ui] at the car's size, scaled down to the width it is given, with its parts tappable when [onPart] is set. */
 @Composable
-internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modifier = Modifier, onTap: (() -> Unit)?) {
+internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modifier = Modifier, onPart: ((PicturePart) -> Unit)?) {
     val shape = RoundedCornerShape(20.dp)
+    // Where the car code drew each part, in the window's coordinates (the scaling included).
+    val registry = remember { CarPartRegistry() }
+    var frame by remember { mutableStateOf(Rect.Zero) }
+    var pressed by remember { mutableStateOf<Rect?>(null) }
     BoxWithConstraints(
         modifier
             .fillMaxWidth()
@@ -178,7 +218,12 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
             .clip(shape)
             .border(BorderStroke(1.dp, Color(0xFF2F3650)), shape)
             .background(PhoneColors.Card)
-            .clearAndSetSemantics { contentDescription = description; if (onTap != null) role = Role.Button },
+            // Not boundsInRoot: that is cut to what shows, and the picture can be half scrolled away.
+            .onGloballyPositioned { frame = Rect(it.positionInRoot(), Size(it.size.width.toFloat(), it.size.height.toFloat())) }
+            .clearAndSetSemantics {
+                contentDescription = description
+                if (onPart != null) { role = Role.Button; onClick { onPart(PicturePart.WHOLE); true } }
+            },
     ) {
         val scale = maxWidth.value / CarPictureSize.WIDTH_DP
         // Laid out at the car's own size and centred, then scaled about its centre to fill this box.
@@ -187,17 +232,42 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
                 .requiredSize(CarPictureSize.WIDTH_DP.dp, CarPictureSize.HEIGHT_DP.dp)
                 .graphicsLayer { scaleX = scale; scaleY = scale },
         ) {
-            CarTheme(night = ui.night, theme = ui.theme) {
-                CarShell(ui, NoCarActions, appContent = { _, m -> SampleMap(ui.night, m) }, navMap = { _, m -> SampleMap(ui.night, m) })
+            CompositionLocalProvider(LocalCarParts provides registry) {
+                CarTheme(night = ui.night, theme = ui.theme) {
+                    CarShell(ui, NoCarActions, appContent = { _, m -> SampleMap(ui.night, m) }, navMap = { _, m -> SampleMap(ui.night, m) })
+                }
             }
         }
         // Over everything, so the car screen inside never gets the touch.
         Box(
-            Modifier.fillMaxSize().then(
-                if (onTap != null) Modifier.clickable(onClick = onTap)
-                else Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } },
-            ),
-        )
+            Modifier.fillMaxSize().pointerInput(onPart) {
+                if (onPart == null) {
+                    awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } }
+                } else {
+                    detectTapGestures(
+                        onPress = { at ->
+                            val hit = partAt(registry.regions, frame.topLeft + at)
+                            pressed = hit?.second?.translate(-frame.topLeft) ?: Rect(Offset.Zero, frame.size)
+                            tryAwaitRelease()
+                            pressed = null
+                        },
+                        onTap = { at -> onPart(picturePartOf(partAt(registry.regions, frame.topLeft + at)?.first)) },
+                    )
+                }
+            },
+        ) {
+            pressed?.let { r ->
+                val density = LocalDensity.current
+                with(density) {
+                    Box(
+                        Modifier
+                            .offset(r.left.toDp() - 3.dp, r.top.toDp() - 3.dp)
+                            .size(r.width.toDp() + 6.dp, r.height.toDp() + 6.dp)
+                            .border(2.dp, PhoneColors.Accent, RoundedCornerShape(10.dp)),
+                    )
+                }
+            }
+        }
     }
 }
 

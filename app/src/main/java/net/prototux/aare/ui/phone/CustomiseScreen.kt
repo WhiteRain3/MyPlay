@@ -27,7 +27,7 @@ import net.prototux.aare.R
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CustomiseScreen(
-    onPicture: () -> Unit,
+    onPicture: (PicturePart) -> Unit,
     parts: List<Pair<String, () -> Unit>>,
     behind: @Composable () -> Unit,
     top: LazyListScope.() -> Unit,
@@ -40,7 +40,7 @@ fun CustomiseScreen(
         item { Spacer(Modifier.height(8.dp)) }
         top()
         item {
-            CarPicture(stringResource(R.string.phone_customise_picture_description), Modifier.padding(top = 8.dp), onTap = onPicture)
+            CarPicture(stringResource(R.string.phone_customise_picture_description), Modifier.padding(top = 8.dp), onPart = onPicture)
         }
         item { HintLine(Icons.Rounded.TouchApp, stringResource(R.string.phone_customise_hint)) }
         // Each part's own page, also reachable without tapping the picture.

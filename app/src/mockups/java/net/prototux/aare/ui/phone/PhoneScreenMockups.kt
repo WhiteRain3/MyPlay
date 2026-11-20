@@ -17,6 +17,7 @@ import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.VerifiedUser
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import org.junit.Rule
 import org.junit.Test
@@ -76,6 +77,43 @@ class PhoneScreenMockups {
 
     @Test fun colours() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { ColoursPage() } } }
+    }
+
+    /** Every part the car code reports, outlined: checks that the picture can find them. */
+    @Test fun pictureParts() = paparazzi.snapshot {
+        MyPlayPhoneTheme {
+            Surface(Modifier.fillMaxSize()) {
+                val ui = androidx.compose.runtime.remember { net.prototux.aare.ui.car.CarUiState().apply { dashboardCards = net.prototux.aare.ui.car.DashCard.DEFAULT } }
+                val registry = androidx.compose.runtime.remember { net.prototux.aare.ui.car.CarPartRegistry() }
+                androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) {
+                    androidx.compose.runtime.CompositionLocalProvider(net.prototux.aare.ui.car.LocalCarParts provides registry) {
+                        net.prototux.aare.ui.theme.CarTheme(night = true, theme = ui.theme) {
+                            androidx.compose.foundation.layout.Box(Modifier.size(450.dp, 271.dp)) {
+                                net.prototux.aare.ui.car.CarShell(ui, object : net.prototux.aare.ui.car.CarActions {
+                                    override fun openApp(app: net.prototux.aare.ui.car.CarAppEntry) = Unit
+                                    override fun goHome() = Unit
+                                    override fun openLauncher() = Unit
+                                    override fun assistant() = Unit
+                                    override fun mediaPlayPause() = Unit
+                                    override fun mediaNext() = Unit
+                                    override fun mediaPrevious() = Unit
+                                    override fun dismissNotice(notice: net.prototux.aare.ui.car.CarNotice) = Unit
+                                    override fun answerCall() = Unit
+                                    override fun endCall() = Unit
+                                    override fun navigateTo(place: String) = Unit
+                                }, appContent = { _, _ -> }, navMap = { _, _ -> })
+                            }
+                        }
+                    }
+                }
+                androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+                    registry.regions.forEach { (_, r) ->
+                        drawRect(androidx.compose.ui.graphics.Color.Red, r.topLeft, r.size, style = androidx.compose.ui.graphics.drawscope.Stroke(4f))
+                    }
+                }
+                androidx.compose.material3.Text(registry.regions.joinToString("\n") { it.first.toString() }, Modifier.padding(top = 320.dp, start = 20.dp))
+            }
+        }
     }
 
     @Test fun parts() = paparazzi.snapshot {

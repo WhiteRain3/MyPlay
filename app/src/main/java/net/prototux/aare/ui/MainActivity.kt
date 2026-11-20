@@ -150,6 +150,7 @@ import net.prototux.aare.ui.car.StyleChoices
 import net.prototux.aare.ui.car.WALLPAPER_NAMES
 import net.prototux.aare.ui.phone.CustomiseScreen
 import net.prototux.aare.ui.phone.MyPlayPhoneTheme
+import net.prototux.aare.ui.phone.PicturePart
 import net.prototux.aare.ui.phone.BarPage
 import net.prototux.aare.ui.phone.CardsPage
 import net.prototux.aare.ui.phone.ColoursPage
@@ -249,7 +250,7 @@ private fun Home() {
             // MyPlay (E2, E4): the start screen is the Customise screen. Tapping the car picture opens
             // the Car screen page; every other page has a tile under it.
             CustomiseScreen(
-                onPicture = { page = Page.CAR_SCREEN },
+                onPicture = { part -> page = pageOf(part) },
                 parts = listOf(Page.BAR, Page.CARDS, Page.WALLPAPER, Page.COLOURS).map { pg -> stringResource(pg.titleRes) to { page = pg } },
                 behind = { BehindTheScenesTiles(state.connected, state.audioCapture, refresh) { page = pageOf(it) } },
                 top = {
@@ -300,6 +301,15 @@ private fun Home() {
             }
         }
     }
+}
+
+/** MyPlay (E3): the page a tapped part of the car picture opens. */
+private fun pageOf(part: PicturePart): Page = when (part) {
+    PicturePart.BAR -> Page.BAR
+    PicturePart.CARDS -> Page.CARDS
+    PicturePart.WALLPAPER -> Page.WALLPAPER
+    PicturePart.APPS -> Page.APPS
+    PicturePart.WHOLE -> Page.CAR_SCREEN
 }
 
 /** MyPlay (E4): the page each start-screen tile opens. */

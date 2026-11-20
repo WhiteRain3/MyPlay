@@ -26,7 +26,7 @@ import net.prototux.aare.Settings
 /** The live car picture at the top of every part page: it shows each change at once. Not tappable. */
 @Composable
 fun PartPicture() {
-    CarPicture(stringResource(R.string.phone_part_picture_description), onTap = null)
+    CarPicture(stringResource(R.string.phone_part_picture_description), onPart = null)
 }
 
 /** A row of big symbol buttons where exactly one is chosen. [options]: stored value, symbol, label. */
