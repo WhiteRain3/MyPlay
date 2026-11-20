@@ -141,6 +141,8 @@ class CarUiState {
     var layout by mutableStateOf(CarLayout.TASKBAR)
     /** The rail runs along the bottom instead of a side. */
     var railBottom by mutableStateOf(false)
+    /** MyPlay (F4): how the status icons and the clock look (settings). */
+    var statusStyle by mutableStateOf(StatusStyle())
     /** MyPlay (M1/M3): the options of the "map behind" layout (a setting). */
     var layoutSpec by mutableStateOf(CarLayoutSpec.DEFAULT)
 

@@ -118,12 +118,9 @@ internal fun OutsideTemperatureWidget(carTemperature: Float?, weather: Weather?)
 @Composable
 internal fun BatteryWidget(status: PhoneStatusInfo?) {
     val s = status ?: return
-    val fg = MaterialTheme.colorScheme.onSurface
-    val dim = fg.copy(alpha = 0.25f)
+    // MyPlay (F4): drawn as the status style says, like PhoneStatusIcons.
     Row(Modifier.carPart(CarPart.Status), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        BatteryGauge(s.battery, s.charging, fg, dim)
-        if (s.charging) Icon(Icons.Rounded.Bolt, stringResource(R.string.phone_status_charging), tint = fg, modifier = Modifier.size(14.dp))
-        else Text("${s.battery}", style = MaterialTheme.typography.labelSmall, color = fg, maxLines = 1)
+        BatteryIcons(s)
     }
 }
 
