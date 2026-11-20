@@ -73,22 +73,22 @@ fun selectedColourIndex(colours: List<Color>, current: Color?): Int? {
 fun PhoneTopBar(title: String, onBack: (() -> Unit)? = null, onHelp: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         if (onBack != null) {
-            RoundIconButton(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.common_back), onBack)
+            RoundIconButton(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.common_back), onClick = onBack)
             Spacer(Modifier.width(12.dp))
         }
         Text(title, Modifier.weight(1f), color = PhoneColors.Text, fontSize = 24.sp, fontWeight = FontWeight.Bold,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (onHelp != null) RoundIconButton(Icons.AutoMirrored.Rounded.HelpOutline, stringResource(R.string.phone_parts_help), onHelp)
+        if (onHelp != null) RoundIconButton(Icons.AutoMirrored.Rounded.HelpOutline, stringResource(R.string.phone_parts_help), onClick = onHelp)
     }
 }
 
 /** The round grey button of the design's top row (back, help). */
 @Composable
-fun RoundIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
+fun RoundIconButton(icon: ImageVector, description: String, enabled: Boolean = true, size: Dp = 44.dp, onClick: () -> Unit) {
     Box(
-        Modifier.size(44.dp).clip(CircleShape).background(PhoneColors.Circle).clickable(role = Role.Button, onClick = onClick),
+        Modifier.size(size).clip(CircleShape).background(PhoneColors.Circle).clickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, description, tint = PhoneColors.CircleIcon, modifier = Modifier.size(24.dp)) }
+    ) { Icon(icon, description, tint = if (enabled) PhoneColors.CircleIcon else PhoneColors.Dim.copy(alpha = 0.4f), modifier = Modifier.size(24.dp)) }
 }
 
 /** A section heading: small capitals, then a thin line to the right edge. */

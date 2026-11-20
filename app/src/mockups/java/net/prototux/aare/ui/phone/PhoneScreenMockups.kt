@@ -59,6 +59,10 @@ class PhoneScreenMockups {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { BarPage() } } }
     }
 
+    @Test fun cards() = paparazzi.snapshot {
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { CardsPage() } } }
+    }
+
     @Test fun parts() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { PhonePartsSample {} } }
     }
