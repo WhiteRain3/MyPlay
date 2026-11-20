@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -119,7 +120,7 @@ internal fun BatteryWidget(status: PhoneStatusInfo?) {
     val s = status ?: return
     val fg = MaterialTheme.colorScheme.onSurface
     val dim = fg.copy(alpha = 0.25f)
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.carPart(CarPart.Status), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         BatteryGauge(s.battery, s.charging, fg, dim)
         if (s.charging) Icon(Icons.Rounded.Bolt, stringResource(R.string.phone_status_charging), tint = fg, modifier = Modifier.size(14.dp))
         else Text("${s.battery}", style = MaterialTheme.typography.labelSmall, color = fg, maxLines = 1)
@@ -140,7 +141,7 @@ internal fun RailWidgetsEditor(order: List<RailWidget>, rowHeight: Dp, onChange:
             val shown = i >= 0
             Row(Modifier.fillMaxWidth().heightIn(min = rowHeight), verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    Modifier.weight(1f).heightIn(min = rowHeight).clickable { onChange(order.withWidget(widget, !shown)) },
+                    Modifier.weight(1f).heightIn(min = rowHeight).carFocusHighlight(MaterialTheme.shapes.small).clickable { onChange(order.withWidget(widget, !shown)) },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Checkbox(checked = shown, onCheckedChange = null)
@@ -148,10 +149,10 @@ internal fun RailWidgetsEditor(order: List<RailWidget>, rowHeight: Dp, onChange:
                     Text(stringResource(widget.label), style = MaterialTheme.typography.bodyLarge)
                 }
                 if (shown) {
-                    IconButton(onClick = { onChange(order.movedBy(i, -1)) }, enabled = i > 0, modifier = Modifier.size(rowHeight)) {
+                    IconButton(onClick = { onChange(order.movedBy(i, -1)) }, enabled = i > 0, modifier = Modifier.size(rowHeight).carFocusHighlight(CircleShape)) {
                         Icon(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.common_up))
                     }
-                    IconButton(onClick = { onChange(order.movedBy(i, 1)) }, enabled = i < order.lastIndex, modifier = Modifier.size(rowHeight)) {
+                    IconButton(onClick = { onChange(order.movedBy(i, 1)) }, enabled = i < order.lastIndex, modifier = Modifier.size(rowHeight).carFocusHighlight(CircleShape)) {
                         Icon(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.common_down))
                     }
                 }

@@ -109,7 +109,7 @@ internal fun NetworkStatusIcons(status: PhoneStatusInfo?) {
     val s = status ?: return
     val fg = MaterialTheme.colorScheme.onSurface
     val dim = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.carPart(CarPart.Status), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
         if (s.wifi) Icon(Icons.Rounded.Wifi, stringResource(R.string.phone_status_wifi), tint = fg, modifier = Modifier.size(16.dp))
         SignalBars(s.signal, fg, dim)
     }
