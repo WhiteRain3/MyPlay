@@ -1,14 +1,26 @@
 package net.prototux.aare.ui.car
 
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * MyPlay: keeping the knob's ring inside the screen that was just opened.
@@ -97,3 +109,35 @@ internal fun KeepFocusInContent(screen: Any, contentFocused: () -> Boolean, entr
 }
 
 private const val RECOVER_TRIES = 40
+
+/**
+ * MyPlay: when the knob moves the ring to this element, scroll its list or grid so the whole
+ * element, ring included, is on screen with a little room around it.
+ *
+ * Compose already scrolls a focused element into view, but only just, and it asks at the moment
+ * focus arrives; an entry of a lazy list that was only composed for this focus move may not have
+ * its final place yet. This asks once more, one frame later, for a slightly larger area.
+ * Part of [carFocusHighlight], so everything that shows the ring has it.
+ */
+internal fun Modifier.keepFocusedVisible(): Modifier = composed {
+    val requester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+    val margin = with(LocalDensity.current) { FOCUS_VIEW_MARGIN.toPx() }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    bringIntoViewRequester(requester)
+        .onSizeChanged { size = it }
+        .onFocusChanged {
+            if (!it.isFocused || !CarFocusVisibility.keyInput) return@onFocusChanged
+            scope.launch {
+                withFrameNanos { }
+                requester.bringIntoView(focusViewArea(size.width, size.height, margin))
+            }
+        }
+}
+
+/** Room kept between the focus ring and the edge of the list when scrolling it into view. */
+private val FOCUS_VIEW_MARGIN = 12.dp
+
+/** The area to scroll into view for an element of this size: the element and [margin] around it. */
+internal fun focusViewArea(width: Int, height: Int, margin: Float): Rect =
+    Rect(0f - margin, 0f - margin, width + margin, height + margin)

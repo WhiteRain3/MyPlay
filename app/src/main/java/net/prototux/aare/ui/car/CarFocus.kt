@@ -37,7 +37,8 @@ fun Modifier.carFocusHighlight(shape: Shape): Modifier = composed {
     val color = MaterialTheme.colorScheme.primary
     val inner = MaterialTheme.colorScheme.onPrimary
     val shown = focused && CarFocusVisibility.keyInput
-    onFocusChanged { focused = it.isFocused }
+    keepFocusedVisible() // MyPlay: scrolled fully into view, see MyPlayFocus.kt
+        .onFocusChanged { focused = it.isFocused }
         .drawWithContent {
             if (shown) drawOutline(shape.createOutline(size, layoutDirection, this), inner.copy(alpha = FOCUS_VEIL_ALPHA))
             drawContent()
