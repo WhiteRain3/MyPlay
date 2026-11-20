@@ -33,6 +33,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/** The Backup tile's value: the day of the last save ("20 Nov"), or null when never saved. */
+fun lastSavedText(savedMs: Long?, locale: Locale = Locale.getDefault()): String? =
+    savedMs?.let { SimpleDateFormat("d MMM", locale).format(Date(it)) }
+
 /** The name offered for a saved settings file: MyPlay's name and the day, so several can sit side by side. */
 fun backupFileName(now: Date = Date()): String = "myplay-settings-" + SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(now) + ".json"
 
@@ -58,6 +62,7 @@ fun BackupPage(onImported: () -> Unit) {
                 runCatching { ctx.contentResolver.openOutputStream(uri)!!.use { it.write(json.toByteArray()) } }
                     .onFailure { DiagLog.add("settings export failed: ${it.javaClass.simpleName}") }.isSuccess
             }
+            if (ok) settings.myplayBackupLastSaved = System.currentTimeMillis()
             Toast.makeText(ctx, if (ok) R.string.phone_backup_saved else R.string.setup_backup_export_failed, Toast.LENGTH_LONG).show()
         }
     }

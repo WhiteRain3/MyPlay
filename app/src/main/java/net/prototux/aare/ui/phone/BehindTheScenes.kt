@@ -168,7 +168,8 @@ fun BehindTheScenesTiles(connected: Boolean, audioCapture: Boolean, refresh: Int
             }), attention = messages == MessagesValue.NO_ACCESS),
         TileSpec(BehindTile.VOICE, Icons.Rounded.Mic, TileTone.PINK, stringResource(R.string.phone_tile_voice), voice ?: stringResource(R.string.phone_tile_none)),
         TileSpec(BehindTile.CERTIFICATES, Icons.Rounded.VerifiedUser, TileTone.GREEN, stringResource(R.string.phone_tile_certificates), certificateText),
-        TileSpec(BehindTile.BACKUP, Icons.Rounded.Backup, TileTone.GREEN, stringResource(R.string.phone_tile_backup), stringResource(R.string.phone_tile_file)),
+        TileSpec(BehindTile.BACKUP, Icons.Rounded.Backup, TileTone.GREEN, stringResource(R.string.phone_tile_backup),
+            remember(refresh) { lastSavedText(settings.myplayBackupLastSaved) } ?: stringResource(R.string.phone_tile_file)),
         TileSpec(BehindTile.ADVANCED, Icons.Rounded.Tune, TileTone.CORAL, stringResource(R.string.phone_tile_advanced),
             stringResource(when (advanced) {
                 AdvancedValue.LOG_ON -> R.string.phone_tile_log_on

@@ -44,8 +44,10 @@ class MyPlayBackupKeysTest {
     }
 
     private companion object {
-        /** MyPlay settings left out of backups on purpose, each with its reason. None yet. */
-        val NOT_BACKED_UP: Set<String> = emptySet()
+        /** MyPlay settings left out of backups on purpose, each with its reason. */
+        val NOT_BACKED_UP: Set<String> = setOf(
+            "myplay_backup_last_saved", // when this phone last saved a backup: belongs to the phone, not to the settings
+        )
 
         /** "myplay_" strings that are not settings keys. */
         val NOT_KEYS: Set<String> = setOf(

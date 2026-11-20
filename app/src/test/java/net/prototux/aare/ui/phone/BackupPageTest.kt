@@ -11,4 +11,11 @@ class BackupPageTest {
         val c = Calendar.getInstance(TimeZone.getDefault()).apply { clear(); set(2026, Calendar.NOVEMBER, 20, 12, 0) }
         assertEquals("myplay-settings-2026-11-20.json", backupFileName(c.time))
     }
+
+    @Test
+    fun theTileShowsTheDayOfTheLastSaveOrNothing() {
+        val c = Calendar.getInstance(TimeZone.getDefault()).apply { clear(); set(2026, Calendar.NOVEMBER, 20, 12, 0) }
+        assertEquals("20 Nov", lastSavedText(c.timeInMillis, java.util.Locale.UK))
+        assertEquals(null, lastSavedText(null))
+    }
 }
