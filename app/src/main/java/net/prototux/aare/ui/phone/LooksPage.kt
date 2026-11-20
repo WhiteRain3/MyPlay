@@ -75,6 +75,19 @@ fun lookFileName(name: String): String =
 /** A look file's name without its ending, offered as the look's name when the file has none. */
 fun nameFromFile(file: String?): String = file.orEmpty().substringAfterLast('/').substringBeforeLast('.').removePrefix("myplay-look-")
 
+/** The look's own colours that read badly over its theme, by day or by night (see [hardToRead]). */
+fun lookHardToRead(look: Look, ctx: Context): Boolean {
+    val v = look.values
+    val own = CustomColours.decode(v["myplay_look_colours"] as? String)
+    if (own.isEmpty) return false
+    val spec = CarThemes.byId(v["style_theme"] as? String ?: "aare").forPhone(ctx)
+        .withAccent(v["style_accent"] as? String ?: "theme", ctx).withCustomColours(own)
+    return listOf(true, false).any { night ->
+        val scheme = if (night) spec.night else spec.day
+        hardToRead({ roleColour(scheme, it) }, own.side(night).keys).isNotEmpty()
+    }
+}
+
 /** Three night colours of [look] as the car would paint them: background, card, accent. */
 private fun lookDots(look: Look, ctx: Context): List<Color> {
     val v = look.values
@@ -106,6 +119,8 @@ fun LooksPage() {
     fun keep(looks: List<Look>) { mine = looks; settings.myplayLooks = looks }
     val looks = MyPlayLooks.BUILT_IN + mine
     val unsaved = looks.none { MyPlayLooks.isCurrent(all, it) }
+    val photoHere = remember(changes) { java.io.File(ctx.filesDir, Settings.WALLPAPER_FILE).isFile }
+    fun noPhoto(look: Look) = !photoHere && look.values["wallpaper"] == Settings.WALLPAPER_CUSTOM
     fun choose(look: Look) { MyPlayLooks.choose(settings, look); changes++ }
 
     val share = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -147,6 +162,7 @@ fun LooksPage() {
         if (mine.isNotEmpty()) {
             RowGroup(rows = mine.map { look ->
                 { LookRow(look, MyPlayLooks.isCurrent(all, look), lookDots(look, ctx), onShare = { sharing = look.name; share.launch(lookFileName(look.name)) },
+                    note = if (noPhoto(look)) stringResource(R.string.phone_looks_photo_missing) else null,
                     onDelete = { deleting = look.name }) { if (unsaved) asking = look.name else choose(look) } }
             })
             Spacer(Modifier.height(10.dp))
@@ -172,14 +188,15 @@ fun LooksPage() {
         )
     }
     if (naming) {
-        NameDialog(stringResource(R.string.phone_looks_save_title), "", onDismiss = { naming = false }) { name ->
+        NameDialog(stringResource(R.string.phone_looks_save_title), "", null, onDismiss = { naming = false }) { name ->
             naming = false
             keep(MyPlayLooks.saved(mine, MyPlayLooks.current(settings.prefs.all.orEmpty(), name)))
             changes++
         }
     }
     opened?.let { look ->
-        NameDialog(stringResource(R.string.phone_looks_add_title), look.name, onDismiss = { opened = null }) { name ->
+        val note = if (lookHardToRead(look, ctx)) stringResource(R.string.phone_looks_hard_to_read) else null
+        NameDialog(stringResource(R.string.phone_looks_add_title), look.name, note, onDismiss = { opened = null }) { name ->
             opened = null
             keep(MyPlayLooks.saved(mine, look.copy(name = name)))
         }
@@ -197,14 +214,15 @@ fun LooksPage() {
 
 /** Asks for a look's name. A built-in look's name cannot be taken; one of the owner's is replaced. */
 @Composable
-private fun NameDialog(title: String, initial: String, onDismiss: () -> Unit, onDone: (String) -> Unit) {
+private fun NameDialog(title: String, initial: String, note: String?, onDismiss: () -> Unit, onDone: (String) -> Unit) {
     var name by rememberSaveable { mutableStateOf(initial) }
     val clean = MyPlayLooks.cleanName(name)
     val builtIn = MyPlayLooks.BUILT_IN.any { it.name.equals(clean, ignoreCase = true) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        text = {
+        text = { Column {
+            note?.let { Text(it, color = PhoneColors.Muted, fontSize = 14.sp, modifier = Modifier.padding(bottom = 10.dp)) }
             OutlinedTextField(
                 name, { name = it.take(MyPlayLooks.MAX_NAME) }, singleLine = true,
                 label = { Text(stringResource(R.string.phone_looks_name)) },
@@ -212,7 +230,7 @@ private fun NameDialog(title: String, initial: String, onDismiss: () -> Unit, on
                 supportingText = if (builtIn) ({ Text(stringResource(R.string.phone_looks_name_built_in)) }) else null,
                 colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PhoneColors.Accent, unfocusedBorderColor = PhoneColors.Border),
             )
-        },
+        } },
         confirmButton = { TextButton(onClick = { onDone(clean) }, enabled = clean.isNotEmpty() && !builtIn) { Text(stringResource(R.string.phone_looks_save_action)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_cancel)) } },
     )
@@ -220,7 +238,7 @@ private fun NameDialog(title: String, initial: String, onDismiss: () -> Unit, on
 
 /** One look: its colours, its name, a tick when it is the look now set, and share (and delete for the owner's own). */
 @Composable
-private fun LookRow(look: Look, chosen: Boolean, dots: List<Color>, onShare: () -> Unit, onDelete: (() -> Unit)? = null, onChoose: () -> Unit) {
+private fun LookRow(look: Look, chosen: Boolean, dots: List<Color>, onShare: () -> Unit, note: String? = null, onDelete: (() -> Unit)? = null, onChoose: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clickable(role = Role.RadioButton, onClick = onChoose).semantics { selected = chosen }
             .padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
@@ -232,7 +250,10 @@ private fun LookRow(look: Look, chosen: Boolean, dots: List<Color>, onShare: () 
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) { dots.drop(1).forEach { Box(Modifier.size(12.dp).clip(CircleShape).background(it)) } }
         Spacer(Modifier.width(14.dp))
-        Text(look.name, Modifier.weight(1f), color = PhoneColors.Text, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        Column(Modifier.weight(1f)) {
+            Text(look.name, color = PhoneColors.Text, fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            note?.let { Text(it, color = PhoneColors.Muted, fontSize = 13.sp) }
+        }
         if (chosen) Icon(Icons.Rounded.CheckCircle, null, tint = PhoneColors.Accent)
         IconButton(onClick = onShare) { Icon(Icons.Rounded.Share, stringResource(R.string.phone_looks_share, look.name), tint = PhoneColors.Muted) }
         if (onDelete != null) IconButton(onClick = onDelete) { Icon(Icons.Rounded.Delete, stringResource(R.string.phone_looks_delete, look.name), tint = PhoneColors.Muted) }

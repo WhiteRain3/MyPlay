@@ -45,17 +45,38 @@ object MyPlayLooks {
     val BUILT_IN: List<Look> = listOf(
         Look("MyPlay", emptyMap()),
         Look("Midnight", mapOf("style_theme" to "night", "style_accent" to "red", "dark_bar" to true) + preset("A")),
-        Look("Forest", mapOf("style_theme" to "aare", "style_accent" to "green", "wallpaper" to "forest") + preset("E")),
-        Look("Ocean", mapOf("style_theme" to "carplay", "style_accent" to "cyan", "wallpaper" to "ocean") + preset("F")),
+        Look("Forest", mapOf("style_accent" to "green", "wallpaper" to "forest") + preset("E")),
+        Look("Ocean", mapOf("style_accent" to "cyan", "wallpaper" to "ocean") + preset("F")),
         Look("High contrast", mapOf("style_theme" to "high_contrast") + preset("A")),
     )
 
-    /** The look now set, from `SharedPreferences.getAll()`, named [name]. */
-    fun current(all: Map<String, *>, name: String): Look =
-        Look(cleanName(name), all.filterKeys { it in KEYS }.mapNotNull { (k, v) -> v?.let { k to it } }.toMap())
+    /**
+     * What a look setting reads as when it is not stored (Settings' own defaults). A value stored
+     * at its default is no difference, so [current] leaves it out. style_theme and style_layout
+     * default to these only without the older car_style, which [current] then keeps them beside.
+     */
+    val DEFAULTS: Map<String, Any> = mapOf(
+        "style_theme" to "aare", "style_accent" to "theme", "style_layout" to "taskbar", "myplay_look_colours" to "",
+        "myplay_layout_preset" to CarLayoutSpec.DEFAULT_PRESET, "myplay_layout_spec" to CarLayoutSpec.encode(CarLayoutSpec.DEFAULT),
+        "rail_position" to Settings.RAIL_AUTO, "dark_bar" to false, "wallpaper" to "none",
+        "rail_widgets" to "clock,battery,weather", "show_weather" to false,
+        "myplay_status_battery_icon" to true, "myplay_status_battery_number" to true, "myplay_status_percent_sign" to false,
+        "myplay_status_size" to "normal", "myplay_status_color_by_level" to false, "myplay_status_signal" to true,
+        "myplay_clock_size" to "normal", "myplay_clock_bold" to false,
+    )
+
+    /** The look now set, from `SharedPreferences.getAll()`, named [name]: only what differs from the defaults. */
+    fun current(all: Map<String, *>, name: String): Look {
+        val legacy = all["car_style"] != null
+        val values = all.filterKeys { it in KEYS }.mapNotNull { (k, v) -> v?.let { k to it } }.filter { (k, v) ->
+            val default = DEFAULTS[k]
+            default == null || default != v || (legacy && (k == "style_theme" || k == "style_layout"))
+        }
+        return Look(cleanName(name), values.toMap())
+    }
 
     /** Whether the settings now set are exactly [look]. */
-    fun isCurrent(all: Map<String, *>, look: Look): Boolean = current(all, look.name).values == look.values
+    fun isCurrent(all: Map<String, *>, look: Look): Boolean = current(all, look.name).values == current(look.values, look.name).values
 
     fun cleanName(name: String): String = name.filter { !it.isISOControl() }.trim().take(MAX_NAME)
 

@@ -32,6 +32,7 @@ class MyPlayLooksTest {
         assertTrue(MyPlayLooks.BUILT_IN.first().values.isEmpty())
         MyPlayLooks.BUILT_IN.forEach { look ->
             assertTrue(look.values.keys.all { it in MyPlayLooks.KEYS })
+            assertEquals(look.name, look.values, MyPlayLooks.current(look.values, look.name).values) // nothing at its default
             (look.values["style_theme"] as String?)?.let { id -> assertEquals(id, CarThemes.byId(id).id) }
             (look.values["style_accent"] as String?)?.let { id -> assertTrue(CarAccents.byId(id) != null) }
             (look.values["wallpaper"] as String?)?.let { assertTrue(it in WALLPAPER_NAMES) }
@@ -47,7 +48,7 @@ class MyPlayLooksTest {
         s.prefs.edit().putString("myplay_clock_size", "large").putBoolean("rail_right", true).putString("browser_url", "x").commit()
         val ocean = MyPlayLooks.BUILT_IN.first { it.name == "Ocean" }
         MyPlayLooks.choose(s, ocean)
-        assertEquals("carplay", s.prefs.getString("style_theme", null))
+        assertEquals("cyan", s.prefs.getString("style_accent", null))
         assertFalse(s.prefs.contains("myplay_clock_size"))
         assertFalse(s.prefs.contains("rail_right"))
         assertEquals("x", s.prefs.getString("browser_url", null)) // not part of a look
@@ -106,5 +107,63 @@ class LookFileNameTest {
         assertEquals("myplay-look-mine.json", lookFileName("/../"))
         assertEquals("high-contrast", nameFromFile("primary:Download/myplay-look-high-contrast.json"))
         assertEquals("", nameFromFile(null))
+    }
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
+class LookDefaultsTest {
+    @Test
+    fun theDefaultsAreWhatSettingsReadsWhenNothingIsStored() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val prefs = ctx.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+        prefs.edit().clear().commit()
+        fun read(): List<Any?> {
+            val s = Settings(ctx)
+            return listOf(s.carThemeId, s.carAccent, s.carLayoutId, s.railPosition, s.darkBar, s.wallpaper, s.railWidgets, s.showWeather,
+                prefs.getString("myplay_look_colours", ""),
+                net.prototux.aare.ui.car.CarLayoutSpec.decode(prefs.getString("myplay_layout_spec", null)),
+                prefs.getString("myplay_layout_preset", net.prototux.aare.ui.car.CarLayoutSpec.DEFAULT_PRESET),
+                prefs.getBoolean("myplay_status_battery_icon", true), prefs.getBoolean("myplay_status_battery_number", true),
+                prefs.getBoolean("myplay_status_percent_sign", false), net.prototux.aare.ui.car.StatusSize.byKey(prefs.getString("myplay_status_size", null)),
+                prefs.getBoolean("myplay_status_color_by_level", false), prefs.getBoolean("myplay_status_signal", true),
+                net.prototux.aare.ui.car.StatusSize.byKey(prefs.getString("myplay_clock_size", null)), prefs.getBoolean("myplay_clock_bold", false))
+        }
+        val unset = read()
+        MyPlayLooks.choose(Settings(ctx), Look("defaults", MyPlayLooks.DEFAULTS))
+        assertEquals(MyPlayLooks.DEFAULTS.keys, prefs.all.keys)
+        assertEquals(unset, read())
+        // And stored at their defaults, they are no difference from MyPlay's own look.
+        assertTrue(MyPlayLooks.isCurrent(prefs.all, MyPlayLooks.BUILT_IN.first()))
+    }
+
+    @Test
+    fun aLookHoldingDefaultsStillMatches() {
+        val look = Look("file", mapOf("style_accent" to "red", "dark_bar" to false))
+        assertTrue(MyPlayLooks.isCurrent(mapOf("style_accent" to "red"), look))
+    }
+
+    @Test
+    fun anOlderCarStyleKeepsTheThemeBesideIt() {
+        val look = MyPlayLooks.current(mapOf("car_style" to "carplay", "style_theme" to "aare"), "x")
+        assertEquals(mapOf("car_style" to "carplay", "style_theme" to "aare"), look.values)
+    }
+}
+
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
+class LookHardToReadTest {
+    private val ctx get() = ApplicationProvider.getApplicationContext<android.content.Context>()
+
+    @Test
+    fun aLookWithoutItsOwnColoursIsFine() {
+        MyPlayLooks.BUILT_IN.forEach { assertFalse(it.name, lookHardToRead(it, ctx)) }
+    }
+
+    @Test
+    fun grey_textOnGreyIsHardToRead() {
+        val look = Look("x", mapOf("myplay_look_colours" to "night.background=FF777777;night.text=FF787878"))
+        assertTrue(lookHardToRead(look, ctx))
+        assertFalse(lookHardToRead(Look("y", mapOf("myplay_look_colours" to "day.background=FFFFFFFF;day.text=FF000000")), ctx))
     }
 }

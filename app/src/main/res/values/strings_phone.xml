@@ -310,4 +310,6 @@
     <string name="phone_looks_delete" translatable="false">Delete %1$s</string>
     <string name="phone_looks_shared" translatable="false">Look saved to the file</string>
     <string name="phone_looks_open_failed" translatable="false">That file could not be read as a look.</string>
+    <string name="phone_looks_hard_to_read" translatable="false">Some of this look\'s own colours are hard to read. You can change them on the Colours page after choosing it.</string>
+    <string name="phone_looks_photo_missing" translatable="false">Its photo is not on this phone</string>
 </resources>
