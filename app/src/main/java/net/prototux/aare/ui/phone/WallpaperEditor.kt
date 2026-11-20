@@ -74,11 +74,12 @@ object WallpaperFiles {
     /**
      * The file to edit from: the untouched copy. A photo set before the editor existed has no copy
      * yet: the shown wallpaper becomes the copy now, once, so later edits start from it and not
-     * from their own results (darkening and blur never pile up). Null when there is no photo.
+     * from their own results (darkening and blur never pile up). If that copy cannot be made (a full
+     * disk), the shown photo is edited as it is rather than said to be missing. Null when there is no photo.
      */
     internal fun sourceFile(shown: File, source: File): File? {
         if (!source.isFile && shown.isFile) keepSource(shown, source)
-        return source.takeIf { it.isFile }
+        return source.takeIf { it.isFile } ?: shown.takeIf { it.isFile }
     }
 
     fun loadSource(context: Context): Bitmap? {
