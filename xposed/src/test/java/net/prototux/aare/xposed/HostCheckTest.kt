@@ -54,5 +54,49 @@ class HostCheckTest {
         assertEquals(listOf(ModuleMain::class.java.name), File(dir, "java_init.list").readLines().filter { it.isNotBlank() })
     }
 
+    @Test fun theUidIsReadFromARealHostInfo() {
+        assertEquals(10123, HostCheck.hostUid(HostInfo("com.example.host", 10123)))
+        assertNull(HostCheck.hostUid(null))
+        assertNull(HostCheck.hostUid(Any()))
+    }
+
+    // ---- W1-2: a host is MyPlay only by uid and signing key, not by name alone ----
+
+    private val myplay = HostCheck.MYPLAY_PACKAGE
+    private val key = setOf("5c39f23994ffbdb49e073d1c1393ea0af9768db3ba481b64b735c363ee7943c1")
+    private fun verdict(
+        name: String? = myplay,
+        uid: Int? = 10123,
+        packages: List<String>? = listOf(myplay),
+        certs: Set<String>? = key,
+        module: Set<String> = key,
+    ) = HostCheck.verdict(name, uid, { packages }, { certs }, module)
+
+    @Test fun myPlaySignedLikeTheModuleIsAccepted() = assertTrue(verdict().accepted)
+
+    @Test fun anotherNameIsNotAccepted() = assertFalse(verdict(name = "com.google.android.projection.gearhead").accepted)
+
+    @Test fun aUidThatIsNotMyPlaysIsNotAccepted() {
+        val v = verdict(packages = listOf("com.example.impostor"))
+        assertFalse(v.accepted)
+        assertTrue(v.why, v.why.contains("com.example.impostor"))
+    }
+
+    @Test fun anotherKeyIsNotAccepted() = assertFalse(verdict(certs = setOf("00".repeat(32))).accepted)
+
+    @Test fun anExtraSignerIsNotAccepted() = assertFalse(verdict(certs = key + "11".repeat(32)).accepted)
+
+    @Test fun anythingUnreadableIsNotAccepted() {
+        assertFalse(verdict(uid = null).accepted)
+        assertFalse(verdict(packages = null).accepted)
+        assertFalse(verdict(certs = null).accepted)
+        assertFalse(verdict(certs = emptySet()).accepted)
+        assertFalse(verdict(module = emptySet()).accepted)
+    }
+
+    /** A shared uid holding MyPlay among others is still MyPlay's uid. */
+    @Test fun aUidWithSeveralPackagesIncludingMyPlayCounts() =
+        assertTrue(verdict(packages = listOf("com.example.other", myplay)).accepted)
+
     @Test fun theAppIdIsMyPlays() = assertEquals("io.github.whiterain3.myplay", HostCheck.MYPLAY_PACKAGE)
 }
