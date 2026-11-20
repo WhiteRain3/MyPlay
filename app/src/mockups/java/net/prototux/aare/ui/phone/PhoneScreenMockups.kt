@@ -75,6 +75,16 @@ class PhoneScreenMockups {
         } } }
     }
 
+    @Test fun looks() = paparazzi.snapshot {
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) {
+            val registry = object : androidx.activity.result.ActivityResultRegistry() {
+                override fun <I, O> onLaunch(requestCode: Int, contract: androidx.activity.result.contract.ActivityResultContract<I, O>, input: I, options: androidx.core.app.ActivityOptionsCompat?) = Unit
+            }
+            val owner = object : androidx.activity.result.ActivityResultRegistryOwner { override val activityResultRegistry = registry }
+            androidx.compose.runtime.CompositionLocalProvider(androidx.activity.compose.LocalActivityResultRegistryOwner provides owner) { LooksPage() }
+        } } }
+    }
+
     @Test fun colours() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { ColoursPage() } } }
     }

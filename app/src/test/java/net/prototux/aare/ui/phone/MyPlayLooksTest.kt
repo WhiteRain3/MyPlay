@@ -98,3 +98,13 @@ class MyPlayLooksTest {
         assertEquals(listOf(Look("Mine", mapOf("style_accent" to "red"))), s.myplayLooks)
     }
 }
+
+class LookFileNameTest {
+    @Test
+    fun fileNamesAreSafeAndComeBackAsNames() {
+        assertEquals("myplay-look-high-contrast.json", lookFileName("High contrast"))
+        assertEquals("myplay-look-mine.json", lookFileName("/../"))
+        assertEquals("high-contrast", nameFromFile("primary:Download/myplay-look-high-contrast.json"))
+        assertEquals("", nameFromFile(null))
+    }
+}

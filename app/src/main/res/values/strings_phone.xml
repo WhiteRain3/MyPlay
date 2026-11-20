@@ -287,4 +287,27 @@
     <string name="phone_role_text_what" translatable="false">Most text and symbols</string>
     <string name="phone_role_text_dim_what" translatable="false">Second lines and quieter text</string>
     <string name="phone_own_colours_dark_bar" translatable="false">\"Dark bar\" is on, so by day the car shows the bar in its night colour.</string>
+    <string name="phone_part_looks" translatable="false">Looks</string>
+    <string name="phone_looks_built_in" translatable="false">Looks that come with MyPlay</string>
+    <string name="phone_looks_yours" translatable="false">Your looks</string>
+    <string name="phone_looks_unsaved" translatable="false">The look now set is not saved. Save it to keep it before choosing another.</string>
+    <string name="phone_looks_save" translatable="false">Save this look</string>
+    <string name="phone_looks_open" translatable="false">Open a look file</string>
+    <string name="phone_looks_no_photo" translatable="false">A shared look leaves out a photo wallpaper: the photo is not in the file.</string>
+    <string name="phone_looks_what" translatable="false">A look holds the colours, layout, wallpaper, status icons, clock and the bar\'s items. Day and night, sizes and apps stay as they are.</string>
+    <string name="phone_looks_replace_title" translatable="false">Choose \"%1$s\"?</string>
+    <string name="phone_looks_replace_text" translatable="false">The look now set is not saved, and choosing another replaces it.</string>
+    <string name="phone_looks_replace_action" translatable="false">Choose</string>
+    <string name="phone_looks_save_title" translatable="false">Save this look</string>
+    <string name="phone_looks_add_title" translatable="false">Add this look to yours</string>
+    <string name="phone_looks_name" translatable="false">Name</string>
+    <string name="phone_looks_name_built_in" translatable="false">A look that comes with MyPlay has this name.</string>
+    <string name="phone_looks_save_action" translatable="false">Save</string>
+    <string name="phone_looks_delete_title" translatable="false">Delete \"%1$s\"?</string>
+    <string name="phone_looks_delete_text" translatable="false">Only the saved look goes; the car screen stays as it is.</string>
+    <string name="phone_looks_delete_action" translatable="false">Delete</string>
+    <string name="phone_looks_share" translatable="false">Share %1$s as a file</string>
+    <string name="phone_looks_delete" translatable="false">Delete %1$s</string>
+    <string name="phone_looks_shared" translatable="false">Look saved to the file</string>
+    <string name="phone_looks_open_failed" translatable="false">That file could not be read as a look.</string>
 </resources>
