@@ -54,6 +54,24 @@ class HeldKeyTest {
         assertEquals(listOf("press"), events)
     }
 
+    /** A down whose up was lost: the next press, seconds later, is a press, not the end of a hold. */
+    @Test fun aDownWithALostUpIsForgotten() {
+        key.onKey(down = true, longPress = false)
+        clock += HeldKey.STALE_MS + 1
+        key.onKey(down = true, longPress = false)
+        clock += 100
+        key.onKey(down = false, longPress = false)
+        assertEquals(listOf("press"), events)
+    }
+
+    /** A real long hold whose repeats keep coming is still a hold, however long. */
+    @Test fun aLongHoldWithRepeatsIsStillAHold() {
+        key.onKey(down = true, longPress = false)
+        repeat(20) { clock += 500; key.onKey(down = true, longPress = false) }
+        key.onKey(down = false, longPress = false)
+        assertEquals(listOf("hold"), events)
+    }
+
     @Test fun aPressAfterAHoldIsAPressAgain() {
         key.onKey(down = true, longPress = false); clock += 1000; key.onKey(down = false, longPress = false)
         key.onKey(down = true, longPress = false); clock += 50; key.onKey(down = false, longPress = false)

@@ -45,6 +45,35 @@ class BackEscapeTest {
     /** An app with no page yet (null id) behaves the same. */
     @Test fun noPageIdIsAPageLikeAnyOther() {
         assertFalse(escape.leaves(1_000, "app", null))
-        assertTrue(escape.leaves(1_100, "app", null))
+        assertTrue(escape.leaves(1_400, "app", null))
+    }
+
+    /**
+     * Two quick Backs meant as "back two pages": the app has not shown its new page yet when the
+     * second comes, so the page looks the same. That Back goes to the app, not home.
+     */
+    @Test fun aSecondBackTooSoonGoesToTheApp() {
+        assertFalse(escape.leaves(1_000, "app", "page2"))
+        assertFalse(escape.leaves(1_000 + BackEscape.SETTLE_MS - 1, "app", "page2"))
+    }
+
+    /** Once the app had time to answer and still shows the same page, the next Back leaves. */
+    @Test fun aSecondBackAfterTheAppHadTimeLeaves() {
+        assertFalse(escape.leaves(1_000, "app", "page1"))
+        assertTrue(escape.leaves(1_000 + BackEscape.SETTLE_MS, "app", "page1"))
+    }
+
+    /** After two quick Backs in an app that ignores them, a third one a moment later still gets out. */
+    @Test fun aThirdBackAfterTwoQuickOnesLeaves() {
+        assertFalse(escape.leaves(1_000, "app", "page1"))
+        assertFalse(escape.leaves(1_100, "app", "page1"))
+        assertTrue(escape.leaves(1_600, "app", "page1"))
+    }
+
+    /** Quick Backs that do move the app through its pages never leave it. */
+    @Test fun quickBacksThroughPagesStayInTheApp() {
+        assertFalse(escape.leaves(1_000, "app", "page3"))
+        assertFalse(escape.leaves(1_100, "app", "page3"))
+        assertFalse(escape.leaves(1_500, "app", "page1"))
     }
 }
