@@ -294,8 +294,8 @@ private fun Home() {
                             item { VehicleOverridesCard() }
                             item { LogCard() }
                         }
-                        Page.BAR -> item { BarPage() }
-                        Page.CARDS -> item { CardsPage() }
+                        Page.BAR -> item { BarPage { page = Page.LAYOUT } }
+                        Page.CARDS -> item { CardsPage { page = Page.LAYOUT } }
                         Page.COLOURS -> item { ColoursPage() }
                         Page.LAYOUT -> item { LayoutScreen() }
                         Page.WALLPAPER -> item { WallpaperPage { uri -> saveWallpaper(ctx, uri) } }

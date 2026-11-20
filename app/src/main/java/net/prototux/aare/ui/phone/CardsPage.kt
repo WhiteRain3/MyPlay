@@ -20,7 +20,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import net.prototux.aare.R
 import net.prototux.aare.Settings
+import net.prototux.aare.ui.car.CarLayout
 import net.prototux.aare.ui.car.DashCard
+import net.prototux.aare.ui.car.changeLayout
+import net.prototux.aare.ui.car.myplayLayoutSpec
 import net.prototux.aare.ui.car.moved
 import net.prototux.aare.ui.car.withCard
 
@@ -57,15 +60,32 @@ private val DashCard.title: Int
         DashCard.WEATHER -> R.string.dash_card_weather
     }
 
-/** The cards on the car's home screen (plan E5): which are shown and in what order. Same setting as the Car screen page. */
+/**
+ * The cards on the car's home screen (plan E5): with "map behind" that layout's own cards and
+ * their place; otherwise the taskbar's dashboard cards (the dock and the app grid have none), with
+ * a note saying which layout is in use.
+ */
 @Composable
-fun CardsPage() {
+fun CardsPage(openLayout: () -> Unit) {
     val ctx = LocalContext.current
     val settings = remember { Settings(ctx) }
+    val version = rememberSettingsChanges()
+    val layout = remember(version) { CarLayout.byId(settings.carLayoutId) }
+    val spec = remember(version) { settings.myplayLayoutSpec }
     var order by remember { mutableStateOf(DashCard.parse(settings.dashboardCards)) }
     fun change(new: List<DashCard>) { order = new; settings.dashboardCards = new.map(DashCard::id) }
     Column {
         PartPicture()
+        LayoutNote(layout, stringResource(when (layout) {
+            CarLayout.TASKBAR -> R.string.phone_cards_note_taskbar
+            CarLayout.MAP_BEHIND -> R.string.phone_cards_note_map_behind
+            else -> R.string.phone_cards_note_none
+        }), openLayout)
+        if (layout == CarLayout.MAP_BEHIND) {
+            SectionHeading(stringResource(R.string.phone_cards_order))
+            MapBehindCardRows(spec) { f -> settings.changeLayout(f) }
+            return@Column
+        }
         SectionHeading(stringResource(R.string.phone_cards_order))
         RowGroup(rows = cardRows(order).map { card ->
             {

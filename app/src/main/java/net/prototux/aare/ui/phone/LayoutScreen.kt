@@ -59,6 +59,20 @@ import net.prototux.aare.ui.car.movedBy
 import net.prototux.aare.ui.car.myplayLayoutPreset
 import net.prototux.aare.ui.car.myplayLayoutSpec
 
+/** A number that goes up whenever any setting changes, to re-read settings that rules may have changed. */
+@Composable
+fun rememberSettingsChanges(): Int {
+    val ctx = LocalContext.current
+    var version by remember { mutableIntStateOf(0) }
+    DisposableEffect(Unit) {
+        val prefs = ctx.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
+        val l = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> version++ }
+        prefs.registerOnSharedPreferenceChangeListener(l)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(l) }
+    }
+    return version
+}
+
 /** The "hide after" choices: never (null) or a number of seconds. */
 val HIDE_CHOICES: List<Int?> = listOf(null, 5, 15, 30, 60)
 
@@ -87,13 +101,7 @@ fun LayoutScreen() {
     val settings = remember { Settings(ctx) }
     var layoutId by remember { mutableStateOf(CarLayout.byId(settings.carLayoutId).id) }
     // Re-read after every change: the rules may have changed other options too.
-    var version by remember { mutableIntStateOf(0) }
-    DisposableEffect(Unit) {
-        val prefs = ctx.getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
-        val l = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> version++ }
-        prefs.registerOnSharedPreferenceChangeListener(l)
-        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(l) }
-    }
+    val version = rememberSettingsChanges()
     val spec = remember(version) { settings.myplayLayoutSpec }
     val preset = remember(version) { settings.myplayLayoutPreset }
     fun change(f: (CarLayoutSpec) -> CarLayoutSpec) = settings.changeLayout(f)
@@ -145,26 +153,7 @@ fun MapBehindOptions(spec: CarLayoutSpec, preset: String, onPreset: (String) -> 
         ))
 
         SectionHeading(stringResource(R.string.phone_layout_bar))
-        PartCard(padding = 16.dp) {
-            Column {
-                PhoneChoices(stringResource(R.string.phone_layout_bar_style), listOf(
-                    BarStyle.SOLID_RAIL.key to stringResource(R.string.phone_layout_style_solid),
-                    BarStyle.SEE_THROUGH_RAIL.key to stringResource(R.string.phone_layout_style_see_through),
-                    BarStyle.FLOATING_PILLS.key to stringResource(R.string.phone_layout_style_pills),
-                    BarStyle.BOTTOM_DOCK.key to stringResource(R.string.phone_layout_style_dock),
-                    BarStyle.TOP_RIBBON.key to stringResource(R.string.phone_layout_style_ribbon),
-                ), spec.barStyle.key) { k -> BarStyle.entries.firstOrNull { it.key == k }?.let { s -> change { it.copy(barStyle = s) } } }
-                PhoneChoices(stringResource(R.string.phone_layout_bar_side), listOf(
-                    BarSide.LEFT.key to stringResource(R.string.setup_choice_left),
-                    BarSide.RIGHT.key to stringResource(R.string.setup_choice_right),
-                    BarSide.BOTTOM.key to stringResource(R.string.setup_choice_bottom),
-                    BarSide.TOP.key to stringResource(R.string.phone_layout_side_top),
-                ), spec.barSide.key) { k -> BarSide.entries.firstOrNull { it.key == k }?.let { s -> change { it.copy(barSide = s) } } }
-                if (spec.barStyle == BarStyle.BOTTOM_DOCK || spec.barStyle == BarStyle.TOP_RIBBON) {
-                    Text(stringResource(R.string.phone_layout_side_fixed), color = PhoneColors.Muted, fontSize = 13.sp)
-                }
-            }
-        }
+        MapBehindBar(spec, change)
 
         SectionHeading(stringResource(R.string.phone_layout_cards))
         PartCard(padding = 16.dp) {
@@ -179,26 +168,7 @@ fun MapBehindOptions(spec: CarLayoutSpec, preset: String, onPreset: (String) -> 
             }
         }
         Spacer(Modifier.height(12.dp))
-        val cardRows: List<@Composable () -> Unit> = specCardRows(spec.cards).map { card ->
-            @Composable {
-                val i = spec.cards.indexOf(card)
-                val shown = i >= 0
-                SimpleRow(card.symbol, stringResource(card.title), card.tone) {
-                    if (shown) {
-                        RoundIconButton(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.common_up), enabled = i > 0, size = 36.dp) {
-                            change { it.copy(cards = it.cards.movedBy(i, -1)) } }
-                        RoundIconButton(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.common_down), enabled = i < spec.cards.lastIndex, size = 36.dp) {
-                            change { it.copy(cards = it.cards.movedBy(i, 1)) } }
-                    }
-                    PhoneSwitch(shown, if (shown && spec.cards.size <= 1) null else { on -> change { it.copy(cards = it.cards.withSpecCard(card, on)) } })
-                }
-            }
-        }
-        val oneExtra: List<@Composable () -> Unit> = if (spec.cardPlace != CardPlace.STAGE) emptyList() else listOf(@Composable {
-            SwitchRow(Icons.Rounded.ViewAgenda, stringResource(R.string.phone_layout_one_extra), spec.oneExtraAtATime, TileTone.VIOLET,
-                stringResource(R.string.phone_layout_one_extra_sub)) { on -> change { it.copy(oneExtraAtATime = on) } }
-        })
-        RowGroup(rows = cardRows + oneExtra)
+        MapBehindCardRows(spec, change)
 
         SectionHeading(stringResource(R.string.phone_layout_hide))
         PartCard(padding = 16.dp) {
@@ -212,6 +182,56 @@ fun MapBehindOptions(spec: CarLayoutSpec, preset: String, onPreset: (String) -> 
             }
         }
     }
+}
+
+/** The "map behind" layout's bar: its look and its side. Shared by the Layout and Bar pages. */
+@Composable
+fun MapBehindBar(spec: CarLayoutSpec, change: ((CarLayoutSpec) -> CarLayoutSpec) -> Unit) {
+    PartCard(padding = 16.dp) {
+        Column {
+            PhoneChoices(stringResource(R.string.phone_layout_bar_style), listOf(
+                BarStyle.SOLID_RAIL.key to stringResource(R.string.phone_layout_style_solid),
+                BarStyle.SEE_THROUGH_RAIL.key to stringResource(R.string.phone_layout_style_see_through),
+                BarStyle.FLOATING_PILLS.key to stringResource(R.string.phone_layout_style_pills),
+                BarStyle.BOTTOM_DOCK.key to stringResource(R.string.phone_layout_style_dock),
+                BarStyle.TOP_RIBBON.key to stringResource(R.string.phone_layout_style_ribbon),
+            ), spec.barStyle.key) { k -> BarStyle.entries.firstOrNull { it.key == k }?.let { s -> change { it.copy(barStyle = s) } } }
+            PhoneChoices(stringResource(R.string.phone_layout_bar_side), listOf(
+                BarSide.LEFT.key to stringResource(R.string.setup_choice_left),
+                BarSide.RIGHT.key to stringResource(R.string.setup_choice_right),
+                BarSide.BOTTOM.key to stringResource(R.string.setup_choice_bottom),
+                BarSide.TOP.key to stringResource(R.string.phone_layout_side_top),
+            ), spec.barSide.key) { k -> BarSide.entries.firstOrNull { it.key == k }?.let { s -> change { it.copy(barSide = s) } } }
+            if (spec.barStyle == BarStyle.BOTTOM_DOCK || spec.barStyle == BarStyle.TOP_RIBBON) {
+                Text(stringResource(R.string.phone_layout_side_fixed), color = PhoneColors.Muted, fontSize = 13.sp)
+            }
+        }
+    }
+}
+
+/** The "map behind" layout's cards: which, in what order, and one extra at a time. Shared by the Layout and Cards pages. */
+@Composable
+fun MapBehindCardRows(spec: CarLayoutSpec, change: ((CarLayoutSpec) -> CarLayoutSpec) -> Unit) {
+    val cardRows: List<@Composable () -> Unit> = specCardRows(spec.cards).map { card ->
+        @Composable {
+            val i = spec.cards.indexOf(card)
+            val shown = i >= 0
+            SimpleRow(card.symbol, stringResource(card.title), card.tone) {
+                if (shown) {
+                    RoundIconButton(Icons.Rounded.KeyboardArrowUp, stringResource(R.string.common_up), enabled = i > 0, size = 36.dp) {
+                        change { it.copy(cards = it.cards.movedBy(i, -1)) } }
+                    RoundIconButton(Icons.Rounded.KeyboardArrowDown, stringResource(R.string.common_down), enabled = i < spec.cards.lastIndex, size = 36.dp) {
+                        change { it.copy(cards = it.cards.movedBy(i, 1)) } }
+                }
+                PhoneSwitch(shown, if (shown && spec.cards.size <= 1) null else { on -> change { it.copy(cards = it.cards.withSpecCard(card, on)) } })
+            }
+        }
+    }
+    val oneExtra: List<@Composable () -> Unit> = if (spec.cardPlace != CardPlace.STAGE) emptyList() else listOf(@Composable {
+        SwitchRow(Icons.Rounded.ViewAgenda, stringResource(R.string.phone_layout_one_extra), spec.oneExtraAtATime, TileTone.VIOLET,
+            stringResource(R.string.phone_layout_one_extra_sub)) { on -> change { it.copy(oneExtraAtATime = on) } }
+    })
+    RowGroup(rows = cardRows + oneExtra)
 }
 
 /** How see-through the cards are, in steps of 10 %; written when the finger lets go. */

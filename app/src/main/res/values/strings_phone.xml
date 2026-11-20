@@ -12,7 +12,7 @@
     <string name="phone_bar_side" translatable="false">Side</string>
     <string name="phone_bar_items" translatable="false">Shown on the bar, in this order</string>
     <string name="phone_bar_items_hint" translatable="false">A bar at the side of a short screen (the Audi\'s) has room for the clock only; the others show when the bar is at the bottom.</string>
-    <string name="phone_bar_more" translatable="false">More</string>
+    <string name="phone_bar_more" translatable="false">Colour and weather</string>
     <string name="phone_part_cards" translatable="false">Cards</string>
     <string name="phone_cards_weather_note" translatable="false">While shown, sends a rough position (about 10 km) to Open-Meteo, even with the Weather switch off</string>
     <string name="phone_cards_order" translatable="false">Shown, in this order</string>
@@ -62,6 +62,16 @@
     <string name="phone_layout_hide_arrival" translatable="false">Arrival time card</string>
     <string name="phone_layout_hide_never" translatable="false">Never</string>
     <string name="phone_layout_hide_seconds" translatable="false">%1$d s</string>
+    <string name="phone_layout_in_use" translatable="false">You use the %1$s layout</string>
+    <string name="phone_layout_change" translatable="false">Change the layout</string>
+    <string name="phone_bar_note_taskbar" translatable="false">Everything on this page changes it.</string>
+    <string name="phone_bar_note_map_behind" translatable="false">Its bar has its own look and side, below. The clock and status show in its "Clock and status" card (Cards page).</string>
+    <string name="phone_bar_note_dock" translatable="false">The dock shows the weather if it is on. Side, bar items and the dark bar belong to the Taskbar layout.</string>
+    <string name="phone_bar_note_classic" translatable="false">Nothing on this page changes it: side, bar items, dark bar and weather belong to other layouts.</string>
+    <string name="phone_bar_items_weather_hint" translatable="false">Weather shows only with the Weather switch below on. Outside temperature uses the car\'s own sensor; a car without one needs the Weather switch too.</string>
+    <string name="phone_cards_note_taskbar" translatable="false">The cards below are its home screen.</string>
+    <string name="phone_cards_note_map_behind" translatable="false">Its cards float over the map. Where they sit is on the Layout page.</string>
+    <string name="phone_cards_note_none" translatable="false">This layout has no cards. The list below is for the Taskbar layout.</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->

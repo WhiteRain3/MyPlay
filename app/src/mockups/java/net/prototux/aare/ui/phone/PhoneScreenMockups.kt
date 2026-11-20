@@ -57,11 +57,11 @@ class PhoneScreenMockups {
     }
 
     @Test fun bar() = paparazzi.snapshot {
-        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { BarPage() } } }
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { BarPage {} } } }
     }
 
     @Test fun cards() = paparazzi.snapshot {
-        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { CardsPage() } } }
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { CardsPage {} } } }
     }
 
     @Test fun wallpaper() = paparazzi.snapshot {
