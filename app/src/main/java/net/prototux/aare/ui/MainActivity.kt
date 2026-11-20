@@ -150,6 +150,10 @@ import net.prototux.aare.ui.car.StyleChoices
 import net.prototux.aare.ui.car.WALLPAPER_NAMES
 import net.prototux.aare.ui.phone.CustomiseScreen
 import net.prototux.aare.ui.phone.MyPlayPhoneTheme
+import net.prototux.aare.ui.phone.PhoneChoices
+import net.prototux.aare.ui.phone.PhoneSection
+import net.prototux.aare.ui.phone.PhoneToggle
+import net.prototux.aare.ui.phone.PhoneTopBar
 import net.prototux.aare.ui.phone.PicturePart
 import net.prototux.aare.ui.phone.BarPage
 import net.prototux.aare.ui.phone.CardsPage
@@ -266,11 +270,8 @@ private fun Home() {
             )
         } else {
             Column(Modifier.fillMaxSize().systemBarsPadding()) {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { page = null }) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, stringResource(R.string.common_back)) }
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(p.titleRes), style = MaterialTheme.typography.titleLarge)
-                }
+                // MyPlay (E7): the new design's title row, round back button and all.
+                Box(Modifier.padding(horizontal = 18.dp, vertical = 6.dp)) { PhoneTopBar(stringResource(p.titleRes), onBack = { page = null }) }
                 LazyColumn(
                     Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 24.dp),
@@ -353,13 +354,8 @@ private fun Header() {
 }
 
 @Composable
-private fun Section(title: String, content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(20.dp)) {
-        Text(title, style = MaterialTheme.typography.titleMedium)
-        Spacer(Modifier.height(8.dp))
-        content()
-    }
-}
+private fun Section(title: String, content: @Composable () -> Unit) =
+    PhoneSection(title, content) // MyPlay (E7): heading with a line, contents in a dark card
 
 /** A quiet warning when a newer release is on GitHub: tap to view it, or dismiss it. No popup. */
 @Composable
@@ -733,16 +729,8 @@ private fun MessageSettings(settings: Settings, refresh: Int) {
 }
 
 @Composable
-private fun Toggle(title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable { onChange(!checked) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Spacer(Modifier.width(12.dp))
-        Switch(checked = checked, onCheckedChange = onChange)
-    }
-}
+private fun Toggle(title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) =
+    PhoneToggle(title, subtitle, checked, onChange) // MyPlay (E7): the new design's switch row
 
 @Composable
 private fun CarScreenSettings(settings: Settings, refresh: Int) {
@@ -967,17 +955,8 @@ private const val SHIZUKU_REQUEST = 42
 
 /** A labelled row of mutually exclusive options. */
 @Composable
-private fun Choices(title: String, options: List<Pair<String, String>>, selected: String, onSelect: (String) -> Unit) {
-    Text(title, style = MaterialTheme.typography.bodyLarge)
-    Spacer(Modifier.height(6.dp))
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-        options.forEachIndexed { i, (value, label) ->
-            SegmentedButton(selected = value == selected, onClick = { onSelect(value) }, shape = SegmentedButtonDefaults.itemShape(i, options.size)) {
-                Text(label, maxLines = 1, style = MaterialTheme.typography.labelMedium)
-            }
-        }
-    }
-}
+private fun Choices(title: String, options: List<Pair<String, String>>, selected: String, onSelect: (String) -> Unit) =
+    PhoneChoices(title, options, selected, onSelect) // MyPlay (E7): pills that wrap instead of cut labels
 
 // ---------------------------------------------------------------- apps
 

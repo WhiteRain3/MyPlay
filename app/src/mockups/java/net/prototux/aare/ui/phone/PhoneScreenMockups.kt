@@ -116,6 +116,26 @@ class PhoneScreenMockups {
         }
     }
 
+    /** The older pages' parts in the new style (E7), with texts from the Connection and Car screen pages. */
+    @Test fun oldPageParts() = paparazzi.snapshot {
+        MyPlayPhoneTheme {
+            Surface(Modifier.fillMaxSize()) {
+                androidx.compose.foundation.layout.Column(Modifier.padding(20.dp)) {
+                    PhoneTopBar("Connection", onBack = {})
+                    PhoneSection("Connecting") {
+                        PhoneToggle("Wireless", "Connect to wireless head units over Wi-Fi", true) {}
+                        PhoneToggle("Resume music", "Start playing again when the car connects", false) {}
+                    }
+                    androidx.compose.foundation.layout.Spacer(Modifier.size(16.dp))
+                    PhoneSection("Look") {
+                        PhoneChoices("Colors", listOf("auto" to "Car's day/night", "dark" to "Dark", "light" to "Light"), "dark") {}
+                        PhoneChoices("Bar", listOf("auto" to "Driver's side", "left" to "Left", "right" to "Right", "bottom" to "Bottom"), "auto") {}
+                    }
+                }
+            }
+        }
+    }
+
     @Test fun parts() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { PhonePartsSample {} } }
     }
