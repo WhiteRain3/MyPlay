@@ -75,7 +75,7 @@ object SettingsBackup {
         "last_media" to Type.STRING,
         "app_order" to Type.STRING,
         "hidden_apps" to Type.STRING_SET,
-    )
+    ) + MyPlayBackupKeys.ALLOWED // MyPlay: its own settings (MyPlayBackupKeys.kt)
 
     /**
      * Settings that are never exported or imported, even though they're ordinary settings: each
