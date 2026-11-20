@@ -76,6 +76,9 @@ import net.prototux.aare.ui.theme.CarTextSize
 import net.prototux.aare.ui.theme.CarTheme
 import net.prototux.aare.ui.theme.CarThemes
 import net.prototux.aare.ui.theme.LocalCarControlScale
+import net.prototux.aare.ui.theme.CustomColours
+import net.prototux.aare.ui.theme.myplayLookColours
+import net.prototux.aare.ui.theme.withCustomColours
 import net.prototux.aare.ui.theme.forPhone
 import net.prototux.aare.ui.theme.withAccent
 
@@ -311,6 +314,7 @@ class CarRuntime(
         // Passenger mode lifts the driving restrictions (keyboard, list lengths, phone screen).
         ui.drivingRestricted = carDriving && !settings.ignoreDriving
         ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
+            .withCustomColours(CustomColours.decode(settings.myplayLookColours)) // MyPlay (F3)
         ui.layout = CarLayout.byId(settings.carLayoutId)
         ui.layoutSpec = settings.myplayLayoutSpec // MyPlay (M3)
         ui.statusStyle = settings.statusStyle // MyPlay (F4)
@@ -343,7 +347,7 @@ class CarRuntime(
     private val settingsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
             // MyPlay (K11-1): the map apps' day/night switch too.
-            "car_theme", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
+            "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
             "car_text_size", "car_control_size", "myplay_home_maps" -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
