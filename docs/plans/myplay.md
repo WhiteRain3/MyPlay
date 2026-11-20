@@ -16,9 +16,12 @@ known".
 | A4 first release and Tester smoke run | 0.1.0 released and run on the PC bench: report `test-reports/0.1.0/REPORT.md` on branch `claude/test-reports` |
 | A7 the car's buttons in the phone's own log | Done, released in 0.1.1: buttons and knob in the connection log on the phone, at most 120 such lines per connection; the log keeps 1000 lines. Not yet seen on the bench |
 | Bench round 1 fixes (K1 to K11 below) | Not started. K1 to K8 can be done before the parked test |
-| The owner's parked test | Not done yet. Everything about the box still waits for it |
+| The owner's parked test | **Passed with 0.1.0 (2026-11-19): "just checked on the car, this thing works!"** Details (knob, tilt, buttons, sound, screen size) not reported yet; they come with the 0.1.1 log |
+| The owner's three requests after the test (W and M below) | Not started |
 
-Next: K1 to K6 in order, then a release; the parked test whenever the owner can.
+Next, in this order: K2 to K7 (the Worker is on them); W1 (Waze, small); K8; M1 and M2 (the map
+behind everything); then the rest of M with the settings. The 0.1.1 log from the car is needed
+before panes, the knob pointer, the buttons' actions and final sizes.
 
 ## Bench round 1: what the Tester found on 0.1.0, and what to do about it
 
@@ -164,6 +167,150 @@ and `a08c2073`, which were read, not run.
 Noted, nothing to do yet: with the phone locked the knob worked, although the phone's log had
 "Touch mode switch rejected" once (the open question in C4); `drive` then `park` showed no
 difference on the home screen, and it is not known whether anything there should change.
+
+## After the car: the owner's three requests (2026-11-20)
+
+The owner asked for these "only if nothing more important is waiting". Honest order against the
+bench fixes: K2 to K7 first, because without them the knob cannot use any app at all, Waze
+included. W1 is small and comes next. M is the biggest piece of work in this plan so far.
+
+### W. Waze
+
+The owner's words: "waze doesn't work ... it says something like allow app in settings and only
+supporting google auto". The exact text they saw is not known. MyPlay has one message that
+matches: "Waze only accepts Google's Android Auto. It needs to allow MyPlay (see the app list on
+the phone)." (`carapp_error_google_only`).
+
+What is going on, from the code and `docs/xposed.md`:
+
+- Waze checks who is hosting its car screen against a list of Google's apps (name and signing
+  key). MyPlay is not on it. Nothing in MyPlay's settings or Waze's settings can change that.
+- AARE's answer for rooted phones is a separate small app, the "host shims" module in `xposed/`,
+  loaded into Waze by an LSPosed-type framework (which the owner has). It makes Waze's check say
+  yes when the host is MyPlay.
+- That module is **not built or shipped** by any MyPlay release, and upstream's own notes say it
+  was never verified on a device.
+- **It cannot work as it is.** Three faults, found by reading:
+  1. It looks for Waze's check under the name `androidx.car.app.HostValidator`. In the car
+     library the class is `androidx.car.app.validation.HostValidator` (checked in the library
+     file this project builds with). The hook is never installed.
+  2. Its settings file (`META-INF/xposed/module.prop`) is not in the form the owner's working
+     module in AA-Experiments uses (`minApiVersion=101`, `targetApiVersion=101`,
+     `staticScope=true`), and it is built against version 102 of the hooking library while the
+     owner's framework is known to support 101. Whether the framework would load it is not known.
+  3. It is still called "AARE host shims" with id `net.prototux.aare.xposed` (the Reviewer's L4),
+     and one line of its settings file was damaged by the rename (`scope=` now holds MyPlay's id).
+- **Not known:** whether Waze's published app keeps that class under its real name. Apps often
+  shorten internal names when they are built. If Waze did, the hook must find the check by its
+  shape instead (W2).
+
+So there are no steps the owner can take today. It needs a build from us first.
+
+**W1. Make the module work for MyPlay and ship it.**
+- Touches: `xposed/` only (a separate app; MyPlay itself is not changed): the class name; the
+  settings file in the form and library version the owner's framework is known to load; name
+  "MyPlay host shims", id `io.github.whiterain3.myplay.hostshims`; signed with the release key;
+  built by CI and attached to the release as `MyPlay-hostshims-<version>.apk`. First version:
+  only the Waze-type hook, and the module's default list holds only Waze. The hooks into
+  Android's own system process (`android` in the list) are left out for now: upstream itself
+  warns they are best-effort, and a wrong one can stop the phone from starting.
+- Verified by: a unit test that the class the hook names exists in the car library the project
+  builds with (so this fault cannot come back). Bench: the Tester's bench uses the owner's phone,
+  which has Waze, so it can be checked without the car: open Waze from the app grid; its map
+  appears instead of the "only accepts Google's Android Auto" message. Car: the owner drives a
+  route with it.
+- The owner's steps once it is released: install `MyPlay-hostshims-<version>.apk`; in the
+  LSPosed-type manager enable "MyPlay host shims" and tick **only Waze**; force-stop Waze (or
+  restart the phone); connect to the car and open Waze.
+
+**W2. Only if W1 does not get through: find Waze's check by its shape.**
+- If the bench still shows the refusal, the phone's log says whether the hook found the class.
+  If not, Waze renamed it, and the hook must look for it another way. Needs the Tester to pull
+  Waze's APK from the phone for reading. Not known until W1 is tried.
+
+**W3. Later: the music apps the same module can open up** (Spotify, YouTube Music and others
+refuse a non-Google host in a similar way; `docs/xposed.md` describes the hooks). Only after W1
+is proven, one app at a time.
+
+Earlier this plan listed "hooks that make Google Maps or Waze accept the app" under "do not
+copy". That was about another fork's abandoned hook collection. The module here is upstream
+AARE's own, already in this repository, and the owner has asked for Waze; the entry below is
+reworded.
+
+### M. The map behind everything, cards and bar on top
+
+The owner's words: "the style itself, the design. Of course customizable from settings, like can
+I have navigation nicely shown as the background, and on top of it, the cards, the bar." And:
+"Important to follow the scaling correctly that I saw on waze, when it's only visible on the
+left, it's more centered there, if it's expanded it goes to the other direction and so on where
+space emptied out." They attached a picture of Google's current Android Auto on three screen
+shapes: the map fills the screen, with a narrow bar and small floating cards on top, placed
+differently per shape.
+
+That picture is the idea, not the look. The result is MyPlay's own design (Phase F's looks apply
+to it); F-Auto's and other forks' layout files are for reading only.
+
+What exists today, from the code:
+
+- On the home screen the map is one card among others (`ui/car/CarShell.kt`, `Dashboard`).
+- Inside a maps app's own full screen, AARE already does what the owner describes: every card it
+  draws over the map is marked (`Modifier.obstructsMap()`, `host/templates/MapUi.kt`), the
+  largest free rectangle is worked out (`host/templates/MapGeometry.kt`, with unit tests), and
+  the app is told through the car library's "visible area" and "stable area" messages
+  (`host/CarAppConnection.kt:245-255`). A maps app that honours them centres itself in the free
+  part and moves when it changes.
+- So the new work is a home screen where the maps app's picture fills the screen and MyPlay's
+  own cards and bar are those marked obstacles.
+- Layouts are a setting already (`ui/car/CarLayout.kt`: bar with cards, dock, classic), so this
+  is a fourth one and the others stay.
+- Upstream has nothing like it on any branch (`feat/dashboard-cards` is already in `main`;
+  `feat/rail-status-widgets` adds choosable items for the bar and is worth taking in M4).
+- It only works with a maps app MyPlay can host: Organic Maps, OsmAnd, CoMaps and others built
+  on the car library, and Waze once W1 works. Google Maps on the phone only gives MyPlay its
+  next-turn text, not a map.
+
+**M1. A fourth layout: "Map behind".**
+- Touches: one new file for the layout (`ui/car/`), one new value in `CarLayout.kt`, a few lines
+  where layouts are chosen in `CarShell.kt`. The maps app's picture fills the area beside the
+  bar; the existing dashboard cards (next turn, music, and the others) float over it in a
+  column; with no maps app chosen it falls back to the wallpaper.
+- Verified by: Tests (layout choice). Bench: with Organic Maps as the maps app, a picture of the
+  home screen shows the map edge to edge with cards over it.
+
+**M2. Tell the maps app where the free space is, and keep telling it.**
+- Touches: the new layout marks its cards (and the bar, if the map is allowed under it) with the
+  existing `obstructsMap()`; `MapGeometry` gets tests for the new arrangements (a card column on
+  one side; cards on both sides; a card that disappears). "Stable area" is what is free with
+  every card showing; "visible area" is what is free right now.
+- Verified by: Tests. Bench: Organic Maps' position arrow sits in the middle of the free part,
+  not of the screen; start music so the music card appears, and the arrow moves over; stop it,
+  and the arrow moves back. Car: the same with Waze, which is where the owner saw it.
+- Not known: how each maps app uses the two areas. The owner saw Waze do it under Google's app.
+
+**M3. Settings for it** (phone, and the short list in the car):
+- Which cards show and in what order (exists: the dashboard list); card side (left, right,
+  both); card width (three steps); how see-through the cards are; whether the map goes under
+  the bar; bar position (exists); whether cards hide after a while when nothing changes.
+- Touches: `Settings.kt`, the new layout file, the phone page for the home screen (later the
+  picture page from Phase E).
+- Verified by: Tests on each setting. Bench pictures per setting.
+
+**M4. Placement by screen shape, and items for the bar.**
+- The owner's own screen is small (about 900 x 543 in layout units), so cards must be few and
+  narrow there; wide and very wide screens get side-by-side placement. Upstream's
+  `feat/rail-status-widgets` (clock, outside temperature, battery, weather as choosable bar
+  items) is taken here.
+- Verified by: Tests on placement for the three shapes in the owner's picture plus the Audi's.
+  Bench pictures at each size (the head unit takes `--res`).
+
+**M5. The knob on this layout.**
+- Turning goes through the cards and the bar as today. The map itself needs a way to be moved
+  and zoomed by the knob (plan C3; JVKeller `570a67de`), which depends on whether the box passes
+  on the knob's tilt.
+
+Safe now, on the bench: M1, M2, M3, and M4's placement rules. Needs the 0.1.1 log or a photo
+from the car: the real screen size and margins (the free space must leave out what the car does
+not show), final card sizes for the Audi, and M5.
 
 How each task is checked:
 
@@ -776,8 +923,9 @@ build resolves it.
   `cert/GearheadKeyExtractor.kt`, background updaters for it, one-tap prompts). Never commit a
   certificate or key. The download button AARE already has is the owner's open question; nothing
   more is added. Google's current certificate also ends on 2026-12-31 by upstream's notes.
-- **Hooks that make Google Maps or Waze accept the app** (meraz9000's `tools/aare-hooks/`,
-  abandoned in October). Fragile, and YouTube does not need them.
+- **meraz9000's hook collection for Google Maps** (`tools/aare-hooks/`, abandoned in October).
+  Fragile. Upstream's own module in `xposed/` is a different thing: it is in this repository
+  and is what task W1 repairs for Waze.
 - **Guessing from the Bluetooth name**, and fixed density presets by head unit name (athanasso
   sets 160 dpi for a list of names; the owner's screen is 213).
 - **Mirrored apps running while the car moves, on by default** (athanasso). MyPlay keeps AARE's

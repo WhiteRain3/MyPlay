@@ -9,8 +9,8 @@ and so is 0.1.1 (tag `myplay-v0.1.1` on `970cc4c`: the car's buttons and knob in
 log). 0.1.0
 is AARE renamed to MyPlay (package `io.github.whiterain3.myplay`), with updates and weather off
 by default, its own release chain, and a test bench for the Tester. Nothing about the look or the
-knob has changed yet. Next is the owner's parked test against the box, which decides the order of
-everything after it.
+knob has changed yet. The owner's parked test against the box is passed (see "What has been seen so far"); the
+details of that visit are still to come.
 
 - Task list: `docs/plans/myplay.md`.
 - Tester's guide: `docs/TESTER_SETUP.md`.
@@ -145,7 +145,29 @@ branch `claude/test-reports`.
 
 What to do about each is in the plan under "Bench round 1" (K1 to K11).
 
-**In the car: nothing yet.** The parked test has not been done.
+**In the car (the owner, parked, MyPlay 0.1.0, 2026-11-19): it works.** The owner's words:
+"just checked on the car, this thing works!" So the box accepts a phone app that is not
+Google's. As far as the dispatcher knows, "Download certificate" was not used, but the owner has
+not confirmed that.
+
+Also from the owner after that visit:
+
+- "waze doesn't work ... it says something like allow app in settings and only supporting google
+  auto". The exact text is not known. Cause and fix: plan section W.
+- They want the map as the background of the car screen with the cards and the bar on top,
+  everything adjustable in settings, and the map to keep itself centred in whatever space the
+  cards leave free. Plan section M.
+
+Still not known from the car, waiting for a visit with 0.1.1 and its connection log:
+
+- which certificate the box accepted;
+- whether the knob moved a ring, whether pressing opened things, and whether tilting did
+  anything;
+- which buttons the box passes on (0.1.1 writes them to the log on the phone);
+- the screen size, density and margins the box reports, and whether anything was cut off;
+- whether it worked with the phone locked;
+- where sound went;
+- whether Google's Android Auto got in the way.
 
 ## Build and test
 
