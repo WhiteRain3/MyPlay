@@ -159,6 +159,8 @@ import net.prototux.aare.ui.phone.PhoneTopBar
 import net.prototux.aare.ui.phone.PicturePart
 import net.prototux.aare.ui.phone.BarPage
 import net.prototux.aare.ui.phone.CardsPage
+import net.prototux.aare.ui.phone.ClockPage
+import net.prototux.aare.ui.phone.StatusIconsPage
 import net.prototux.aare.ui.phone.ColoursPage
 import net.prototux.aare.ui.phone.LayoutScreen
 import net.prototux.aare.ui.phone.WallpaperPage
@@ -231,6 +233,8 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     WALLPAPER(R.string.phone_part_wallpaper, R.string.phone_part_wallpaper, Icons.Rounded.Dashboard),
     COLOURS(R.string.phone_part_colours, R.string.phone_part_colours, Icons.Rounded.Dashboard),
     LAYOUT(R.string.phone_part_layout, R.string.phone_part_layout, Icons.Rounded.Dashboard),
+    CLOCK(R.string.phone_part_clock, R.string.phone_part_clock, Icons.Rounded.Dashboard),
+    STATUS(R.string.phone_part_status, R.string.phone_part_status, Icons.Rounded.Dashboard),
     CERTIFICATES(R.string.cert_section_title, R.string.phone_certificates_subtitle, Icons.Rounded.VerifiedUser),
     ABOUT(R.string.setup_page_about_title, R.string.setup_page_about_subtitle, Icons.Rounded.Info),
 }
@@ -259,7 +263,7 @@ private fun Home() {
             // the Car screen page; every other page has a tile under it.
             CustomiseScreen(
                 onPicture = { part -> page = pageOf(part) },
-                parts = listOf(Page.LAYOUT, Page.BAR, Page.CARDS, Page.WALLPAPER, Page.COLOURS).map { pg -> stringResource(pg.titleRes) to { page = pg } },
+                parts = listOf(Page.LAYOUT, Page.BAR, Page.CLOCK, Page.STATUS, Page.CARDS, Page.WALLPAPER, Page.COLOURS).map { pg -> stringResource(pg.titleRes) to { page = pg } },
                 behind = { BehindTheScenesTiles(state.connected, state.audioCapture, refresh) { page = pageOf(it) } },
                 top = {
                     item {
@@ -299,6 +303,8 @@ private fun Home() {
                         Page.CARDS -> item { CardsPage { page = Page.LAYOUT } }
                         Page.COLOURS -> item { ColoursPage() }
                         Page.LAYOUT -> item { LayoutScreen() }
+                        Page.CLOCK -> item { ClockPage() }
+                        Page.STATUS -> item { StatusIconsPage() }
                         Page.WALLPAPER -> item { WallpaperPage { uri -> saveWallpaper(ctx, uri) } }
                         Page.CERTIFICATES -> item { CertificatesCard(certs, state) }
                         Page.ABOUT -> item { AboutScreen() }
@@ -312,6 +318,8 @@ private fun Home() {
 /** MyPlay (E3): the page a tapped part of the car picture opens. */
 private fun pageOf(part: PicturePart): Page = when (part) {
     PicturePart.BAR -> Page.BAR
+    PicturePart.CLOCK -> Page.CLOCK
+    PicturePart.STATUS -> Page.STATUS
     PicturePart.CARDS -> Page.CARDS
     PicturePart.WALLPAPER -> Page.WALLPAPER
     PicturePart.APPS -> Page.APPS

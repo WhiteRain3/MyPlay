@@ -146,6 +146,14 @@ class PhoneScreenMockups {
         }
     }
 
+    @Test fun statusIcons() = paparazzi.snapshot {
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { StatusIconsPage() } } }
+    }
+
+    @Test fun clock() = paparazzi.snapshot {
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { ClockPage() } } }
+    }
+
     @Test fun parts() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { PhonePartsSample {} } }
     }

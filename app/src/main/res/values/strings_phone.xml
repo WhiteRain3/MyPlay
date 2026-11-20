@@ -75,6 +75,31 @@
     <string name="phone_cards_note_taskbar" translatable="false">The cards below are its home screen.</string>
     <string name="phone_cards_note_map_behind" translatable="false">Its cards float over the map. Where they sit is on the Layout page.</string>
     <string name="phone_cards_note_none" translatable="false">This layout has no cards. The list below is for the Taskbar layout.</string>
+    <string name="phone_part_status" translatable="false">Status icons</string>
+    <string name="phone_part_clock" translatable="false">Clock</string>
+    <string name="phone_status_show" translatable="false">Show</string>
+    <string name="phone_status_icon" translatable="false">Icon</string>
+    <string name="phone_status_number" translatable="false">Number</string>
+    <string name="phone_status_sign" translatable="false">Sign</string>
+    <string name="phone_status_sign_needs_number" translatable="false">The % sign shows only with the number.</string>
+    <string name="phone_status_signal" translatable="false">Signal and Wi-Fi</string>
+    <string name="phone_status_signal_sub" translatable="false">The phone\'s mobile signal bars and Wi-Fi symbol</string>
+    <string name="phone_status_size" translatable="false">Size</string>
+    <string name="phone_size_small" translatable="false">Small</string>
+    <string name="phone_size_normal" translatable="false">Normal</string>
+    <string name="phone_size_large" translatable="false">Large</string>
+    <string name="phone_size_larger" translatable="false">Larger</string>
+    <string name="phone_status_colour" translatable="false">Colour</string>
+    <string name="phone_colour_n" translatable="false">Colour %1$d</string>
+    <string name="phone_status_by_level" translatable="false">Colour by level</string>
+    <string name="phone_status_low" translatable="false">Low, up to %1$d %%</string>
+    <string name="phone_status_middle" translatable="false">Middle, up to %1$d %%</string>
+    <string name="phone_status_high" translatable="false">High</string>
+    <string name="phone_status_by_level_on" translatable="false">The battery takes the colour of its band. While charging it keeps the colour above.</string>
+    <string name="phone_status_by_level_off" translatable="false">Off: the battery is red when low and otherwise takes the colour above.</string>
+    <string name="phone_clock_style" translatable="false">Style</string>
+    <string name="phone_clock_bold" translatable="false">Bold</string>
+    <string name="phone_clock_bold_sub" translatable="false">Thicker digits. The Retro look keeps its own digits.</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->

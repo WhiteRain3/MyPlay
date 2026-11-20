@@ -48,6 +48,7 @@ import net.prototux.aare.ui.car.CarPart
 import net.prototux.aare.ui.car.CarPartRegistry
 import net.prototux.aare.ui.car.LocalCarParts
 import net.prototux.aare.ui.car.RailWidget
+import net.prototux.aare.ui.car.statusStyle
 import net.prototux.aare.ui.car.myplayLayoutSpec
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -93,11 +94,13 @@ fun pictureNight(carTheme: String): Boolean = carTheme != Settings.THEME_LIGHT
 fun pictureRailOnRight(railPosition: String): Boolean = railPosition == Settings.RAIL_RIGHT
 
 /** Which page a part of the picture opens. [WHOLE]: the Car screen page with every setting. */
-enum class PicturePart { BAR, CARDS, WALLPAPER, APPS, WHOLE }
+enum class PicturePart { BAR, CLOCK, STATUS, CARDS, WALLPAPER, APPS, WHOLE }
 
-/** The page for a tapped car-screen part: the clock and status icons sit in the bar, so they open the Bar page for now. */
+/** The page for a tapped car-screen part. */
 fun picturePartOf(part: CarPart?): PicturePart = when (part) {
-    CarPart.Bar, CarPart.Clock, CarPart.Status -> PicturePart.BAR
+    CarPart.Bar -> PicturePart.BAR
+    CarPart.Clock -> PicturePart.CLOCK
+    CarPart.Status -> PicturePart.STATUS
     CarPart.AppsButton -> PicturePart.APPS
     CarPart.Wallpaper -> PicturePart.WALLPAPER
     is CarPart.DashboardCard, is CarPart.MapBehindCard -> PicturePart.CARDS
@@ -123,6 +126,7 @@ internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: C
     ui.layoutSpec = settings.myplayLayoutSpec
     ui.darkBar = settings.darkBar
     ui.railWidgets = RailWidget.parse(settings.railWidgets)
+    ui.statusStyle = settings.statusStyle
     ui.dashboardCards = DashCard.parse(settings.dashboardCards)
     ui.weatherInBar = settings.showWeather
     ui.weather = if (settings.showWeather) Weather(18, "°C", 1, day = !ui.night) else null

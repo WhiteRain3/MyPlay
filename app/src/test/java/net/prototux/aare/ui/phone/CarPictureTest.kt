@@ -58,8 +58,8 @@ class CarPictureTest {
     @Test
     fun eachPartOpensItsPage() {
         assertEquals(PicturePart.BAR, picturePartOf(CarPart.Bar))
-        assertEquals(PicturePart.BAR, picturePartOf(CarPart.Clock))
-        assertEquals(PicturePart.BAR, picturePartOf(CarPart.Status))
+        assertEquals(PicturePart.CLOCK, picturePartOf(CarPart.Clock))
+        assertEquals(PicturePart.STATUS, picturePartOf(CarPart.Status))
         assertEquals(PicturePart.APPS, picturePartOf(CarPart.AppsButton))
         assertEquals(PicturePart.WALLPAPER, picturePartOf(CarPart.Wallpaper))
         assertEquals(PicturePart.CARDS, picturePartOf(CarPart.DashboardCard(DashCard.MEDIA)))
