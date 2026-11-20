@@ -41,6 +41,8 @@ import net.prototux.aare.notify.CarNotificationListener
 import net.prototux.aare.notify.MessagingScreen
 import net.prototux.aare.launch.AppLauncher
 import net.prototux.aare.notify.PhoneGuidance
+import net.prototux.aare.ui.car.LocalTurnIcon
+import net.prototux.aare.ui.car.myplayLayoutSpec
 import net.prototux.aare.ui.car.trackCarFocus
 import net.prototux.aare.ui.car.BrowserScreen
 import net.prototux.aare.ui.car.CarActions
@@ -298,6 +300,7 @@ class CarRuntime(
         ui.drivingRestricted = carDriving && !settings.ignoreDriving
         ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
         ui.layout = CarLayout.byId(settings.carLayoutId)
+        ui.layoutSpec = settings.myplayLayoutSpec // MyPlay (M3)
         ui.darkBar = settings.darkBar
         ui.dashboardCards = DashCard.parse(settings.dashboardCards)
         ui.weatherInBar = settings.showWeather
@@ -323,7 +326,7 @@ class CarRuntime(
     private val settingsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
             // MyPlay (K11-1): the map apps' day/night switch too.
-            "car_theme", "myplay_maps_follow_car_lights", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving" -> main.post { applyScreenSettings() }
+            "car_theme", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving" -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
             "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }
@@ -735,7 +738,11 @@ class CarRuntime(
     fun Root(modifier: Modifier = Modifier) {
         val mediaApps by media.apps.collectAsState()
         CarTheme(night = ui.night, theme = ui.theme) {
-            CompositionLocalProvider(LocalCarDimens provides LocalCarDimens.current) {
+            CompositionLocalProvider(
+                LocalCarDimens provides LocalCarDimens.current,
+                // MyPlay (M3): the "map behind" layout's next-turn card loads maneuver icons here.
+                LocalTurnIcon provides { icon, px, owner -> icons.load(icon, px, owner) },
+            ) {
                 CarShell(
                     state = ui,
                     actions = actions,

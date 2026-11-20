@@ -24,7 +24,10 @@ enum class CarLayout(
     DOCK("dock"),
 
     /** A bar along the bottom and the app grid as the home screen, like Android Auto's from 2019 to 2022. */
-    CLASSIC("classic");
+    CLASSIC("classic"),
+
+    /** MyPlay (M3): the maps app's picture behind everything, bar and cards on top, as the layout options say (CarLayoutSpec). */
+    MAP_BEHIND("myplay_map_behind");
 
     companion object {
         fun byId(id: String?): CarLayout = entries.firstOrNull { it.id == id } ?: TASKBAR
@@ -84,6 +87,7 @@ internal fun StyleChoices(
         CarLayout.TASKBAR.id to stringResource(R.string.setup_layout_taskbar),
         CarLayout.DOCK.id to stringResource(R.string.setup_layout_dock),
         CarLayout.CLASSIC.id to stringResource(R.string.setup_layout_classic),
+        CarLayout.MAP_BEHIND.id to stringResource(R.string.myplay_layout_map_behind),
     ), layout.id) { onChange(theme.id, it) }
     Spacer(Modifier.height(12.dp))
     val accents = listOf(CarAccents.THEME to stringResource(R.string.accent_theme)) +

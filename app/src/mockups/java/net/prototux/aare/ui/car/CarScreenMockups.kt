@@ -64,6 +64,29 @@ class CarScreenMockups {
     @Test fun retroAmber() = shot("retro", night = true, accent = "amber")
     @Test fun customDashboard() = shot("aare", night = true, cards = listOf(DashCard.MEDIA, DashCard.MAP, DashCard.WEATHER))
 
+    // MyPlay (M3): the "map behind" layout, one picture per preset, with directions and music on.
+    @Test fun mapBehindA() = mapBehind("A")
+    @Test fun mapBehindB() = mapBehind("B")
+    @Test fun mapBehindC() = mapBehind("C")
+    @Test fun mapBehindD() = mapBehind("D")
+    @Test fun mapBehindE() = mapBehind("E")
+    @Test fun mapBehindF() = mapBehind("F")
+
+    private fun mapBehind(preset: String) {
+        val state = mockState(night = true, screen = CarScreen.Dashboard).apply {
+            theme = CarThemes.byId("aare")
+            layout = CarLayout.MAP_BEHIND
+            layoutSpec = CarLayoutSpec.PRESETS.getValue(preset)
+            phoneGuidance = PhoneGuidance("mock", "maps", "Maps", "300 m", "Turn right onto Aarstrasse",
+                "12 min · 8.4 km", arrow = null, distance = null, instruction = "Turn right onto Aarstrasse")
+        }
+        paparazzi.snapshot {
+            CarTheme(night = state.night, theme = state.theme) {
+                CarShell(state, NoActions, appContent = { _, m -> MapStandIn(true, m) }, navMap = { _, m -> MapStandIn(true, m) })
+            }
+        }
+    }
+
     /** The style made of [themeId] and its layout, as the settings' Style picker would set it. */
     private fun shot(
         themeId: String,

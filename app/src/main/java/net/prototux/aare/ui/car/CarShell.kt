@@ -108,6 +108,7 @@ fun CarShell(
     when (state.layout) {
         CarLayout.DOCK -> { DockShell(state, actions, appContent, navMap, overlay, modifier); return }
         CarLayout.CLASSIC -> { ClassicShell(state, actions, appContent, navMap, overlay, modifier); return }
+        CarLayout.MAP_BEHIND -> { SpecShell(state, actions, appContent, navMap, overlay, modifier); return } // MyPlay (M3)
         CarLayout.TASKBAR -> Unit
     }
     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
@@ -323,7 +324,7 @@ private fun SegmentClock(time: String) {
 }
 
 @Composable
-private fun RailButton(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
+internal fun RailButton(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
     val d = LocalCarDimens.current
     val bg = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
     val fg = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -336,7 +337,7 @@ private fun RailButton(icon: ImageVector, label: String, selected: Boolean, onCl
 }
 
 @Composable
-private fun RailApp(app: CarAppEntry?, fallback: ImageVector, selected: Boolean, onClick: () -> Unit) {
+internal fun RailApp(app: CarAppEntry?, fallback: ImageVector, selected: Boolean, onClick: () -> Unit) {
     val d = LocalCarDimens.current
     if (app?.icon == null) {
         RailButton(fallback, app?.label ?: "", selected, onClick)
