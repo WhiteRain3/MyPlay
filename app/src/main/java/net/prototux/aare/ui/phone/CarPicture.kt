@@ -244,7 +244,9 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
         Box(
             Modifier.fillMaxSize().pointerInput(onPart) {
                 if (onPart == null) {
-                    awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } }
+                    // Being hit is enough: the car screen underneath (a sibling) then gets no touch.
+                    // Nothing is consumed, so a drag that starts here still scrolls the page.
+                    awaitPointerEventScope { while (true) awaitPointerEvent() }
                 } else {
                     detectTapGestures(
                         onPress = { at ->
