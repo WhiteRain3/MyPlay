@@ -491,9 +491,8 @@ private fun NavCard(state: CarUiState, actions: CarActions, navMap: @Composable 
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(20.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    navApps.take(4).forEach { app -> AppChip(app) { actions.openApp(app) } }
-                }
+                // MyPlay: only the buttons that fit, and "More" for the rest (was: up to four, clipped).
+                MapsButtons(navApps, actions::openApp, actions::openLauncher)
             }
         }
     }
@@ -527,15 +526,16 @@ private fun GuidanceCard(g: PhoneGuidance) {
 }
 
 @Composable
-private fun AppChip(app: CarAppEntry, onClick: () -> Unit) {
+internal fun AppChip(app: CarAppEntry, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Row(
-        Modifier.height(64.dp).clip(MaterialTheme.shapes.extraLarge).background(MaterialTheme.colorScheme.secondaryContainer)
+        modifier.height(64.dp).clip(MaterialTheme.shapes.extraLarge).background(MaterialTheme.colorScheme.secondaryContainer)
             .carFocusHighlight(MaterialTheme.shapes.extraLarge).clickable(onClick = onClick).padding(start = 10.dp, end = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AppIcon(app, 44)
         Spacer(Modifier.width(12.dp))
-        Text(app.label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer)
+        Text(app.label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
