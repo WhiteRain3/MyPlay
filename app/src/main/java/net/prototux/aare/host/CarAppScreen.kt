@@ -224,6 +224,12 @@ private class ConnectionTemplateHost(val conn: CarAppConnection, val runtime: Ca
 
     @Composable
     override fun MapSurface(modifier: Modifier) {
+        // MyPlay: through the look's colour filter while one is on (MyPlayMapSurface.kt).
+        val filter = runtime.mapFilter.matrix(runtime.ui.night)
+        if (filter != null) {
+            FilteredMapSurface(conn, runtime.densityDpi, filter, modifier)
+            return
+        }
         val owner = remember { Any() }
         val dpi = runtime.densityDpi
         AndroidView(
