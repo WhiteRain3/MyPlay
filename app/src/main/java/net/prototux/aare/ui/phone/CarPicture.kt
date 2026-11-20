@@ -81,6 +81,9 @@ import androidx.compose.ui.unit.Density
 import net.prototux.aare.ui.theme.CarThemes
 import net.prototux.aare.ui.theme.forPhone
 import net.prototux.aare.ui.theme.withAccent
+import net.prototux.aare.ui.theme.CustomColours
+import net.prototux.aare.ui.theme.myplayLookColours
+import net.prototux.aare.ui.theme.withCustomColours
 
 /**
  * The car screen drawn small on the phone: the car's own drawing code ([CarShell]) with made-up
@@ -152,6 +155,7 @@ fun pictureHomeMaps(stored: String): String =
 internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: Context) {
     ui.night = pictureNight(settings.carTheme)
     ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
+        .withCustomColours(CustomColours.decode(settings.myplayLookColours))
     ui.layout = CarLayout.byId(settings.carLayoutId)
     ui.layoutSpec = settings.myplayLayoutSpec
     ui.darkBar = settings.darkBar
@@ -223,10 +227,10 @@ private object NoCarActions : CarActions {
  * clock, cards, wallpaper, apps button) can be tapped on its own: it is outlined while pressed
  * and [onPart] gets it. Without, it is only a picture. The car screen inside never sees the
  * touch. [description] is what TalkBack reads; for TalkBack the picture is one button that opens
- * [PicturePart.WHOLE].
+ * [PicturePart.WHOLE]. [night], when set, shows night or day whatever the setting (the Colours page's tabs).
  */
 @Composable
-fun CarPicture(description: String, modifier: Modifier = Modifier, onPart: ((PicturePart) -> Unit)?) {
+fun CarPicture(description: String, modifier: Modifier = Modifier, night: Boolean? = null, onPart: ((PicturePart) -> Unit)?) {
     val context = LocalContext.current
     val settings = remember { Settings(context) }
     val ui = remember { sampleCarState() }
@@ -238,8 +242,9 @@ fun CarPicture(description: String, modifier: Modifier = Modifier, onPart: ((Pic
         prefs.registerOnSharedPreferenceChangeListener(listener)
         onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
     }
-    LaunchedEffect(changes) {
+    LaunchedEffect(changes, night) {
         applyPictureSettings(ui, settings, context)
+        if (night != null) { ui.night = night; ui.weather = ui.weather?.copy(day = !night) }
         ui.wallpaperImage = if (ui.wallpaper == Settings.WALLPAPER_CUSTOM) withContext(Dispatchers.IO) {
             runCatching { BitmapFactory.decodeFile(java.io.File(context.filesDir, Settings.WALLPAPER_FILE).path) }.getOrNull()
         } else null

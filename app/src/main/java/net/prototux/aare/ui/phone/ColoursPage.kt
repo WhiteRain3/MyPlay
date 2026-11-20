@@ -47,6 +47,17 @@ import net.prototux.aare.ui.theme.CarAccents
 import net.prototux.aare.ui.theme.CarThemeSpec
 import net.prototux.aare.ui.theme.CarThemes
 import net.prototux.aare.ui.theme.label
+import net.prototux.aare.ui.theme.ColourRole
+import net.prototux.aare.ui.theme.CustomColours
+import net.prototux.aare.ui.theme.contrastRatio
+import net.prototux.aare.ui.theme.forPhone
+import net.prototux.aare.ui.theme.myplayLookColours
+import net.prototux.aare.ui.theme.withAccent
+import net.prototux.aare.ui.theme.withCustomColours
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.automirrored.rounded.Undo
+import androidx.compose.material.icons.rounded.WarningAmber
+import androidx.compose.material3.IconButton
 
 /** The accent colours as dots: each accent's colour on dark surfaces, in the settings' order. */
 fun accentDotColours(): List<Color> = CarAccents.all.map { it.dark.primary }
@@ -58,7 +69,7 @@ fun accentDotColour(id: String): Color? = CarAccents.byId(id)?.dark?.primary
 fun accentIdOf(colour: Color): String? = CarAccents.all.firstOrNull { it.dark.primary == colour }?.id
 
 /**
- * The car screen's colours (plan E5): the look, the accent colour, day and night, and whether
+ * The car screen's colours (plan E5): the look, the accent colour, the owner's own colours (F3, myplay_look_colours), day and night, and whether
  * map apps follow the car's lights. The same settings as the Car screen page (style_theme,
  * style_accent, car_theme, myplay_maps_follow_car_lights); the layout stays where it is.
  */
@@ -70,8 +81,18 @@ fun ColoursPage() {
     var accent by remember { mutableStateOf(settings.carAccent) }
     var dayNight by remember { mutableStateOf(settings.carTheme) }
     var mapsFollow by remember { mutableStateOf(settings.mapsFollowCarLights) }
+    var own by remember { mutableStateOf(CustomColours.decode(settings.myplayLookColours)) }
+    // Which side the owner's colours are being set for; the picture shows that side.
+    var editNight by remember { mutableStateOf(true) }
+    var picking by remember { mutableStateOf<ColourRole?>(null) }
+    fun saveOwn(c: CustomColours) { own = c; settings.myplayLookColours = c.encode() }
+    // The look as the car will paint it: theme, then accent, then the owner's colours.
+    val look = remember(themeId, accent, own) {
+        CarThemes.byId(themeId).forPhone(ctx).withAccent(accent, ctx).withCustomColours(own)
+    }
+    val scheme = if (editNight) look.night else look.day
     Column {
-        PartPicture()
+        CarPicture(stringResource(R.string.phone_part_picture_description), night = editNight) { part -> picking = colourRoleOf(part) }
         SectionHeading(stringResource(R.string.setup_choice_theme))
         RowGroup(rows = CarThemes.available.map { theme ->
             { ThemeRow(theme, theme.id == themeId) { themeId = theme.id; settings.carThemeId = theme.id } }
@@ -88,6 +109,33 @@ fun ColoursPage() {
             Spacer(Modifier.height(10.dp))
             PillButton(stringResource(R.string.phone_colours_phone_accent), main = accent == CarAccents.PHONE) {
                 accent = CarAccents.PHONE; settings.carAccent = CarAccents.PHONE
+            }
+        }
+        SectionHeading(stringResource(R.string.phone_own_colours))
+        ChoiceButtons(
+            listOf(
+                Triple("night", Icons.Rounded.DarkMode, stringResource(R.string.phone_own_colours_night)),
+                Triple("day", Icons.Rounded.LightMode, stringResource(R.string.phone_own_colours_day)),
+            ),
+            if (editNight) "night" else "day",
+        ) { editNight = it == "night" }
+        HintLine(Icons.Rounded.Palette, stringResource(R.string.phone_own_colours_hint))
+        val mine = own.side(editNight)
+        RowGroup(rows = ColourRole.entries.map { role ->
+            { OwnColourRow(role, roleColour(scheme, role), role in mine, onPick = { picking = role }, onBack = { saveOwn(own.with(editNight, role, null)) }) }
+        })
+        hardToRead({ roleColour(scheme, it) }, mine.keys).forEach { (fg, bg) ->
+            val ratio = contrastRatio(roleColour(scheme, fg), roleColour(scheme, bg))
+            HintLine(Icons.Rounded.WarningAmber, stringResource(R.string.phone_own_colours_hard_to_read,
+                stringResource(fg.label), stringResource(bg.label).lowercase(), "%.1f".format(ratio)))
+        }
+        if (!own.isEmpty) {
+            Spacer(Modifier.height(10.dp))
+            PillButton(stringResource(R.string.phone_own_colours_reset), main = false) { saveOwn(CustomColours.NONE) }
+        }
+        picking?.let { role ->
+            ColourPickerDialog(stringResource(role.label), roleColour(scheme, role), onDismiss = { picking = null }) { c ->
+                saveOwn(own.with(editNight, role, c)); picking = null
             }
         }
         SectionHeading(stringResource(R.string.phone_colours_day_night))
@@ -127,5 +175,41 @@ private fun ThemeRow(theme: CarThemeSpec, selected: Boolean, onClick: () -> Unit
         Spacer(Modifier.width(14.dp))
         Text(theme.label(), Modifier.weight(1f), color = PhoneColors.Text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         if (selected) Icon(Icons.Rounded.CheckCircle, null, tint = PhoneColors.Accent)
+    }
+}
+
+/** The name of a colour role on the Colours page. */
+val ColourRole.label: Int
+    get() = when (this) {
+        ColourRole.BACKGROUND -> R.string.phone_role_background
+        ColourRole.CARD -> R.string.phone_role_card
+        ColourRole.BAR -> R.string.phone_role_bar
+        ColourRole.ACCENT -> R.string.phone_role_accent
+        ColourRole.ON_ACCENT -> R.string.phone_role_on_accent
+        ColourRole.TEXT -> R.string.phone_role_text
+        ColourRole.TEXT_DIM -> R.string.phone_role_text_dim
+    }
+
+/** One colour role: its colour as the car paints it, whose it is, and a way back to the look's own when the owner set it. */
+@Composable
+private fun OwnColourRow(role: ColourRole, colour: Int, yours: Boolean, onPick: () -> Unit, onBack: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onPick).padding(start = 16.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(30.dp).clip(RoundedCornerShape(9.dp)).background(Color(colour)).border(1.dp, PhoneColors.Border, RoundedCornerShape(9.dp)))
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(role.label), color = PhoneColors.Text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(if (yours) R.string.phone_own_colours_yours else R.string.phone_own_colours_looks_own) + " · #" + ColourMath.toHex(colour),
+                color = PhoneColors.Muted, fontSize = 13.sp,
+            )
+        }
+        if (yours) {
+            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.Undo, stringResource(R.string.phone_own_colours_back), tint = PhoneColors.Muted) }
+        } else {
+            Spacer(Modifier.size(48.dp))
+        }
     }
 }

@@ -263,4 +263,20 @@
     <string name="phone_parts_sample_changed" translatable="false">3 changed</string>
     <string name="phone_parts_sample_two_on" translatable="false">2 on</string>
     <string name="phone_parts_sample_wide" translatable="false">A wide button</string>
+    <string name="phone_own_colours" translatable="false">Your own colours</string>
+    <string name="phone_own_colours_hint" translatable="false">Tap a part of the picture, or a row, to choose its colour. Night and day are set apart.</string>
+    <string name="phone_own_colours_night" translatable="false">Night</string>
+    <string name="phone_own_colours_day" translatable="false">Day</string>
+    <string name="phone_own_colours_looks_own" translatable="false">The look\'s own</string>
+    <string name="phone_own_colours_yours" translatable="false">Yours</string>
+    <string name="phone_own_colours_back" translatable="false">Back to the look\'s own</string>
+    <string name="phone_own_colours_reset" translatable="false">Clear all my colours</string>
+    <string name="phone_own_colours_hard_to_read" translatable="false">Hard to read: %1$s on %2$s (%3$s to 1, aim for 4.5 or more).</string>
+    <string name="phone_role_background" translatable="false">Background</string>
+    <string name="phone_role_card" translatable="false">Cards</string>
+    <string name="phone_role_bar" translatable="false">Bar</string>
+    <string name="phone_role_accent" translatable="false">Accent</string>
+    <string name="phone_role_on_accent" translatable="false">Text on the accent</string>
+    <string name="phone_role_text" translatable="false">Text</string>
+    <string name="phone_role_text_dim" translatable="false">Dim text</string>
 </resources>
