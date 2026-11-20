@@ -98,6 +98,7 @@
     <string name="phone_status_high" translatable="false">High</string>
     <string name="phone_status_by_level_on" translatable="false">The battery takes the colour of its band. While charging it keeps the colour above.</string>
     <string name="phone_status_by_level_off" translatable="false">Off: the battery is red when low and otherwise takes the colour above.</string>
+    <string name="phone_clock_size_hint" translatable="false">In a bar at the side (and in the Dock), the clock is limited by the bar\'s width, so Large and Larger may look like Normal there. They show fully in a bottom bar or in the Clock and status card.</string>
     <string name="phone_clock_style" translatable="false">Style</string>
     <string name="phone_clock_bold" translatable="false">Bold</string>
     <string name="phone_clock_bold_sub" translatable="false">Thicker digits. The Retro look keeps its own digits.</string>

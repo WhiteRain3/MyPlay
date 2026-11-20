@@ -34,6 +34,7 @@ fun ClockPage() {
         SizeButtons(style.clockSize, { settings.myplayClockSize = it }) { size, tint ->
             Text("12:34", color = tint, fontSize = 15.sp * size.scale, fontWeight = if (style.clockBold) FontWeight.Bold else FontWeight.Medium)
         }
+        HintLine(Icons.Rounded.FormatBold, stringResource(R.string.phone_clock_size_hint))
         SectionHeading(stringResource(R.string.phone_clock_style))
         RowGroup(rows = listOf {
             SwitchRow(Icons.Rounded.FormatBold, stringResource(R.string.phone_clock_bold), style.clockBold, TileTone.VIOLET,
