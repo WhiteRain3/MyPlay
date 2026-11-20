@@ -52,8 +52,13 @@ object CarInputEvents {
 
     @Volatile private var touchpadSeen = false
 
-    /** A new session: its report replaces the last one's. */
-    internal fun start(lines: List<String>) {
+    /** The session whose report is shown: an older session's [end] leaves a newer one's report alone (I4-4). */
+    @Volatile private var owner: Any? = null
+
+    /** A new session ([session]): its report replaces the last one's. */
+    @Synchronized
+    internal fun start(session: Any, lines: List<String>) {
+        owner = session
         touchpadSeen = false
         _report.value = lines
     }
@@ -62,8 +67,11 @@ object CarInputEvents {
     internal fun chosen(index: Int, c: VideoConfiguration) =
         _report.update { lines -> lines.filterNot { it.startsWith(CHOSEN) } + chosenLine(index, c) }
 
-    /** The session ended. */
-    internal fun end() {
+    /** [session] ended: its report goes, unless a newer session has started since. */
+    @Synchronized
+    internal fun end(session: Any) {
+        if (owner !== session) return
+        owner = null
         _report.value = emptyList()
     }
 

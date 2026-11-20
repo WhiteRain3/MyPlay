@@ -301,7 +301,7 @@ class CarSession(
         main.post { runtime.touchscreen = hasTouch }
         if (settings.logCarInput) for (s in inputServices) DiagLog.add(CarInputLog.serviceLine(s, used = s === mainInput))
         // MyPlay (I4): what the car said about itself, for the phone's car check.
-        CarInputEvents.start(CarInputEvents.sessionLines(mainConfigs, inputServices, mainInput))
+        CarInputEvents.start(this, CarInputEvents.sessionLines(mainConfigs, inputServices, mainInput))
         mainInput?.let { s ->
             inputChannelId = s.id
             InputChannel(s, inputListener).also { ch ->
@@ -396,7 +396,7 @@ class CarSession(
         val rejected = session.certificateRefusal
         val refusal = session.pinRefusal
         inputLog.end()
-        CarInputEvents.end()
+        CarInputEvents.end(this)
         main.post {
             teardown()
             listener.onEnded(this, reason, rejected, refusal)
