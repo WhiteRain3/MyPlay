@@ -73,7 +73,8 @@ data class MapColourFilter(
             "grey" to MapColourFilter(saturation = 0, contrast = 110),
         )
 
-        internal val IDENTITY = floatArrayOf(
+        /** The matrix that changes nothing. */
+        val IDENTITY: FloatArray get() = floatArrayOf(
             1f, 0f, 0f, 0f, 0f,
             0f, 1f, 0f, 0f, 0f,
             0f, 0f, 1f, 0f, 0f,

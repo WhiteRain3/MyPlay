@@ -62,6 +62,7 @@ import net.prototux.aare.host.templates.TemplateHost
 import net.prototux.aare.ui.car.LocalMapTapIsKnobStop
 import net.prototux.aare.ui.theme.LocalCarDimens
 import net.prototux.aare.ui.car.carFocusHighlight
+import net.prototux.aare.ui.theme.MapColourFilter
 
 /**
  * One hosted car app on the car screen: its current template, its alerts, and loading/error
@@ -224,10 +225,13 @@ private class ConnectionTemplateHost(val conn: CarAppConnection, val runtime: Ca
 
     @Composable
     override fun MapSurface(modifier: Modifier) {
-        // MyPlay: through the look's colour filter while one is on (MyPlayMapSurface.kt).
-        val filter = runtime.mapFilter.matrix(runtime.ui.night)
-        if (filter != null) {
-            FilteredMapSurface(conn, runtime.densityDpi, filter, modifier)
+        // MyPlay: through the look's colour filter while one is set (MyPlayMapSurface.kt). MF-1: the
+        // filtered view stays while any filter is set, even one that changes nothing now (darker at
+        // night only, by day), so a day/night switch does not rebuild the app's map surface.
+        // MF-2: night as the maps apps are told it.
+        val filter = runtime.mapFilter
+        if (!filter.isIdentity(night = true)) {
+            FilteredMapSurface(conn, runtime.densityDpi, filter.matrix(runtime.mapFilterNight) ?: MapColourFilter.IDENTITY, modifier)
             return
         }
         val owner = remember { Any() }

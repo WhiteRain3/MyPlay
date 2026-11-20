@@ -138,6 +138,9 @@ class CarRuntime(
     /** MyPlay: the colour filter for hosted maps apps' pictures, the chosen look's (MapColourFilter). */
     var mapFilter by mutableStateOf(MapColourFilter())
         private set
+    /** MF-2: night as the maps apps are told it ([mapNight]), for the filter's "darker at night". */
+    var mapFilterNight by mutableStateOf(false)
+        private set
     override var screenWidthDp by mutableIntStateOf(1280)
     override var screenHeightDp by mutableIntStateOf(720)
     override var densityDpi by mutableIntStateOf(160)
@@ -312,6 +315,7 @@ class CarRuntime(
             else -> carNight ?: true
         }
         val mapNightNow = MyPlayNight.forMaps(night, carNight, settings.mapsFollowCarLights)
+        mapFilterNight = mapNightNow
         if (ui.night != night || toldMapNight != mapNightNow) {
             ui.night = night
             toldMapNight = mapNightNow
