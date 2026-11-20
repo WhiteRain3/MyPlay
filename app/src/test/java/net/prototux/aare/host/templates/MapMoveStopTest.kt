@@ -11,7 +11,9 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
 import net.prototux.aare.R
@@ -38,6 +40,7 @@ class MapMoveStopTest {
 
     private val scrolls = ArrayList<Pair<Float, Float>>()
     private val scales = ArrayList<Float>()
+    private val clicks = ArrayList<Pair<Float, Float>>()
 
     private val host = object : TemplateHost {
         override val driving = false
@@ -54,17 +57,27 @@ class MapMoveStopTest {
         override fun mapScroll(dx: Float, dy: Float) { scrolls += dx to dy }
         override fun mapFling(vx: Float, vy: Float) = Unit
         override fun mapScale(focusX: Float, focusY: Float, factor: Float) { scales += factor }
-        override fun mapClick(x: Float, y: Float) = Unit
+        override fun mapClick(x: Float, y: Float) { clicks += x to y }
     }
 
-    @Test fun pushPanZoomAndLeave() {
-        rule.setContent {
+    private fun show() = rule.setContent {
             CarTheme(night = true, theme = CarThemes.byId("aare")) {
                 CompositionLocalProvider(LocalTemplateHost provides host) {
                     MapScaffold(actionStrip = null, mapActionStrip = null, panModeDelegate = null) { }
                 }
             }
         }
+
+    /** R5-6: the knob's stop over the map takes no touches: a tap still reaches the map. */
+    @Test fun aTapStillReachesTheMap() {
+        show()
+        rule.onNode(isFocusable()).performTouchInput { click(center) }
+        rule.waitForIdle()
+        assertEquals("the tap did not reach the map", 1, clicks.size)
+    }
+
+    @Test fun pushPanZoomAndLeave() {
+        show()
         val hint = rule.activity.getString(R.string.myplay_map_move_hint)
         val stop = rule.onNode(isFocusable())
         stop.requestFocus()

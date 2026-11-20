@@ -177,7 +177,7 @@ internal fun MapScaffold(
             }
         }
         // MyPlay (R5): the map as the knob's last stop here, and moving it with the knob (MapMoveMode.kt).
-        MapMoveStop(host, panOffered, setPan)
+        MapMoveStop(host, panOffered, { panState.value }, setPan)
         MapAreaOutline(registry.toldVisible, registry.toldStable) // MyPlay
     }
     ReportAreas(registry, panState)

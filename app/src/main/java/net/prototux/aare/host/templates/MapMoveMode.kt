@@ -74,15 +74,24 @@ internal object MapMoveKeys {
 
 /**
  * The map's knob stop and its move mode, over the map in [MapScaffold]. [setPan] puts the app in
- * its pan mode for the time, when it offers one ([panOffered]).
+ * its pan mode for the time, when it offers one ([panOffered]); R5-7: a pan mode the driver had
+ * already turned on ([panning]) is left on when move mode ends.
  */
 @Composable
-internal fun BoxScope.MapMoveStop(host: TemplateHost, panOffered: Boolean, setPan: (Boolean) -> Unit) {
+internal fun BoxScope.MapMoveStop(host: TemplateHost, panOffered: Boolean, panning: () -> Boolean, setPan: (Boolean) -> Unit) {
     var moving by remember { mutableStateOf(false) }
     var size by remember { mutableStateOf(IntSize.Zero) }
+    /** Whether entering move mode turned the app's pan mode on (so leaving turns it off again). */
+    var panTurnedOn by remember { mutableStateOf(false) }
+    fun enter() {
+        moving = true
+        panTurnedOn = panOffered && !panning()
+        if (panTurnedOn) setPan(true)
+    }
     fun leave() {
         moving = false
-        if (panOffered) setPan(false)
+        if (panTurnedOn) setPan(false)
+        panTurnedOn = false
     }
     BackHandler(enabled = moving) { leave() }
     Box(
@@ -91,7 +100,7 @@ internal fun BoxScope.MapMoveStop(host: TemplateHost, panOffered: Boolean, setPa
             .onKeyEvent { e ->
                 if (e.type != KeyEventType.KeyDown) return@onKeyEvent moving && MapMoveKeys.action(e.key, e.isShiftPressed, true) != null
                 when (val a = MapMoveKeys.action(e.key, e.isShiftPressed, moving) ?: return@onKeyEvent false) {
-                    MapMoveKeys.Action.Enter -> { moving = true; if (panOffered) setPan(true) }
+                    MapMoveKeys.Action.Enter -> enter()
                     MapMoveKeys.Action.Leave -> leave()
                     is MapMoveKeys.Action.Pan -> safeCall("mapScroll") { host.mapScroll(a.dx * size.width, a.dy * size.height) }
                     is MapMoveKeys.Action.Zoom -> safeCall("mapScale") { host.mapScale(size.width / 2f, size.height / 2f, a.factor) }
