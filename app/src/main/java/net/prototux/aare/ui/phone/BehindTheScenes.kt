@@ -135,12 +135,15 @@ fun BehindTheScenesTiles(connected: Boolean, audioCapture: Boolean, refresh: Int
     val voice = remember(refresh) {
         (settings.assistantPackage ?: Assistants.phoneDefault(ctx))?.let { Assistants.label(ctx, it) }
     }
-    val sound = soundValue(
-        settings.carAudio,
-        bestCaptureMethod(CaptureMethods.audioPolicyAvailable(ctx), CaptureMethods.shizukuAvailable(), CaptureMethods.rootAvailable(ctx), audioCapture),
-    )
-    val messages = messagesValue(NotificationManagerCompat.getEnabledListenerPackages(ctx).contains(ctx.packageName), settings.messageBanners)
-    val advanced = advancedValue(settings.verboseProtocolLog, settings.headUnitServer)
+    // Read again when the user comes back to the app ([refresh]), not on every redraw.
+    val sound = remember(refresh, audioCapture) {
+        soundValue(
+            settings.carAudio,
+            bestCaptureMethod(CaptureMethods.audioPolicyAvailable(ctx), CaptureMethods.shizukuAvailable(), CaptureMethods.rootAvailable(ctx), audioCapture),
+        )
+    }
+    val messages = remember(refresh) { messagesValue(NotificationManagerCompat.getEnabledListenerPackages(ctx).contains(ctx.packageName), settings.messageBanners) }
+    val advanced = remember(refresh) { advancedValue(settings.verboseProtocolLog, settings.headUnitServer) }
 
     val tiles = listOf(
         TileSpec(BehindTile.UPDATES, Icons.Rounded.SystemUpdate, TileTone.BLUE, stringResource(R.string.phone_tile_updates), update?.version ?: BuildConfig.VERSION_NAME, attention = update != null),

@@ -111,7 +111,11 @@ fun picturePartOf(part: CarPart?): PicturePart = when (part) {
 fun partAt(regions: List<Pair<CarPart, Rect>>, point: Offset): Pair<CarPart, Rect>? =
     regions.filter { (_, r) -> r.contains(point) && r.width > 0f && r.height > 0f }.minByOrNull { (_, r) -> r.width * r.height }
 
-/** Fills [ui] from the settings the same way the car does (CarRuntime.applyScreenSettings), without a car. */
+/**
+ * Fills [ui] from the settings the same way the car does, without a car. A copy of the look part
+ * of CarRuntime.applyScreenSettings (host/, the car's file): when a car-screen setting is added
+ * there, add it here too, or the picture will not show it.
+ */
 internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: Context) {
     ui.night = pictureNight(settings.carTheme)
     ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
@@ -140,7 +144,8 @@ internal fun sampleCarState(): CarUiState = CarUiState().apply {
     )
     activeNavAppId = maps.id
     activeMediaAppId = music.id
-    nowPlaying = NowPlaying(music.id, "Night Drive", "The Synthwaves", sampleArt(), playing = true,
+    // Paused, so the progress bar stays where it is (playing, the car moves it on from updatedAtMs).
+    nowPlaying = NowPlaying(music.id, "Night Drive", "The Synthwaves", sampleArt(), playing = false,
         positionMs = 95_000, durationMs = 240_000, updatedAtMs = 0)
     nextEvent = NextEvent("Coffee", startMs = System.currentTimeMillis() + 45 * 60_000, allDay = false, location = "")
 }
