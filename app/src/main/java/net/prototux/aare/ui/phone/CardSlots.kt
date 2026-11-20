@@ -22,6 +22,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -103,8 +105,11 @@ fun <T> CardSlots(
                     contentAlignment = Alignment.Center,
                 ) {
                     if (card == null) Icon(Icons.Rounded.Add, null, tint = PhoneColors.Dim)
-                    else DraggableCard(card, label(card), symbol(card), tone(card), Modifier.fillMaxSize()) { at ->
-                        onChange(dropCard(shown, card, dropAt(at)))
+                    // Keyed by the card, so its drag state follows the card, not the place it sits in.
+                    else key(card) {
+                        DraggableCard(card, label(card), symbol(card), tone(card), Modifier.fillMaxSize()) { at ->
+                            onChange(dropCard(shown, card, dropAt(at)))
+                        }
                     }
                 }
             }
@@ -118,8 +123,10 @@ fun <T> CardSlots(
             if (hidden.isEmpty()) Text(stringResource(R.string.phone_slots_tray_empty), color = PhoneColors.Dim, fontSize = 13.sp, modifier = Modifier.padding(8.dp))
             else Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 hidden.forEach { card ->
-                    DraggableCard(card, label(card), symbol(card), tone(card), Modifier.size(width = 84.dp, height = 56.dp)) { at ->
-                        onChange(dropCard(shown, card, dropAt(at)))
+                    key(card) {
+                        DraggableCard(card, label(card), symbol(card), tone(card), Modifier.size(width = 84.dp, height = 56.dp)) { at ->
+                            onChange(dropCard(shown, card, dropAt(at)))
+                        }
                     }
                 }
             }
@@ -134,6 +141,9 @@ private fun <T> DraggableCard(card: T, label: String, symbol: ImageVector, tone:
     var offset by remember(card) { mutableStateOf(Offset.Zero) }
     var origin by remember { mutableStateOf(Offset.Zero) }
     var touch by remember { mutableStateOf(Offset.Zero) }
+    // The drag gesture lives across recompositions: it must call the latest drop handler, which
+    // knows the current order, not the one from when the card first appeared.
+    val latestDrop by rememberUpdatedState(onDrop)
     val dragging = offset != Offset.Zero
     Column(
         modifier
@@ -145,7 +155,7 @@ private fun <T> DraggableCard(card: T, label: String, symbol: ImageVector, tone:
             .pointerInputDrag(
                 onStart = { touch = it },
                 onDrag = { offset += it },
-                onEnd = { onDrop(origin + touch + offset); offset = Offset.Zero },
+                onEnd = { latestDrop(origin + touch + offset); offset = Offset.Zero },
                 onCancel = { offset = Offset.Zero },
             )
             .padding(6.dp),

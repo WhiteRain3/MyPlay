@@ -50,7 +50,8 @@ fun ReleaseNotesText(blocks: List<NoteBlock>) {
 /** "What's new in <version>": the notes in a dark card over the app, closed with its button or Back. */
 @Composable
 fun WhatsNewDialog(version: String, notes: String, onClose: () -> Unit) {
-    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    // Back closes it; a stray tap outside does not (it would mark the notes as read unseen).
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, dismissOnClickOutside = false)) {
         Column(
             Modifier.padding(horizontal = 18.dp, vertical = 40.dp).fillMaxWidth().clip(RoundedCornerShape(28.dp))
                 .background(PhoneColors.Page).padding(20.dp),
