@@ -422,7 +422,7 @@ class CarSession(
                 vehicleOverride?.prefer60fps ?: settings.prefer60fps, videoType(videoCodec))
 
         override fun onVideoStart(index: Int, config: VideoConfiguration) {
-            CarInputEvents.chosen(index, config)
+            CarInputEvents.chosen(this@CarSession, index, config)
             main.post {
                 if (closed) return@post
                 try {

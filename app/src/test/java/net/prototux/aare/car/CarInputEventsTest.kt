@@ -75,8 +75,9 @@ class CarInputEventsTest {
         assertEquals("car offers screen #1: 800x480 30 fps H264_BP, margins 0x0, density not given", lines[1])
         assertEquals(CarInputLog.serviceLine(input, used = true), lines[2])
 
-        CarInputEvents.chosen(0, c0)
-        CarInputEvents.chosen(1, c1)
+        CarInputEvents.chosen(session, 0, c0)
+        CarInputEvents.chosen(session, 1, c1)
+        CarInputEvents.chosen(Any(), 0, c0) // I4-5: another session's start is not this report's
         assertEquals(4, CarInputEvents.report.value.size)
         assertEquals("chosen: screen #1, 800x480 30 fps H264_BP, margins 0x0, density not given", CarInputEvents.report.value.last())
 
