@@ -30,5 +30,6 @@ internal object MyPlayBackupKeys {
         "myplay_clock_size" to Type.STRING,
         "myplay_clock_bold" to Type.BOOLEAN,
         "myplay_clock_color" to Type.INT,
+        "myplay_home_maps" to Type.STRING,
     )
 }

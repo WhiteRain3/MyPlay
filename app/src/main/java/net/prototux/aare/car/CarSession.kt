@@ -1082,14 +1082,14 @@ class CarSession(
             else -> 140
         }
 
+        /** MyPlay (D3-1): the car screen densities a setting may choose. */
+        val SETTING_DPI_RANGE = 80..640
+
         /**
          * The car screen's density, in order: a per-vehicle override (`vehicles.json`'s
          * `dpi`, see docs/vehicles.md) always wins; then the phone's own setting if it isn't
          * "Auto" (0); then the head unit's own value; then [defaultDensity] by screen size.
          */
-        /** MyPlay (D3-1): the car screen densities a setting may choose. */
-        val SETTING_DPI_RANGE = 80..640
-
         fun resolveDensity(vehicleDpi: Int?, settingDpi: Int, headUnitDensity: Int, shortSide: Int): Int =
             // MyPlay (D3-1): a setting outside a usable range (say from a crafted backup file) is ignored.
             vehicleDpi ?: settingDpi.takeIf { it in SETTING_DPI_RANGE } ?: headUnitDensity.takeIf { it > 0 } ?: defaultDensity(shortSide)

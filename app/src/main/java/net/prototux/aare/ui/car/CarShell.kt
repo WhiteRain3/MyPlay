@@ -525,7 +525,7 @@ private fun Card(modifier: Modifier, onClick: (() -> Unit)? = null, content: @Co
 
 @Composable
 private fun NavCard(state: CarUiState, actions: CarActions, navMap: @Composable (CarAppEntry, Modifier) -> Unit, modifier: Modifier) {
-    val nav = state.app(state.activeNavAppId)
+    val nav = state.app(state.homeNavAppId) // MyPlay (K9): was the maps app used last, always
     val guidance = state.phoneGuidance
     Card(modifier) {
         if (guidance != null) {

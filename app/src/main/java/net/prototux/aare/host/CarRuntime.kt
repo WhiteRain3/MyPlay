@@ -18,12 +18,14 @@ import androidx.car.app.constraints.ConstraintManager
 import androidx.car.app.navigation.model.Trip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -31,6 +33,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.prototux.aare.DiagLog
 import net.prototux.aare.R
@@ -43,8 +46,10 @@ import net.prototux.aare.notify.CarNotificationListener
 import net.prototux.aare.notify.MessagingScreen
 import net.prototux.aare.launch.AppLauncher
 import net.prototux.aare.notify.PhoneGuidance
+import net.prototux.aare.ui.car.HomeMaps
 import net.prototux.aare.ui.car.LocalTurnIcon
 import net.prototux.aare.ui.car.isStatusStyleKey
+import net.prototux.aare.ui.car.myplayHomeMaps
 import net.prototux.aare.ui.car.myplayLayoutSpec
 import net.prototux.aare.ui.car.statusStyle
 import net.prototux.aare.ui.car.trackCarFocus
@@ -309,6 +314,7 @@ class CarRuntime(
         ui.layout = CarLayout.byId(settings.carLayoutId)
         ui.layoutSpec = settings.myplayLayoutSpec // MyPlay (M3)
         ui.statusStyle = settings.statusStyle // MyPlay (F4)
+        ui.homeMaps = settings.myplayHomeMaps // MyPlay (K9)
         ui.textScale = CarTextSize.byId(settings.carTextSize).fontScale
         ui.controlScale = CarControlSize.byId(settings.carControlSize).scale
         ui.darkBar = settings.darkBar
@@ -338,7 +344,7 @@ class CarRuntime(
         when (key) {
             // MyPlay (K11-1): the map apps' day/night switch too.
             "car_theme", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
-            "car_text_size", "car_control_size" -> main.post { applyScreenSettings() }
+            "car_text_size", "car_control_size", "myplay_home_maps" -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
             "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }
@@ -653,6 +659,8 @@ class CarRuntime(
                 CarAppKind.NAVIGATION -> {
                     ui.activeNavAppId = app.id
                     settings.lastNavApp = app.packageName
+                    // MyPlay (K9): opened on purpose, so the home screen may show it again.
+                    ui.navShowsNothing = ui.navShowsNothing - app.id
                     connection(app.id)?.connect()
                 }
                 else -> connection(app.id)?.connect()
@@ -775,12 +783,17 @@ class CarRuntime(
                             CarAppKind.BROWSER -> BrowserScreen(this, ui.drivingRestricted, settings.browserUrl, mod)
                             CarAppKind.CAR_DATA -> CarDataScreen(mod)
                             CarAppKind.PHONE -> PhoneScreen(this, mod)
-                            CarAppKind.SETTINGS -> CarSettingsScreen(settings, mod)
+                            CarAppKind.SETTINGS -> CarSettingsScreen(settings, mod, ui.apps.filter { it.kind == CarAppKind.NAVIGATION })
                             CarAppKind.NOTIFICATIONS -> NotificationsScreen(ui, mod)
                             else -> shownConnection(app.id)?.let { CarAppScreen(it, this, mod) }
                         }
                     },
-                    navMap = { app, mod -> shownConnection(app.id)?.let { CarAppScreen(it, this, mod, compact = true, onOpen = { actions.openApp(app) }) } },
+                    navMap = { app, mod ->
+                        shownConnection(app.id)?.let {
+                            WatchHomeMap(it, app) // MyPlay (K9)
+                            CarAppScreen(it, this, mod, compact = true, onOpen = { actions.openApp(app) })
+                        }
+                    },
                     overlay = { mod ->
                         val entry = ui.app(ui.assistantAppId)
                         val conn = entry?.let { shownConnection(it.id) }
@@ -793,6 +806,26 @@ class CarRuntime(
                     // MyPlay: so the content can take the focus back when nothing holds it (ui/car/MyPlayFocus.kt).
                     modifier = modifier.trackCarFocus(),
                 )
+            }
+        }
+    }
+
+    /**
+     * MyPlay (K9): a maps app on the home screen that shows nothing within [HomeMaps.WAIT_MS] (it
+     * failed to start, or never sent a screen) is left out there until it is opened on purpose, so
+     * the maps buttons come back instead of an empty card.
+     */
+    @Composable
+    private fun WatchHomeMap(conn: CarAppConnection, app: CarAppEntry) {
+        LaunchedEffect(conn) {
+            val shown = kotlinx.coroutines.withTimeoutOrNull(HomeMaps.WAIT_MS) {
+                snapshotFlow { conn.template != null }.first { it }
+            }
+            if (shown == null) {
+                val line = "home screen: ${app.label} showed nothing within ${HomeMaps.WAIT_MS / 1_000} s, offering the maps buttons instead"
+                Log.i(TAG, line)
+                DiagLog.add(line)
+                ui.navShowsNothing = ui.navShowsNothing + app.id
             }
         }
     }

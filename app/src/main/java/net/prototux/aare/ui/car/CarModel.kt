@@ -141,6 +141,12 @@ class CarUiState {
     var layout by mutableStateOf(CarLayout.TASKBAR)
     /** The rail runs along the bottom instead of a side. */
     var railBottom by mutableStateOf(false)
+    /** MyPlay (K9): which maps app the home screen's map shows (a setting: see HomeMaps). */
+    var homeMaps by mutableStateOf(HomeMaps.LAST)
+    /** MyPlay (K9): maps apps that showed nothing on the home screen, until they are opened again. */
+    var navShowsNothing by mutableStateOf<Set<String>>(emptySet())
+    /** MyPlay (K9): the maps app the home screen's map shows, or null for the maps buttons. */
+    val homeNavAppId: String? get() = HomeMaps.appId(homeMaps, activeNavAppId, apps, navShowsNothing)
     /** MyPlay (F4): how the status icons and the clock look (settings). */
     var statusStyle by mutableStateOf(StatusStyle())
     /** MyPlay (M1/M3): the options of the "map behind" layout (a setting). */

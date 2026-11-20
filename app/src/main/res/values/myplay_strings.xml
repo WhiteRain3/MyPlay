@@ -17,4 +17,7 @@
     <string name="myplay_toggle_maps_follow_car_subtitle" translatable="false">Map apps switch between day and night colours when the car does, even when the colours above are always dark or always light.</string>
     <string name="myplay_layout_map_behind" translatable="false">Map behind, cards on top</string>
     <string name="myplay_card_arrival" translatable="false">Arrive %1$s</string>
+    <string name="myplay_home_maps_title" translatable="false">Maps on the home screen</string>
+    <string name="myplay_home_maps_last" translatable="false">Last used</string>
+    <string name="myplay_home_maps_ask" translatable="false">Always ask</string>
 </resources>

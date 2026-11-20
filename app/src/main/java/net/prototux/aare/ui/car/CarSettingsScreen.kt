@@ -37,7 +37,8 @@ import net.prototux.aare.ui.theme.LocalCarDimens
  * stays in AARE on the phone.
  */
 @Composable
-internal fun CarSettingsScreen(settings: Settings, modifier: Modifier) {
+internal fun CarSettingsScreen(settings: Settings, modifier: Modifier, mapsApps: List<CarAppEntry> = emptyList()) {
+    var homeMaps by remember { mutableStateOf(settings.myplayHomeMaps) } // MyPlay (K9)
     var theme by remember { mutableStateOf(settings.carTheme) }
     var rail by remember { mutableStateOf(settings.railPosition) }
     var themeId by remember { mutableStateOf(settings.carThemeId) }
@@ -75,6 +76,14 @@ internal fun CarSettingsScreen(settings: Settings, modifier: Modifier) {
             )
         }
         item { SwitchRow(stringResource(R.string.setup_switch_dark_bar), darkBar) { darkBar = it; settings.darkBar = it } }
+        // MyPlay (K9): which maps app the home screen shows.
+        item {
+            Choice(stringResource(R.string.myplay_home_maps_title),
+                listOf(HomeMaps.LAST to stringResource(R.string.myplay_home_maps_last)) +
+                    mapsApps.map { HomeMaps.chosen(it.packageName) to it.label } +
+                    listOf(HomeMaps.ASK to stringResource(R.string.myplay_home_maps_ask)),
+                homeMaps) { homeMaps = it; settings.myplayHomeMaps = it }
+        }
         item {
             RailWidgetsEditor(railWidgets, LocalCarDimens.current.touchTarget) { railWidgets = it; settings.railWidgets = it.map(RailWidget::id) }
         }
