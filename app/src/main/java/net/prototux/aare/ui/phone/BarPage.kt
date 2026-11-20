@@ -34,6 +34,9 @@ import androidx.compose.ui.unit.dp
 import net.prototux.aare.R
 import net.prototux.aare.Settings
 import net.prototux.aare.ui.car.CarLayout
+import net.prototux.aare.ui.car.CarLayoutSpec
+import net.prototux.aare.ui.car.SpecPlacement
+import net.prototux.aare.ui.car.clockCardOnScreen
 import net.prototux.aare.ui.car.changeLayout
 import net.prototux.aare.ui.car.myplayLayoutSpec
 import net.prototux.aare.ui.car.RailWidget
@@ -89,6 +92,29 @@ fun barControlsFor(layout: CarLayout): BarControls = when (layout) {
     CarLayout.CLASSIC -> BarControls(taskbarSide = false, items = false, darkBar = false, weather = false, mapBehindBar = false)
 }
 
+/** Whether the "map behind" layout's "Clock and status" card is on the home screen, which decides what its bar leaves out. */
+sealed interface ClockCard {
+    data object NOT_CHOSEN : ClockCard
+    data object ON_SCREEN : ClockCard
+    /** Chosen, but only [fits] cards fit on this screen and it is not among them. */
+    data class CUT(val fits: Int) : ClockCard
+    /** One big card at a time: it depends on which card is shown. */
+    data object STAGE : ClockCard
+}
+
+/**
+ * The same answer the car works out (SpecShell's clockCardOnScreen, with SpecPlacement's slots for
+ * the car screen at [densityDpi]), for the Bar page's note. The car's visible area is taken as the
+ * whole 1200 x 723 screen, as the picture does.
+ */
+fun clockCardOnBarScreen(spec: CarLayoutSpec, densityDpi: Int): ClockCard {
+    if (CarLayoutSpec.SpecCard.CLOCK_STATUS !in spec.cards) return ClockCard.NOT_CHOSEN
+    if (spec.cardPlace == CarLayoutSpec.CardPlace.STAGE) return ClockCard.STAGE
+    val (w, h) = CarPictureSize.layoutSizeDp(densityDpi)
+    val slots = SpecPlacement.place(spec, w, h).slots.size
+    return if (clockCardOnScreen(spec, slots, null)) ClockCard.ON_SCREEN else ClockCard.CUT(slots)
+}
+
 /** The name of a layout as the Layout page shows it. */
 @Composable
 fun layoutName(layout: CarLayout): String = stringResource(when (layout) {
@@ -125,6 +151,7 @@ fun BarPage(openLayout: () -> Unit) {
     val layout = remember(version) { CarLayout.byId(settings.carLayoutId) }
     val spec = remember(version) { settings.myplayLayoutSpec }
     val controls = barControlsFor(layout)
+    val clockCard = remember(version) { clockCardOnBarScreen(spec, settings.carDensity) }
     var side by remember { mutableStateOf(settings.railPosition) }
     var darkBar by remember { mutableStateOf(settings.darkBar) }
     var weather by remember { mutableStateOf(settings.showWeather) }
@@ -132,12 +159,17 @@ fun BarPage(openLayout: () -> Unit) {
     fun changeItems(new: List<RailWidget>) { items = new; settings.railWidgets = new.map(RailWidget::id) }
     Column {
         PartPicture()
-        LayoutNote(layout, stringResource(when (layout) {
-            CarLayout.TASKBAR -> R.string.phone_bar_note_taskbar
-            CarLayout.MAP_BEHIND -> R.string.phone_bar_note_map_behind
-            CarLayout.DOCK -> R.string.phone_bar_note_dock
-            CarLayout.CLASSIC -> R.string.phone_bar_note_classic
-        }), openLayout)
+        LayoutNote(layout, when (layout) {
+            CarLayout.TASKBAR -> stringResource(R.string.phone_bar_note_taskbar)
+            CarLayout.MAP_BEHIND -> stringResource(R.string.phone_bar_note_map_behind) + " " + when (clockCard) {
+                ClockCard.NOT_CHOSEN -> stringResource(R.string.phone_bar_clock_card_off)
+                ClockCard.ON_SCREEN -> stringResource(R.string.phone_bar_clock_card_on)
+                is ClockCard.CUT -> stringResource(R.string.phone_bar_clock_card_cut, clockCard.fits)
+                ClockCard.STAGE -> stringResource(R.string.phone_bar_clock_card_stage)
+            }
+            CarLayout.DOCK -> stringResource(R.string.phone_bar_note_dock)
+            CarLayout.CLASSIC -> stringResource(R.string.phone_bar_note_classic)
+        }, openLayout)
         if (controls.mapBehindBar) {
             SectionHeading(stringResource(R.string.phone_layout_bar))
             MapBehindBar(spec) { f -> settings.changeLayout(f) }
