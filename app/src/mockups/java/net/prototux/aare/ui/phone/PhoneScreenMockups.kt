@@ -75,6 +75,15 @@ class PhoneScreenMockups {
         } } }
     }
 
+    @Test fun carCheck() = paparazzi.snapshot {
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) {
+            val inputs = kotlinx.coroutines.flow.flowOf<CheckInput>(
+                CheckInput.Key(3, 4, true, false, 0), CheckInput.Key(3, 4, true, false, 400), CheckInput.Key(3, 4, false, false, 1300),
+            )
+            CarCheckPage(inputs, listOf("screen 1280x720"), { emptyList() }, connected = false, now = { 2000L })
+        } } }
+    }
+
     @Test fun looks() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) {
             val registry = object : androidx.activity.result.ActivityResultRegistry() {

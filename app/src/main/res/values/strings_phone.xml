@@ -312,4 +312,32 @@
     <string name="phone_looks_open_failed" translatable="false">That file could not be read as a look.</string>
     <string name="phone_looks_hard_to_read" translatable="false">Some of this look\'s own colours are hard to read. You can change them on the Colours page after choosing it.</string>
     <string name="phone_looks_photo_missing" translatable="false">Its photo is not on this phone</string>
+    <string name="phone_tile_car_check" translatable="false">Car check</string>
+    <string name="phone_check_not_connected" translatable="false">No car is connected. Connect first: the check listens to what the car sends.</string>
+    <string name="phone_check_how" translatable="false">Parked, with the car connected: do what each step says. Whatever the car sends while a step is on screen is recorded for that step. The car screen also reacts, which is fine.</string>
+    <string name="phone_check_step_of" translatable="false">Step %1$d of %2$d</string>
+    <string name="phone_check_hold_hint" translatable="false">Hold it for about two seconds, then let go.</string>
+    <string name="phone_check_waiting" translatable="false">Waiting for the car…</string>
+    <string name="phone_check_next" translatable="false">Next</string>
+    <string name="phone_check_nothing" translatable="false">Nothing happened, next</string>
+    <string name="phone_check_again" translatable="false">Again</string>
+    <string name="phone_check_done" translatable="false">All steps done</string>
+    <string name="phone_check_steps" translatable="false">Steps</string>
+    <string name="phone_check_nothing_arrived" translatable="false">nothing arrived</string>
+    <string name="phone_check_share" translatable="false">Share the log</string>
+    <string name="phone_check_private" translatable="false">The shared log leaves out addresses, e-mails and phone numbers. Look at it before you send it.</string>
+    <string name="phone_check_knob_right" translatable="false">Turn the dash knob right, a few clicks</string>
+    <string name="phone_check_knob_left" translatable="false">Turn the dash knob left, a few clicks</string>
+    <string name="phone_check_knob_push" translatable="false">Push the dash knob once</string>
+    <string name="phone_check_knob_hold" translatable="false">Push the dash knob and hold it in</string>
+    <string name="phone_check_pad_up" translatable="false">Push the pad up</string>
+    <string name="phone_check_pad_down" translatable="false">Push the pad down</string>
+    <string name="phone_check_pad_left" translatable="false">Push the pad left</string>
+    <string name="phone_check_pad_right" translatable="false">Push the pad right</string>
+    <string name="phone_check_menu" translatable="false">Press Menu</string>
+    <string name="phone_check_back" translatable="false">Press Back</string>
+    <string name="phone_check_back_hold" translatable="false">Hold Back</string>
+    <string name="phone_check_wheel_scroll" translatable="false">Scroll the steering-wheel wheel, both ways</string>
+    <string name="phone_check_wheel_click" translatable="false">Click the steering-wheel wheel once</string>
+    <string name="phone_check_wheel_hold" translatable="false">Click the steering-wheel wheel and hold it</string>
 </resources>
