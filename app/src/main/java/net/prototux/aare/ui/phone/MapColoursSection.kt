@@ -37,6 +37,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -106,6 +109,7 @@ fun MapColoursSection(settings: Settings, night: Boolean) {
             FilterSlider(stringResource(R.string.phone_map_saturation, filter.saturation), filter.saturation, 0..200, { filter = filter.copy(saturation = it) }) { save(filter) }
             FilterSlider(stringResource(R.string.phone_map_brightness, filter.brightness), filter.brightness, -100..100, { filter = filter.copy(brightness = it) }) { save(filter) }
             FilterSlider(stringResource(R.string.phone_map_contrast, filter.contrast), filter.contrast, 0..200, { filter = filter.copy(contrast = it) }) { save(filter) }
+            val tintLabel = stringResource(R.string.phone_map_tint_colour)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.weight(1f)) {
                     FilterSlider(stringResource(R.string.phone_map_tint, filter.tintStrength), filter.tintStrength, 0..100, { filter = filter.copy(tintStrength = it) }) { save(filter) }
@@ -113,7 +117,9 @@ fun MapColoursSection(settings: Settings, night: Boolean) {
                 Spacer(Modifier.width(10.dp))
                 Box(
                     Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF000000.toInt() or filter.tint))
-                        .border(1.dp, PhoneColors.Border, RoundedCornerShape(10.dp)).clickable { pickingTint = true },
+                        .border(1.dp, PhoneColors.Border, RoundedCornerShape(10.dp))
+                        .clickable(onClickLabel = tintLabel, role = Role.Button) { pickingTint = true }
+                        .semantics { contentDescription = tintLabel },
                 )
             }
             FilterSlider(stringResource(R.string.phone_map_night_darker, filter.nightDarker), filter.nightDarker, 0..90, { filter = filter.copy(nightDarker = it) }) { save(filter) }
