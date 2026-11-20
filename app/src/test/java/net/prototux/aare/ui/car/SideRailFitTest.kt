@@ -32,4 +32,11 @@ class SideRailFitTest {
         assertEquals(SideRailFit(recentSlots = 1, status = true, settings = true), sideRailFit(810.dp, larger))
         assertEquals(SideRailFit(recentSlots = 0, status = false, settings = true), sideRailFit(640.dp, larger))
     }
+
+    /** F4-6: smaller sizes keep the normal thresholds. */
+    @Test
+    fun smallerSizesKeepTheNormalThresholds() {
+        val small = StatusStyle(size = StatusSize.SMALL, clockSize = StatusSize.SMALL)
+        for (h in listOf(300, 508, 600, 700, 767, 768)) assertEquals(sideRailFit(h.dp), sideRailFit(h.dp, small))
+    }
 }

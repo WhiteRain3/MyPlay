@@ -230,7 +230,8 @@ internal data class SideRailFit(val recentSlots: Int, val status: Boolean, val s
 internal fun sideRailFit(height: Dp, look: StatusStyle = StatusStyle()): SideRailFit {
     // MyPlay (F4-2): a larger clock or larger status icons take more of the height (the clock's
     // line is about 30 dp of its 72, the status and weather 54), so everything else goes sooner.
-    val extra = CLOCK_LINE * (look.clockSize.scale - 1f) + STATUS_LINES * (look.size.scale - 1f)
+    // Smaller sizes give nothing back (F4-6): the thresholds stay as measured at the normal size.
+    val extra = (CLOCK_LINE * (look.clockSize.scale - 1f) + STATUS_LINES * (look.size.scale - 1f)).coerceAtLeast(0.dp)
     val h = height - extra
     return SideRailFit(
         // A recent app only on tall screens: what an 800 dp screen leaves inside the padding.
@@ -348,7 +349,8 @@ internal fun Clock() {
     // instead of being cut off; measured on its widest time, "88:88".
     val measurer = rememberTextMeasurer()
     BoxWithConstraints(Modifier.carPart(CarPart.Clock)) { // MyPlay: a part for the phone's picture
-        val widest = if (segment) segmentStyle(look.clockSize.scale) else plain
+        // Measured with the very style it is drawn with (F4-7).
+        val widest = if (segment) base.merge(segmentStyle(look.clockSize.scale)) else plain
         val needed = measurer.measure("88:88", widest, maxLines = 1).size.width
         val room = constraints.maxWidth
         val fit = if (constraints.hasBoundedWidth && needed > room && needed > 0) room.toFloat() / needed else 1f
