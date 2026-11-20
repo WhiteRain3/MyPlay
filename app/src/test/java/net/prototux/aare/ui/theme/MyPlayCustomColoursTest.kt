@@ -47,4 +47,9 @@ class MyPlayCustomColoursTest {
         assertEquals(contrastRatio(0xFF000000.toInt(), 0xFF767676.toInt()), contrastRatio(0xFF767676.toInt(), 0xFF000000.toInt()), 1e-9)
         assertTrue(contrastRatio(0xFFFFFFFF.toInt(), 0xFF767676.toInt()) > 4.5)
     }
+
+    /** F3-2: a see-through colour from a file is made opaque. */
+    @Test fun coloursAreAlwaysOpaque() {
+        assertEquals(CustomColours(night = mapOf(ColourRole.TEXT to 0xFF123456.toInt())), CustomColours.decode("night.text=00123456"))
+    }
 }

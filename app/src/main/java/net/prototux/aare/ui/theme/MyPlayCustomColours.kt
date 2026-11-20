@@ -54,7 +54,8 @@ data class CustomColours(val night: Map<ColourRole, Int> = emptyMap(), val day: 
                 val (key, value) = part.split('=', limit = 2).takeIf { it.size == 2 } ?: continue
                 val (side, roleId) = key.trim().split('.', limit = 2).takeIf { it.size == 2 } ?: continue
                 val role = ColourRole.byId(roleId) ?: continue
-                val colour = value.trim().takeIf { it.length == 8 }?.toLongOrNull(16)?.toInt() ?: continue
+                // F3-2: always opaque, so a file or backup cannot make text or the background see-through.
+                val colour = value.trim().takeIf { it.length == 8 }?.toLongOrNull(16)?.toInt()?.or(OPAQUE) ?: continue
                 when (side) {
                     "night" -> night[role] = colour
                     "day" -> day[role] = colour
@@ -64,6 +65,8 @@ data class CustomColours(val night: Map<ColourRole, Int> = emptyMap(), val day: 
         }
 
         private fun hex(c: Int) = "%08X".format(c)
+
+        private const val OPAQUE = 0xFF000000.toInt()
     }
 }
 
