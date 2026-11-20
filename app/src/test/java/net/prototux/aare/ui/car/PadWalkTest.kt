@@ -71,24 +71,31 @@ class PadWalkTest {
         val holdable = focusables().filter { focus(it.id) }
         assertTrue("$layout $screen: nothing can hold the ring", holdable.isNotEmpty())
         // Rows of a long list are made anew as they scroll back into view, with new ids: the knob's
-        // walk compares items by what they say.
-        val want = holdable.map { label(it) }.toSet()
+        // walk compares items by what they say. R4-4: items that say the same (two "Settings", two
+        // rows of one song) are counted, so one of them out of reach is not hidden by its twin:
+        // each label must be reached on as many different items as there are. (A row that
+        // scrolled away and back counts again under its new id, so a long list of twins is
+        // checked less strictly than a screen that does not scroll.)
+        val want = holdable.groupingBy { label(it) }.eachCount()
         for (back in listOf(false, true)) {
             focus(startId(holdable))
-            val seen = HashSet<String>()
-            fun look() { rule.onAllNodes(isFocused()).fetchSemanticsNodes().firstOrNull()?.let { seen += label(it) } }
+            val seen = HashMap<String, MutableSet<Int>>()
+            fun look() {
+                rule.onAllNodes(isFocused()).fetchSemanticsNodes().firstOrNull()?.let { seen.getOrPut(label(it)) { HashSet() } += it.id }
+            }
+            fun missing() = want.filter { (l, n) -> (seen[l]?.size ?: 0) < n }
             look()
             // Turned back from the first item, a long list wraps to its end first: keep turning
             // until every item was seen, or a full lap of even the longest screen.
             var clicks = 0
-            while (!seen.containsAll(want) && clicks++ < MAX_KNOB_CLICKS) {
+            while (missing().isNotEmpty() && clicks++ < MAX_KNOB_CLICKS) {
                 rule.onNode(isFocused()).performKeyInput {
                     if (back) withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } else pressKey(Key.Tab)
                 }
                 settle()
                 look()
             }
-            val missed = want - seen
+            val missed = missing().map { (l, n) -> if (n > 1) "$l (${seen[l]?.size ?: 0} of $n)" else l }
             assertTrue("$layout $screen: the knob turned ${if (back) "back" else "on"} never reaches: $missed", missed.isEmpty())
         }
     }
