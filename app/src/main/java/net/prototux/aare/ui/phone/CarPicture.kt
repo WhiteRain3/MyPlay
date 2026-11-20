@@ -128,7 +128,7 @@ internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: C
 }
 
 /** Made-up apps, music and an appointment, so every card has something to show. Nothing here is real. */
-private fun sampleCarState(): CarUiState = CarUiState().apply {
+internal fun sampleCarState(): CarUiState = CarUiState().apply {
     val maps = sampleApp("maps", "Maps", CarAppKind.NAVIGATION, 0xFF34A853.toInt())
     val music = sampleApp("music", "Music", CarAppKind.MEDIA, 0xFFE8453C.toInt())
     apps += listOf(

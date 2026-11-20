@@ -136,6 +136,16 @@ class PhoneScreenMockups {
         }
     }
 
+    @Test fun layout() = paparazzi.snapshot {
+        MyPlayPhoneTheme {
+            Surface(Modifier.fillMaxSize()) {
+                androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) {
+                    MapBehindOptions(net.prototux.aare.ui.car.CarLayoutSpec.PRESETS.getValue("C"), "C", {}, {})
+                }
+            }
+        }
+    }
+
     @Test fun parts() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { PhonePartsSample {} } }
     }

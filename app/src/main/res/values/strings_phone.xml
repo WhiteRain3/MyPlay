@@ -21,6 +21,47 @@
     <string name="phone_part_colours" translatable="false">Colours</string>
     <string name="phone_colours_phone_accent" translatable="false">Use the phone\'s colours</string>
     <string name="phone_colours_day_night" translatable="false">Day and night</string>
+    <string name="phone_part_layout" translatable="false">Layout</string>
+    <string name="phone_layout_kind" translatable="false">Kind of layout</string>
+    <string name="phone_layout_kind_hint" translatable="false">How the home screen is laid out</string>
+    <string name="phone_layout_presets" translatable="false">Ready-made layouts</string>
+    <string name="phone_layout_preset_name" translatable="false">Layout %1$s</string>
+    <string name="phone_layout_preset_hint" translatable="false">Tap one to use it. Each option below can then be changed on its own.</string>
+    <string name="phone_layout_own" translatable="false">Your own mix: options were changed after choosing a ready-made layout.</string>
+    <string name="phone_layout_map" translatable="false">Map</string>
+    <string name="phone_layout_map_background" translatable="false">Map behind everything</string>
+    <string name="phone_layout_map_background_sub" translatable="false">The maps app fills the screen. Off: a plain dark background</string>
+    <string name="phone_layout_map_under" translatable="false">Map under the bar too</string>
+    <string name="phone_layout_map_under_sub" translatable="false">Off: the map stops at the bar\'s edge</string>
+    <string name="phone_layout_map_under_needs" translatable="false">Needs "Map behind everything"</string>
+    <string name="phone_layout_bar" translatable="false">Bar</string>
+    <string name="phone_layout_bar_style" translatable="false">Look</string>
+    <string name="phone_layout_style_solid" translatable="false">Solid rail</string>
+    <string name="phone_layout_style_see_through" translatable="false">See-through rail</string>
+    <string name="phone_layout_style_pills" translatable="false">Floating pills</string>
+    <string name="phone_layout_style_dock" translatable="false">Bottom dock</string>
+    <string name="phone_layout_style_ribbon" translatable="false">Top ribbon</string>
+    <string name="phone_layout_bar_side" translatable="false">Side</string>
+    <string name="phone_layout_side_top" translatable="false">Top</string>
+    <string name="phone_layout_side_fixed" translatable="false">A bottom dock is always at the bottom and a top ribbon at the top.</string>
+    <string name="phone_layout_cards" translatable="false">Cards</string>
+    <string name="phone_layout_card_place" translatable="false">Where the cards sit</string>
+    <string name="phone_layout_place_column" translatable="false">Column by the bar</string>
+    <string name="phone_layout_place_corners" translatable="false">Corners</string>
+    <string name="phone_layout_place_stage" translatable="false">One big card</string>
+    <string name="phone_layout_place_banner" translatable="false">Top banner and a corner</string>
+    <string name="phone_layout_see_through" translatable="false">See-through: %1$d %%</string>
+    <string name="phone_layout_card_turn" translatable="false">Next turn</string>
+    <string name="phone_layout_card_arrival" translatable="false">Arrival time</string>
+    <string name="phone_layout_card_music" translatable="false">Music</string>
+    <string name="phone_layout_card_clock" translatable="false">Clock and status</string>
+    <string name="phone_layout_one_extra" translatable="false">One extra card at a time</string>
+    <string name="phone_layout_one_extra_sub" translatable="false">Besides the next turn, only one other card shows</string>
+    <string name="phone_layout_hide" translatable="false">Hide after a while</string>
+    <string name="phone_layout_hide_music" translatable="false">Music card</string>
+    <string name="phone_layout_hide_arrival" translatable="false">Arrival time card</string>
+    <string name="phone_layout_hide_never" translatable="false">Never</string>
+    <string name="phone_layout_hide_seconds" translatable="false">%1$d s</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->
