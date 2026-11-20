@@ -36,5 +36,6 @@ internal object MyPlayBackupKeys {
         "myplay_buttons" to Type.STRING,
         "myplay_look_colours" to Type.STRING,
         "myplay_button_codes" to Type.STRING,
+        "myplay_looks" to Type.STRING, // the owner's saved looks (phone, F7)
     )
 }
