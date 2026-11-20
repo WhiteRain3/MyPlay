@@ -2,6 +2,8 @@
 #
 # It runs on every push to the MyPlay branch and does nothing unless the version in
 # myplay-version.txt is new. The version 0.0.0 means "not released yet" and never publishes.
+# The release page also says what is new: docs/releases/<version>.md if it exists (plain English,
+# for the owner), otherwise the message of the commit that set the version.
 # A release is tagged myplay-v<version> and holds:
 #   - MyPlay-<version>.apk             the Android app, signed with the owner's key
 #   - myplay-headunit-<version>.zip    the desktop test head unit
@@ -206,5 +208,17 @@ jobs:
           | \`MyPlay-hostshims-$VERSION.apk\` | optional, only for rooted phones with an LSPosed-type framework: lets Waze accept MyPlay. Install it, switch on "MyPlay host shims" for Waze only, force-stop Waze. Not yet tried on a device |
           | \`SHA256SUMS\` | checksums |
           NOTES
+          # What's new, in plain words for the owner: docs/releases/<version>.md if it was written,
+          # otherwise the version commit's message without its attribution lines.
+          {
+            echo
+            echo "## What's new"
+            echo
+            if [ -f "$GITHUB_WORKSPACE/docs/releases/$VERSION.md" ]; then
+              cat "$GITHUB_WORKSPACE/docs/releases/$VERSION.md"
+            else
+              git -C "$GITHUB_WORKSPACE" log -1 --format=%B "$GITHUB_SHA" | grep -v -E '^(Co-Authored-By|Claude-Session):' || true
+            fi
+          } >> ../notes.md
           gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --title "MyPlay $VERSION" --notes-file ../notes.md --latest -- *
