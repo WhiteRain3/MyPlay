@@ -510,8 +510,9 @@ class CarRuntime(
         var lastWeather = 0L
         while (true) {
             val now = System.currentTimeMillis()
-            // For the bar's clock or the dashboard's weather card.
-            if (!settings.showWeather && DashCard.WEATHER !in ui.dashboardCards) ui.weather = null
+            // MyPlay (R1): only when something shown in the layout in use shows the weather.
+            val carHasTemperature = net.prototux.aare.car.CarData.state.value.environment?.value?.temperatureC != null
+            if (!MyPlayWeather.wanted(ui.layout, settings.showWeather, ui.railWidgets, ui.dashboardCards, ui.layoutSpec, carHasTemperature)) ui.weather = null
             else if (now - lastWeather > 30 * 60_000) {
                 val where = carLocation ?: DashboardInfo.phoneLocation(context)
                 if (where != null) {
