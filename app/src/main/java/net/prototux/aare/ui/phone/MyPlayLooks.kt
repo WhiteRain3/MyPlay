@@ -17,7 +17,7 @@ data class Look(val name: String, val values: Map<String, Any>)
 
 object MyPlayLooks {
     /**
-     * The settings that make up a look. Not day/night (car_theme), sizes, density or apps: those
+     * The settings that make up a look (the map colour filter, myplay_map_filter, among them). Not day/night (car_theme), sizes, density or apps: those
      * follow the car and the driver, not the look. Older keys that the newer ones fall back to
      * (rail_right, car_style) are here so that choosing a look clears them as well.
      */
@@ -29,6 +29,7 @@ object MyPlayLooks {
         "myplay_status_battery_icon", "myplay_status_battery_number", "myplay_status_percent_sign", "myplay_status_size",
         "myplay_status_color", "myplay_status_color_by_level", "myplay_status_signal",
         "myplay_clock_size", "myplay_clock_bold", "myplay_clock_color",
+        "myplay_map_filter",
     )
 
     /** In a look file, next to the settings backup's own fields. */

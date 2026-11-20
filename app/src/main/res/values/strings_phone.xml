@@ -342,5 +342,24 @@
     <string name="phone_check_wheel_hold" translatable="false">Click the steering-wheel wheel and hold it</string>
     <string name="phone_check_start" translatable="false">Start</string>
     <string name="phone_map_areas_title" translatable="false">Show the map\'s free area</string>
-    <string name="phone_map_areas_hint" translatable="false">Outlines on the car screen the part of the map MyPlay tells the maps app is free (green: now, dashed yellow: always). For checking why a map is not centred.</string>
+    <string name="phone_map_areas_hint" translatable="false">Outlines on the car screen the part of the map MyPlay tells the maps app is free (green: now, dashed yellow: always). For checking why a map is not centred; turn it off when done.</string>
+    <string name="phone_map_colours" translatable="false">Map colours</string>
+    <string name="phone_map_colours_for" translatable="false">A colour filter over the maps app on the car screen.</string>
+    <string name="phone_map_before" translatable="false">As the app draws it</string>
+    <string name="phone_map_after" translatable="false">On the car screen</string>
+    <string name="phone_map_preset_none" translatable="false">None</string>
+    <string name="phone_map_preset_muted" translatable="false">Muted</string>
+    <string name="phone_map_preset_cool" translatable="false">Cool</string>
+    <string name="phone_map_preset_warm" translatable="false">Warm</string>
+    <string name="phone_map_preset_dark_night" translatable="false">Darker nights</string>
+    <string name="phone_map_preset_grey" translatable="false">Grey</string>
+    <string name="phone_map_hue" translatable="false">Hue shift: %1$d°</string>
+    <string name="phone_map_saturation" translatable="false">Colourfulness: %1$d %%</string>
+    <string name="phone_map_brightness" translatable="false">Brightness: %1$d</string>
+    <string name="phone_map_contrast" translatable="false">Contrast: %1$d %%</string>
+    <string name="phone_map_tint" translatable="false">Tint: %1$d %%</string>
+    <string name="phone_map_tint_colour" translatable="false">Tint colour</string>
+    <string name="phone_map_night_darker" translatable="false">Darker at night: %1$d %% (when the maps app is in night colours)</string>
+    <string name="phone_map_what" translatable="false">It recolours everything the maps app draws on its map, its own buttons and speed sign too. It works on colours only, so it cannot tell water from roads, and it costs a little more work per frame.</string>
+    <string name="phone_map_with_look" translatable="false">The filter is part of the look: saving a look keeps it, and choosing a look brings its own (or none).</string>
 </resources>

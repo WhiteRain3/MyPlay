@@ -7,6 +7,7 @@ import net.prototux.aare.ui.car.CarLayoutSpec
 import net.prototux.aare.ui.car.WALLPAPER_NAMES
 import net.prototux.aare.ui.theme.CarAccents
 import net.prototux.aare.ui.theme.CarThemes
+import net.prototux.aare.ui.theme.myplayMapFilter
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -54,6 +55,19 @@ class MyPlayLooksTest {
         assertEquals("x", s.prefs.getString("browser_url", null)) // not part of a look
         assertTrue(MyPlayLooks.isCurrent(s.prefs.all, ocean))
         assertFalse(MyPlayLooks.isCurrent(s.prefs.all, MyPlayLooks.BUILT_IN.first()))
+    }
+
+    @Test
+    fun aLooksMapFilterIsSavedAndChosenWithIt() {
+        val s = settings
+        s.prefs.edit().clear().commit()
+        s.myplayMapFilter = net.prototux.aare.ui.theme.MapColourFilter.PRESETS.getValue("grey")
+        val mine = MyPlayLooks.current(s.prefs.all, "Grey maps")
+        assertTrue("myplay_map_filter" in mine.values)
+        MyPlayLooks.choose(s, MyPlayLooks.BUILT_IN.first())
+        assertTrue(s.myplayMapFilter.isIdentity(night = true))
+        MyPlayLooks.choose(s, mine)
+        assertEquals(net.prototux.aare.ui.theme.MapColourFilter.PRESETS.getValue("grey"), s.myplayMapFilter)
     }
 
     @Test

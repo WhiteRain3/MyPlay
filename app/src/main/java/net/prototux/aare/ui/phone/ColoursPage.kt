@@ -140,6 +140,7 @@ fun ColoursPage() {
                 saveOwn(own.with(editNight, role, c)); picking = null
             }
         }
+        MapColoursSection(settings, editNight)
         SectionHeading(stringResource(R.string.phone_colours_day_night))
         ChoiceButtons(
             listOf(

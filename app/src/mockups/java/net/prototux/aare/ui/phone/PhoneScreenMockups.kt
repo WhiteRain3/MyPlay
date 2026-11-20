@@ -94,6 +94,12 @@ class PhoneScreenMockups {
         } } }
     }
 
+    @Test fun mapColours() = paparazzi.snapshot {
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Column(Modifier.padding(20.dp)) {
+            MapColoursSection(net.prototux.aare.Settings(androidx.compose.ui.platform.LocalContext.current), night = true)
+        } } }
+    }
+
     @Test fun colours() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { ColoursPage() } } }
     }
