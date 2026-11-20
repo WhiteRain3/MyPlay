@@ -24,6 +24,22 @@ internal object SpecPlacement {
     const val MIN_CARD_W = 240f
     const val BANNER_H = 112f
 
+    /**
+     * M6: the screen's shape decides how big the cards are and how many there are. [SMALL] is the
+     * Audi's (about 900 x 543 dp) and narrow or portrait screens: few, narrow cards. [VERY_WIDE]
+     * (2.4 : 1 and wider) puts cards side by side so the map keeps the middle.
+     */
+    enum class Shape(val cardW: Float, val cardH: Float, val maxCards: Int) {
+        SMALL(260f, 140f, 3), NORMAL(CARD_W, CARD_H, 4), WIDE(400f, CARD_H, 4), VERY_WIDE(400f, CARD_H, 4),
+    }
+
+    fun shapeOf(width: Float, height: Float): Shape = when {
+        height < 600f || width < 1000f -> Shape.SMALL
+        width / height >= 2.4f -> Shape.VERY_WIDE
+        width / height >= 1.9f -> Shape.WIDE
+        else -> Shape.NORMAL
+    }
+
     data class Placement(
         val bar: Box,
         /** The screen minus the bar's strip: where an opened app and the cards go. */
@@ -52,7 +68,8 @@ internal object SpecPlacement {
             BarSide.TOP -> Box(0f, strip, width, height)
         }
         val map = if (s.mapUnderBar) screen else content
-        return Placement(bar, content, map, slots(s, content).take(s.cards.size))
+        val shape = shapeOf(width, height)
+        return Placement(bar, content, map, slots(s, content, shape).take(minOf(s.cards.size, shape.maxCards)))
     }
 
     /**
@@ -62,16 +79,26 @@ internal object SpecPlacement {
     fun readingOrder(boxes: List<Box>): List<Int> =
         boxes.indices.sortedWith(compareBy<Int>({ boxes[it].top }, { boxes[it].left }))
 
-    private fun slots(s: CarLayoutSpec, c: Box): List<Box> {
+    private fun slots(s: CarLayoutSpec, c: Box, shape: Shape): List<Box> {
         val inner = Box(c.left + GAP, c.top + GAP, c.right - GAP, c.bottom - GAP)
         if (inner.width <= 0f || inner.height <= 0f) return emptyList()
         val n = s.cards.size.coerceAtLeast(1)
         val side = s.barSide == BarSide.LEFT || s.barSide == BarSide.RIGHT
         // The "start" side is the bar's side for a side bar, the left otherwise.
         val startIsRight = s.barSide == BarSide.RIGHT
-        val w = minOf(CARD_W, inner.width * 0.4f)
+        val w = minOf(shape.cardW, inner.width * 0.4f)
         return when (s.cardPlace) {
-            CardPlace.COLUMN_BY_BAR -> if (side) {
+            // Very wide: two columns side by side next to the bar, two cards each.
+            CardPlace.COLUMN_BY_BAR -> if (side && shape == Shape.VERY_WIDE && n > 2) {
+                val rows = (n + 1) / 2
+                val h = (inner.height - (rows - 1) * GAP) / rows
+                val x0 = if (startIsRight) inner.right - 2 * w - GAP else inner.left
+                List(n) { i ->
+                    val x = x0 + (i % 2) * (w + GAP)
+                    val y = inner.top + (i / 2) * (h + GAP)
+                    Box(x, y, x + w, y + h)
+                }
+            } else if (side) {
                 val h = (inner.height - (n - 1) * GAP) / n
                 val x = if (startIsRight) inner.right - w else inner.left
                 List(n) { i -> Box(x, inner.top + i * (h + GAP), x + w, inner.top + i * (h + GAP) + h) }
@@ -81,11 +108,21 @@ internal object SpecPlacement {
                 val y = if (s.barSide == BarSide.BOTTOM) inner.bottom - h else inner.top
                 List(n) { i -> Box(inner.left + i * (cw + GAP), y, inner.left + i * (cw + GAP) + cw, y + h) }
             }
-            CardPlace.CORNERS -> {
-                val h = minOf(CARD_H, (inner.height - GAP) / 2)
+            // Very wide: the four cards as a block of two by two at the far end, the map keeps the middle.
+            CardPlace.CORNERS -> if (shape == Shape.VERY_WIDE) {
+                val h = minOf(shape.cardH, (inner.height - GAP) / 2)
+                val x0 = if (startIsRight) inner.left else inner.right - 2 * w - GAP
+                listOf(
+                    Box(x0, inner.top, x0 + w, inner.top + h),
+                    Box(x0, inner.bottom - h, x0 + w, inner.bottom),
+                    Box(x0 + w + GAP, inner.top, x0 + 2 * w + GAP, inner.top + h),
+                    Box(x0 + w + GAP, inner.bottom - h, x0 + 2 * w + GAP, inner.bottom),
+                )
+            } else {
+                val h = minOf(shape.cardH, (inner.height - GAP) / 2)
                 // Too narrow for a card in each corner: only the two on the bar's side, wider.
                 val both = w >= MIN_CARD_W
-                val cw = if (both) w else minOf(CARD_W, inner.width * 0.6f)
+                val cw = if (both) w else minOf(shape.cardW, inner.width * 0.6f)
                 val startL = if (startIsRight) inner.right - cw else inner.left
                 val endL = if (startIsRight) inner.left else inner.right - cw
                 listOf(
