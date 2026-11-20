@@ -314,17 +314,15 @@ right session cannot do a task, it tells the owner instead of quietly doing the 
 
 - **Planner**: turns an idea into a short ordered task list with what each task touches and how
   it is verified. Reads the code first. Writes no app code.
-- **Car screen worker**: what is drawn on the car and how the knob moves through it
-  (`app/.../ui/car/`, `ui/theme/`, `host/`, `media/`, `mirror/`, `launch/`).
-- **Phone app worker**: the phone's screens and settings (`ui/MainActivity.kt` and the new
-  design's files, `Settings.kt`, the updater).
-- **Connection worker**: protocol, wireless, the desktop head unit, build and release files
-  (`aap/`, `app/.../transport/`, `service/`, `car/`, `headunit/`, `.github/`, `tools/`). Only
-  needed when a task is there.
-- **Phone worker** (from 2026-11-20): the phone app's new design, plan Phase E. Writes only new
-  files under `app/.../ui/phone/`, `res/values/strings_phone.xml`, its own settings file of
+- **Worker** (the car Worker): everything except the phone app's new design: the car screen and
+  the knob (`app/.../ui/car/`, `ui/theme/`, `host/`, `media/`, `mirror/`, `launch/`), protocol
+  and wireless (`aap/`, `transport/`, `service/`, `car/`), the desktop head unit, the Xposed
+  module, build and release files (`.github/`, `tools/`). It also cuts releases after a clean
+  review.
+- **Phone app worker** (from 2026-11-20): the phone app's new design, plan Phase E. Writes only
+  new files under `app/.../ui/phone/`, `res/values/strings_phone.xml`, its own settings file of
   extension properties, and the start-screen routing in `ui/MainActivity.kt`. The car Worker
-  stays out of those; neither edits `Settings.kt` while both run.
+  stays out of those; neither edits `Settings.kt` while both run (see plan Phase E).
 - **Reviewer**: reads a diff for bugs and rule violations, builds and tests, ends with CLEAN or
   HOLD. Changes nothing.
 - **Release**: changes the version, pushes, confirms the release and the signing fingerprint.
@@ -333,6 +331,18 @@ right session cannot do a task, it tells the owner instead of quietly doing the 
 - **Tester**: local on the owner's PC. Runs the desktop head unit and the phone
   (`docs/TESTER_SETUP.md`), reports with pictures to branch `claude/test-reports`. Cannot be
   messaged; read its branch or ask the owner.
+
+### The sessions (2026-11-20)
+
+| Role | Session id |
+|---|---|
+| Dispatcher | `session_0164xm2WGLbejRCB65ouk7d4` |
+| Planner | `session_0164xm2W6VGBytyna9avuntr` |
+| Worker (car side, releases) | `session_0164xm2XUnESquAPm7HnvQ9f` |
+| Phone app worker | `session_0164xm2XQbyH5qTqcV9aVTr9` |
+| Tester | local on the owner's PC; cannot be messaged |
+
+The Reviewer and the Design reviewer are run by the dispatcher; ask it for their ids.
 
 One worker can hold two areas while the work is small. `ui/MainActivity.kt` (1,500 lines) and
 `Settings.kt` are shared by many tasks: one writer at a time.
