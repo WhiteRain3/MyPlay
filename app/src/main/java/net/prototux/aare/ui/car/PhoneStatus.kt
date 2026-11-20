@@ -92,14 +92,9 @@ internal fun rememberPhoneStatus(): PhoneStatusInfo? {
 @Composable
 fun PhoneStatusIcons() {
     val s = rememberPhoneStatus() ?: return
-    val fg = MaterialTheme.colorScheme.onSurface
-    val dim = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
     Row(Modifier.carPart(CarPart.Status), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (s.wifi) Icon(Icons.Rounded.Wifi, stringResource(R.string.phone_status_wifi), tint = fg, modifier = Modifier.size(16.dp))
-        SignalBars(s.signal, fg, dim)
-        BatteryGauge(s.battery, s.charging, fg, dim)
-        if (s.charging) Icon(Icons.Rounded.Bolt, stringResource(R.string.phone_status_charging), tint = fg, modifier = Modifier.size(14.dp))
-        else Text("${s.battery}", style = MaterialTheme.typography.labelSmall, color = fg, maxLines = 1)
+        NetworkIcons(s)
+        BatteryIcons(s)
     }
 }
 
@@ -107,17 +102,53 @@ fun PhoneStatusIcons() {
 @Composable
 internal fun NetworkStatusIcons(status: PhoneStatusInfo?) {
     val s = status ?: return
-    val fg = MaterialTheme.colorScheme.onSurface
-    val dim = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+    if (!LocalStatusStyle.current.signal) return
     Row(Modifier.carPart(CarPart.Status), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-        if (s.wifi) Icon(Icons.Rounded.Wifi, stringResource(R.string.phone_status_wifi), tint = fg, modifier = Modifier.size(16.dp))
-        SignalBars(s.signal, fg, dim)
+        NetworkIcons(s)
     }
 }
 
+/** MyPlay (F4): the status icons' colour: the style's, else the theme's. */
 @Composable
-internal fun SignalBars(level: Int?, fg: Color, dim: Color) {
-    Canvas(Modifier.size(16.dp)) {
+private fun statusColor(): Color = LocalStatusStyle.current.color?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurface
+
+/** Wi-Fi and signal, if the style shows them (F4). */
+@Composable
+private fun NetworkIcons(s: PhoneStatusInfo) {
+    val look = LocalStatusStyle.current
+    if (!look.signal) return
+    val fg = statusColor()
+    val dim = fg.copy(alpha = 0.25f)
+    if (s.wifi) Icon(Icons.Rounded.Wifi, stringResource(R.string.phone_status_wifi), tint = fg, modifier = Modifier.size(16.dp * look.size.scale))
+    SignalBars(s.signal, fg, dim, look.size.scale)
+}
+
+/** The battery as the style says (F4): gauge, number with or without %, charging bolt, colours. */
+@Composable
+internal fun BatteryIcons(s: PhoneStatusInfo) {
+    val look = LocalStatusStyle.current
+    val fg = statusColor()
+    val dim = fg.copy(alpha = 0.25f)
+    val fill = when (look.batteryLevel(s.battery, s.charging)) {
+        StatusStyle.BatteryLevel.LOW -> MaterialTheme.colorScheme.error
+        StatusStyle.BatteryLevel.MEDIUM -> BATTERY_AMBER
+        StatusStyle.BatteryLevel.HIGH -> BATTERY_GREEN
+        StatusStyle.BatteryLevel.NORMAL -> fg
+    }
+    if (look.batteryIcon) BatteryGauge(s.battery, s.charging, fill, dim, look.size.scale)
+    if (s.charging) Icon(Icons.Rounded.Bolt, stringResource(R.string.phone_status_charging), tint = fg, modifier = Modifier.size(14.dp * look.size.scale))
+    else look.batteryText(s.battery)?.let { text ->
+        val base = MaterialTheme.typography.labelSmall
+        Text(text, style = base.copy(fontSize = base.fontSize * look.size.scale), color = fg, maxLines = 1)
+    }
+}
+
+private val BATTERY_AMBER = Color(0xFFFFB300)
+private val BATTERY_GREEN = Color(0xFF43A047)
+
+@Composable
+internal fun SignalBars(level: Int?, fg: Color, dim: Color, scale: Float = 1f) {
+    Canvas(Modifier.size(16.dp * scale)) {
         val bar = size.width / 5.5f
         for (i in 0 until 4) {
             val h = size.height * (i + 1) / 4
@@ -132,10 +163,9 @@ internal fun SignalBars(level: Int?, fg: Color, dim: Color) {
 }
 
 @Composable
-internal fun BatteryGauge(percent: Int, charging: Boolean, fg: Color, dim: Color) {
-    val low = !charging && percent <= 15
-    val fill = if (low) MaterialTheme.colorScheme.error else fg
-    Canvas(Modifier.size(width = 22.dp, height = 12.dp)) {
+/** [fill] is the level's colour (MyPlay F4: chosen by BatteryIcons from the status style). */
+internal fun BatteryGauge(percent: Int, charging: Boolean, fill: Color, dim: Color, scale: Float = 1f) {
+    Canvas(Modifier.size(width = 22.dp * scale, height = 12.dp * scale)) {
         val tip = size.width * 0.08f
         val body = Size(size.width - tip, size.height)
         val stroke = 1.5.dp.toPx()

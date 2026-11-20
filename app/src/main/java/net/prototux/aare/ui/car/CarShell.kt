@@ -52,6 +52,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -74,6 +75,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
@@ -104,6 +106,21 @@ fun CarShell(
     overlay: @Composable (Modifier) -> Unit = {},
     /** Insets the UI into the head unit's visible area (the codec frame minus its margins). */
     modifier: Modifier = Modifier,
+) {
+    // MyPlay (F4): the status icons' and clock's look, for every layout.
+    CompositionLocalProvider(LocalStatusStyle provides state.statusStyle) {
+        CarShellLayout(state, actions, appContent, navMap, overlay, modifier)
+    }
+}
+
+@Composable
+private fun CarShellLayout(
+    state: CarUiState,
+    actions: CarActions,
+    appContent: @Composable (CarAppEntry, Modifier) -> Unit,
+    navMap: @Composable (CarAppEntry, Modifier) -> Unit,
+    overlay: @Composable (Modifier) -> Unit,
+    modifier: Modifier,
 ) {
     when (state.layout) {
         CarLayout.DOCK -> { DockShell(state, actions, appContent, navMap, overlay, modifier); return }
@@ -310,9 +327,16 @@ internal fun Clock() {
     val text = android.text.format.DateFormat.format(
         if (android.text.format.DateFormat.is24HourFormat(androidx.compose.ui.platform.LocalContext.current)) "H:mm" else "h:mm", now,
     ).toString()
+    // MyPlay (F4): size, weight and colour from the status style.
+    val look = LocalStatusStyle.current
+    val color = look.clockColor?.let { Color(it) } ?: MaterialTheme.colorScheme.onSurface
     Box(Modifier.carPart(CarPart.Clock)) { // MyPlay: a part for the phone's picture
-        if (LocalCarTheme.current.segmentClock) SegmentClock(text)
-        else Text(text, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
+        if (LocalCarTheme.current.segmentClock) SegmentClock(text, look.clockSize.scale, color)
+        else {
+            val base = MaterialTheme.typography.titleMedium
+            Text(text, style = base.copy(fontSize = base.fontSize * look.clockSize.scale, fontWeight = if (look.clockBold) FontWeight.Bold else base.fontWeight),
+                color = color, maxLines = 1)
+        }
     }
 }
 
@@ -321,9 +345,8 @@ internal fun Clock() {
  * dashboard. 22 sp keeps "88:88" (3.5 em) inside the 96 dp side bar.
  */
 @Composable
-private fun SegmentClock(time: String) {
-    val style = MaterialTheme.typography.titleMedium.copy(fontFamily = SegmentFont, fontSize = 22.sp, letterSpacing = 0.sp)
-    val lit = MaterialTheme.colorScheme.onSurface
+private fun SegmentClock(time: String, scale: Float = 1f, lit: Color = MaterialTheme.colorScheme.onSurface) {
+    val style = MaterialTheme.typography.titleMedium.copy(fontFamily = SegmentFont, fontSize = 22.sp * scale, letterSpacing = 0.sp)
     Box(contentAlignment = Alignment.CenterEnd) {
         Text("88:88", style = style.copy(shadow = null), color = lit.copy(alpha = 0.12f), maxLines = 1)
         // "!" is the font's digit-wide blank: "9:41" becomes "!9:41", over "88:88".

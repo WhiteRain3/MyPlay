@@ -42,7 +42,9 @@ import net.prototux.aare.notify.MessagingScreen
 import net.prototux.aare.launch.AppLauncher
 import net.prototux.aare.notify.PhoneGuidance
 import net.prototux.aare.ui.car.LocalTurnIcon
+import net.prototux.aare.ui.car.isStatusStyleKey
 import net.prototux.aare.ui.car.myplayLayoutSpec
+import net.prototux.aare.ui.car.statusStyle
 import net.prototux.aare.ui.car.trackCarFocus
 import net.prototux.aare.ui.car.BrowserScreen
 import net.prototux.aare.ui.car.CarActions
@@ -302,6 +304,7 @@ class CarRuntime(
         ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
         ui.layout = CarLayout.byId(settings.carLayoutId)
         ui.layoutSpec = settings.myplayLayoutSpec // MyPlay (M3)
+        ui.statusStyle = settings.statusStyle // MyPlay (F4)
         ui.darkBar = settings.darkBar
         ui.dashboardCards = DashCard.parse(settings.dashboardCards)
         ui.weatherInBar = settings.showWeather
@@ -332,6 +335,8 @@ class CarRuntime(
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
             "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }
+            // MyPlay (F4): the status icons' and clock's look.
+            else -> if (isStatusStyleKey(key)) main.post { applyScreenSettings() }
         }
     }
 
