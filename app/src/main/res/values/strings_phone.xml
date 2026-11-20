@@ -113,6 +113,12 @@
     <string name="phone_backup_saved" translatable="false">Settings saved.</string>
     <string name="phone_tile_backup" translatable="false">Backup</string>
     <string name="phone_tile_file" translatable="false">Save, load</string>
+    <string name="phone_part_size" translatable="false">Size</string>
+    <string name="phone_size_text_controls" translatable="false">Text and controls</string>
+    <string name="phone_size_text_controls_hint" translatable="false">Text size makes the words larger; control size makes buttons, the bar and icons larger. They change the car screen at once.</string>
+    <string name="phone_size_density_title" translatable="false">How much fits on the car screen</string>
+    <string name="phone_size_dpi" translatable="false">%1$d dpi</string>
+    <string name="phone_size_density_hint" translatable="false">A higher number draws everything larger, so less fits. 213 is what Google\'s Android Auto used for the Audi. The picture above follows the choice.</string>
     <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->

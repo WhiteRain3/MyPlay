@@ -162,6 +162,7 @@ import net.prototux.aare.ui.phone.BackupPage
 import net.prototux.aare.ui.phone.BarPage
 import net.prototux.aare.ui.phone.CardsPage
 import net.prototux.aare.ui.phone.ClockPage
+import net.prototux.aare.ui.phone.SizePage
 import net.prototux.aare.ui.phone.StatusIconsPage
 import net.prototux.aare.ui.phone.ColoursPage
 import net.prototux.aare.ui.phone.LayoutScreen
@@ -235,6 +236,7 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     WALLPAPER(R.string.phone_part_wallpaper, R.string.phone_part_wallpaper, Icons.Rounded.Dashboard),
     COLOURS(R.string.phone_part_colours, R.string.phone_part_colours, Icons.Rounded.Dashboard),
     LAYOUT(R.string.phone_part_layout, R.string.phone_part_layout, Icons.Rounded.Dashboard),
+    SIZE(R.string.phone_part_size, R.string.phone_part_size, Icons.Rounded.Dashboard),
     CLOCK(R.string.phone_part_clock, R.string.phone_part_clock, Icons.Rounded.Dashboard),
     STATUS(R.string.phone_part_status, R.string.phone_part_status, Icons.Rounded.Dashboard),
     BACKUP(R.string.setup_section_backup, R.string.setup_section_backup, Icons.Rounded.Tune),
@@ -269,7 +271,7 @@ private fun Home() {
             // the Car screen page; every other page has a tile under it.
             CustomiseScreen(
                 onPicture = { part -> page = pageOf(part) },
-                parts = listOf(Page.LAYOUT, Page.BAR, Page.CLOCK, Page.STATUS, Page.CARDS, Page.WALLPAPER, Page.COLOURS).map { pg -> stringResource(pg.titleRes) to { page = pg } },
+                parts = listOf(Page.LAYOUT, Page.BAR, Page.CLOCK, Page.STATUS, Page.CARDS, Page.WALLPAPER, Page.COLOURS, Page.SIZE).map { pg -> stringResource(pg.titleRes) to { page = pg } },
                 behind = { BehindTheScenesTiles(state.connected, state.audioCapture, refresh) { page = pageOf(it) } },
                 top = {
                     item {
@@ -310,6 +312,7 @@ private fun Home() {
                         Page.COLOURS -> item { ColoursPage() }
                         Page.LAYOUT -> item { LayoutScreen() }
                         Page.CLOCK -> item { ClockPage() }
+                        Page.SIZE -> item { SizePage() }
                         Page.STATUS -> item { StatusIconsPage() }
                         Page.WALLPAPER -> item { WallpaperPage { uri -> saveWallpaper(ctx, uri) } }
                         Page.BACKUP -> item { BackupPage { settingsGeneration++ } }

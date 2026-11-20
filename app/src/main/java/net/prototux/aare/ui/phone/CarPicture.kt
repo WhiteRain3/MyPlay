@@ -70,7 +70,11 @@ import net.prototux.aare.ui.car.CarShell
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.DashCard
 import net.prototux.aare.ui.car.NowPlaying
+import net.prototux.aare.ui.theme.CarControlSize
+import net.prototux.aare.ui.theme.CarTextSize
 import net.prototux.aare.ui.theme.CarTheme
+import net.prototux.aare.ui.theme.LocalCarControlScale
+import androidx.compose.ui.unit.Density
 import net.prototux.aare.ui.theme.CarThemes
 import net.prototux.aare.ui.theme.forPhone
 import net.prototux.aare.ui.theme.withAccent
@@ -82,9 +86,19 @@ import net.prototux.aare.ui.theme.withAccent
  * Auto reported it: 1200 x 723 pixels at 213 dpi (about 901 x 543 dp).
  */
 object CarPictureSize {
+    const val WIDTH_PX = 1200
+    const val HEIGHT_PX = 723
+    /** The density Google's Android Auto reported for the Audi; the picture's "Auto". */
+    const val AUTO_DPI = 213
     const val WIDTH_DP = 901f
     const val HEIGHT_DP = 543f
     const val ASPECT = WIDTH_DP / HEIGHT_DP
+
+    /** The car screen's size in layout units (dp) at [dpi] (0: Auto), as the car code lays out: pixels × 160 / dpi. */
+    fun layoutSizeDp(dpi: Int): Pair<Float, Float> {
+        val d = if (dpi > 0) dpi else AUTO_DPI
+        return WIDTH_PX * 160f / d to HEIGHT_PX * 160f / d
+    }
 }
 
 /** Whether the picture is drawn at night, from the car-screen colour setting (automatic is drawn dark). */
@@ -130,6 +144,8 @@ internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: C
     ui.dashboardCards = DashCard.parse(settings.dashboardCards)
     ui.weatherInBar = settings.showWeather
     ui.weather = if (settings.showWeather) Weather(18, "°C", 1, day = !ui.night) else null
+    ui.textScale = CarTextSize.byId(settings.carTextSize).fontScale
+    ui.controlScale = CarControlSize.byId(settings.carControlSize).scale
     ui.railBottom = settings.railPosition == Settings.RAIL_BOTTOM
     ui.railOnRight = pictureRailOnRight(settings.railPosition)
     ui.wallpaper = settings.wallpaper
@@ -211,12 +227,13 @@ fun CarPicture(description: String, modifier: Modifier = Modifier, onPart: ((Pic
             runCatching { BitmapFactory.decodeFile(java.io.File(context.filesDir, Settings.WALLPAPER_FILE).path) }.getOrNull()
         } else null
     }
-    CarPictureFrame(ui, description, modifier, onPart)
+    CarPictureFrame(ui, description, modifier, onPart, densityDpi = remember(changes) { settings.carDensity })
 }
 
 /** Draws [ui] at the car's size, scaled down to the width it is given, with its parts tappable when [onPart] is set. */
 @Composable
-internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modifier = Modifier, onPart: ((PicturePart) -> Unit)?) {
+internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modifier = Modifier, onPart: ((PicturePart) -> Unit)?, densityDpi: Int = 0) {
+    val (carW, carH) = CarPictureSize.layoutSizeDp(densityDpi)
     val shape = RoundedCornerShape(20.dp)
     // Where the car code drew each part, in the window's coordinates (the scaling included).
     val registry = remember { CarPartRegistry() }
@@ -236,14 +253,20 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
                 if (onPart != null) { role = Role.Button; onClick { onPart(PicturePart.WHOLE); true } }
             },
     ) {
-        val scale = maxWidth.value / CarPictureSize.WIDTH_DP
+        val scale = maxWidth.value / carW
         // Laid out at the car's own size and centred, then scaled about its centre to fill this box.
         Box(
             Modifier
-                .requiredSize(CarPictureSize.WIDTH_DP.dp, CarPictureSize.HEIGHT_DP.dp)
+                .requiredSize(carW.dp, carH.dp)
                 .graphicsLayer { scaleX = scale; scaleY = scale },
         ) {
-            CompositionLocalProvider(LocalCarParts provides registry) {
+            // Text and control size as the car applies them (CarRuntime.Root).
+            val base = LocalDensity.current
+            CompositionLocalProvider(
+                LocalCarParts provides registry,
+                LocalCarControlScale provides ui.controlScale,
+                LocalDensity provides Density(base.density, base.fontScale * ui.textScale),
+            ) {
                 CarTheme(night = ui.night, theme = ui.theme) {
                     CarShell(ui, NoCarActions, appContent = { _, m -> SampleMap(ui.night, m) }, navMap = { _, m -> SampleMap(ui.night, m) })
                 }
