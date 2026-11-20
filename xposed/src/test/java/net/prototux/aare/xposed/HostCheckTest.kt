@@ -94,6 +94,17 @@ class HostCheckTest {
         assertFalse(verdict(module = emptySet()).accepted)
     }
 
+    /** W1-7: only answers that cannot change are definite (and so remembered by the hook). */
+    @Test fun onlyAnswersThatCannotChangeAreDefinite() {
+        assertTrue(verdict().definite)
+        assertTrue(verdict(packages = listOf("com.example.impostor")).definite)
+        assertTrue(verdict(certs = setOf("00".repeat(32))).definite)
+        assertFalse(verdict(uid = null).definite)
+        assertFalse(verdict(packages = null).definite)
+        assertFalse(verdict(certs = null).definite)
+        assertFalse(verdict(module = emptySet()).definite)
+    }
+
     /** A shared uid holding MyPlay among others is still MyPlay's uid. */
     @Test fun aUidWithSeveralPackagesIncludingMyPlayCounts() =
         assertTrue(verdict(packages = listOf("com.example.other", myplay)).accepted)

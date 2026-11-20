@@ -9,7 +9,12 @@ import java.util.UUID
 class Settings(context: Context) {
     /** Not the Activity [Settings] may be made with, so an instance kept around does not leak it. */
     private val appContext = context.applicationContext
-    private val prefs: SharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
+    /**
+     * MyPlay: internal rather than private, so MyPlay's own settings can live in separate files as
+     * extension properties on [Settings] (one file per stream of work) and this file stays as
+     * upstream's. Keys added that way start with "myplay_".
+     */
+    internal val prefs: SharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     /** Serve the developer "head unit server" like Android Auto does, through adb (for DHU/openauto/headunit-revived). */
     var headUnitServer: Boolean

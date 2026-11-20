@@ -108,7 +108,8 @@ object CarTools {
         val ui = rt.ui
         when (w) {
             "home", "dashboard", "map" -> { ui.screen = CarScreen.Dashboard; return ok("home") }
-            "apps", "app list", "launcher" -> { ui.screen = CarScreen.Launcher; return ok("app list") }
+            // MyPlay (K10-1): through openLauncher, which also clears the Music button's filter.
+            "apps", "app list", "launcher" -> { rt.actions.openLauncher(); return ok("app list") }
         }
         // "Exit to car" isn't an app: a loose match on "car" mustn't take the screen away.
         val apps = ui.apps.filter { it.kind != CarAppKind.EXIT }
