@@ -16,6 +16,8 @@
     <string name="phone_part_cards" translatable="false">Cards</string>
     <string name="phone_cards_weather_note" translatable="false">While this card is on, MyPlay sends a rough position (about 10 km) to Open-Meteo, even with the Weather switch off</string>
     <string name="phone_home_maps_question" translatable="false">Which map the home screen shows</string>
+    <string name="phone_slots_hint" translatable="false">Drag a card to a place, or down here to hide it. The first place is the most important. The rows below do the same with arrows.</string>
+    <string name="phone_slots_tray_empty" translatable="false">Not shown: none. Drag a card here to hide it.</string>
     <string name="phone_cards_order" translatable="false">Shown, in this order</string>
     <string name="phone_part_wallpaper" translatable="false">Wallpaper</string>
     <string name="phone_wallpaper_other_photo" translatable="false">Choose another photo</string>

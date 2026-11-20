@@ -219,6 +219,11 @@ fun MapBehindBar(spec: CarLayoutSpec, change: ((CarLayoutSpec) -> CarLayoutSpec)
 /** The "map behind" layout's cards: which, in what order, and one extra at a time. Shared by the Layout and Cards pages. */
 @Composable
 fun MapBehindCardRows(spec: CarLayoutSpec, change: ((CarLayoutSpec) -> CarLayoutSpec) -> Unit) {
+    // Drag a card to a place (the Design reviewer's slots); the rows below do the same with arrows.
+    CardSlots(SpecCard.entries, spec.cards, { stringResource(it.title) }, { it.symbol }, { it.tone }) { new ->
+        change { it.copy(cards = new) }
+    }
+    Spacer(Modifier.height(12.dp))
     val cardRows: List<@Composable () -> Unit> = specCardRows(spec.cards).map { card ->
         @Composable {
             val i = spec.cards.indexOf(card)
