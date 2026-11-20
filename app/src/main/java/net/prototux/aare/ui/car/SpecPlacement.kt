@@ -55,6 +55,13 @@ internal object SpecPlacement {
         return Placement(bar, content, map, slots(s, content).take(s.cards.size))
     }
 
+    /**
+     * M4: the order the knob goes through [boxes] (the bar and the card slots): reading order, top
+     * to bottom, then left to right. Indices into [boxes].
+     */
+    fun readingOrder(boxes: List<Box>): List<Int> =
+        boxes.indices.sortedWith(compareBy<Int>({ boxes[it].top }, { boxes[it].left }))
+
     private fun slots(s: CarLayoutSpec, c: Box): List<Box> {
         val inner = Box(c.left + GAP, c.top + GAP, c.right - GAP, c.bottom - GAP)
         if (inner.width <= 0f || inner.height <= 0f) return emptyList()

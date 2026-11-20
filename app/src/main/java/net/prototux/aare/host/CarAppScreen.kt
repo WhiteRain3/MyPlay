@@ -41,6 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import net.prototux.aare.ui.car.CarFocusVisibility
@@ -58,6 +59,7 @@ import net.prototux.aare.R
 import net.prototux.aare.host.templates.LocalCompactMap
 import net.prototux.aare.host.templates.RenderTemplate
 import net.prototux.aare.host.templates.TemplateHost
+import net.prototux.aare.ui.car.LocalMapTapIsKnobStop
 import net.prototux.aare.ui.theme.LocalCarDimens
 import net.prototux.aare.ui.car.carFocusHighlight
 
@@ -107,7 +109,9 @@ fun CarAppScreen(conn: CarAppConnection, runtime: CarRuntime, modifier: Modifier
                 }
             }
         }
-        if (compact && onOpen != null) Box(Modifier.fillMaxSize().carFocusHighlight(RoundedCornerShape(LocalCarDimens.current.cardRadius)).clickable(onClick = onOpen))
+        // MyPlay (M4): not a knob stop where the map fills the screen (LocalMapTapIsKnobStop).
+        val knobStop = LocalMapTapIsKnobStop.current
+        if (compact && onOpen != null) Box(Modifier.fillMaxSize().focusProperties { canFocus = knobStop }.carFocusHighlight(RoundedCornerShape(LocalCarDimens.current.cardRadius)).clickable(onClick = onOpen))
         conn.alert?.let { AlertCard(it, conn, host, Modifier.align(Alignment.TopCenter)) }
     }
 }

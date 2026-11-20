@@ -70,6 +70,38 @@ class SpecPlacementTest {
         assertEquals(2, p.slots.size)
     }
 
+    // ---- M4: the knob's order ----
+
+    private fun order(preset: String): List<Box> {
+        val p = SpecPlacement.place(CarLayoutSpec.PRESETS.getValue(preset), 1280f, 720f)
+        val boxes = listOf(p.bar) + p.slots
+        return SpecPlacement.readingOrder(boxes).map { boxes[it] }
+    }
+
+    @Test fun aLeftRailComesFirstThenTheCardsTopToBottom() {
+        val o = order("A")
+        assertEquals(SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("A"), 1280f, 720f).bar, o.first())
+        assertTrue(o.drop(1).zipWithNext().all { (a, b) -> a.top < b.top })
+    }
+
+    @Test fun cornersGoAcrossTheTopRowFirst() {
+        // D: rail on the left, cards in the corners: rail, top-left, top-right, bottom-left, bottom-right.
+        val o = order("D").drop(1)
+        assertEquals(o[0].top, o[1].top)
+        assertTrue(o[0].left < o[1].left)
+        assertTrue(o[2].top > o[0].top && o[2].left < o[3].left)
+    }
+
+    @Test fun aBottomBarComesLast() {
+        val p = SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("E"), 1280f, 720f)
+        assertEquals(p.bar, order("E").last())
+    }
+
+    @Test fun aTopRibbonComesFirst() {
+        val p = SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("C"), 1280f, 720f)
+        assertEquals(p.bar, order("C").first())
+    }
+
     @Test fun theMapGoesUnderTheBarOnlyWhenAsked() {
         assertEquals(Box(0f, 0f, 1280f, 720f), SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("D"), 1280f, 720f).map)
         assertEquals(Box(SpecPlacement.BAR, 0f, 1280f, 720f), SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("A"), 1280f, 720f).map)

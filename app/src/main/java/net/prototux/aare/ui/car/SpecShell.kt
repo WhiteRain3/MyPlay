@@ -5,6 +5,7 @@ import androidx.car.app.model.CarIcon
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +46,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -74,6 +79,13 @@ import net.prototux.aare.ui.car.CarLayoutSpec.SpecCard
 internal val LocalTurnIcon = staticCompositionLocalOf<(CarIcon, Int, String?) -> ImageBitmap?> { { _, _, _ -> null } }
 
 /**
+ * MyPlay (M4): whether a maps app's picture on the home screen, which opens the app when tapped, is
+ * also a stop for the knob. It is on AARE's dashboard card; not where the map fills the screen
+ * (the bar's maps button opens the app there).
+ */
+internal val LocalMapTapIsKnobStop = staticCompositionLocalOf { true }
+
+/**
  * MyPlay (M3): the "map behind" layout. One file draws any combination of the layout options
  * ([CarLayoutSpec], placed by [SpecPlacement]): on the home screen the maps app's picture fills
  * the screen (or the area beside the bar), with the bar and the cards on top; an opened app takes
@@ -83,7 +95,10 @@ internal val LocalTurnIcon = staticCompositionLocalOf<(CarIcon, Int, String?) ->
  * and a card's slot stays reserved while the card is hidden, so the maps app keeps its position
  * arrow in the free part and does not jump when a card comes or goes (M2).
  *
- * The knob's order through bar and cards is M4; this file only draws.
+ * The knob (M4): it goes through the bar and the cards in reading order ([SpecPlacement.readingOrder]),
+ * and starts on the first of them when the home screen opens (as K2 does for the other layouts).
+ * Cards that are only read (next turn, arrival time, clock) are never a stop; tapping them still
+ * opens their app. On the music card, its three buttons are the stops.
  */
 @Composable
 internal fun SpecShell(
@@ -102,17 +117,26 @@ internal fun SpecShell(
             CompositionLocalProvider(LocalMapCovers provides covers) {
                 if (state.screen == CarScreen.Dashboard) {
                     val nav = state.app(state.activeNavAppId)
-                    if (spec.mapBackground && nav != null) navMap(nav, Modifier.at(p.map))
-                    else Wallpaper(state, Modifier.at(p.map))
-                    if (spec.cardPlace == CardPlace.STAGE) {
-                        p.slots.firstOrNull()?.let { StageSlot(spec, state, actions, Modifier.at(it)) }
-                    } else {
-                        p.slots.forEachIndexed { i, slot -> CardSlot(spec.cards[i], spec, state, actions, Modifier.at(slot)) }
+                    CompositionLocalProvider(LocalMapTapIsKnobStop provides false) {
+                        if (spec.mapBackground && nav != null) navMap(nav, Modifier.at(p.map))
+                        else Wallpaper(state, Modifier.at(p.map))
+                    }
+                    // The bar and the cards, composed in reading order: the knob follows composition order.
+                    val entry = remember { FocusRequester() }
+                    var homeFocused by remember { mutableStateOf(false) }
+                    KeepFocusInContent(state.screen, { homeFocused }, entry)
+                    Box(Modifier.fillMaxSize().onFocusChanged { homeFocused = it.hasFocus }.focusRequester(entry).focusGroup()) {
+                        val slots = if (spec.cardPlace == CardPlace.STAGE) p.slots.take(1) else p.slots
+                        for (i in SpecPlacement.readingOrder(listOf(p.bar) + slots)) {
+                            if (i == 0) SpecBar(state, actions, spec, Modifier.at(p.bar).coversMap())
+                            else if (spec.cardPlace == CardPlace.STAGE) StageSlot(spec, state, actions, Modifier.at(slots[0]))
+                            else CardSlot(spec.cards[i - 1], spec, state, actions, Modifier.at(slots[i - 1]))
+                        }
                     }
                 } else {
                     ContentArea(state, actions, appContent, navMap, Modifier.at(p.content))
+                    SpecBar(state, actions, spec, Modifier.at(p.bar).coversMap())
                 }
-                SpecBar(state, actions, spec, Modifier.at(p.bar).coversMap())
             }
             overlay(Modifier.align(Alignment.BottomCenter))
             NoticeOverlay(state, actions, Modifier.align(Alignment.TopCenter))
@@ -237,9 +261,10 @@ private fun onClick(card: SpecCard, state: CarUiState, actions: CarActions): (()
 private fun SpecCardBox(spec: CarLayoutSpec, onClick: (() -> Unit)?, modifier: Modifier, content: @Composable () -> Unit) {
     val shape: Shape = MaterialTheme.shapes.large
     val card = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 1f - spec.cardSeeThrough / 100f)
+    // A tap opens the card's app; the knob passes the card itself by (M4), only its buttons are stops.
     Box(
         modifier.clip(shape).background(Color.Black.copy(alpha = DARK_BASE)).background(card)
-            .let { if (onClick != null) it.carFocusHighlight(shape).clickable(onClick = onClick) else it }
+            .let { if (onClick != null) it.focusProperties { canFocus = false }.carFocusHighlight(shape).clickable(onClick = onClick) else it }
             .padding(16.dp),
         contentAlignment = Alignment.CenterStart,
     ) { content() }
