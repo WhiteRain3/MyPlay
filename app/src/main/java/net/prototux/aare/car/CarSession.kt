@@ -728,9 +728,12 @@ class CarSession(
         DiagLog.add("button ${KeyEvent.keyCodeToString(g.code)} ${gesture.id}: ${action.id}")
         when (action) {
             ButtonAction.SELECT -> {
+                // B1-1: a press of the ring's item, whatever button it was given to (Back or Menu
+                // sent as themselves would act as Back or Menu on the screen).
+                val code = ButtonAction.selectKeyFor(g.code)
                 val t = SystemClock.uptimeMillis()
-                dispatchCarKey(CarKey(g.code, true, downTime = t))
-                dispatchCarKey(CarKey(g.code, false, downTime = t))
+                dispatchCarKey(CarKey(code, true, downTime = t))
+                dispatchCarKey(CarKey(code, false, downTime = t))
             }
             ButtonAction.BACK -> back()
             ButtonAction.HOME -> runtime.assistantClosedThenHome()

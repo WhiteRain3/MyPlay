@@ -132,6 +132,14 @@ enum class ButtonAction(val id: String) {
 
     companion object {
         fun byId(id: String) = entries.firstOrNull { it.id == id }
+
+        /**
+         * The key [SELECT] sends to the screen for a gesture on [code]: the centre or Enter key
+         * as it came, else the centre key (B1-1: Back, Menu or a media key sent as themselves would
+         * not press the ring's item).
+         */
+        fun selectKeyFor(code: Int): Int =
+            if (code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) code else KeyEvent.KEYCODE_DPAD_CENTER
     }
 }
 
