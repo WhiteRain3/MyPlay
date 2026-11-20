@@ -666,14 +666,20 @@ class CarSession(
                 // Rotary controller: each detent moves focus to the next/previous element in layout
                 // order, like Android Auto. Compose maps Tab to "focus next" and Shift+Tab to
                 // "focus previous" (not D-pad up/down, which is 2D spatial and wrong for a knob).
-                for (r in report.relativeEvent.dataList) {
-                    // MyPlay (R3): turned while a button whose hold takes the turn is down: the hold's.
-                    if (gestureTurn(r.delta)) continue
-                    val meta = if (r.delta < 0) KeyEvent.META_SHIFT_ON else 0
-                    repeat(kotlin.math.abs(r.delta)) {
-                        val t = SystemClock.uptimeMillis()
-                        display?.dispatchKey(KeyEvent(t, t, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_TAB, 0, meta))
-                        display?.dispatchKey(KeyEvent(t, t, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_TAB, 0, meta))
+                // MyPlay (R3-1): handled on the main thread, in order with the keys (posted the same way),
+                // because the gesture engine that may take the turn is main-thread only.
+                val turns = report.relativeEvent.dataList.map { it.delta }
+                main.post {
+                    if (closed) return@post
+                    for (delta in turns) {
+                        // MyPlay (R3): turned while a button whose hold takes the turn is down: the hold's.
+                        if (gestureTurn(delta)) continue
+                        val meta = if (delta < 0) KeyEvent.META_SHIFT_ON else 0
+                        repeat(kotlin.math.abs(delta)) {
+                            val t = SystemClock.uptimeMillis()
+                            display?.dispatchKey(KeyEvent(t, t, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_TAB, 0, meta))
+                            display?.dispatchKey(KeyEvent(t, t, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_TAB, 0, meta))
+                        }
                     }
                 }
             }
