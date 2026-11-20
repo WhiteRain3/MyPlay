@@ -289,27 +289,48 @@ look copied a whole shell file and then could not take upstream's fixes. Here on
 file draws any combination of options, and "A", "B", "C" and the three to come are named sets of
 options (presets). AARE's three existing layouts stay as they are and stay selectable.
 
-The options (from the owner's words and the Design reviewer's brief):
+The Design reviewer's sheet (`customisation-system.png`, AA-Experiments `claude/design-options`
+at `b0a721f`) settles the options: eight, the same for every layout, and six presets.
 
-| Option | Values |
-|---|---|
-| Map | as background / as a card (today's behaviour) |
-| Map under the bar | yes / no |
-| Bar style | solid rail / see-through rail / floating pills / bottom dock / top ribbon |
-| Bar side | left / right / top / bottom (top and bottom only for dock and ribbon) |
-| Cards | which ones, in what order (exists today), at most how many at once |
-| Card place | slots per bar style, as in the pictures (column beside the rail; corners; one stage card) |
-| Card size | small / medium / large, per card |
-| See-through | how much of the map shows through cards and bar |
-| Auto-hide | cards and bar fade after a while with nothing changing, and come back on a knob turn |
+| # | Option | Values |
+|---|---|---|
+| 1 | Map as the background | on / off (plain dark) |
+| 2 | Map goes under the bar | under it / stops at its edge |
+| 3 | Bar style | solid rail / see-through rail / floating pills / bottom dock / top ribbon |
+| 4 | Bar side | left / right / bottom / top |
+| 5 | Where cards sit | column by the bar / corners / one stage card / top banner + corner |
+| 6 | Card see-through amount | 0 to 100 %, always over a dark base |
+| 7 | Which cards, in what order | next turn, arrival time, music, clock and status; "one extra at a time" for the stage layout |
+| 8 | Hide after a while | never, or music and arrival time after 5 to 60 s |
+
+| Preset | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|---|
+| A Left rail + column | on | beside | solid rail | left | column by the bar | 14 % | all four | never |
+| B Bottom dock | on | beside | bottom dock | bottom | corners | 14 % | all four | never |
+| C Top ribbon | on | beside | top ribbon | top | one stage card | 14 % | one extra at a time | never |
+| D See-through rail | on | under | see-through rail | left | corners | 40 % | all four | never |
+| E Pills along the bottom | on | under | floating pills | bottom | corners | 40 % | all four | music after 15 s |
+| F Pill column on the right | on | under | floating pills | right | top banner + corner | 40 % | all four | never |
+
+**Rules** (from the sheet): a dock only at the bottom, a ribbon only at the top; cards never sit
+in the free area; cards keep a dark base at any see-through amount; the knob reaches everything
+in every combination. Choosing a preset sets all eight; any one can then be changed on its own.
+
+**Proposals, not decisions:** the 14 % and 40 % amounts, the 15-second hide in E, and putting
+the bar on the right next to the strip the car may not show. They depend on what the owner finds
+readable in the car, and on the screen size and margins the box really reports.
+
+Which preset is the default: not decided. The owner picks after seeing them on the bench.
 
 **M1. The layout as data.**
-- Touches: one new file `ui/car/CarLayoutSpec.kt` holding the options above as one value, the
-  presets A, B, C (and room for three more), and reading and writing them through one new file
+- Touches: one new file `ui/car/CarLayoutSpec.kt` holding the eight options as one value, the
+  six presets A to F from the table, the rules as one function that turns any combination into
+  an allowed one, and reading and writing them through one new file
   of settings (`MyPlayLayoutSettings.kt`, extension properties on `Settings` so `Settings.kt` is
   not edited by two streams at once). No drawing yet.
 - Verified by: unit tests: every preset round-trips through the settings; an option combination
-  that makes no sense (a top ribbon on the left) is corrected to the nearest valid one.
+  that breaks a rule (a dock on the left, a ribbon at the bottom) is corrected to the nearest
+  allowed one; each preset's values match the table above.
 
 **M2. Tell the maps app where the free space is, and keep telling it.** *(Already queued for
 the Worker.)*
@@ -798,6 +819,11 @@ page shows those controls only once the car side has them, so nothing on the pho
   picture of the car screen after each change.
 
 **E6. Car screen layout: presets and options** (with Phase M).
+- Follows the Design reviewer's sheet: the six presets as small pictures to pick from; then the
+  eight options, each set the "Edit the picture" way (tap the bar or a card in the car picture
+  and change that one thing); cards dragged into the dashed slots of the chosen card layout.
+  Options a rule does not allow in the current combination are not offered (no dock on the
+  side). The phone shows the result at once.
 - Touches: `ui/phone/LayoutScreen.kt` (new): the presets as pictures to pick from, then the
   options of M1 as big symbol buttons, and the Design reviewer's "tap a card, drag it to a
   dashed slot" from the layout drawings. Reads and writes only through M1's
