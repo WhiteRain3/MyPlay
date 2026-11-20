@@ -11,7 +11,7 @@ import org.junit.Test
 /** MyPlay (M3): slot placement for every preset and every combination of bar and card place. */
 class SpecPlacementTest {
     /** The Audi's area as the bench uses it (1280 x 720 at 213 dpi, 80 px right margin) in dp, and two other shapes. */
-    private val sizes = listOf(900f to 543f, 1280f to 720f, 1920f to 720f, 800f to 1280f)
+    private val sizes = listOf(900f to 543f, 1280f to 720f, 1440f to 720f, 1920f to 720f, 2560f to 720f, 800f to 1280f)
 
     private fun inside(a: Box, b: Box) = a.left >= b.left - 0.01f && a.top >= b.top - 0.01f && a.right <= b.right + 0.01f && a.bottom <= b.bottom + 0.01f
 
@@ -68,6 +68,40 @@ class SpecPlacementTest {
         // On a narrow screen two cards side by side would not fit: only the bar-side corners are used.
         val p = SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("D"), 600f, 543f)
         assertEquals(2, p.slots.size)
+    }
+
+    // ---- M6: by the screen's shape ----
+
+    @Test fun shapesAreRecognised() {
+        assertEquals(SpecPlacement.Shape.SMALL, SpecPlacement.shapeOf(900f, 543f))
+        assertEquals(SpecPlacement.Shape.SMALL, SpecPlacement.shapeOf(800f, 1280f))
+        assertEquals(SpecPlacement.Shape.NORMAL, SpecPlacement.shapeOf(1280f, 720f))
+        assertEquals(SpecPlacement.Shape.WIDE, SpecPlacement.shapeOf(1440f, 720f))
+        assertEquals(SpecPlacement.Shape.VERY_WIDE, SpecPlacement.shapeOf(1920f, 720f))
+    }
+
+    /** The Audi's screen: few, narrow cards. */
+    @Test fun theAudisScreenGetsAtMostThreeNarrowCards() {
+        for ((name, spec) in CarLayoutSpec.PRESETS) {
+            val p = SpecPlacement.place(spec, 900f, 543f)
+            assertTrue(name, p.slots.size <= 3)
+            p.slots.filter { it.height < p.content.height * 0.5f }.forEach { assertTrue("$name $it", it.width <= 260f + 0.01f || it.width >= p.content.width * 0.8f) }
+        }
+    }
+
+    /** A very wide screen: the corner cards sit side by side at the far end, the middle stays free. */
+    @Test fun veryWideScreensPutCardsSideBySide() {
+        val p = SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("D"), 1920f, 720f)
+        assertEquals(4, p.slots.size)
+        val left = p.slots.minOf { it.left }
+        assertTrue("cards at the far end: $left", left > p.content.left + p.content.width / 2)
+        assertEquals(p.slots[0].top, p.slots[2].top)
+        assertTrue(p.slots[0].right < p.slots[2].left)
+    }
+
+    @Test fun veryWideColumnByTheBarIsTwoColumns() {
+        val p = SpecPlacement.place(CarLayoutSpec.PRESETS.getValue("A"), 1920f, 720f)
+        assertEquals(2, p.slots.map { it.left }.distinct().size)
     }
 
     // ---- M4: the knob's order ----
