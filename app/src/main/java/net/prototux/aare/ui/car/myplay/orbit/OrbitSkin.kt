@@ -135,7 +135,7 @@ object OrbitSkin : MyPlaySkin {
     override fun Turn(turn: TurnSlot, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            val nav = Orbit.accent(World.NAVIGATE)
+            val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OrbitDisc(132.dp, LocalSkinTokens.current.night, Modifier.orbitFocus(LocalStopRinged.current, nav, g.halo), fill = nav, edge = nav) {
                     val arrow = turn.arrow
@@ -143,7 +143,7 @@ object OrbitSkin : MyPlaySkin {
                         val image = remember(arrow) { arrow.asImageBitmap() }
                         Image(image, null, Modifier.size(84.dp), contentScale = ContentScale.Fit)
                     } else {
-                        Icon(arrowIcon(turn.direction), null, Modifier.size(78.dp), tint = Orbit.ON_ACCENT)
+                        Icon(arrowIcon(turn.direction), null, Modifier.size(78.dp), tint = Orbit.onAccent(LocalSkinTokens.current.night))
                     }
                 }
                 Spacer(Modifier.width(22.dp))
@@ -173,7 +173,7 @@ object OrbitSkin : MyPlaySkin {
     override fun Hub(trip: TripSlot?, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            val nav = Orbit.accent(World.NAVIGATE)
+            val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
             OrbitDisc(192.dp, LocalSkinTokens.current.night, Modifier.orbitFocus(LocalStopRinged.current, nav, g.halo)) {
                 OrbitRing(trip?.progress, 184.dp, 9.dp, nav, g.track) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -210,7 +210,8 @@ object OrbitSkin : MyPlaySkin {
                     Text(song.subtitle, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
                 }
                 Spacer(Modifier.width(10.dp))
-                OrbitRing(progress, 152.dp, 7.dp, Orbit.SONG, g.track, Modifier.orbitFocus(LocalStopRinged.current, Orbit.SONG, g.halo)) {
+                val musicColour = Orbit.accent(World.MUSIC, LocalSkinTokens.current.night)
+                OrbitRing(progress, 152.dp, 7.dp, musicColour, g.track, Modifier.orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
                     val art = song.art
                     if (art != null) {
                         val image = remember(art) { art.asImageBitmap() }
@@ -242,7 +243,7 @@ object OrbitSkin : MyPlaySkin {
     override fun Status(modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            val nav = Orbit.accent(World.NAVIGATE)
+            val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
             val context = LocalContext.current
             var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
             LaunchedEffect(Unit) {
@@ -288,14 +289,14 @@ object OrbitSkin : MyPlaySkin {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.size(DIAL), contentAlignment = Alignment.Center) {
                     worlds.forEachIndexed { i, w ->
-                        OrbitSector(i, worlds.size, w == selected, Orbit.accent(w), night, DIAL, 132.dp)
+                        OrbitSector(i, worlds.size, w == selected, Orbit.accent(w, night), night, DIAL, 132.dp)
                         val a = Math.toRadians(-90.0 + 360.0 / worlds.size * i)
                         val on = w == selected
                         Column(
                             Modifier.offset((205 * cos(a)).dp, (205 * sin(a)).dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Icon(Orbit.icon(w), null, Modifier.size(if (on) 52.dp else 44.dp), tint = if (on) Orbit.accent(w) else g.secondary)
+                            Icon(Orbit.icon(w), null, Modifier.size(if (on) 52.dp else 44.dp), tint = if (on) Orbit.accent(w, night) else g.secondary)
                             Text(worldName(w), style = Orbit.Type.dial.copy(color = if (on) g.text else g.secondary), maxLines = 1)
                         }
                     }
@@ -311,7 +312,7 @@ object OrbitSkin : MyPlaySkin {
     @Composable
     private fun WorldDisc(world: World, night: Boolean, line: String? = null) {
         val g = Orbit.glass(night)
-        val accent = Orbit.accent(world)
+        val accent = Orbit.accent(world, night)
         OrbitDisc(240.dp, night, fill = g.glass.copy(alpha = 0.95f), edge = accent, edgeWidth = 3.dp) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Orbit.icon(world), null, Modifier.size(76.dp), tint = accent)
