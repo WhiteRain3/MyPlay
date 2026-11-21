@@ -315,4 +315,19 @@ class MyPlayAppFrameTest {
         assertEquals(listOf(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP), sentToApp)
         assertTrue(asked.isEmpty())
     }
+
+    // F1-3: the gesture line (R6) over an app, under the notice (R6-3).
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theGestureLineShowsOverAnAppUnderTheNotice() {
+        val s = show()
+        rule.runOnIdle { s.gestureLine = net.prototux.aare.ui.car.GestureLine(net.prototux.aare.car.ButtonAction.NEXT, forward = true, atMs = 1) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.GESTURE_LINE_TAG).assertExists()
+        rule.runOnIdle { s.notices.add(0, CarNotice("n1", "Anna K.", "Running late", null)) }
+        rule.waitForIdle()
+        val line = rule.onNodeWithTag(net.prototux.aare.ui.car.GESTURE_LINE_TAG).fetchSemanticsNode().boundsInRoot
+        val dismiss = rule.onNodeWithTag(NOTICE_DISMISS).fetchSemanticsNode().boundsInRoot
+        assertTrue("the line ($line) is under the notice (its Dismiss at $dismiss)", line.top >= dismiss.bottom)
+    }
 }

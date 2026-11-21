@@ -539,6 +539,27 @@ class MyPlayEngineTest {
         rule.onNodeWithTag(SLOT_PHONE).assertExists()
     }
 
+    /** F1-3 (R6-3): on the home the gesture line is under a notice, never on it; in a world it shows over the page. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theGestureLineIsUnderTheNoticeAndOverAWorld() {
+        val state = show()
+        rule.runOnIdle {
+            state.notices.add(0, CarNotice("n1", "Anna K.", "Running late", null))
+            state.gestureLine = net.prototux.aare.ui.car.GestureLine(net.prototux.aare.car.ButtonAction.NEXT, forward = true, atMs = 1)
+        }
+        rule.waitForIdle()
+        val line = rule.onNodeWithTag(net.prototux.aare.ui.car.GESTURE_LINE_TAG).fetchSemanticsNode().boundsInRoot
+        val dismiss = rule.onNodeWithTag(NOTICE_DISMISS).fetchSemanticsNode().boundsInRoot
+        assertTrue("under the notice: $line, $dismiss", line.top >= dismiss.bottom)
+        // In a world (the dial, then Navigate's neighbour Music): still shown.
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC).assertExists()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.GESTURE_LINE_TAG).assertExists()
+    }
+
     /** A phone with two recent calls (one missed) and two favourites, one of them also a recent call. */
     private class FakePhone(override val permitted: Boolean = true) : PhoneSource {
         val called = mutableListOf<String>()

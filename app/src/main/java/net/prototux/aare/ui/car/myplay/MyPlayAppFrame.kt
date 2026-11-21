@@ -53,6 +53,7 @@ import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.ContentArea
+import net.prototux.aare.ui.car.GestureLineOverlay
 import net.prototux.aare.ui.car.carFocusHighlight
 import net.prototux.aare.ui.car.rememberCanEnd
 
@@ -178,6 +179,8 @@ internal fun MyPlayAppFrame(
             }
             overlay(Modifier.align(Alignment.BottomCenter))
             // A notice for a few seconds at the top: its buttons by touch, and (F1-5) by the knob.
+            // F1-3 (R6, R6-3): the notice and, under it, the gesture line (what a button just did), never on top of each other.
+            Column(Modifier.align(Alignment.TopCenter).padding(top = tokens.edge), horizontalAlignment = Alignment.CenterHorizontally) {
             if (notice != null && !ringing) {
                 val currentNotice by rememberUpdatedState(notice)
                 skin.Notice(
@@ -195,8 +198,10 @@ internal fun MyPlayAppFrame(
                             .semantics { selected = noticeKnob && id == noticeRing }
                             .testTag(id)
                     },
-                    Modifier.align(Alignment.TopCenter).padding(top = tokens.edge),
+                    Modifier,
                 )
+            }
+            GestureLineOverlay(state, Modifier)
             }
             // A ringing call: the skin's, over everything, with the knob, as on the home (C-1: touches stop here).
             if (ringing) {

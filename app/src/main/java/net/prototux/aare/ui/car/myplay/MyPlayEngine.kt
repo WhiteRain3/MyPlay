@@ -629,6 +629,8 @@ internal fun MyPlayEngineShell(
                         skin.Notice(notice, hideText = state.drivingRestricted && notice.message, ring.takeIf { showRing && atHome },
                             { id -> if (atHome) Modifier.stop(id) else Modifier.testTag(id) }, Modifier.padding(top = 12.dp))
                     }
+                    // The gesture line (R6), under the call's strip and the notice (R6-3: never on top of them).
+                    if (model.place == Place.Home) GestureLineOverlay(state, Modifier)
                 }
                 if (home && hand == null) slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
                 when (val p = model.place) {
@@ -723,8 +725,8 @@ internal fun MyPlayEngineShell(
                 }
             }
             overlay(Modifier.align(Alignment.BottomCenter))
-            // The gesture line (R6); the notice is the skin's now (N8).
-            GestureLineOverlay(state, Modifier.align(Alignment.TopCenter))
+            // The gesture line (R6) over a world's page or the dial (at home it is under the notice, above).
+            if (model.place != Place.Home) GestureLineOverlay(state, Modifier.align(Alignment.TopCenter))
             // N8: the notifications list, over the home.
             if (listOpen && !ringing) {
                 val currentKeys by rememberUpdatedState(listKeys)
