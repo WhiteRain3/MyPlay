@@ -131,7 +131,8 @@ fun picturePartOf(part: CarPart?): PicturePart = when (part) {
     CarPart.AppsButton -> PicturePart.APPS
     CarPart.Wallpaper -> PicturePart.WALLPAPER
     is CarPart.DashboardCard, is CarPart.MapBehindCard -> PicturePart.CARDS
-    null -> PicturePart.WHOLE
+    // A part the phone does not know yet (the car side adds ORBIT's) opens the car screen settings.
+    else -> PicturePart.WHOLE
 }
 
 /**
