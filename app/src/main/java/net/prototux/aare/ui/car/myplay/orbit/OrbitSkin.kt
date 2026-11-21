@@ -31,7 +31,10 @@ import androidx.compose.material.icons.rounded.Battery6Bar
 import androidx.compose.material.icons.rounded.BatteryChargingFull
 import androidx.compose.material.icons.rounded.BatteryFull
 import androidx.compose.material.icons.rounded.DonutLarge
+import androidx.compose.material.icons.rounded.CallEnd
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MusicNote
@@ -100,6 +103,11 @@ import net.prototux.aare.ui.car.myplay.MUSIC_NEXT
 import net.prototux.aare.ui.car.myplay.MUSIC_PLAY
 import net.prototux.aare.ui.car.myplay.MUSIC_PREV
 import net.prototux.aare.ui.car.myplay.MusicPage
+import net.prototux.aare.ui.car.myplay.CALL_ANSWER
+import net.prototux.aare.ui.car.myplay.CALL_DECLINE
+import net.prototux.aare.ui.car.myplay.STOP_CALL
+import net.prototux.aare.ui.car.myplay.STOP_HANG_UP
+import net.prototux.aare.ui.car.CarCall
 import net.prototux.aare.ui.car.myplay.LibraryPage
 import net.prototux.aare.media.LibraryRow
 import net.prototux.aare.ui.car.myplay.MyPlaySkin
@@ -485,6 +493,100 @@ object OrbitSkin : MyPlaySkin {
     }
 
     const val MUSIC_PROGRESS_TAG = "orbit_music_progress"
+
+    /** Up to two letters for a caller's disc; null for a number (then a phone icon). */
+    fun initials(name: String): String? {
+        val words = name.trim().split(Regex("\\s+")).filter { w -> w.firstOrNull()?.isLetter() == true }
+        if (words.isEmpty()) return null
+        return words.take(2).joinToString("") { it.first().uppercase() }
+    }
+
+    @Composable
+    override fun Ringing(call: CarCall, canEnd: Boolean, ringed: String, stop: (String) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        val calls = Orbit.accent(World.CALLS, night)
+        Box(modifier.background(g.halo.copy(alpha = 0.72f)).orbitRipple(0.5f, 0.4f), contentAlignment = Alignment.Center) {
+            Scaled {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(Modifier.size(472.dp, 260.dp), contentAlignment = Alignment.Center) {
+                        // The sheet's soft rings around the caller.
+                        Canvas(Modifier.size(472.dp)) {
+                            drawCircle(calls.copy(alpha = 0.14f), 236.dp.toPx(), style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx()))
+                            drawCircle(calls.copy(alpha = 0.28f), 200.dp.toPx(), style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx()))
+                        }
+                        Box(
+                            Modifier.size(240.dp).clip(CircleShape)
+                                .background(Brush.linearGradient(listOf(Color(0xFF3B4A63), Color(0xFF1D2433))))
+                                .border(3.dp, calls, CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            val letters = initials(call.name)
+                            if (letters != null) Text(letters, style = TextStyle(fontSize = 96.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = Color.White))
+                            else Icon(Icons.Rounded.Phone, null, Modifier.size(110.dp), tint = Color.White)
+                        }
+                    }
+                    Text(call.name, style = TextStyle(fontSize = 54.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold).floating(g.text),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 900.dp))
+                    Text(stringResource(R.string.phone_incoming_call), style = TextStyle(fontSize = 28.sp).floating(g.secondary))
+                    Spacer(Modifier.height(28.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(212.dp)) {
+                        if (canEnd) CallButton(CALL_DECLINE, Icons.Rounded.Close, stringResource(R.string.phone_action_decline), Orbit.warning(night), ringed, calls, night, stop)
+                        CallButton(CALL_ANSWER, Icons.Rounded.Phone, stringResource(R.string.phone_action_answer), calls, ringed, calls, night, stop)
+                    }
+                }
+            }
+        }
+    }
+
+    /** A 128 dp call button filled in its colour, its word under it. */
+    @Composable
+    private fun CallButton(id: String, icon: ImageVector, label: String, fill: Color, ringed: String, ring: Color, night: Boolean, stop: (String) -> Modifier) {
+        val g = Orbit.glass(night)
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            OrbitDisc(128.dp, night, stop(id).orbitFocus(ringed == id, ring, g.halo), fill = fill, edge = fill) {
+                Icon(icon, label, Modifier.size(56.dp), tint = Color(0xFF06120C))
+            }
+            Text(label, style = TextStyle(fontSize = 24.sp).floating(g.secondary), modifier = Modifier.padding(top = 8.dp))
+        }
+    }
+
+    @Composable
+    override fun InCall(call: CarCall, canEnd: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        val calls = Orbit.accent(World.CALLS, night)
+        val elapsed by androidx.compose.runtime.produceState(0L, call.sinceMs) {
+            while (true) { value = ((System.currentTimeMillis() - call.sinceMs) / 1000).coerceAtLeast(0); delay(1_000) }
+        }
+        Box(modifier) {
+            Scaled {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    val pill = androidx.compose.foundation.shape.RoundedCornerShape(38.dp)
+                    Row(
+                        stop(STOP_CALL).orbitFocusRounded(ringed == STOP_CALL, calls, g.halo, 38.dp).height(76.dp).clip(pill).background(g.glass)
+                            .border(2.dp, calls, pill).padding(start = 10.dp, end = 24.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        Box(Modifier.size(56.dp).clip(CircleShape).background(calls), contentAlignment = Alignment.Center) {
+                            val letters = initials(call.name)
+                            if (letters != null) Text(letters, style = TextStyle(fontSize = 24.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = Orbit.onAccent(night)))
+                            else Icon(Icons.Rounded.Phone, null, tint = Orbit.onAccent(night))
+                        }
+                        Text(stringResource(R.string.phone_in_call_elapsed, call.name, "${elapsed / 60}:${"%02d".format(elapsed % 60)}"),
+                            style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = g.text),
+                            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 460.dp))
+                    }
+                    if (canEnd) {
+                        val red = Orbit.warning(night)
+                        OrbitDisc(76.dp, night, stop(STOP_HANG_UP).orbitFocus(ringed == STOP_HANG_UP, red, g.halo), fill = red, edge = red) {
+                            Icon(Icons.Rounded.CallEnd, stringResource(R.string.phone_action_hang_up), Modifier.size(36.dp), tint = Color.White)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     @Composable
     override fun Library(page: LibraryPage, ringed: Int, art: suspend (LibraryRow, Int) -> android.graphics.Bitmap?, row: (Int) -> Modifier, modifier: Modifier) {

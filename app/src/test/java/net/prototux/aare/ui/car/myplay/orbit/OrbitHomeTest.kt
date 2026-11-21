@@ -35,6 +35,8 @@ import net.prototux.aare.ui.car.CarScreen
 import net.prototux.aare.ui.car.CarShell
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.NowPlaying
+import net.prototux.aare.ui.car.CarCall
+import org.robolectric.Shadows
 import net.prototux.aare.ui.car.PadWalkStates
 import net.prototux.aare.ui.car.myplay.ENGINE_TAG
 import androidx.compose.ui.test.performClick
@@ -319,11 +321,27 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun music901x543Day() = picture("orbit-music-901x543-day", night = false, music = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun libraryNight() = picture("orbit-library-1280x720-night", night = true, music = true, library = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun library901x543Day() = picture("orbit-library-901x543-day", night = false, music = true, library = true)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun ringingNight() = picture("orbit-call-ringing-1280x720-night", night = true, call = CarCall(true, "Anna K.", 1L))
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun ringing901x543Day() = picture("orbit-call-ringing-901x543-day", night = false, call = CarCall(true, "+370 612 34567", 1L))
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun inCallNight() = picture("orbit-call-in-call-1280x720-night", night = true, call = CarCall(false, "Anna K.", System.currentTimeMillis() - 133_000))
+
+    @Test fun initialsAreLettersOrNone() {
+        assertEquals("AK", OrbitSkin.initials("Anna K."))
+        assertEquals("AB", OrbitSkin.initials("anna   bell cole"))
+        assertNull(OrbitSkin.initials("+370 612 34567"))
+        assertNull(OrbitSkin.initials(""))
+    }
+
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false) {
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null) {
         val state = show(night, trip, withArt)
+        if (call != null) {
+            Shadows.shadowOf(rule.activity.application).grantPermissions(android.Manifest.permission.ANSWER_PHONE_CALLS)
+            rule.runOnIdle { state.call = call }
+            rule.mainClock.advanceTimeBy(1_500)
+        }
         if (music) {
             rule.runOnIdle {
                 state.transport = MediaTransport(canSeek = true, canPrevious = true, canNext = true,

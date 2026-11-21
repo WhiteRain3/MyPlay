@@ -39,6 +39,8 @@ import net.prototux.aare.media.MediaLibrary
 import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.media.UpNextItem
 import net.prototux.aare.ui.car.NowPlaying
+import net.prototux.aare.ui.car.CarCall
+import org.robolectric.Shadows
 import net.prototux.aare.car.PhoneFixes
 import net.prototux.aare.car.SpeedSourceMode
 import net.prototux.aare.host.templates.LocalMapCovers
@@ -87,6 +89,8 @@ class MyPlayEngineTest {
         override fun mediaSeekTo(positionMs: Long) { asked += "seek:$positionMs" }
         override fun mediaSkipTo(queueId: Long) { asked += "skip:$queueId" }
         override fun mediaLibrary(): MediaLibrary? = library
+        override fun answerCall() { asked += "answer" }
+        override fun endCall() { asked += "end" }
     }
 
     /** What the engine tells the maps app covers its map, as the map sees it. */
@@ -416,6 +420,70 @@ class MyPlayEngineTest {
         rule.onNodeWithTag(MUSIC_LIBRARY).performClick()
         assertEquals("app:music", asked.last())
         assertTrue(rule.onAllNodes(hasTestTag(SLOT_LIBRARY)).fetchSemanticsNodes().isEmpty())
+    }
+
+    private fun allowEndingCalls() =
+        Shadows.shadowOf(rule.activity.application).grantPermissions(android.Manifest.permission.ANSWER_PHONE_CALLS)
+
+    /** N8: a ringing call takes the knob and the pad; R5-2: afterwards the ring is where it was. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aRingingCallAnswersOrDeclinesAndTheRingComesBack() {
+        allowEndingCalls()
+        val state = show(otherStop = true)
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.onNodeWithTag(STOP_SONG).assertIsSelected()
+        rule.runOnIdle { state.call = CarCall(ringing = true, name = "Anna K.", sinceMs = 1L) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(SLOT_CALL).assertExists()
+        rule.onNodeWithTag(CALL_ANSWER).assertIsSelected()
+        // Turns and the pad stay inside the call (the test skin puts Decline right of Answer).
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.onNodeWithTag(CALL_DECLINE).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        rule.onNodeWithTag(CALL_ANSWER).assertIsSelected()
+        engine.assertIsFocused()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("answer"), asked)
+        // The call is answered, then over: the ring is on the song again.
+        rule.runOnIdle { state.call = null }
+        rule.waitForIdle()
+        rule.onNodeWithTag(STOP_SONG).assertIsSelected()
+        // A second call, declined by a tap.
+        rule.runOnIdle { state.call = CarCall(ringing = true, name = "Ben", sinceMs = 2L) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(CALL_DECLINE).performClick()
+        assertEquals("end", asked.last())
+    }
+
+    /** Without the permission to end calls there is no Decline: Answer only. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun noDeclineWithoutThePermission() {
+        val state = show()
+        rule.runOnIdle { state.call = CarCall(ringing = true, name = "Anna K.", sinceMs = 1L) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(CALL_ANSWER).assertIsSelected()
+        assertTrue(rule.onAllNodes(hasTestTag(CALL_DECLINE)).fetchSemanticsNodes().isEmpty())
+    }
+
+    /** In a call, its strip is on the home: the knob reaches it; it opens the phone, or hangs up. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun inACallTheStripOpensThePhoneOrHangsUp() {
+        allowEndingCalls()
+        val state = show()
+        rule.runOnIdle { state.call = CarCall(ringing = false, name = "Anna K.", sinceMs = System.currentTimeMillis()) }
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        // Reading order: the strip is at the top, first after a wrap from the song.
+        engine.performKeyInput { pressKey(Key.Tab) }
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.onNodeWithTag(STOP_CALL).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals("app:phone", asked.last())
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.onNodeWithTag(STOP_HANG_UP).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals("end", asked.last())
     }
 
     @Test fun appsPagesWrapAndPage() {

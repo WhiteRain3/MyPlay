@@ -55,7 +55,7 @@ import net.prototux.aare.host.LocalSkinMapFilter
 import net.prototux.aare.host.templates.LocalMapCovers
 import net.prototux.aare.host.templates.MapCoverRegistry
 import net.prototux.aare.host.templates.coversMap
-import net.prototux.aare.ui.car.CallOverlay
+import net.prototux.aare.ui.car.rememberCanEnd
 import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarFocusVisibility
@@ -115,7 +115,25 @@ internal fun MyPlayEngineShell(
     // The home's stops and where they are, as the slots report them.
     val boxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
     var chosen by remember { mutableStateOf(STOP_HUB) }
+    // N8: a call. While it rings it takes the knob and the pad; in a call its strip is on the home.
+    val call = sources.calls.call
+    val canEnd = rememberCanEnd()
+    val ringing = call?.ringing == true
+    val callBoxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
+    var callChosen by remember(call?.sinceMs) { mutableStateOf(CALL_ANSWER) }
+    val callActions: Map<String, () -> Unit> = buildMap {
+        if (ringing) {
+            put(CALL_ANSWER, sources.calls::answer)
+            if (canEnd) put(CALL_DECLINE, sources.calls::end)
+        }
+    }
+    // R5: the ring starts on Answer, so a push answers.
+    val callRing = callChosen.takeIf { it in callActions } ?: CALL_ANSWER
     val actionsOf: Map<String, () -> Unit> = buildMap {
+        if (call != null && !ringing) {
+            put(STOP_CALL, sources.phone::open)
+            if (canEnd) put(STOP_HANG_UP, sources.calls::end)
+        }
         if (slots.turn != null) put(STOP_TURN, sources.openMaps)
         put(STOP_HUB) { model.push() }
         if (slots.song != null) put(STOP_SONG, sources.music::open)
@@ -219,7 +237,18 @@ internal fun MyPlayEngineShell(
     // Declared later, so it comes first: Back goes up the library, then out of it.
     BackHandler(enabled = lib != null) { if (lib?.canGoBack == true) lib.back() else library = null }
 
-    fun onKey(key: Key, shift: Boolean): Boolean = when (val p = model.place) {
+    fun onKey(key: Key, shift: Boolean): Boolean = if (ringing) {
+        // R5-2: the engine's own ring is left where it was, so it is there again once the call is answered or declined.
+        val live = callBoxes.filterKeys { it in callActions }
+        when (key) {
+            Key.Tab -> FocusGraph.knob(live, callRing, if (shift) -1 else 1)?.let { callChosen = it }
+            Key.DirectionLeft -> FocusGraph.pad(live, callRing, FocusGraph.Direction.LEFT)?.let { callChosen = it }
+            Key.DirectionRight -> FocusGraph.pad(live, callRing, FocusGraph.Direction.RIGHT)?.let { callChosen = it }
+            Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> callActions[callRing]?.invoke()
+            else -> Unit
+        }
+        key in WORLD_KEYS
+    } else when (val p = model.place) {
         Place.Home -> when (key) {
             Key.Tab -> { move(FocusGraph.knob(live, ring, if (shift) -1 else 1)); true }
             Key.DirectionUp -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.UP)); true }
@@ -327,6 +356,10 @@ internal fun MyPlayEngineShell(
                     }
                 }
                 if (home) ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }
+                // N8: in a call, its strip at the top of the home: two more home stops.
+                if (model.place == Place.Home && call != null && !ringing) {
+                    skin.InCall(call, canEnd, ring.takeIf { showRing }, { id -> Modifier.stop(id) }, Modifier.align(Alignment.TopCenter).padding(top = tokens.edge))
+                }
                 if (home) slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
                 when (val p = model.place) {
                     is Place.Chooser -> skin.Chooser(p.selected, Modifier.align(Alignment.Center).slot(Slot.CHOOSER).testTag(SLOT_CHOOSER))
@@ -384,7 +417,17 @@ internal fun MyPlayEngineShell(
             }
             overlay(Modifier.align(Alignment.BottomCenter))
             TopLines(state, actions, Modifier.align(Alignment.TopCenter))
-            CallOverlay(state, actions, Modifier.align(Alignment.TopCenter))
+            // N8: a ringing call, drawn by the skin over everything.
+            if (ringing) {
+                val currentCall by rememberUpdatedState(callActions)
+                skin.Ringing(call!!, canEnd, callRing, { id ->
+                    Modifier
+                        .pointerInput(id) { detectTapGestures { callChosen = id; currentCall[id]?.invoke() } }
+                        .onGloballyPositioned { c -> c.boundsInRoot().let { callBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                        .semantics { selected = id == callRing }
+                        .testTag(id)
+                }, Modifier.fillMaxSize().testTag(SLOT_CALL))
+            }
         }
     }
 }
@@ -424,12 +467,16 @@ internal const val ENGINE_TAG = "engine_root"
 internal const val STOP_TURN = "stop_turn"
 internal const val STOP_HUB = "stop_hub"
 internal const val STOP_SONG = "stop_song"
+/** N8: in a call, the strip (opens the phone) and Hang up. */
+const val STOP_CALL = "stop_call"
+const val STOP_HANG_UP = "stop_hang_up"
 internal const val SLOT_STATUS = "slot_status"
 internal const val SLOT_SPEED = "slot_speed"
 internal const val SLOT_CHOOSER = "slot_chooser"
 internal const val SLOT_WORLD = "slot_world"
 internal const val SLOT_APPS = "slot_apps"
 internal const val SLOT_MUSIC = "slot_music"
+internal const val SLOT_CALL = "slot_call"
 internal const val SLOT_LIBRARY = "slot_library"
 
 /** A row of the library (its test tag). */

@@ -142,7 +142,7 @@ private fun InCall(call: CarCall, state: CarUiState, actions: CarActions, modifi
  * so a permission granted meanwhile shows Decline and Hang up without waiting for another change.
  */
 @Composable
-private fun rememberCanEnd(): Boolean {
+internal fun rememberCanEnd(): Boolean {
     val context = LocalContext.current
     val canEnd by produceState(Calls.canEnd(context), context) {
         while (true) { value = Calls.canEnd(context); delay(1_000) }

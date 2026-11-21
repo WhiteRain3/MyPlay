@@ -12,6 +12,7 @@ import net.prototux.aare.car.PassiveFixes
 import net.prototux.aare.car.PhoneFixes
 import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarAppEntry
+import net.prototux.aare.ui.car.CarAppKind
 import net.prototux.aare.ui.car.CarCall
 import net.prototux.aare.ui.car.CarNotice
 import net.prototux.aare.ui.car.CarUiState
@@ -63,6 +64,8 @@ data class PhoneEntry(val name: String, val number: String)
 interface PhoneSource {
     val recents: List<PhoneEntry>
     fun call(entry: PhoneEntry)
+    /** N8: the phone app's own screen (calls, contacts, keypad). */
+    fun open()
 }
 
 interface MirrorSource {
@@ -127,6 +130,7 @@ data class EngineSources(
             phone = object : PhoneSource {
                 override val recents = emptyList<PhoneEntry>()
                 override fun call(entry: PhoneEntry) = Unit
+                override fun open() { state.apps.firstOrNull { it.kind == CarAppKind.PHONE }?.let(actions::openApp) }
             },
             mirror = object : MirrorSource {
                 override val running = false

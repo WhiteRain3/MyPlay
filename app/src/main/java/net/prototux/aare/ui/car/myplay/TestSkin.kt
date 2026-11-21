@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.prototux.aare.car.SpeedReading
 import net.prototux.aare.ui.car.CarAppEntry
+import net.prototux.aare.ui.car.CarCall
 import net.prototux.aare.media.LibraryRow
 import android.graphics.Bitmap
 
@@ -129,6 +130,27 @@ object TestSkin : MyPlaySkin {
                 Text(r.title + if (r.browsable) " >" else "", color = if (i == ringed) t.accent else t.onSurface, fontSize = 18.sp,
                     modifier = row(i).padding(8.dp))
             }
+        }
+    }
+
+    @Composable
+    override fun Ringing(call: CarCall, canEnd: Boolean, ringed: String, stop: (String) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        Column(modifier.background(t.background.copy(alpha = 0.9f)).padding(24.dp)) {
+            Text("CALL ${call.name}", color = t.onSurface, fontSize = 20.sp)
+            Row {
+                Text("ANSWER", color = if (ringed == CALL_ANSWER) t.accent else t.onSurface, modifier = stop(CALL_ANSWER).padding(12.dp))
+                if (canEnd) Text("DECLINE", color = if (ringed == CALL_DECLINE) t.accent else t.onSurface, modifier = stop(CALL_DECLINE).padding(12.dp))
+            }
+        }
+    }
+
+    @Composable
+    override fun InCall(call: CarCall, canEnd: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        Row(modifier.background(t.surface)) {
+            Text("IN CALL ${call.name}", color = t.onSurface, modifier = stop(STOP_CALL).padding(8.dp))
+            if (canEnd) Text("HANG UP", color = t.onSurface, modifier = stop(STOP_HANG_UP).padding(8.dp))
         }
     }
 

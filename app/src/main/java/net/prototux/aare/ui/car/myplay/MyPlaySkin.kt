@@ -14,6 +14,7 @@ import net.prototux.aare.host.templates.CarFormat
 import net.prototux.aare.media.LibraryRow
 import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.ui.car.CarAppEntry
+import net.prototux.aare.ui.car.CarCall
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.theme.MapColourFilter
 
@@ -121,6 +122,10 @@ data class MusicPage(val song: SongSlot?, val transport: MediaTransport)
 /** N7: one level of a music app's library, as the skin draws it. */
 data class LibraryPage(val title: String, val rows: List<LibraryRow>, val loading: Boolean, val error: String?)
 
+/** N8: the stops of a ringing call (also their test tags). */
+const val CALL_ANSWER = "call_answer"
+const val CALL_DECLINE = "call_decline"
+
 /** N7: the Music world's stops (also their test tags). */
 const val MUSIC_ART = "music_art"
 const val MUSIC_PREV = "music_prev"
@@ -209,6 +214,18 @@ interface MyPlaySkin {
      * takes `row(i)`; [art] loads a row's artwork. The skin keeps the ringed row in view.
      */
     @Composable fun Library(page: LibraryPage, ringed: Int, art: suspend (LibraryRow, Int) -> Bitmap?, row: (Int) -> Modifier, modifier: Modifier)
+
+    /**
+     * N8: a call ringing, over everything: Answer ([CALL_ANSWER]) and, when MyPlay may end calls
+     * ([canEnd]), Decline ([CALL_DECLINE]); each takes `stop(id)`; the ring is on [ringed].
+     */
+    @Composable fun Ringing(call: CarCall, canEnd: Boolean, ringed: String, stop: (String) -> Modifier, modifier: Modifier)
+
+    /**
+     * N8: a call in progress: a strip at the top of the home with the caller and the time, which
+     * opens the phone ([STOP_CALL]), and Hang up ([STOP_HANG_UP]) when [canEnd]; [ringed] as on the home.
+     */
+    @Composable fun InCall(call: CarCall, canEnd: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier)
 
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)
