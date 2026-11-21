@@ -602,8 +602,8 @@ possible at all.
   reports, which only Waze shows.
 - 2026-11-21, answers: racing becomes a **third full language, RACE**, for the whole screen, on
   the same engine. Order: **ORBIT, then DECK, then RACE.** Speed: from Waze if its feed has it,
-  else the car's speed if the box sends it, else the phone's GPS (that last one waits for the
-  owner's approval).
+  else the car's speed if the box sends it, else the phone's location (approved 2026-11-21, with
+  the battery rules in N3).
 
 **Why the screen still looks like AARE today.** The "map behind" layout replaced only the
 home screen and the bar. Apps, the app grid, notifications, calls, car settings and the music
@@ -658,7 +658,7 @@ by default, so every release before it is safe and the owner can try each piece 
 |---|---|---|
 | N1 | **Engine skeleton.** New package `ui/car/myplay/`: the screen model, the skin interface (tokens plus one composable per slot), a plain test skin, and a hidden layout choice "MyPlay" that draws it. Tests: the screen model's moves; a screenshot of the test skin at 1280x720 and 1200x723 | — |
 | N2 | **Engine focus and test seams.** Focus graph for knob, pad and buttons over the slots; fake sources for music, phone, calls, notifications and mirror; the pad-walk harness (`PadWalkTest` style) running on the engine with the test skin | N1 |
-| N3 | **Engine map layer.** The hosted maps app (Waze, Organic Maps) full screen behind; each slot declares whether it covers the map, and the free area goes to the app; wallpaper when no maps app; map colour filter hooked in per skin. **Speed source** for the skins: the car's speed when the box sends it (`car/CarData.kt`), otherwise none until the owner approves the phone's GPS. **Waze bench check** (once W1 works), with pictures: does Waze show police and hazard reports as car library alerts; does it keep its icons out of the covered area; does it draw its own speed sign; does any of its text (trip text, messages) carry the current speed. Tests: free-area numbers per slot set; bench `maps` and `map-move` | N1 |
+| N3 | **Engine map layer.** The hosted maps app (Waze, Organic Maps) full screen behind; each slot declares whether it covers the map, and the free area goes to the app; wallpaper when no maps app; map colour filter hooked in per skin. **Speed source** for the skins: the car's speed when the box sends it (`car/CarData.kt`); otherwise the phone's location, under the owner's condition of **no extra battery drain**: listen only while a speed is on the screen; prefer the fixes Waze already asks for (the passive provider, or the fused provider at a low interval and low-power priority) over asking for GPS; no location at all while no maps app is running; no background location permission (foreground only, while connected to the car); stop listening the moment the speed leaves the screen or the car disconnects. Tests: the listener starts and stops with the speed slot and the maps app; a fake location feed gives the shown speed. **Waze bench check** (once W1 works), with pictures: does Waze show police and hazard reports as car library alerts; does it keep its icons out of the covered area; does it draw its own speed sign; does any of its text (trip text, messages) carry the current speed. Tests: free-area numbers per slot set; bench `maps` and `map-move` | N1 |
 | N4 | **ORBIT tokens and parts.** Circles, rings and arcs; the type scale (62 px distance, 36 to 38 px names, 25 to 28 px secondary); near-black glass with one accent per world; ripple and detent motion; the focus ring in ORBIT's form. Screenshot per part, day and night | N1 |
 | N5 | **ORBIT home.** Turn bubble and distance (top left), trip ring hub with arrival time (bottom left), song disc (bottom right), clock and status (top right), all over the map and declared as covering it. Turn data from the hosted app's template (`host/templates/NavigationUi.kt`) or the phone's guidance. Bench `home`, `maps`, `night-day` | N3, N4 |
 | N6 | **ORBIT dial and apps.** Push the hub: the six worlds (Navigate, Music, Calls, Apps, Car, Settings) around the map; turn to choose, push to enter, hold to go back. Apps world is the app list. Pad right = next song on home. Bench `grid-end`, `open-back`, `back-out`, `pad`, `gestures` | N2, N5 |
@@ -722,7 +722,7 @@ darken and tint only, and the bench must show a report icon still readable.
 | HUD part | Possible? | How |
 |---|---|---|
 | Big turn read-out (arrow, distance, street) | **Yes** | From Waze's template data, drawn by MyPlay in any style, in a corner |
-| Speed | **Yes, if there is a source** | Not from Waze's data: the car library's navigation data (version 1.8.0-rc01, which MyPlay builds with) has no field for the current speed or the speed limit. `Trip`, `TravelEstimate`, `RoutingInfo` and `NavigationTemplate` carry steps, distances, times, arrival, the current road and free trip text only; checked in the library's classes, 2026-11-21. Waze could put a speed into its free text, which N3's bench check looks for. Otherwise the car's speed from the box (`car/CarData.kt` reads it when the car sends it; the connection log (R8) shows whether it does), else the phone's GPS (waits for the owner's approval) |
+| Speed | **Yes, if there is a source** | Not from Waze's data: the car library's navigation data (version 1.8.0-rc01, which MyPlay builds with) has no field for the current speed or the speed limit. `Trip`, `TravelEstimate`, `RoutingInfo` and `NavigationTemplate` carry steps, distances, times, arrival, the current road and free trip text only; checked in the library's classes, 2026-11-21. Waze could put a speed into its free text, which N3's bench check looks for. Otherwise the car's speed from the box (`car/CarData.kt` reads it when the car sends it; the connection log (R8) shows whether it does), else the phone's location, with the battery rules in N3 (approved 2026-11-21) |
 | Speed limit | **No field for it** in the car library's navigation data | Only if Waze puts it into free text or an alert; N3's bench check |
 | Arrival, time left, distance left | **Yes** | Template data, e.g. a racing "lap" strip |
 | A game-like frame (edges, corner brackets, a dark vignette, angled panels) | **Yes, at the edges** | Drawn over the outer strip of the screen, declared as covering the map, so the free area (and Waze's icons, if it honours it) stays in the middle |
@@ -739,7 +739,8 @@ the **colour of Waze's picture**, and stops at Waze's map content.
 
 Answered 2026-11-21 (see the decisions at the top of this phase): RACE as a third language; speed
 from Waze, else the car, else the phone's GPS (GPS waits for approval); ORBIT, DECK, RACE.
-Still open: **may MyPlay use the phone's GPS for speed** when the car does not send it?
+The phone's location as the speed fallback was approved the same day, on condition of no extra
+battery drain (the rules are in N3). No question is open for this phase now.
 
 ## Standing rules for every task
 
