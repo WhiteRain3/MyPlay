@@ -34,6 +34,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import net.prototux.aare.car.CarData
+import net.prototux.aare.media.MediaTransport
+import net.prototux.aare.media.UpNextItem
+import net.prototux.aare.ui.car.NowPlaying
 import net.prototux.aare.car.PhoneFixes
 import net.prototux.aare.car.SpeedSourceMode
 import net.prototux.aare.host.templates.LocalMapCovers
@@ -77,6 +80,10 @@ class MyPlayEngineTest {
         override fun openLauncher() { asked += "launcher" }
         override fun openApp(app: CarAppEntry) { asked += "app:${app.id}" }
         override fun mediaNext() { asked += "next" }
+        override fun mediaPrevious() { asked += "previous" }
+        override fun mediaPlayPause() { asked += "playPause" }
+        override fun mediaSeekTo(positionMs: Long) { asked += "seek:$positionMs" }
+        override fun mediaSkipTo(queueId: Long) { asked += "skip:$queueId" }
     }
 
     /** What the engine tells the maps app covers its map, as the map sees it. */
@@ -126,10 +133,11 @@ class MyPlayEngineTest {
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
-        engine.performKeyInput { pressKey(Key.Tab) }
+        // Calls: a world not drawn yet (Music and Apps draw their own).
+        repeat(2) { engine.performKeyInput { pressKey(Key.Tab) } }
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_WORLD).assertExists()
-        rule.onNodeWithText(World.MUSIC.name, useUnmergedTree = true).assertExists()
+        rule.onNodeWithText(World.CALLS.name, useUnmergedTree = true).assertExists()
 
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
@@ -187,9 +195,9 @@ class MyPlayEngineTest {
         rule.onNodeWithTag("other_stop").assertIsNotFocused()
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
-        engine.performKeyInput { pressKey(Key.Tab) }
+        repeat(2) { engine.performKeyInput { pressKey(Key.Tab) } }
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        rule.onNodeWithText(World.MUSIC.name, useUnmergedTree = true).assertExists()
+        rule.onNodeWithText(World.CALLS.name, useUnmergedTree = true).assertExists()
     }
 
     /** N6: the Apps world lists the apps; knob, pad, push and tap; Back returns to the dial. */
@@ -229,6 +237,75 @@ class MyPlayEngineTest {
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
         assertTrue("no app grid any more", "launcher" !in asked)
+    }
+
+    /** N7: the Music world with the test skin. */
+    private fun openMusic(canSeek: Boolean = true): CarUiState {
+        val state = show(otherStop = true)
+        rule.runOnIdle {
+            // Paused, so the position does not move while the test runs.
+            state.nowPlaying = NowPlaying("music", PadWalkStates.SONG_TITLE, "The Synthwaves", null, playing = false,
+                positionMs = 95_000, durationMs = 240_000, updatedAtMs = android.os.SystemClock.elapsedRealtime())
+            state.transport = MediaTransport(canSeek = canSeek, canPrevious = true, canNext = true,
+                upNext = listOf(UpNextItem(7, "Midnight Run", "Blue Harbor"), UpNextItem(8, "Glass Roads", "Kite & Co.")))
+        }
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.Tab) } // NAVIGATE -> MUSIC
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC).assertExists()
+        return state
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theMusicWorldPlaysSeeksAndSkips() {
+        openMusic()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        rule.onNodeWithTag(MUSIC_PLAY).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("playPause"), asked)
+        // The pad to the artwork above; there left and right seek 10 s (R5-5), from the last seek
+        // while the player has not confirmed it (R5-4).
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
+        rule.onNodeWithTag(MUSIC_ART).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        assertEquals(listOf("playPause", "seek:105000", "seek:115000", "seek:105000"), asked)
+        rule.onNodeWithTag(MUSIC_ART).assertIsSelected()
+        // The knob still leaves the artwork; a next song plays when pushed.
+        engine.performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } }
+        engine.assertIsFocused()
+        rule.onNodeWithTag(upNextStop(8)).performClick()
+        assertEquals("skip:8", asked.last())
+        rule.onNodeWithTag(MUSIC_LIBRARY).performClick()
+        assertEquals("app:music", asked.last())
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    /** Where the player does not allow seeking, left and right on the artwork move the ring instead. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun noSeekWithoutThePlayersLeave() {
+        openMusic(canSeek = false)
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
+        rule.onNodeWithTag(MUSIC_ART).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        assertTrue(asked.none { it.startsWith("seek") })
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun nothingPlayingOffersTheLibrary() {
+        val state = show()
+        rule.runOnIdle { state.nowPlaying = null }
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.Tab) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(MUSIC_LIBRARY).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(1, asked.size)
     }
 
     @Test fun appsPagesWrapAndPage() {

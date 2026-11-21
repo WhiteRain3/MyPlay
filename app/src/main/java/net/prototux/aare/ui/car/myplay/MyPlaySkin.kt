@@ -11,6 +11,7 @@ import net.prototux.aare.car.SpeedReading
 import androidx.car.app.model.Distance
 import androidx.car.app.navigation.model.Maneuver
 import net.prototux.aare.host.templates.CarFormat
+import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.theme.MapColourFilter
@@ -113,6 +114,17 @@ object TripProgress {
     }
 }
 
+/** N7: what the Music world shows. */
+data class MusicPage(val song: SongSlot?, val transport: MediaTransport)
+
+/** N7: the Music world's stops (also their test tags). */
+const val MUSIC_ART = "music_art"
+const val MUSIC_PREV = "music_prev"
+const val MUSIC_PLAY = "music_play"
+const val MUSIC_NEXT = "music_next"
+const val MUSIC_LIBRARY = "music_library"
+fun upNextStop(queueId: Long) = "music_up_$queueId"
+
 /** What the home screen's slots show; null where there is nothing (no route, no song). */
 data class HomeSlots(val turn: TurnSlot?, val trip: TripSlot?, val song: SongSlot?) {
     companion object {
@@ -179,6 +191,14 @@ interface MyPlaySkin {
      * pad and taps; the skin draws the ring on [ringed].
      */
     @Composable fun AppsWorld(apps: List<CarAppEntry>, ringed: Int, page: Int, pages: Int, tile: (Int) -> Modifier, modifier: Modifier)
+
+    /**
+     * N7: the Music world: the song (null when nothing plays), its buttons, the next songs, and the
+     * way to the music app's library. Each stop takes `stop(id)` with its id ([MUSIC_ART],
+     * [MUSIC_PREV], [MUSIC_PLAY], [MUSIC_NEXT], [MUSIC_LIBRARY], [upNextStop]); the skin draws
+     * the ring on [ringed]. The artwork carries the progress bar: left and right seek there (R5-5).
+     */
+    @Composable fun MusicWorld(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier)
 
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)

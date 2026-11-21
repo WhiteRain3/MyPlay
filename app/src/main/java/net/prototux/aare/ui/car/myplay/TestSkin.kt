@@ -94,6 +94,30 @@ object TestSkin : MyPlaySkin {
     }
 
     @Composable
+    override fun MusicWorld(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        @Composable
+        fun item(id: String, label: String) =
+            Text(label, color = if (id == ringed) t.accent else t.onSurface, fontSize = 18.sp, modifier = stop(id).padding(12.dp))
+        Column(modifier.background(t.background.copy(alpha = 0.8f)).padding(24.dp)) {
+            val song = page.song
+            if (song != null) {
+                item(MUSIC_ART, song.title)
+                Row {
+                    item(MUSIC_PREV, "PREV")
+                    item(MUSIC_PLAY, if (song.playing) "PAUSE" else "PLAY")
+                    item(MUSIC_NEXT, "NEXT")
+                    item(MUSIC_LIBRARY, "LIBRARY")
+                }
+            } else {
+                Text("NOTHING PLAYING", color = t.dim, fontSize = 18.sp)
+                item(MUSIC_LIBRARY, "LIBRARY")
+            }
+            for (u in page.transport.upNext) item(upNextStop(u.queueId), u.title)
+        }
+    }
+
+    @Composable
     override fun Chooser(selected: World, modifier: Modifier) = Box(modifier) {
         val t = LocalSkinTokens.current
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

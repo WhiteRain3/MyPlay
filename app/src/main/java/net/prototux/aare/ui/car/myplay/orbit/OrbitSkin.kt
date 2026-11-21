@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,7 +30,12 @@ import androidx.compose.material.icons.rounded.Battery6Bar
 import androidx.compose.material.icons.rounded.BatteryChargingFull
 import androidx.compose.material.icons.rounded.BatteryFull
 import androidx.compose.material.icons.rounded.DonutLarge
+import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Straight
 import androidx.compose.material.icons.rounded.TurnLeft
@@ -83,7 +91,14 @@ import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.mediaProgress
 import net.prototux.aare.ui.car.myplay.LocalSkinTokens
 import net.prototux.aare.ui.car.myplay.LocalStopRinged
+import net.prototux.aare.ui.car.myplay.MUSIC_ART
+import net.prototux.aare.ui.car.myplay.MUSIC_LIBRARY
+import net.prototux.aare.ui.car.myplay.MUSIC_NEXT
+import net.prototux.aare.ui.car.myplay.MUSIC_PLAY
+import net.prototux.aare.ui.car.myplay.MUSIC_PREV
+import net.prototux.aare.ui.car.myplay.MusicPage
 import net.prototux.aare.ui.car.myplay.MyPlaySkin
+import net.prototux.aare.ui.car.myplay.upNextStop
 import net.prototux.aare.ui.car.myplay.SkinTokens
 import net.prototux.aare.ui.car.myplay.SongSlot
 import net.prototux.aare.ui.car.myplay.TripSlot
@@ -353,6 +368,118 @@ object OrbitSkin : MyPlaySkin {
     }
 
     private val DIAL = 552.dp
+
+    @Composable
+    override fun MusicWorld(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        val accent = Orbit.accent(World.MUSIC, night)
+        Box(modifier.background(g.halo.copy(alpha = 0.62f)).orbitRipple(0.5f, 0.5f)) {
+            Scaled {
+                // The sheet's places at 1280x720, scaled with the screen.
+                Box(Modifier.fillMaxSize()) {
+                    val song = page.song
+                    if (song == null) {
+                        Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                            OrbitDisc(200.dp, night, fill = g.glass) { Icon(Icons.Rounded.MusicNote, null, Modifier.size(96.dp), tint = accent) }
+                            Text(stringResource(R.string.myplay_music_nothing), style = Orbit.Type.name.floating(g.text), modifier = Modifier.padding(top = 16.dp))
+                            Spacer(Modifier.size(24.dp))
+                            MusicButton(MUSIC_LIBRARY, Icons.Rounded.LibraryMusic, 76.dp, false, ringed, accent, night, stop)
+                        }
+                        return@Box
+                    }
+                    ArtBox(song, accent, ringed == MUSIC_ART, night, stop(MUSIC_ART).offset(140.dp, 110.dp))
+                    // The buttons in an arc under the artwork.
+                    MusicButton(MUSIC_PREV, Icons.Rounded.SkipPrevious, 76.dp, false, ringed, accent, night, stop, Modifier.offset(165.dp - 38.dp, 548.dp - 38.dp))
+                    MusicButton(MUSIC_PLAY, if (song.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, 100.dp, true, ringed, accent, night, stop, Modifier.offset(262.dp - 50.dp, 586.dp - 50.dp))
+                    MusicButton(MUSIC_NEXT, Icons.Rounded.SkipNext, 76.dp, false, ringed, accent, night, stop, Modifier.offset(376.dp - 38.dp, 586.dp - 38.dp))
+                    MusicButton(MUSIC_LIBRARY, Icons.Rounded.LibraryMusic, 76.dp, false, ringed, accent, night, stop, Modifier.offset(472.dp - 38.dp, 548.dp - 38.dp))
+                    if (page.transport.upNext.isNotEmpty()) {
+                        Column(Modifier.offset(640.dp, 110.dp).width(480.dp)) {
+                            Text(stringResource(R.string.myplay_music_up_next).uppercase(), style = TextStyle(fontSize = 22.sp, letterSpacing = 2.sp).floating(g.secondary),
+                                modifier = Modifier.padding(bottom = 14.dp))
+                            page.transport.upNext.forEachIndexed { i, u ->
+                                val id = upNextStop(u.queueId)
+                                Row(
+                                    stop(id).padding(bottom = 22.dp).orbitFocusRounded(ringed == id, accent, g.halo, 36.dp),
+                                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp),
+                                ) {
+                                    Box(Modifier.size(72.dp).clip(CircleShape).background(UP_NEXT[i % UP_NEXT.size]))
+                                    Column {
+                                        Text(u.title, style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold).floating(g.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        if (u.subtitle.isNotBlank()) Text(u.subtitle, style = TextStyle(fontSize = 25.sp).floating(g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** The sheet's round colour for each next song (the queue sends no artwork). */
+    private val UP_NEXT = listOf(
+        Brush.linearGradient(listOf(Color(0xFFFFC24A), Color(0xFFFF5A8A))),
+        Brush.linearGradient(listOf(Color(0xFF4CC9F0), Color(0xFF5FD39A))),
+        Brush.linearGradient(listOf(Color(0xFF8F5BFF), Color(0xFF4CC9F0))),
+    )
+
+    /** The artwork box ("the one square"): the art, the title, artist and the progress bar over its bottom. */
+    @Composable
+    private fun ArtBox(song: SongSlot, accent: Color, on: Boolean, night: Boolean, modifier: Modifier) {
+        val g = Orbit.glass(night)
+        val shape = androidx.compose.foundation.shape.RoundedCornerShape(78.dp)
+        var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+        LaunchedEffect(song.playing, song.updatedAtMs) {
+            now = SystemClock.elapsedRealtime()
+            while (song.playing) {
+                delay(500)
+                now = SystemClock.elapsedRealtime()
+            }
+        }
+        val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
+        Box(modifier.size(320.dp).orbitFocusRounded(on, accent, g.halo, 78.dp).clip(shape)) {
+            val art = song.art
+            if (art != null) {
+                val image = remember(art) { art.asImageBitmap() }
+                Image(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            } else {
+                Box(Modifier.fillMaxSize().background(ART), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.MusicNote, null, Modifier.size(128.dp), tint = Color.White)
+                }
+            }
+            Column(
+                Modifier.align(Alignment.BottomStart).fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xE006080D))))
+                    .padding(start = 28.dp, end = 28.dp, top = 50.dp, bottom = 22.dp),
+            ) {
+                Text(song.title, style = TextStyle(fontSize = 38.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = Color.White), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(song.subtitle, style = TextStyle(fontSize = 26.sp, color = Color(0xFFC4CBDC)), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (progress != null) {
+                    Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(6.dp).clip(CircleShape).background(Color(0x40FFFFFF))
+                        .testTag(MUSIC_PROGRESS_TAG).progressSemantics(progress)) {
+                        Box(Modifier.fillMaxWidth(progress).fillMaxSize().clip(CircleShape).background(Color.White))
+                    }
+                }
+            }
+        }
+    }
+
+    /** One of the music buttons: a glass disc, or the big one filled in the world's colour. */
+    @Composable
+    private fun MusicButton(
+        id: String, icon: ImageVector, size: androidx.compose.ui.unit.Dp, big: Boolean, ringed: String, accent: Color, night: Boolean,
+        stop: (String) -> Modifier, modifier: Modifier = Modifier,
+    ) {
+        val g = Orbit.glass(night)
+        OrbitDisc(
+            size, night, modifier.then(stop(id)).orbitFocus(ringed == id, accent, g.halo),
+            fill = if (big) accent else g.glass, edge = if (big) accent else g.edge,
+        ) { Icon(icon, null, Modifier.size(if (big) 46.dp else 36.dp), tint = if (big) Orbit.onAccent(night) else g.text) }
+    }
+
+    const val MUSIC_PROGRESS_TAG = "orbit_music_progress"
 
     /** The honeycomb's rows (the sheet: 3, 4, 3), for [appsPerPage] apps. */
     private val ROWS = listOf(3, 4, 3)

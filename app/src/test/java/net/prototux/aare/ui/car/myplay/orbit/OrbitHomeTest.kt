@@ -37,6 +37,8 @@ import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.NowPlaying
 import net.prototux.aare.ui.car.PadWalkStates
 import net.prototux.aare.ui.car.myplay.ENGINE_TAG
+import net.prototux.aare.media.MediaTransport
+import net.prototux.aare.media.UpNextItem
 import net.prototux.aare.ui.car.myplay.SLOT_APPS
 import net.prototux.aare.ui.car.myplay.SLOT_CHOOSER
 import net.prototux.aare.ui.car.myplay.appTag
@@ -287,11 +289,24 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNoArtDay() = picture("orbit-home-no-art-day", night = false, withArt = false)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun dialNight() = picture("orbit-dial-1280x720-night", night = true, dial = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun dial901x543Day() = picture("orbit-dial-901x543-day", night = false, dial = true)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun musicNight() = picture("orbit-music-1280x720-night", night = true, music = true)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun music901x543Day() = picture("orbit-music-901x543-day", night = false, music = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false) {
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false) {
         val state = show(night, trip, withArt)
+        if (music) {
+            rule.runOnIdle {
+                state.transport = MediaTransport(canSeek = true, canPrevious = true, canNext = true,
+                    upNext = listOf(UpNextItem(7, "Midnight Run", "Blue Harbor"), UpNextItem(8, "Glass Roads", "Kite & Co."), UpNextItem(9, "Slow Harbour", "Lumen")))
+            }
+            val engine = rule.onNodeWithTag(ENGINE_TAG)
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            engine.performKeyInput { pressKey(Key.Tab) }
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            rule.mainClock.advanceTimeBy(1_000)
+        }
         if (apps) {
             rule.runOnIdle { addApps(state) }
             val engine = rule.onNodeWithTag(ENGINE_TAG)

@@ -14,6 +14,25 @@ data class MediaApp(
     val icon: Bitmap?,
 )
 
+/** MyPlay (N7): one song after the playing one, in the player's queue. */
+data class UpNextItem(val queueId: Long, val title: String, val subtitle: String)
+
+/** MyPlay (N7): what the playing source lets the car screen do, and what comes next. */
+data class MediaTransport(
+    val canSeek: Boolean = false,
+    val canPrevious: Boolean = false,
+    val canNext: Boolean = false,
+    val upNext: List<UpNextItem> = emptyList(),
+) {
+    companion object {
+        /** At most this many songs after the playing one. */
+        const val UP_NEXT = 3
+        private val NONE = kotlinx.coroutines.flow.MutableStateFlow(MediaTransport())
+        /** For hubs that know nothing of it. */
+        val none: StateFlow<MediaTransport> get() = NONE
+    }
+}
+
 /** What is playing, from whichever media app is active. */
 data class PlaybackInfo(
     val packageName: String,
@@ -59,6 +78,15 @@ interface MediaHub {
     /** Full-screen UI for an app: browse tree (list/grid per content style), search, now playing. */
     @Composable
     fun Screen(app: MediaApp, driving: Boolean, modifier: Modifier)
+
+    /** MyPlay (N7): what the playing source allows, and its next songs. */
+    val transport: StateFlow<MediaTransport> get() = MediaTransport.none
+
+    /** MyPlay (N7): seek the playing source, when it allows it. */
+    fun seekTo(positionMs: Long) = Unit
+
+    /** MyPlay (N7): play a song of the queue ([UpNextItem.queueId]). */
+    fun skipTo(queueId: Long) = Unit
 
     /** Disconnects everything. */
     fun release()

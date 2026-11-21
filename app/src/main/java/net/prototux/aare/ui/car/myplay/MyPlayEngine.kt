@@ -40,7 +40,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.unit.dp
+import android.os.SystemClock
 import kotlinx.coroutines.delay
+import net.prototux.aare.media.SEEK_PENDING_MS
+import net.prototux.aare.media.SEEK_STEP_MS
+import net.prototux.aare.media.nextSeek
+import net.prototux.aare.media.seekConfirmed
 import net.prototux.aare.car.SpeedFeed
 import net.prototux.aare.car.SpeedReading
 import net.prototux.aare.car.SpeedSourceMode
@@ -117,6 +122,40 @@ internal fun MyPlayEngineShell(
     val live = boxes.filterKeys { it in actionsOf }
     val ring = chosen.takeIf { it in actionsOf } ?: STOP_HUB
     fun move(to: String?) { if (to != null) chosen = to }
+    // N7: the Music world: its stops, which holds the ring, and a pad seek not yet confirmed.
+    val music = sources.music
+    val musicPage = MusicPage(slots.song, music.transport)
+    val musicBoxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
+    var musicChosen by remember { mutableStateOf(MUSIC_PLAY) }
+    val musicActions: Map<String, () -> Unit> = buildMap {
+        if (musicPage.song != null) {
+            put(MUSIC_ART, music::playPause)
+            put(MUSIC_PREV, music::previous)
+            put(MUSIC_PLAY, music::playPause)
+            put(MUSIC_NEXT, music::next)
+        }
+        put(MUSIC_LIBRARY, music::open)
+        for (u in musicPage.transport.upNext) put(upNextStop(u.queueId)) { music.skipTo(u.queueId) }
+    }
+    val musicRing = musicChosen.takeIf { it in musicActions } ?: if (musicPage.song != null) MUSIC_PLAY else MUSIC_LIBRARY
+    var pendingSeek by remember { mutableStateOf<Long?>(null) }
+    val np = music.nowPlaying
+    // R5-9: the player's report confirms the seek; R5-4: or it stops counting after a while.
+    LaunchedEffect(np?.positionMs, np?.updatedAtMs) { if (np != null && seekConfirmed(pendingSeek, np.positionMs)) pendingSeek = null }
+    LaunchedEffect(pendingSeek) { if (pendingSeek != null) { delay(SEEK_PENDING_MS); pendingSeek = null } }
+    fun seek(forward: Boolean) {
+        val p = music.nowPlaying ?: return
+        val now = if (p.playing) p.positionMs + (SystemClock.elapsedRealtime() - p.updatedAtMs).coerceAtLeast(0) else p.positionMs
+        val target = nextSeek(pendingSeek, now, p.durationMs, if (forward) SEEK_STEP_MS else -SEEK_STEP_MS)
+        pendingSeek = target
+        music.seekTo(target)
+    }
+    fun padMusic(dir: FocusGraph.Direction) {
+        val sideways = dir == FocusGraph.Direction.LEFT || dir == FocusGraph.Direction.RIGHT
+        // R5-5: on the artwork (it carries the progress bar) left and right seek; up, down and the knob leave it.
+        if (musicRing == MUSIC_ART && sideways && musicPage.transport.canSeek) seek(dir == FocusGraph.Direction.RIGHT)
+        else FocusGraph.pad(musicBoxes.filterKeys { it in musicActions }, musicRing, dir)?.let { musicChosen = it }
+    }
     // N6: the Apps world: which app holds the ring (over all pages), and where this page's discs are.
     val apps = sources.apps.apps
     val perPage = skin.appsPerPage
@@ -164,13 +203,25 @@ internal fun MyPlayEngineShell(
             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> {
                 model.push()
                 if (p.selected == World.APPS) appRing = 0
+                if (p.selected == World.MUSIC) musicChosen = MUSIC_PLAY
                 true
             }
             else -> false
         }
         // N2-1: until the worlds draw their own stops, a world keeps the knob and pad (only Back,
         // through the BackHandler, leaves), so a turn cannot carry focus off the engine.
-        is Place.InWorld -> if (p.world == World.APPS) {
+        is Place.InWorld -> if (p.world == World.MUSIC) {
+            when (key) {
+                Key.Tab -> FocusGraph.knob(musicBoxes.filterKeys { it in musicActions }, musicRing, if (shift) -1 else 1)?.let { musicChosen = it }
+                Key.DirectionUp -> padMusic(FocusGraph.Direction.UP)
+                Key.DirectionDown -> padMusic(FocusGraph.Direction.DOWN)
+                Key.DirectionLeft -> padMusic(FocusGraph.Direction.LEFT)
+                Key.DirectionRight -> padMusic(FocusGraph.Direction.RIGHT)
+                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> musicActions[musicRing]?.invoke()
+                else -> Unit
+            }
+            key in WORLD_KEYS
+        } else if (p.world == World.APPS) {
             when (key) {
                 Key.Tab -> appRing = AppsPages.knob(appIndex, if (shift) -1 else 1, apps.size)
                 Key.DirectionUp -> padApps(FocusGraph.Direction.UP)
@@ -229,7 +280,19 @@ internal fun MyPlayEngineShell(
                 if (home) slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
                 when (val p = model.place) {
                     is Place.Chooser -> skin.Chooser(p.selected, Modifier.align(Alignment.Center).slot(Slot.CHOOSER).testTag(SLOT_CHOOSER))
-                    is Place.InWorld -> if (p.world == World.APPS) {
+                    is Place.InWorld -> if (p.world == World.MUSIC) {
+                        skin.MusicWorld(
+                            musicPage, musicRing,
+                            { id ->
+                                Modifier
+                                    .pointerInput(id) { detectTapGestures { musicChosen = id; musicActions[id]?.invoke() } }
+                                    .onGloballyPositioned { c -> c.boundsInRoot().let { musicBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                                    .semantics { selected = id == musicRing }
+                                    .testTag(id)
+                            },
+                            Modifier.fillMaxSize().testTag(SLOT_MUSIC),
+                        )
+                    } else if (p.world == World.APPS) {
                         val first = page * perPage
                         skin.AppsWorld(
                             pageApps, appIndex - first, page, AppsPages.pages(apps.size, perPage),
@@ -296,6 +359,7 @@ internal const val SLOT_SPEED = "slot_speed"
 internal const val SLOT_CHOOSER = "slot_chooser"
 internal const val SLOT_WORLD = "slot_world"
 internal const val SLOT_APPS = "slot_apps"
+internal const val SLOT_MUSIC = "slot_music"
 
 /** An app's disc in the Apps world (its test tag). */
 internal fun appTag(app: CarAppEntry) = "app_${app.id}"

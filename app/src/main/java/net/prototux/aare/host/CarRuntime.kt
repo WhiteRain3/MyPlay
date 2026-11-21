@@ -413,6 +413,7 @@ class CarRuntime(
                 if (p != null && ui.activeMediaAppId == null) ui.activeMediaAppId = mediaId(p.packageName)
             }
         }
+        scope.launch { media.transport.collect { ui.transport = it } } // MyPlay (N7): seek, previous, next, up next
     }
 
     fun stop() {
@@ -705,6 +706,8 @@ class CarRuntime(
         override fun mediaPlayPause() = media.playPause()
         override fun mediaNext() = media.next()
         override fun mediaPrevious() = media.previous()
+        override fun mediaSeekTo(positionMs: Long) = media.seekTo(positionMs) // MyPlay (N7)
+        override fun mediaSkipTo(queueId: Long) = media.skipTo(queueId) // MyPlay (N7)
         override fun dismissNotice(notice: CarNotice) { ui.notices.remove(notice) }
         override fun answerCall() = Calls.answer(context)
         override fun endCall() = Calls.end(context)

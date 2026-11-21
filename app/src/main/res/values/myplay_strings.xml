@@ -40,4 +40,6 @@
     <string name="myplay_hub_menu" translatable="false">Menu</string>
     <string name="myplay_apps_hint" translatable="false">turn: move around · push: open · Back: back</string>
     <string name="myplay_apps_none" translatable="false">No apps to show.</string>
+    <string name="myplay_music_nothing" translatable="false">Nothing playing</string>
+    <string name="myplay_music_up_next" translatable="false">Up next</string>
 </resources>

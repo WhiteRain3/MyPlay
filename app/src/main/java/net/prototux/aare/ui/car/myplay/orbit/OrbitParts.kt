@@ -99,6 +99,20 @@ fun Modifier.orbitFocus(on: Boolean, accent: Color, halo: Color): Modifier = if 
     drawCircle(accent, r + gap + w / 2, c, style = Stroke(w))
 }
 
+/** ORBIT's focus ring around a rounded square of corner [corner] (the artwork box, "the one square"). */
+fun Modifier.orbitFocusRounded(on: Boolean, accent: Color, halo: Color, corner: Dp): Modifier = if (!on) this else drawBehind {
+    val gap = Orbit.FOCUS_GAP.toPx()
+    val w = Orbit.FOCUS_WIDTH.toPx()
+    val r = corner.toPx()
+    fun ring(grow: Float, colour: Color, width: Float) = drawRoundRect(
+        colour, Offset(-grow, -grow), Size(size.width + 2 * grow, size.height + 2 * grow),
+        androidx.compose.ui.geometry.CornerRadius(r + grow), style = Stroke(width),
+    )
+    ring(gap + w + Orbit.FOCUS_HALO.toPx() / 2, halo.copy(alpha = 0.6f), Orbit.FOCUS_HALO.toPx())
+    ring(gap / 2, halo, gap)
+    ring(gap + w / 2, accent, w)
+}
+
 /** The ring-shaped sector of the dial between [startDeg] and [endDeg] (0 = right, clockwise), radii in px. */
 internal fun sectorPath(center: Offset, inner: Float, outer: Float, startDeg: Float, endDeg: Float, steps: Int = 24): Path = Path().apply {
     fun at(r: Float, deg: Float) = Math.toRadians(deg.toDouble()).let { Offset(center.x + r * cos(it).toFloat(), center.y + r * sin(it).toFloat()) }

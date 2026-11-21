@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import net.prototux.aare.car.SpeedReading
 import kotlinx.coroutines.flow.StateFlow
 import net.prototux.aare.car.CarData
+import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.car.PassiveFixes
 import net.prototux.aare.car.PhoneFixes
 import net.prototux.aare.ui.car.CarActions
@@ -23,9 +24,16 @@ import net.prototux.aare.ui.car.NowPlaying
  */
 interface MusicSource {
     val nowPlaying: NowPlaying?
+    /** N7: what the playing source allows, and its next songs. */
+    val transport: MediaTransport
     fun playPause()
     fun next()
     fun previous()
+    /** N7: seek (only when [transport] allows it). */
+    fun seekTo(positionMs: Long)
+    /** N7: play a song of the queue. */
+    fun skipTo(queueId: Long)
+    /** The music app's own screen: its library, search and queue (the browser). */
     fun open()
 }
 
@@ -93,6 +101,9 @@ data class EngineSources(
         fun of(state: CarUiState, actions: CarActions, context: Context?) = EngineSources(
             music = object : MusicSource {
                 override val nowPlaying get() = state.nowPlaying
+                override val transport get() = state.transport
+                override fun seekTo(positionMs: Long) = actions.mediaSeekTo(positionMs)
+                override fun skipTo(queueId: Long) = actions.mediaSkipTo(queueId)
                 override fun playPause() = actions.mediaPlayPause()
                 override fun next() = actions.mediaNext()
                 override fun previous() = actions.mediaPrevious()

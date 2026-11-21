@@ -59,6 +59,12 @@ class DefaultMediaHub(context: Context, scope: CoroutineScope) : MediaHub {
 
     override val playback: StateFlow<PlaybackInfo?> = _playback.asStateFlow()
 
+    private val _transport = MutableStateFlow(MediaTransport())
+    override val transport: StateFlow<MediaTransport> = _transport.asStateFlow()
+
+    /** The playing source's state, for its queue (skipTo needs the entry). */
+    private var currentState: SourceState? = null
+
     init {
         discovery.start()
         tracker.start()
@@ -77,6 +83,8 @@ class DefaultMediaHub(context: Context, scope: CoroutineScope) : MediaHub {
             val pick = all.firstOrNull { it.first.key == key }
             _current.value = pick?.first
             _playback.value = pick?.second?.info
+            currentState = pick?.second
+            _transport.value = pick?.second?.let(::transportOf) ?: MediaTransport()
         }
     }
 
@@ -118,6 +126,15 @@ class DefaultMediaHub(context: Context, scope: CoroutineScope) : MediaHub {
         target()?.pause()
     }
 
+    override fun seekTo(positionMs: Long) {
+        if (currentState?.canSeek == true) target()?.seekTo(positionMs.coerceAtLeast(0))
+    }
+
+    override fun skipTo(queueId: Long) {
+        val entry = currentState?.queue?.firstOrNull { it.id == queueId } ?: return
+        target()?.skipTo(entry)
+    }
+
     @Composable
     override fun Screen(app: MediaApp, driving: Boolean, modifier: Modifier) = MediaAppScreen(this, app, driving, modifier)
 
@@ -136,3 +153,13 @@ class DefaultMediaHub(context: Context, scope: CoroutineScope) : MediaHub {
 /** True once [status] is [MediaConnection.Status.Ready]; false if it fails first or stays connecting for [timeoutMs]. */
 internal suspend fun awaitSettled(status: Flow<MediaConnection.Status>, timeoutMs: Long): Boolean =
     withTimeoutOrNull(timeoutMs) { status.firstOrNull { it !is MediaConnection.Status.Connecting } } is MediaConnection.Status.Ready
+
+/** MyPlay (N7): the car screen's view of a source: what it allows, and the songs after the playing one. */
+internal fun transportOf(s: SourceState): MediaTransport {
+    val current = s.queue.indexOfFirst { it.current }
+    val after = if (current >= 0) s.queue.drop(current + 1) else emptyList()
+    return MediaTransport(
+        canSeek = s.canSeek, canPrevious = s.canPrevious, canNext = s.canNext,
+        upNext = after.take(MediaTransport.UP_NEXT).map { UpNextItem(it.id, it.title, it.subtitle) },
+    )
+}

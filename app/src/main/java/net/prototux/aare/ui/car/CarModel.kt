@@ -121,6 +121,8 @@ class CarUiState {
     var gestureLine by mutableStateOf<GestureLine?>(null)
     /** MyPlay (N1): draw with MyPlay's own engine (ui/car/myplay/), a hidden preview while phase N is built. */
     var enginePreview by mutableStateOf(false)
+    /** MyPlay (N7): what the playing source allows (seek, previous, next) and its next songs. */
+    var transport by mutableStateOf(net.prototux.aare.media.MediaTransport())
     /** MyPlay (N3): where the engine's speed comes from (car/MyPlaySpeed.kt). */
     var speedSource by mutableStateOf(net.prototux.aare.car.SpeedSourceMode.AUTO)
     /** The apps opened last, newest first (ids): the rail shows the recent ones. */
@@ -193,6 +195,10 @@ interface CarActions {
     fun mediaPlayPause()
     fun mediaNext()
     fun mediaPrevious()
+    /** MyPlay (N7): seek the playing song; nothing where the car cannot. */
+    fun mediaSeekTo(positionMs: Long) = Unit
+    /** MyPlay (N7): play a song of the queue. */
+    fun mediaSkipTo(queueId: Long) = Unit
     fun dismissNotice(notice: CarNotice)
     fun answerCall()
     fun endCall()
