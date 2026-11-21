@@ -157,6 +157,8 @@ internal fun MyPlayEngineShell(
     // F3: the maps app, or the music app; with none known, the Apps world with those apps (set further down).
     var openMaps: () -> Unit = {}
     var openMusic: () -> Unit = {}
+    // F4: the in-call strip opens the Calls world (set further down).
+    var openCalls: () -> Unit = {}
     val actionsOf: Map<String, () -> Unit> = buildMap {
         if (notes.unseen > 0 && model.place == Place.Home && !listOpen) put(STOP_BELL) { listOpen = true; listChosen = null; notes.markSeen() }
         if (notice != null && model.place == Place.Home) {
@@ -166,7 +168,7 @@ internal fun MyPlayEngineShell(
             put(NOTICE_DISMISS) { sources.notifications.dismiss(notice) }
         }
         if (call != null && !ringing) {
-            put(STOP_CALL, sources.phone::open)
+            put(STOP_CALL) { openCalls() }
             if (canEnd) put(STOP_HANG_UP, sources.calls::end)
         }
         if (slots.turn != null) put(STOP_TURN) { openMaps() }
@@ -338,6 +340,17 @@ internal fun MyPlayEngineShell(
     openFront = {
         val w = model.front
         if (w == World.NAVIGATE) openMaps() else { model.enter(w); freshWorld(w) }
+    }
+    // F4, the owner's first drive: in a call, the strip opens the Calls world (recent calls,
+    // favourites, the phone app last), not the phone app itself.
+    openCalls = { model.enter(World.CALLS); freshWorld(World.CALLS) }
+    // F4: a world the car runtime asks for (a call placed from an app opens the Calls world).
+    val openWorld = state.engineOpenWorld
+    LaunchedEffect(openWorld) {
+        val w = World.entries.firstOrNull { it.id == openWorld } ?: return@LaunchedEffect
+        model.enter(w)
+        freshWorld(w)
+        state.engineOpenWorld = null
     }
     /** F3: the Apps world with only apps of [kinds] (all apps when there are none of them). */
     fun showApps(kinds: Set<CarAppKind>) {

@@ -123,6 +123,11 @@ class CarUiState {
     var enginePreview by mutableStateOf(false)
     /** MyPlay (N13): the new screen's design language ("orbit", "deck"; MyPlaySkins). */
     var engineLanguage by mutableStateOf("orbit")
+    /**
+     * MyPlay (F4): a world for the new screen to open, once (its id, as World.id: "calls"); the
+     * engine opens it and clears this. Set by the car runtime (a call placed from an app).
+     */
+    var engineOpenWorld by mutableStateOf<String?>(null)
     /** MyPlay (N7): what the playing source allows (seek, previous, next) and its next songs. */
     var transport by mutableStateOf(net.prototux.aare.media.MediaTransport())
     /** MyPlay (N3): where the engine's speed comes from (car/MyPlaySpeed.kt). */

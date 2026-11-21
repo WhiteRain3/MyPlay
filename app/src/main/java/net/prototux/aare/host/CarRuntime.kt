@@ -194,11 +194,11 @@ class CarRuntime(
                 onScreen -> {
                     Calls.place(context, number)
                     notice(context.getString(R.string.notif_calling_title, number), context.getString(R.string.notif_asked_by, from.info.label))
-                    ui.screen = CarScreen.App(PHONE_ID)
+                    showCalls()
                 }
                 else -> notice(context.getString(R.string.notif_call_confirm_title, number), context.getString(R.string.notif_asked_by, from.info.label), durationMs = 10_000, actions = listOf(context.getString(R.string.common_call) to {
                     Calls.place(context, number)
-                    ui.screen = CarScreen.App(PHONE_ID)
+                    showCalls()
                 }))
             }
             return
@@ -221,6 +221,18 @@ class CarRuntime(
         val navIntent = if (isNavigate && intent.action != CarContext.ACTION_NAVIGATE) Intent(CarContext.ACTION_NAVIGATE, intent.data) else intent
         target.connect(navIntent)
         show(target)
+    }
+
+    /**
+     * After a call is placed: MyPlay's own Calls world on the new screen (F4, the owner's first
+     * drive), else AARE's phone screen. A code or a missing number still opens the phone app: only
+     * it has the keypad (inside MyPlay's frame on the new screen, F1).
+     */
+    private fun showCalls() {
+        if (ui.enginePreview) {
+            ui.screen = CarScreen.Dashboard
+            ui.engineOpenWorld = "calls"
+        } else ui.screen = CarScreen.App(PHONE_ID)
     }
 
     override fun finish(app: CarAppConnection) {

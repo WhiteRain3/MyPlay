@@ -499,9 +499,9 @@ class MyPlayEngineTest {
         assertTrue(rule.onAllNodes(hasTestTag(CALL_DECLINE)).fetchSemanticsNodes().isEmpty())
     }
 
-    /** In a call, its strip is on the home: the knob reaches it; it opens the phone, or hangs up. */
+    /** In a call, its strip is on the home: the knob reaches it; it opens the Calls world (F4), or hangs up. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
-    fun inACallTheStripOpensThePhoneOrHangsUp() {
+    fun inACallTheStripOpensTheCallsWorldOrHangsUp() {
         allowEndingCalls()
         val state = show()
         rule.runOnIdle { state.call = CarCall(ringing = false, name = "Anna K.", sinceMs = System.currentTimeMillis()) }
@@ -512,11 +512,31 @@ class MyPlayEngineTest {
         engine.performKeyInput { pressKey(Key.Tab) }
         rule.onNodeWithTag(STOP_CALL).assertIsSelected()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        assertEquals("app:phone", asked.last())
+        // F4: MyPlay's own Calls world, never AARE's phone app.
+        rule.onNodeWithTag(SLOT_PHONE).assertExists()
+        assertTrue("no app opened: $asked", asked.none { it.startsWith("app:") })
+        // Back to the dial, and home: the strip again, and Hang up next to it.
+        repeat(2) { rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }; rule.waitForIdle() }
+        rule.onNodeWithTag(STOP_CALL).assertIsSelected()
         engine.performKeyInput { pressKey(Key.Tab) }
         rule.onNodeWithTag(STOP_HANG_UP).assertIsSelected()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         assertEquals("end", asked.last())
+    }
+
+    /** F4: the car runtime asks for a world (a call placed from an app opens the Calls world); once. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aWorldTheRuntimeAsksForOpensOnce() {
+        val state = show()
+        rule.runOnIdle { state.engineOpenWorld = World.CALLS.id }
+        rule.waitForIdle()
+        rule.onNodeWithTag(SLOT_PHONE).assertExists()
+        assertNull("the request is used up", rule.runOnIdle { state.engineOpenWorld })
+        assertTrue(asked.none { it.startsWith("app:") })
+        // Something unknown is ignored (and left for no one).
+        rule.runOnIdle { state.engineOpenWorld = "nowhere" }
+        rule.waitForIdle()
+        rule.onNodeWithTag(SLOT_PHONE).assertExists()
     }
 
     /** A phone with two recent calls (one missed) and two favourites, one of them also a recent call. */
