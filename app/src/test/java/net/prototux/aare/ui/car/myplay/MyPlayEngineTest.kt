@@ -506,7 +506,9 @@ class MyPlayEngineTest {
     private class FakePhone(override val permitted: Boolean = true) : PhoneSource {
         val called = mutableListOf<String>()
         var opened = 0
-        override suspend fun recents() = listOf(PhoneEntry("Anna K.", "111", "2 min ago", missed = true), PhoneEntry("Ben", "222", "1 hour ago"))
+        /** A call that came in since: on top of the recents at the next load. */
+        var newest: PhoneEntry? = null
+        override suspend fun recents() = listOfNotNull(newest) + listOf(PhoneEntry("Anna K.", "111", "2 min ago", missed = true), PhoneEntry("Ben", "222", "1 hour ago"))
         override suspend fun favourites() = listOf(PhoneEntry("Carla", "333", "Mobile"), PhoneEntry("Ben", "222", "Mobile"))
         override fun call(entry: PhoneEntry) { called += entry.number }
         override fun open() { opened++ }
@@ -545,6 +547,28 @@ class MyPlayEngineTest {
         assertEquals(listOf("222", "333"), phone.called)
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    /** P-1: the list reloads after a call with a new call on top; the ring stays on the same person. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theRingStaysOnThePersonWhenTheListReloads() {
+        val phone = FakePhone()
+        openCalls(phone)
+        val state = this.state!!
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNodeWithText("Ben", useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(phoneRowTag(1)).assertIsSelected()
+        // A call comes and goes: the list reloads with Dora on top, and Ben moves to row 2.
+        phone.newest = PhoneEntry("Dora", "444", "now")
+        rule.runOnIdle { state.call = CarCall(ringing = false, name = "Dora", sinceMs = 1L) }
+        rule.waitForIdle()
+        rule.runOnIdle { state.call = null }
+        rule.waitForIdle()
+        rule.onNodeWithText("Dora", useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(phoneRowTag(2)).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("222"), phone.called)
     }
 
     /** Without the phone's permissions: nothing is read; only the phone app is offered. */

@@ -219,11 +219,19 @@ internal fun MyPlayEngineShell(
     val phoneRows: List<PhoneRow> = phoneEntries.mapIndexed { i, e ->
         PhoneRow(e.name.ifBlank { e.number }, e.detail, when { i >= phoneRecents -> PhoneRow.Kind.FAVOURITE; e.missed -> PhoneRow.Kind.MISSED; else -> PhoneRow.Kind.RECENT })
     } + PhoneRow(stringResource(R.string.myplay_phone_app), "", PhoneRow.Kind.PHONE_APP)
-    var phoneRing by remember { mutableStateOf(0) }
-    val phoneIndex = phoneRing.coerceIn(0, phoneRows.size - 1)
-    fun openPhoneRow(i: Int) {
-        phoneRing = i
-        phoneEntries.getOrNull(i)?.let(phone::call) ?: phone.open()
+    // P-1: the ring stays on a person (their number), not a row number: the list reloads after a
+    // call with the newest one on top, and a push must never call whoever moved into the row.
+    val phoneKeys: List<String> = phoneEntries.map { "tel:${it.number}" } + PHONE_APP_KEY
+    var phoneChosen by remember { mutableStateOf<String?>(null) }
+    val phoneIndex = phoneKeys.indexOf(phoneChosen).takeIf { it >= 0 } ?: 0
+    fun movePhone(to: Int) { phoneChosen = phoneKeys[to.coerceIn(0, phoneKeys.size - 1)] }
+    val currentPhoneKeys by rememberUpdatedState(phoneKeys)
+    val currentPhoneEntries by rememberUpdatedState(phoneEntries)
+    /** Calls the entry with [key] as the screen shows it now (or opens the phone app). */
+    fun openPhone(key: String) {
+        phoneChosen = key
+        if (key == PHONE_APP_KEY) { phone.open(); return }
+        currentPhoneEntries.firstOrNull { "tel:${it.number}" == key }?.let(phone::call)
     }
     // N6: the Apps world: which app holds the ring (over all pages), and where this page's discs are.
     val apps = sources.apps.apps
@@ -294,7 +302,7 @@ internal fun MyPlayEngineShell(
                 model.push()
                 if (p.selected == World.APPS) appRing = 0
                 if (p.selected == World.MUSIC) musicChosen = MUSIC_PLAY
-                if (p.selected == World.CALLS) phoneRing = 0
+                if (p.selected == World.CALLS) phoneChosen = null
                 true
             }
             else -> false
@@ -325,10 +333,10 @@ internal fun MyPlayEngineShell(
         } else if (p.world == World.CALLS) {
             val n = phoneRows.size
             when (key) {
-                Key.Tab -> phoneRing = (phoneIndex + if (shift) -1 else 1).coerceIn(0, n - 1)
-                Key.DirectionUp -> phoneRing = (phoneIndex - 1).coerceAtLeast(0)
-                Key.DirectionDown -> phoneRing = (phoneIndex + 1).coerceAtMost(n - 1)
-                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> openPhoneRow(phoneIndex)
+                Key.Tab -> movePhone(phoneIndex + if (shift) -1 else 1)
+                Key.DirectionUp -> movePhone(phoneIndex - 1)
+                Key.DirectionDown -> movePhone(phoneIndex + 1)
+                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> openPhone(phoneKeys[phoneIndex.coerceAtMost(n - 1)])
                 else -> Unit
             }
             key in WORLD_KEYS
@@ -427,7 +435,11 @@ internal fun MyPlayEngineShell(
                             phoneIndex,
                             { i ->
                                 Modifier
-                                    .pointerInput(i, phoneRows.size) { detectTapGestures { openPhoneRow(i) } }
+                                    // P-2: keyed on the entry, and resolved by it when tapped.
+                                    .let { m ->
+                                        val key = phoneKeys[i]
+                                        m.pointerInput(key) { detectTapGestures { if (key in currentPhoneKeys) openPhone(key) } }
+                                    }
                                     .semantics { selected = i == phoneIndex }
                                     .testTag(phoneRowTag(i))
                             },
@@ -525,6 +537,7 @@ internal const val SLOT_APPS = "slot_apps"
 internal const val SLOT_MUSIC = "slot_music"
 internal const val SLOT_CALL = "slot_call"
 internal const val SLOT_PHONE = "slot_phone"
+private const val PHONE_APP_KEY = "phone_app"
 
 /** A row of the Calls world (its test tag). */
 internal fun phoneRowTag(i: Int) = "phone_row_$i"
