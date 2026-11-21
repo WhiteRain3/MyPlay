@@ -399,7 +399,7 @@
     <string name="phone_nav_text_title" translatable="false">Log the maps app\'s texts</string>
     <string name="phone_nav_text_hint" translatable="false">For the Waze check: every text the maps app sends to the car screen goes into the connection log, marked when it looks like a speed. The log on the phone then holds street names and your destination; a shared Car check log keeps only the speeds. Off when done.</string>
     <string name="phone_orbit_preview_title" translatable="false">Try ORBIT (preview)</string>
-    <string name="phone_orbit_preview_hint" translatable="false">MyPlay\'s own car screen, still being built: the home, the world dial and the Apps world. Other screens still look as before. The picture above shows it.</string>
+    <string name="phone_orbit_preview_hint" translatable="false">MyPlay\'s own car screen: the home, the world dial and every world (navigate, music, calls, apps, car, settings). A preview: turn it off to go back to the layout chosen below. The picture above shows it.</string>
     <string name="phone_speed_warning" translatable="false">Over the limit</string>
     <string name="phone_speed_warning_hint" translatable="false">The car screen\'s speed turns amber when you are this far over the known limit.</string>
     <string name="phone_speed_limit_needs_location" translatable="false">The limit is found from the phone\'s location, so it is not shown with the speed set to Car only.</string>
