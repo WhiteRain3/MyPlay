@@ -76,6 +76,8 @@ import kotlinx.coroutines.delay
 import net.prototux.aare.R
 import net.prototux.aare.car.SpeedReading
 import net.prototux.aare.ui.car.AppIcon
+import net.prototux.aare.ui.car.CarPart
+import net.prototux.aare.ui.car.carPart
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.mediaProgress
 import net.prototux.aare.ui.car.myplay.LocalSkinTokens
@@ -150,7 +152,7 @@ object OrbitSkin : MyPlaySkin {
         Scaled {
             val g = glass()
             val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.carPart(CarPart.OrbitTurn), verticalAlignment = Alignment.CenterVertically) {
                 OrbitDisc(132.dp, LocalSkinTokens.current.night, Modifier.orbitFocus(LocalStopRinged.current, nav, g.halo), fill = nav, edge = nav) {
                     val arrow = turn.arrow
                     if (arrow != null) {
@@ -188,7 +190,7 @@ object OrbitSkin : MyPlaySkin {
         Scaled {
             val g = glass()
             val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
-            OrbitDisc(192.dp, LocalSkinTokens.current.night, Modifier.orbitFocus(LocalStopRinged.current, nav, g.halo)) {
+            OrbitDisc(192.dp, LocalSkinTokens.current.night, Modifier.carPart(CarPart.OrbitHub).orbitFocus(LocalStopRinged.current, nav, g.halo)) {
                 OrbitRing(trip?.progress, 184.dp, 9.dp, nav, g.track, Modifier.testTag(TRIP_RING_TAG).progressSemantics(trip?.progress)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         val arrival = trip?.arrival
@@ -218,7 +220,7 @@ object OrbitSkin : MyPlaySkin {
                 }
             }
             val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.carPart(CarPart.OrbitSong), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.widthIn(max = 392.dp), horizontalAlignment = Alignment.End) {
                     Text(song.title, style = Orbit.Type.name.floating(g.text), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
                     Text(song.subtitle, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
@@ -269,13 +271,13 @@ object OrbitSkin : MyPlaySkin {
             }
             val time = DateFormat.format(if (DateFormat.is24HourFormat(context)) "H:mm" else "h:mm", now).toString()
             Column(horizontalAlignment = Alignment.End) {
-                Text(time, style = Orbit.Type.clock.floating(g.text), maxLines = 1)
+                Text(time, style = Orbit.Type.clock.floating(g.text), maxLines = 1, modifier = Modifier.carPart(CarPart.Clock))
                 // N5-3: no level shown when the phone does not tell it, never "0%".
                 rememberPhoneStatus()?.takeIf { it.batteryKnown }?.let { s ->
                     val night = LocalSkinTokens.current.night
                     val colour = if (batteryLow(s.battery, s.charging)) Orbit.warning(night) else nav
                     Row(
-                        Modifier.padding(top = 8.dp).testTag(BATTERY_TAG),
+                        Modifier.padding(top = 8.dp).testTag(BATTERY_TAG).carPart(CarPart.Status),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(batteryIcon(s.battery, s.charging), null, Modifier.size(30.dp), tint = colour)
@@ -310,7 +312,7 @@ object OrbitSkin : MyPlaySkin {
     override fun Speed(reading: SpeedReading?, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            OrbitDisc(104.dp, LocalSkinTokens.current.night, Modifier.padding(top = 12.dp)) {
+            OrbitDisc(104.dp, LocalSkinTokens.current.night, Modifier.padding(top = 12.dp).carPart(CarPart.OrbitSpeed)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(reading?.kmh?.toString() ?: "–", style = Orbit.Type.name.copy(color = g.text, lineHeight = 36.sp), maxLines = 1)
                     Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, color = g.secondary), maxLines = 1)

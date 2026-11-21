@@ -29,6 +29,14 @@ sealed interface CarPart {
     data class DashboardCard(val card: DashCard) : CarPart
     /** A card of the "map behind, cards on top" layout. */
     data class MapBehindCard(val card: CarLayoutSpec.SpecCard) : CarPart
+    /** ORBIT (plan N5): the turn bubble with the distance and road. */
+    data object OrbitTurn : CarPart
+    /** ORBIT: the hub, the trip's ring and the way into the dial. */
+    data object OrbitHub : CarPart
+    /** ORBIT: the song disc with its title. */
+    data object OrbitSong : CarPart
+    /** ORBIT: the speed disc. */
+    data object OrbitSpeed : CarPart
 }
 
 /** Where each tagged part was last drawn, in root coordinates of the composition that drew it. */

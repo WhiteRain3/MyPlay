@@ -27,6 +27,10 @@ import androidx.compose.ui.test.pressKey
 import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarLayout
+import net.prototux.aare.ui.car.CarPart
+import net.prototux.aare.ui.car.CarPartRegistry
+import net.prototux.aare.ui.car.LocalCarParts
+import androidx.compose.runtime.CompositionLocalProvider
 import net.prototux.aare.ui.car.CarScreen
 import net.prototux.aare.ui.car.CarShell
 import net.prototux.aare.ui.car.CarUiState
@@ -118,6 +122,28 @@ class OrbitHomeTest {
         }
         rule.waitForIdle()
         return state
+    }
+
+    /** For the phone's picture (N11): ORBIT's parts are tagged so a tap can find them. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun orbitsPartsAreTaggedForThePhonesPicture() {
+        val registry = CarPartRegistry()
+        val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
+            enginePreview = true
+            trip = route()
+        }
+        rule.setContent {
+            CarTheme(night = state.night, theme = state.theme) {
+                CompositionLocalProvider(LocalCarParts provides registry) {
+                    CarShell(state, actions, appContent = { _, m -> Box(m) }, navMap = { _, m -> Box(m) })
+                }
+            }
+        }
+        rule.waitForIdle()
+        val parts = rule.runOnIdle { registry.regions.map { it.first }.toSet() }
+        for (p in listOf(CarPart.OrbitTurn, CarPart.OrbitHub, CarPart.OrbitSong, CarPart.OrbitSpeed, CarPart.Clock)) {
+            assertTrue("$p in $parts", p in parts)
+        }
     }
 
     @Test fun turnArrowsAreOnlyTheOnesKnown() {
