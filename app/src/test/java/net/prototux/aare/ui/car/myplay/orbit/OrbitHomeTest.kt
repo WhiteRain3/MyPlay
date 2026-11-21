@@ -98,7 +98,7 @@ class OrbitHomeTest {
 
     /** The fixture's song, its position told now, so the ring shows the real look. */
     private fun song(art: Bitmap?) = NowPlaying("music", PadWalkStates.SONG_TITLE, "The Synthwaves", art, playing = true,
-        positionMs = 95_000, durationMs = 240_000, updatedAtMs = System.currentTimeMillis())
+        positionMs = 95_000, durationMs = 240_000, updatedAtMs = android.os.SystemClock.elapsedRealtime())
 
     /** Artwork a player could send: a two-colour square. */
     private fun art() = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888).apply {
@@ -234,6 +234,15 @@ class OrbitHomeTest {
         rule.runOnIdle { state!!.nowPlaying = song(null) }
         rule.waitForIdle()
         rule.onNodeWithTag(OrbitSkin.SONG_ART_FALLBACK_TAG, useUnmergedTree = true).assertExists()
+    }
+
+    /** The song ring runs on the player's clock (elapsedRealtime): 95 s of 240 s is about 0.4, not full. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theSongRingShowsThePosition() {
+        show()
+        val p = rule.onNodeWithTag(OrbitSkin.SONG_RING_TAG, useUnmergedTree = true).fetchSemanticsNode()
+            .config[SemanticsProperties.ProgressBarRangeInfo].current
+        assertTrue("progress $p", p in 0.39f..0.5f)
     }
 
     /** N5-3: Robolectric's phone tells no battery level, so none is shown (never "0%"). */

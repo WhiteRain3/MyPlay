@@ -1,5 +1,6 @@
 package net.prototux.aare.ui.car.myplay.orbit
 
+import android.os.SystemClock
 import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -212,11 +213,14 @@ object OrbitSkin : MyPlaySkin {
     override fun Song(song: SongSlot, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-            LaunchedEffect(song.playing) {
+            // The player's position is sampled on SystemClock.elapsedRealtime() (PlaybackInfo.sampledAtMs),
+            // so "now" must be on the same clock, not the wall clock.
+            var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+            LaunchedEffect(song.playing, song.updatedAtMs) {
+                now = SystemClock.elapsedRealtime()
                 while (song.playing) {
                     delay(1_000)
-                    now = System.currentTimeMillis()
+                    now = SystemClock.elapsedRealtime()
                 }
             }
             val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
@@ -227,7 +231,7 @@ object OrbitSkin : MyPlaySkin {
                 }
                 Spacer(Modifier.width(10.dp))
                 val musicColour = Orbit.accent(World.MUSIC, LocalSkinTokens.current.night)
-                OrbitRing(progress, 152.dp, 7.dp, musicColour, g.track, Modifier.orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
+                OrbitRing(progress, 152.dp, 7.dp, musicColour, g.track, Modifier.testTag(SONG_RING_TAG).progressSemantics(progress).orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
                     val art = song.art
                     if (art != null) {
                         val image = remember(art) { art.asImageBitmap() }
@@ -422,6 +426,7 @@ object OrbitSkin : MyPlaySkin {
     const val SONG_ART_TAG = "orbit_song_art"
     const val SONG_ART_FALLBACK_TAG = "orbit_song_art_fallback"
     const val TRIP_RING_TAG = "orbit_trip_ring"
+    const val SONG_RING_TAG = "orbit_song_ring"
 
     /** A ring's progress for accessibility (and the tests); nothing when it is not known. */
     private fun Modifier.progressSemantics(p: Float?): Modifier =
