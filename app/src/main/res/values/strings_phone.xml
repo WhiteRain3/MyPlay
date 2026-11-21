@@ -405,4 +405,5 @@
     <string name="phone_speed_limit_needs_location" translatable="false">The limit is found from the phone\'s location, so it is not shown with the speed set to Car only.</string>
     <string name="phone_engine_language" translatable="false">Design</string>
     <string name="phone_engine_deck_preview" translatable="false">DECK: its home is new; its worlds still use ORBIT\'s look for now.</string>
+    <string name="phone_youtube_row_subtitle" translatable="false">YouTube\'s website in the car browser, parked only</string>
 </resources>

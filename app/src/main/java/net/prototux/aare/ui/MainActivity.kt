@@ -1109,6 +1109,8 @@ private fun AppsCard(settings: Settings) {
             AppRow(null, stringResource(R.string.setup_app_entry_notifications), stringResource(R.string.setup_app_builtin_subtitle), CarRuntime.NOTIFICATIONS_ID !in hidden) { toggle(CarRuntime.NOTIFICATIONS_ID, it) }
             AppRow(null, stringResource(R.string.phone_section_title), stringResource(R.string.phone_app_row_subtitle), phoneScreen) { phoneScreen = it; settings.phoneScreen = it }
             AppRow(null, stringResource(R.string.browser_app_label), stringResource(R.string.browser_app_row_subtitle), browser) { browser = it; settings.browser = it }
+            // MyPlay: YouTube comes with the browser; it can be hidden on its own.
+            if (browser) AppRow(null, stringResource(R.string.myplay_youtube_label), stringResource(R.string.phone_youtube_row_subtitle), CarRuntime.YOUTUBE_ID !in hidden) { toggle(CarRuntime.YOUTUBE_ID, it) }
             if (browser) {
                 OutlinedTextField(
                     value = browserUrl, onValueChange = { browserUrl = it; settings.browserUrl = it },
@@ -1149,6 +1151,8 @@ private fun AppOrder(settings: Settings, l: LauncherLists, hidden: Set<String>, 
         if (CarRuntime.NOTIFICATIONS_ID !in hidden) Triple(CarRuntime.NOTIFICATIONS_ID, stringResource(R.string.setup_app_entry_notifications), null) else null,
         if (phoneScreen) Triple(CarRuntime.PHONE_SCREEN_ID, stringResource(R.string.phone_section_title), null) else null,
         if (browser) Triple(CarRuntime.BROWSER_ID, stringResource(R.string.browser_app_label), null) else null,
+        // MyPlay: YouTube in the car browser, there whenever the browser is (CarRuntime.applyApps).
+        if (browser && CarRuntime.YOUTUBE_ID !in hidden) Triple(CarRuntime.YOUTUBE_ID, stringResource(R.string.myplay_youtube_label), null) else null,
     )
     var order by remember { mutableStateOf(settings.appOrder) }
     val index = order.withIndex().associate { (i, k) -> k to i }
