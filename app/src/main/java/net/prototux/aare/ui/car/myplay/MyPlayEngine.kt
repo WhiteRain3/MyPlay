@@ -17,6 +17,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -263,6 +265,18 @@ internal fun MyPlayEngineShell(
     val panelRing = panelChosen.takeIf { it in panelActions } ?: PANEL_PLAY
     // The song ended, or the home was left: the panel closes.
     LaunchedEffect(model.place, slots.song == null) { if (model.place != Place.Home || slots.song == null) panelOpen = false }
+    // O2: a panel over the map (the music panel, the dial) closes by itself after the driver's
+    // chosen time without a knob, pad or touch input; any input starts the time again. The ring
+    // goes back to where it was on the home (the song, the hub). Real screens never close so.
+    var inputs by remember { mutableIntStateOf(0) }
+    val transient = panelOpen || model.place is Place.Chooser
+    val idleMs = PanelTimeout.ms(state.panelTimeoutS)
+    LaunchedEffect(transient, inputs, idleMs) {
+        if (!transient || idleMs == null) return@LaunchedEffect
+        delay(idleMs)
+        if (panelOpen) { panelOpen = false; chosen = STOP_SONG }
+        if (model.place is Place.Chooser) model.back()
+    }
     fun padPanel(dir: FocusGraph.Direction) {
         val sideways = dir == FocusGraph.Direction.LEFT || dir == FocusGraph.Direction.RIGHT
         if (panelRing == PANEL_SEEK && sideways) seek(dir == FocusGraph.Direction.RIGHT)
@@ -600,7 +614,9 @@ internal fun MyPlayEngineShell(
         BoxWithConstraints(
             Modifier.fillMaxSize().background(tokens.background).then(modifier).testTag(ENGINE_TAG)
                 .focusRequester(focus)
-                .onPreviewKeyEvent { e -> e.type == KeyEventType.KeyDown && onKey(e.key, e.isShiftPressed) }
+                .onPreviewKeyEvent { e -> if (e.type == KeyEventType.KeyDown) inputs++; e.type == KeyEventType.KeyDown && onKey(e.key, e.isShiftPressed) }
+                // O2: a touch anywhere is input too (only looked at, never taken).
+                .pointerInput(Unit) { awaitPointerEventScope { while (true) { awaitPointerEvent(PointerEventPass.Initial); inputs++ } } }
                 .focusable(),
         ) {
             // N3: the maps app is told what the slots cover (as the spec layouts do, M2), and gets the

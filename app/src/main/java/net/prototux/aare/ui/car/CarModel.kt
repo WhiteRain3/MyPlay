@@ -123,6 +123,8 @@ class CarUiState {
     var enginePreview by mutableStateOf(false)
     /** MyPlay (N13): the new screen's design language ("orbit", "deck"; MyPlaySkins). */
     var engineLanguage by mutableStateOf("orbit")
+    /** MyPlay (O2): seconds before a panel over the map closes by itself; 0 never (PanelTimeout). */
+    var panelTimeoutS by mutableStateOf(net.prototux.aare.ui.car.myplay.PanelTimeout.DEFAULT)
     /**
      * MyPlay (F4): a world for the new screen to open, once (its id, as World.id: "calls"); the
      * engine opens it and clears this. Set by the car runtime (a call placed from an app).

@@ -80,6 +80,14 @@ internal class CarSettingsSource(private val context: Context, private val state
             },
             settings.myplaySpeedLimitMargin.toString(),
         ) { settings.myplaySpeedLimitMargin = it.toInt() },
+        // O2: how long a panel over the map (the music panel, the dial) stays open untouched.
+        SettingItem.Choice(
+            "panel_timeout", s(R.string.myplay_setting_panel_timeout),
+            PanelTimeout.CHOICES.map { t ->
+                t.toString() to if (t == PanelTimeout.NEVER) s(R.string.myplay_setting_panel_timeout_never) else context.getString(R.string.myplay_setting_panel_timeout_after, t)
+            },
+            settings.myplayPanelTimeout.toString(),
+        ) { settings.myplayPanelTimeout = it.toInt() },
         SettingItem.Toggle("gesture_line", s(R.string.myplay_setting_gesture_line), settings.myplayGestureLine) { settings.myplayGestureLine = it },
         SettingItem.Toggle("banners", s(R.string.setup_switch_message_notifications), settings.messageBanners) { settings.messageBanners = it },
         SettingItem.Toggle("read_aloud", s(R.string.msg_toggle_read_aloud_title), settings.readMessagesAloud) { settings.readMessagesAloud = it },

@@ -17,6 +17,28 @@ var Settings.myplayEngineLanguage: String
     get() = MyPlaySkins.byId(prefs.getString(KEY_ENGINE_LANGUAGE, null)).id
     set(v) = prefs.edit { putString(KEY_ENGINE_LANGUAGE, MyPlaySkins.byId(v).id) }
 
+/**
+ * O2: how long a panel over the map (the music panel, the dial) stays open without a knob, pad or
+ * touch input, in seconds ([PanelTimeout.CHOICES]; 0 is never). Backed up.
+ */
+const val KEY_PANEL_TIMEOUT = "myplay_panel_timeout"
+var Settings.myplayPanelTimeout: Int
+    get() = PanelTimeout.valid(prefs.getInt(KEY_PANEL_TIMEOUT, PanelTimeout.DEFAULT))
+    set(v) = prefs.edit { putInt(KEY_PANEL_TIMEOUT, PanelTimeout.valid(v)) }
+
+/** O2: the times a driver can choose for [myplayPanelTimeout]. */
+object PanelTimeout {
+    const val DEFAULT = 5
+    const val NEVER = 0
+    val CHOICES = listOf(3, 5, 8, 15, NEVER)
+
+    /** [s] when it is one of the choices, else the default. */
+    fun valid(s: Int): Int = if (s in CHOICES) s else DEFAULT
+
+    /** The time in milliseconds, or null for never. */
+    fun ms(s: Int): Long? = valid(s).takeIf { it != NEVER }?.let { it * 1_000L }
+}
+
 /** N13: the languages a driver can choose, by their stored id (never changed once released). */
 object MyPlaySkins {
     val ALL: List<MyPlaySkin> get() = listOf(net.prototux.aare.ui.car.myplay.orbit.OrbitSkin, net.prototux.aare.ui.car.myplay.deck.DeckSkin)

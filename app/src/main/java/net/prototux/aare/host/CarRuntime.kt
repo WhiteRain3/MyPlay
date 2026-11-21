@@ -43,6 +43,8 @@ import net.prototux.aare.host.templates.myplayDebugMapAreas
 import net.prototux.aare.ui.theme.MapColourFilter
 import net.prototux.aare.ui.theme.myplayMapFilter
 import net.prototux.aare.ui.car.myplay.KEY_ENGINE_LANGUAGE
+import net.prototux.aare.ui.car.myplay.KEY_PANEL_TIMEOUT
+import net.prototux.aare.ui.car.myplay.myplayPanelTimeout
 import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
 import net.prototux.aare.ui.car.myplay.myplayEnginePreview
 import net.prototux.aare.car.Calls
@@ -350,6 +352,7 @@ class CarRuntime(
         mapFilter = settings.myplayMapFilter // MyPlay: map colour filter, the chosen look's
         ui.enginePreview = settings.myplayEnginePreview // MyPlay (N1): hidden preview of the new car screen
         ui.engineLanguage = settings.myplayEngineLanguage // MyPlay (N13): ORBIT or DECK
+        ui.panelTimeoutS = settings.myplayPanelTimeout // MyPlay (O2): panels over the map close by themselves
         ui.speedSource = settings.myplaySpeedSource // MyPlay (N3): the engine's speed source
         NavTextCheck.on = settings.myplayDebugNavText // MyPlay (N3 check): maps apps' text in the log
         ui.textScale = CarTextSize.byId(settings.carTextSize).fontScale
@@ -899,6 +902,7 @@ class CarRuntime(
         internal val SCREEN_SETTING_KEYS = setOf(
             "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
             "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", KEY_ENGINE_LANGUAGE, "myplay_speed_source", "myplay_debug_nav_text",
+            KEY_PANEL_TIMEOUT,
         )
 
         private const val TAG = "AareRuntime"

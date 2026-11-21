@@ -371,6 +371,70 @@ class MyPlayEngineTest {
         assertTrue("never the music app from the disc: $asked", asked.count { it == "app:music" } == 1)
     }
 
+    /** O2: the music panel and the dial close after the chosen time without input; any input starts it again. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun panelsCloseByThemselves() {
+        val state = show()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        fun open(tag: String) = rule.onNodeWithTag(tag).assertExists()
+        fun closed(tag: String) = rule.onNodeWithTag(tag).assertDoesNotExist()
+        // The music panel: still open just before 5 s.
+        engine.performKeyInput { pressKey(Key.Tab) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.mainClock.advanceTimeBy(4_500)
+        open(SLOT_MUSIC_PANEL)
+        // A knob turn starts the time again; then 5 s untouched closes it, the ring on the song.
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.mainClock.advanceTimeBy(4_500)
+        open(SLOT_MUSIC_PANEL)
+        rule.mainClock.advanceTimeBy(1_000)
+        closed(SLOT_MUSIC_PANEL)
+        rule.onNodeWithTag(STOP_SONG).assertIsSelected()
+        // A touch counts as input too.
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.mainClock.advanceTimeBy(4_500)
+        rule.onNodeWithTag(PANEL_PREV).performClick()
+        rule.mainClock.advanceTimeBy(4_500)
+        open(SLOT_MUSIC_PANEL)
+        rule.mainClock.advanceTimeBy(1_000)
+        closed(SLOT_MUSIC_PANEL)
+        // The dial, likewise; the ring back on the hub.
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        open(SLOT_CHOOSER)
+        rule.mainClock.advanceTimeBy(5_500)
+        closed(SLOT_CHOOSER)
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+        // A real screen (a world) never closes so.
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(4) { engine.performKeyInput { pressKey(Key.Tab) } }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        open(SLOT_CAR)
+        rule.mainClock.advanceTimeBy(30_000)
+        open(SLOT_CAR)
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        // The driver's time: 15 s, and never.
+        rule.runOnIdle { state.panelTimeoutS = 15 }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.mainClock.advanceTimeBy(10_000)
+        open(SLOT_CHOOSER)
+        rule.mainClock.advanceTimeBy(5_500)
+        closed(SLOT_CHOOSER)
+        rule.runOnIdle { state.panelTimeoutS = PanelTimeout.NEVER }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.mainClock.advanceTimeBy(60_000)
+        open(SLOT_CHOOSER)
+    }
+
+    @Test fun panelTimeoutsAreTheChoicesOnly() {
+        assertEquals(5_000L, PanelTimeout.ms(5))
+        assertNull(PanelTimeout.ms(PanelTimeout.NEVER))
+        assertEquals(PanelTimeout.DEFAULT, PanelTimeout.valid(7))
+        assertEquals(15, PanelTimeout.valid(15))
+    }
+
     /** O1: without the player's leave to seek the panel has no progress bar stop. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun thePanelSeeksOnlyWithThePlayersLeave() {

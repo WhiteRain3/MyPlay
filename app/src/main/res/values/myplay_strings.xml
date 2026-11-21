@@ -56,6 +56,10 @@
     <string name="myplay_setting_gesture_line" translatable="false">A line after button gestures</string>
     <string name="myplay_on" translatable="false">On</string>
     <string name="myplay_off" translatable="false">Off</string>
+    <!-- O2: the Settings world's row for how long a panel over the map stays open untouched -->
+    <string name="myplay_setting_panel_timeout" translatable="false">Close panels by themselves</string>
+    <string name="myplay_setting_panel_timeout_after" translatable="false">After %1$d s</string>
+    <string name="myplay_setting_panel_timeout_never" translatable="false">Never</string>
     <string name="myplay_settings_hint" translatable="false">turn: choose · push: change · Back: back</string>
     <string name="myplay_car_hint" translatable="false">turn: read on · Back: back</string>
     <string name="myplay_setting_passenger_stopped" translatable="false">Can be turned on only while the car is stopped</string>
