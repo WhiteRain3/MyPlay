@@ -825,9 +825,20 @@ class CarSession(
             KeyEvent.KEYCODE_ENDCALL -> if (!down) runtime.actions.endCall()
             // The Radio button hands the screen back to the car's own source (radio, media…), like "exit".
             KEYCODE_RADIO -> if (!down) exitToCar()
-            else -> dispatchCarKey(key)
+            else -> {
+                // MyPlay (O5): a push-like key the button table does not know goes to the screen as
+                // itself, whatever the Buttons page says: say so once in the connection log, so the
+                // owner's log shows which code the knob really sends.
+                if (!down && code in PUSH_LIKE_KEYS && unknownPushLogged.add(code)) {
+                    DiagLog.add("key ${KeyEvent.keyCodeToString(code)} ($code) is not in the button table: it pressed the screen as itself (knob push codes: ${buttonTable.codes(ButtonTable.Control.KNOB_PUSH).sorted().joinToString()})")
+                }
+                dispatchCarKey(key)
+            }
         }
     }
+
+    /** MyPlay (O5): push-like codes already logged as missing from the button table, once per connection. */
+    private val unknownPushLogged = HashSet<Int>()
 
     /** A key for the car screen itself: the D-pad, Enter, letters... */
     private fun dispatchCarKey(key: CarKey) {
@@ -1240,6 +1251,11 @@ class CarSession(
             KeyEvent.KEYCODE_MEDIA_PAUSE, KeyEvent.KEYCODE_MEDIA_STOP, KeyEvent.KEYCODE_MEDIA_NEXT, KeyEvent.KEYCODE_MEDIA_PREVIOUS,
         )
         private const val VIDEO_FOCUS_RETRIES = 3
+        /** MyPlay (O5): keys that press the ring's item when they reach the screen as themselves. */
+        private val PUSH_LIKE_KEYS = setOf(
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER,
+            KeyEvent.KEYCODE_BUTTON_A, KeyEvent.KEYCODE_BUTTON_SELECT,
+        )
         const val KEYCODE_MEDIA = 65537
         const val KEYCODE_NAVIGATION = 65538
         const val KEYCODE_RADIO = 65539

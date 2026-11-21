@@ -57,7 +57,9 @@ internal class ButtonTable(
 
     companion object {
         val DEFAULT_CODES: Map<Control, Set<Int>> = mapOf(
-            Control.KNOB_PUSH to setOf(KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER),
+            // O5: the number pad's Enter too, which some cars send for the knob's push (the screen
+            // already takes it as a push); without it a rebound push still pressed the ring's item.
+            Control.KNOB_PUSH to setOf(KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER),
             Control.WHEEL_CLICK to setOf(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE),
             Control.MENU to setOf(KeyEvent.KEYCODE_MENU),
             Control.BACK to setOf(KeyEvent.KEYCODE_BACK),

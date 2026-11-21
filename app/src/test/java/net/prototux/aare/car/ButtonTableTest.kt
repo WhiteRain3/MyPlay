@@ -39,6 +39,16 @@ class ButtonTableTest {
         assertEquals(ButtonAction.SELECT, t.resolve(KeyEvent.KEYCODE_ENTER, Gesture.PRESS))
     }
 
+    /** O5 (the owner: "even when I changed what it does, it still just presses like enter"). */
+    @Test fun aReboundPushTakesEveryCodeOfTheKnobNumpadEnterToo() {
+        val t = ButtonTable(mapOf((Control.KNOB_PUSH to Gesture.PRESS) to ButtonAction.PLAY_PAUSE))
+        for (code in listOf(KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER)) {
+            assertEquals(ButtonAction.PLAY_PAUSE, t.resolve(code, Gesture.PRESS))
+        }
+        // As a push of the ring's item, the number pad's Enter goes to the screen as the centre key.
+        assertEquals(KeyEvent.KEYCODE_DPAD_CENTER, ButtonAction.selectKeyFor(KeyEvent.KEYCODE_NUMPAD_ENTER))
+    }
+
     @Test fun theCodesCanBeChanged() {
         val t = ButtonTable(codeOverrides = mapOf(Control.WHEEL_CLICK to setOf(KeyEvent.KEYCODE_HEADSETHOOK)))
         assertEquals(ButtonAction.PLAY_PAUSE, t.resolve(KeyEvent.KEYCODE_HEADSETHOOK, Gesture.PRESS))
