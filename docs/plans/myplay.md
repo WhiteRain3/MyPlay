@@ -685,6 +685,16 @@ by default, so every release before it is safe and the owner can try each piece 
 | N22 | **Waze speed limit hook (optional, pending research).** In the host shims module (`xposed/`, W1), read the limit Waze itself shows, only if it can be found cleanly, and hand it to MyPlay. Rules: it is off unless the owner turns it on; any failure is silent and never crashes Waze (every hook body in a catch-all, no change to Waze's own behaviour, read only); when it gives no answer, N20 falls back to the next source. Where Waze holds the limit is **not known**: the owner's "Waze talk" session may research it, and this chunk waits for that. Tests: the module's parsing on recorded values; MyPlay's fallback when the hook is silent | W1; the research |
 | N18 | **Map colour filter presets per language** (ORBIT, DECK, RACE), using the filter that exists; only colour, see below | N5 |
 
+**N19, the workflow on `main` (2026-11-21, approved by the owner through the dispatcher).** The
+speed limit workflow (`.github/workflows/myplay-speed-limits.yml`) is also on `main` (`702e769`,
+that one file only), because GitHub runs scheduled workflows from the default branch only. The
+monthly run there (03:17 UTC on the 4th) checks out the newest MyPlay release tag (`myplay-v*`)
+and builds from it, since `main` holds AARE's code and not MyPlay's builder; it refuses to build
+if the latest release is not a MyPlay one. A run by hand on `claude/myplay` builds that commit
+(WF-2: only on a tip the Reviewer cleared). A push to `claude/myplay` that changes the builder or
+the workflow builds and tests only, never publishes (WF-1). When the workflow changes on
+`claude/myplay`, copy it to `main` again once cleared.
+
 About **22 chunks**, plus the Design reviewer's RACE sheet before N16. The speed read-out in N5 (ORBIT), N13 (DECK) and N16 (RACE) always has a place for the limit; N20 fills it. Every chunk has: a
 Robolectric screenshot of each new screen, day and night, at 1280x720 and 1200x723; a pad walk
 of each screen (every stop reachable, one ring, Back returns, no trap); unit tests for placement

@@ -31,7 +31,9 @@ phone apps (video included) usable with the knob. Video is for when parked, or f
 
 - Repository: `WhiteRain3/MyPlay`.
 - `main` stays an untouched copy of upstream AARE, so upstream can be merged in. Nobody commits
-  to it.
+  to it, with one exception: the speed limit workflow file
+  (`.github/workflows/myplay-speed-limits.yml`), because GitHub runs scheduled workflows only
+  from the default branch (owner's approval, 2026-11-21; plan task N19).
 - All MyPlay work is on `claude/myplay`.
 - F-Auto (https://github.com/malashhab/F-Auto) is another AARE fork, used as reference only.
   The owner wants the work based on AARE.
@@ -244,6 +246,9 @@ Planner did not download the APK.)
 - **Releases are automatic.** The owner's standing rule (2026-11-20): "Always release, dont ask
   me." Once the Reviewer has called the exact branch tip CLEAN, the Worker cuts the release
   without asking and reports it; the owner is then told what is in it and how to test it.
+- **Run "MyPlay speed limits" by hand only on a cleared tag or SHA** (WF-2). A push that changes
+  the builder or the workflow only builds and tests, never publishes (WF-1). When the workflow
+  changes on `claude/myplay`, copy it to `main` again once it is cleared.
 
 ### Possible later, not decided
 
@@ -356,7 +361,7 @@ One worker can hold two areas while the work is small. `ui/MainActivity.kt` (1,5
   Then it stops pushing and tells the dispatcher. "Stop when I say" does not work: sessions only
   read messages between tasks.
 - Keep upstream mergeable: new MyPlay code goes in new files; edits to AARE's files are small; no
-  renaming of packages or files, no reformatting. `main` is never committed to.
+  renaming of packages or files, no reformatting. `main` is never committed to (except the speed limit workflow file, see above).
 - Network use only where a feature needs it; a task that adds one says so in its note. A new
   library is named in the note too. Third-party artwork and fonts are allowed, with their
   licence text kept in the app.
