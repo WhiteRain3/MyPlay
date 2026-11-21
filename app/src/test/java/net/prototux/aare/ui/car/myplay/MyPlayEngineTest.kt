@@ -9,6 +9,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasTestTag
@@ -82,7 +88,8 @@ class MyPlayEngineTest {
         return MapAreas.compute(screen, boxes(c.shown), boxes(c.reserved))
     }
 
-    private fun show(night: Boolean = true, guidance: Boolean = false): CarUiState {
+    /** [otherStop]: a focusable in the overlay, as a notice's buttons would be (N2-1). */
+    private fun show(night: Boolean = true, guidance: Boolean = false, otherStop: Boolean = false): CarUiState {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
             enginePreview = true
             this.night = night
@@ -92,7 +99,8 @@ class MyPlayEngineTest {
         rule.setContent {
             CarTheme(night = state.night, theme = state.theme) {
                 MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
-                    navMap = { _, m -> covers = LocalMapCovers.current; Box(m.background(Color(0xFF2E4A3A))) }, overlay = {}, skin = TestSkin)
+                    navMap = { _, m -> covers = LocalMapCovers.current; Box(m.background(Color(0xFF2E4A3A))) },
+                    overlay = { m -> if (otherStop) Box(m.size(40.dp).focusable().testTag("other_stop")) }, skin = TestSkin)
             }
         }
         rule.waitForIdle()
@@ -151,6 +159,25 @@ class MyPlayEngineTest {
         ringed(STOP_SONG)
         engine.performKeyInput { pressKey(Key.Enter) }
         assertEquals(listOf("app:maps", "app:music"), asked)
+    }
+
+    /** N2-1: turns inside a world not drawn yet stay with the engine; Back still leaves. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aWorldKeepsTheKnob() {
+        show(otherStop = true)
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_WORLD).assertExists()
+        repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        engine.assertIsFocused()
+        rule.onNodeWithTag("other_stop").assertIsNotFocused()
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+        engine.performKeyInput { pressKey(Key.Tab) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithText(World.MUSIC.name, useUnmergedTree = true).assertExists()
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")

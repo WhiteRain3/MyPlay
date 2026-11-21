@@ -139,7 +139,9 @@ internal fun MyPlayEngineShell(
             }
             else -> false
         }
-        is Place.InWorld -> false
+        // N2-1: until the worlds draw their own stops, a world keeps the knob and pad (only Back,
+        // through the BackHandler, leaves), so a turn cannot carry focus off the engine.
+        is Place.InWorld -> key in WORLD_KEYS
     }
 
     CompositionLocalProvider(LocalSkinTokens provides tokens) {
@@ -212,6 +214,12 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
 }
 
 private const val SPEED_TICK_MS = 1_000L
+
+/** The keys a world not drawn yet takes for itself (N2-1). */
+private val WORLD_KEYS = setOf(
+    Key.Tab, Key.Enter, Key.DirectionCenter, Key.NumPadEnter,
+    Key.DirectionUp, Key.DirectionDown, Key.DirectionLeft, Key.DirectionRight,
+)
 
 internal const val ENGINE_TAG = "engine_root"
 /** The home's stops; also their test tags. */
