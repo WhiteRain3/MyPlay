@@ -7,7 +7,7 @@ import java.nio.ByteOrder
 
 /**
  * MyPlay (plan N19): the speed limit file, format 1. Built from OpenStreetMap by the CI job
- * ([Build]); read by the car side ([SpeedLimitFile], [Matcher]); downloaded by the phone (which
+ * (Build.kt); read by the car side ([SpeedLimitFile], [Matcher]); downloaded by the phone (which
  * checks the first five bytes: "MPSL" and the format).
  *
  * Little-endian throughout:
@@ -108,10 +108,16 @@ object SpeedLimitWriter {
     private fun ByteArrayOutputStream.writeShortLe(v: Int) { write(v and 0xFF); write((v shr 8) and 0xFF) }
 }
 
-/** Reads a file; throws on one that is not format 1. Thread-safe for reading. */
-class SpeedLimitFile(bytes: ByteArray) {
+/**
+ * Reads a file; throws on one that is not format 1. [buffer] can be a memory-mapped file, so a
+ * large file is not read into memory. Thread-safe: every read is by absolute position.
+ */
+class SpeedLimitFile(buffer: ByteBuffer) {
+    constructor(bytes: ByteArray) : this(ByteBuffer.wrap(bytes))
+
     // asReadOnlyBuffer() resets the order to big-endian, so the order is set after it.
-    private val buf = ByteBuffer.wrap(bytes).asReadOnlyBuffer().order(ByteOrder.LITTLE_ENDIAN)
+    private val buf = buffer.asReadOnlyBuffer().order(ByteOrder.LITTLE_ENDIAN)
+    private val size = buf.limit()
     val originLat: Int
     val originLon: Int
     val tile: Int
@@ -119,11 +125,11 @@ class SpeedLimitFile(bytes: ByteArray) {
     val cols: Int
 
     init {
-        require(bytes.size >= SpeedLimitFormat.HEADER) { "too short" }
-        require(bytes.copyOfRange(0, 4).contentEquals(SpeedLimitFormat.MAGIC) && bytes[4].toInt() == SpeedLimitFormat.FORMAT) { "not a speed limit file of format 1" }
+        require(size >= SpeedLimitFormat.HEADER) { "too short" }
+        require((0 until 4).all { buf.get(it) == SpeedLimitFormat.MAGIC[it] } && buf.get(4).toInt() == SpeedLimitFormat.FORMAT) { "not a speed limit file of format 1" }
         originLat = buf.getInt(8); originLon = buf.getInt(12); tile = buf.getInt(16)
         rows = buf.getShort(20).toInt() and 0xFFFF; cols = buf.getShort(22).toInt() and 0xFFFF
-        require(tile > 0 && bytes.size >= SpeedLimitFormat.HEADER + rows * cols * 8) { "bad index" }
+        require(tile > 0 && size.toLong() >= SpeedLimitFormat.HEADER + rows.toLong() * cols * 8) { "bad index" }
     }
 
     /** The pieces stored in the tile holding (lat, lon) and the tiles around it (1e-5 degrees). */
@@ -140,6 +146,7 @@ class SpeedLimitFile(bytes: ByteArray) {
         val i = r * cols + c
         var at = buf.getInt(SpeedLimitFormat.HEADER + 8 * i)
         val count = buf.getInt(SpeedLimitFormat.HEADER + 8 * i + 4)
+        require(at >= SpeedLimitFormat.HEADER && count >= 0 && at.toLong() + count * 9L <= size) { "bad tile" }
         val lat0 = originLat + r * tile; val lon0 = originLon + c * tile
         val out = ArrayList<Piece>(count)
         repeat(count) {
