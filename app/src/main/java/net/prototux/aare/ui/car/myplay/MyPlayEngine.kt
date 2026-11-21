@@ -66,7 +66,7 @@ import net.prototux.aare.ui.car.CarScreen
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.LocalMapTapIsKnobStop
 import net.prototux.aare.ui.car.SpecShell
-import net.prototux.aare.ui.car.TopLines
+import net.prototux.aare.ui.car.GestureLineOverlay
 import net.prototux.aare.ui.car.Wallpaper
 
 /**
@@ -132,7 +132,21 @@ internal fun MyPlayEngineShell(
     }
     // R5: the ring starts on Answer, so a push answers.
     val callRing = callChosen.takeIf { it in callActions } ?: CALL_ANSWER
+    // N8: the newest notice, for a few seconds; on the home its actions and Dismiss are stops.
+    val notice = sources.notifications.notices.firstOrNull()
+    LaunchedEffect(notice?.key) {
+        if (notice != null) {
+            delay(NOTICE_SHOW_MS)
+            sources.notifications.dismiss(notice)
+        }
+    }
     val actionsOf: Map<String, () -> Unit> = buildMap {
+        if (notice != null && model.place == Place.Home) {
+            // At most two actions: two fit in the room at the top (a phone's notice can carry more; the
+            // rest stay on the phone, and in the notifications list).
+            notice.actions.take(2).forEachIndexed { i, (_, run) -> put(noticeActionStop(i)) { run(); sources.notifications.dismiss(notice) } }
+            put(NOTICE_DISMISS) { sources.notifications.dismiss(notice) }
+        }
         if (call != null && !ringing) {
             put(STOP_CALL, sources.phone::open)
             if (canEnd) put(STOP_HANG_UP, sources.calls::end)
@@ -396,9 +410,17 @@ internal fun MyPlayEngineShell(
                     }
                 }
                 if (home) ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }
-                // N8: in a call, its strip at the top of the home: two more home stops.
-                if (model.place == Place.Home && call != null && !ringing) {
-                    skin.InCall(call, canEnd, ring.takeIf { showRing }, { id -> Modifier.stop(id) }, Modifier.align(Alignment.TopCenter).padding(top = tokens.edge))
+                // N8: at the top of the home: in a call its strip, and a notice under it; their parts are home stops.
+                Column(Modifier.align(Alignment.TopCenter).padding(top = tokens.edge), horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (model.place == Place.Home && call != null && !ringing) {
+                        skin.InCall(call, canEnd, ring.takeIf { showRing }, { id -> Modifier.stop(id) }, Modifier)
+                    }
+                    if (notice != null && !ringing) {
+                        val atHome = model.place == Place.Home
+                        // Away from the home the notice only shows (its stops are the home's).
+                        skin.Notice(notice, hideText = state.drivingRestricted && notice.message, ring.takeIf { showRing && atHome },
+                            { id -> if (atHome) Modifier.stop(id) else Modifier.testTag(id) }, Modifier.padding(top = 12.dp))
+                    }
                 }
                 if (home) slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
                 when (val p = model.place) {
@@ -472,7 +494,8 @@ internal fun MyPlayEngineShell(
                 }
             }
             overlay(Modifier.align(Alignment.BottomCenter))
-            TopLines(state, actions, Modifier.align(Alignment.TopCenter))
+            // The gesture line (R6); the notice is the skin's now (N8).
+            GestureLineOverlay(state, Modifier.align(Alignment.TopCenter))
             // N8: a ringing call, drawn by the skin over everything.
             if (ringing) {
                 val currentCall by rememberUpdatedState(callActions)
@@ -514,6 +537,9 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
 }
 
 private const val SPEED_TICK_MS = 1_000L
+
+/** How long a notice shows (as the car's notice overlay). */
+internal const val NOTICE_SHOW_MS = 8_000L
 
 /** The keys a world not drawn yet takes for itself (N2-1). */
 private val WORLD_KEYS = setOf(

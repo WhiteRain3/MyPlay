@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.sp
 import net.prototux.aare.car.SpeedReading
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarCall
+import net.prototux.aare.ui.car.CarNotice
 import net.prototux.aare.media.LibraryRow
 import android.graphics.Bitmap
 
@@ -162,6 +163,16 @@ object TestSkin : MyPlaySkin {
             page.rows.forEachIndexed { i, r ->
                 Text(r.title, color = if (i == ringed) t.accent else t.onSurface, fontSize = 18.sp, modifier = row(i).padding(8.dp))
             }
+        }
+    }
+
+    @Composable
+    override fun Notice(notice: CarNotice, hideText: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        Row(modifier.background(t.surface)) {
+            Text(notice.title + if (hideText) "" else ": " + notice.text, color = t.onSurface, modifier = Modifier.padding(8.dp))
+            notice.actions.take(2).forEachIndexed { i, (label, _) -> Text(label, color = t.accent, modifier = stop(noticeActionStop(i)).padding(8.dp)) }
+            Text("X", color = t.onSurface, modifier = stop(NOTICE_DISMISS).padding(8.dp))
         }
     }
 

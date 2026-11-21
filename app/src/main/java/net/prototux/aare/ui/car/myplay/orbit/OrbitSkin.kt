@@ -41,6 +41,7 @@ import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
@@ -113,6 +114,9 @@ import net.prototux.aare.ui.car.myplay.CALL_DECLINE
 import net.prototux.aare.ui.car.myplay.STOP_CALL
 import net.prototux.aare.ui.car.myplay.STOP_HANG_UP
 import net.prototux.aare.ui.car.CarCall
+import net.prototux.aare.ui.car.CarNotice
+import net.prototux.aare.ui.car.myplay.NOTICE_DISMISS
+import net.prototux.aare.ui.car.myplay.noticeActionStop
 import net.prototux.aare.ui.car.myplay.LibraryPage
 import net.prototux.aare.media.LibraryRow
 import net.prototux.aare.ui.car.myplay.MyPlaySkin
@@ -498,6 +502,58 @@ object OrbitSkin : MyPlaySkin {
     }
 
     const val MUSIC_PROGRESS_TAG = "orbit_music_progress"
+
+    @Composable
+    override fun Notice(notice: CarNotice, hideText: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        val accent = Orbit.accent(World.NAVIGATE, night)
+        Box(modifier) {
+            Scaled {
+                // Two rows, at most NOTICE_WIDTH wide: it fits between the turn (top left) and the clock
+                // (top right), so it never covers the next turn.
+                val card = androidx.compose.foundation.shape.RoundedCornerShape(32.dp)
+                Column(
+                    Modifier.widthIn(max = NOTICE_WIDTH).clip(card).background(g.glass).border(2.dp, g.edge, card).padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Box(Modifier.size(48.dp).clip(CircleShape).background(g.track), contentAlignment = Alignment.Center) {
+                            val icon = notice.icon
+                            if (icon != null) {
+                                val image = remember(icon) { icon.asImageBitmap() }
+                                Image(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                            } else {
+                                Icon(Icons.Rounded.Notifications, null, Modifier.size(28.dp), tint = g.text)
+                            }
+                        }
+                        Column(Modifier.weight(1f, fill = false)) {
+                            Text(notice.title, style = TextStyle(fontSize = 26.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = g.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            // While driving a message shows who wrote, not what (as everywhere in the car).
+                            Text(if (hideText) stringResource(R.string.notif_new_message_placeholder) else notice.text,
+                                style = TextStyle(fontSize = 22.sp, color = g.secondary), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                    Row(Modifier.align(Alignment.End), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        notice.actions.take(2).forEachIndexed { i, (label, _) ->
+                            val id = noticeActionStop(i)
+                            val shape = androidx.compose.foundation.shape.RoundedCornerShape(26.dp)
+                            Text(label, style = TextStyle(fontSize = 22.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = g.text), maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = stop(id).widthIn(max = 180.dp).orbitFocusRounded(ringed == id, accent, g.halo, 26.dp).clip(shape)
+                                    .border(2.dp, accent, shape).padding(horizontal = 18.dp, vertical = 10.dp))
+                        }
+                        OrbitDisc(48.dp, night, stop(NOTICE_DISMISS).orbitFocus(ringed == NOTICE_DISMISS, accent, g.halo)) {
+                            Icon(Icons.Rounded.Close, stringResource(R.string.common_dismiss), Modifier.size(26.dp), tint = g.text)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** The notice's widest, at the sheet's scale: the room between the turn and the clock. */
+    private val NOTICE_WIDTH = 480.dp
 
     /** Up to two letters for a caller's disc; null for a number (then a phone icon). */
     fun initials(name: String): String? {

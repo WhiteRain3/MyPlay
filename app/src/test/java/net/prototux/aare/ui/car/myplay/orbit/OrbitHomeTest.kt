@@ -366,11 +366,23 @@ class OrbitHomeTest {
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun phoneNight() = picture("orbit-phone-1280x720-night", night = true, calls = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun phone901x543Day() = picture("orbit-phone-901x543-day", night = false, calls = true)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun noticeNight() = picture("orbit-notice-1280x720-night", night = true, notice = true)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun notice901x543Day() = picture("orbit-notice-901x543-day", night = false, notice = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null, calls: Boolean = false) {
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null, calls: Boolean = false, notice: Boolean = false) {
         val state = show(night, trip, withArt)
+        if (notice) {
+            rule.runOnIdle {
+                state.notices.add(0, net.prototux.aare.ui.car.CarNotice("n1", "Anna K.", "Running late, see you at 6", null, listOf("Reply" to {}, "Mark read" to {}), message = true))
+            }
+            val engine = rule.onNodeWithTag(ENGINE_TAG)
+            engine.performKeyInput { pressKey(Key.Tab) }
+            engine.performKeyInput { pressKey(Key.Tab) }
+            engine.performKeyInput { pressKey(Key.Tab) }
+            rule.mainClock.advanceTimeBy(500)
+        }
         if (calls) {
             val engine = rule.onNodeWithTag(ENGINE_TAG)
             engine.performKeyInput { pressKey(Key.DirectionCenter) }

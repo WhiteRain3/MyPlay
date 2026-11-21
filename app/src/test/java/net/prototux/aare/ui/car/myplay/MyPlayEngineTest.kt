@@ -40,6 +40,8 @@ import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.media.UpNextItem
 import net.prototux.aare.ui.car.NowPlaying
 import net.prototux.aare.ui.car.CarCall
+import net.prototux.aare.ui.car.CarNotice
+import androidx.compose.ui.test.onAllNodesWithText
 import org.robolectric.Shadows
 import net.prototux.aare.car.PhoneFixes
 import net.prototux.aare.car.SpeedSourceMode
@@ -90,6 +92,7 @@ class MyPlayEngineTest {
         override fun mediaSkipTo(queueId: Long) { asked += "skip:$queueId" }
         override fun mediaLibrary(): MediaLibrary? = library
         override fun answerCall() { asked += "answer" }
+        override fun dismissNotice(notice: CarNotice) { asked += "dismiss:${notice.key}"; state?.notices?.remove(notice) }
         override fun endCall() { asked += "end" }
     }
 
@@ -582,6 +585,66 @@ class MyPlayEngineTest {
         rule.onNodeWithTag(ENGINE_TAG).performKeyInput { pressKey(Key.DirectionCenter) }
         assertEquals(1, phone.opened)
         assertTrue(phone.called.isEmpty())
+    }
+
+    private fun aNotice(message: Boolean = false) =
+        CarNotice("n1", "Anna K.", "Running late, see you at 6", null, listOf("Reply" to { asked += "reply" }), message = message)
+
+    /** N8: a notice's action and Dismiss are knob stops on the home; a push runs the action and dismisses it. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aNoticesButtonsAreReachedByTheKnob() {
+        val state = show(otherStop = true)
+        rule.runOnIdle { state.notices.add(0, aNotice()) }
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        // Reading order: the notice sits at the top, before the hub and the song.
+        engine.performKeyInput { pressKey(Key.Tab) }
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.onNodeWithTag(noticeActionStop(0)).assertIsSelected()
+        engine.assertIsFocused()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("reply", "dismiss:n1"), asked)
+        // Gone: the ring is back on the hub.
+        rule.waitForIdle()
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aNoticeGoesAwayByItself() {
+        val state = show()
+        rule.runOnIdle { state.notices.add(0, aNotice()) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(NOTICE_DISMISS).assertExists()
+        rule.mainClock.advanceTimeBy(NOTICE_SHOW_MS + 100)
+        rule.waitForIdle()
+        assertEquals(listOf("dismiss:n1"), asked)
+        assertTrue(rule.onAllNodes(hasTestTag(NOTICE_DISMISS)).fetchSemanticsNodes().isEmpty())
+    }
+
+    /** While driving a message shows who wrote, not what. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aMessagesTextIsHiddenWhileDriving() {
+        val state = show()
+        rule.runOnIdle { state.drivingRestricted = true; state.notices.add(0, aNotice(message = true)) }
+        rule.waitForIdle()
+        rule.onNodeWithText("Anna K.", substring = true).assertExists()
+        assertTrue(rule.onAllNodesWithText("Running late", substring = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    /** In a world the notice shows, but its buttons are not stops there (the world keeps the knob). */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun inAWorldTheNoticeOnlyShows() {
+        val state = show()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        rule.runOnIdle { state.notices.add(0, aNotice()) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(NOTICE_DISMISS).assertExists()
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.onNodeWithTag(appTag(state.launcherApps[1])).assertIsSelected()
     }
 
     @Test fun appsPagesWrapAndPage() {

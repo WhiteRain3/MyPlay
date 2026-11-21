@@ -15,6 +15,7 @@ import net.prototux.aare.media.LibraryRow
 import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarCall
+import net.prototux.aare.ui.car.CarNotice
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.theme.MapColourFilter
 
@@ -130,6 +131,10 @@ data class PhoneRow(val title: String, val subtitle: String, val kind: Kind) {
 /** N8: what the Calls world shows; [permitted] false: the phone's permissions are missing. */
 data class PhonePage(val rows: List<PhoneRow>, val loading: Boolean, val permitted: Boolean)
 
+/** N8: a notice's stops (also their test tags). */
+const val NOTICE_DISMISS = "notice_dismiss"
+fun noticeActionStop(i: Int) = "notice_action_$i"
+
 /** N8: the stops of a ringing call (also their test tags). */
 const val CALL_ANSWER = "call_answer"
 const val CALL_DECLINE = "call_decline"
@@ -240,6 +245,13 @@ interface MyPlaySkin {
      * Each row takes `row(i)`; the ring is on [ringed]; the skin keeps it in view.
      */
     @Composable fun PhoneWorld(page: PhonePage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier)
+
+    /**
+     * N8: a notice (a message, a reminder) at the top for a few seconds: its icon, title and text
+     * ([hideText] while driving for a message), its actions ([noticeActionStop]) and Dismiss
+     * ([NOTICE_DISMISS]); each takes `stop(id)`; [ringed] as on the home.
+     */
+    @Composable fun Notice(notice: CarNotice, hideText: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier)
 
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)
