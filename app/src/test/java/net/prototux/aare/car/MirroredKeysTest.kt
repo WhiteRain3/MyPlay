@@ -37,4 +37,13 @@ class MirroredKeysTest {
         assertEquals(TurnMode.UP_DOWN, MirroredKeys.turnFor(text, "org.other"))
         assertEquals(TurnMode.UP_DOWN, MirroredKeys.turnFor(null, "org.other"))
     }
+
+    /** G1-3: Back three times within 1.5 s leaves; slower presses do not. */
+    @Test fun threeQuickBacksLeave() {
+        val q = QuickBacks()
+        assertEquals(false, q.press(0)); assertEquals(false, q.press(400)); assertEquals(true, q.press(900))
+        assertEquals(false, q.press(1000)) // starts over
+        val slow = QuickBacks()
+        assertEquals(false, slow.press(0)); assertEquals(false, slow.press(1000)); assertEquals(false, slow.press(2000))
+    }
 }

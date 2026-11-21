@@ -52,8 +52,11 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
 
     DisposableEffect(packageName) {
         // Hardware / head-unit Back goes to the launched app.
-        val back: () -> Boolean = {
+        val quickBacks = net.prototux.aare.car.QuickBacks()
+        val back: () -> Boolean = back@{
             val t = android.os.SystemClock.uptimeMillis()
+            // MyPlay (G1-3): Back three times quickly leaves the app, whatever the buttons do.
+            if (quickBacks.press(t)) { runtime.actions.goHome(); return@back true }
             launcher.key(t, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BACK)
             launcher.key(t, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_BACK)
             launcher.connected

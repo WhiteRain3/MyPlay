@@ -59,3 +59,20 @@ object MirroredKeys {
 var Settings.myplayMirrorTurns: String
     get() = prefs.getString("myplay_mirror_turns", "") ?: ""
     set(v) = prefs.edit { putString("myplay_mirror_turns", v) }
+
+/**
+ * MyPlay (G1-3): a way out of a mirrored app that needs no touch and does not depend on how the
+ * owner set the buttons: Back pressed [count] times within [windowMs] goes home (one Back still
+ * goes to the app, and two in a row are common inside apps). Pure; times from outside.
+ */
+class QuickBacks(private val count: Int = 3, private val windowMs: Long = 1_500L) {
+    private val times = ArrayDeque<Long>()
+
+    /** A Back at [nowMs]; true when it completes the run, which then starts over. */
+    fun press(nowMs: Long): Boolean {
+        while (times.isNotEmpty() && nowMs - times.first() > windowMs) times.removeFirst()
+        times.addLast(nowMs)
+        if (times.size >= count) { times.clear(); return true }
+        return false
+    }
+}

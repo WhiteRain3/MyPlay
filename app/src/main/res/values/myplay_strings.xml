@@ -26,4 +26,5 @@
     <string name="myplay_gesture_line_playing" translatable="false">Playing</string>
     <string name="myplay_gesture_line_paused" translatable="false">Paused</string>
     <string name="myplay_gesture_line_assistant" translatable="false">Assistant</string>
+    <string name="myplay_mirror_knob_hint" translatable="false">The knob now works the app. To leave: hold Back, or press Back three times quickly.</string>
 </resources>
