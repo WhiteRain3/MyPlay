@@ -30,6 +30,7 @@ object MyPlayLooks {
         "myplay_status_color", "myplay_status_color_by_level", "myplay_status_signal",
         "myplay_clock_size", "myplay_clock_bold", "myplay_clock_color",
         "myplay_map_filter",
+        "myplay_engine_language",
     )
 
     /** In a look file, next to the settings backup's own fields. */
@@ -64,6 +65,7 @@ object MyPlayLooks {
         "myplay_status_battery_icon" to true, "myplay_status_battery_number" to true, "myplay_status_percent_sign" to false,
         "myplay_status_size" to "normal", "myplay_status_color_by_level" to false, "myplay_status_signal" to true,
         "myplay_clock_size" to "normal", "myplay_clock_bold" to false,
+        "myplay_engine_language" to "orbit",
     )
 
     /** The look now set, from `SharedPreferences.getAll()`, named [name]: only what differs from the defaults. */

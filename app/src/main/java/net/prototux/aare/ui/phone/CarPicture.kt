@@ -85,6 +85,7 @@ import net.prototux.aare.ui.theme.CustomColours
 import net.prototux.aare.ui.theme.myplayLookColours
 import net.prototux.aare.ui.theme.withCustomColours
 import net.prototux.aare.ui.car.myplay.myplayEnginePreview
+import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
 
 /**
  * The car screen drawn small on the phone: the car's own drawing code ([CarShell]) with made-up
@@ -186,6 +187,7 @@ internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: C
     ui.railOnRight = pictureRailOnRight(settings.railPosition)
     ui.wallpaper = settings.wallpaper
     ui.enginePreview = settings.myplayEnginePreview // N11: MyPlay's own screen (ORBIT) while it is tried
+    ui.engineLanguage = settings.myplayEngineLanguage // N15: ORBIT or DECK
     // The picture never reads the phone's location (N3's battery rules): its speed is off.
     ui.speedSource = net.prototux.aare.car.SpeedSourceMode.OFF
 }

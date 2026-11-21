@@ -99,7 +99,7 @@ class PhoneScreenMockups {
             val ui = androidx.compose.runtime.remember { sampleCarState().apply { enginePreview = true } }
             CarPictureFrame(ui, "ORBIT", onPart = { })
             androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
-            val day = androidx.compose.runtime.remember { sampleCarState().apply { enginePreview = true; night = false } }
+            val day = androidx.compose.runtime.remember { sampleCarState().apply { enginePreview = true; engineLanguage = "deck" } }
             CarPictureFrame(day, "ORBIT day", onPart = null)
         } } }
     }

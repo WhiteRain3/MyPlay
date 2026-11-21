@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.prototux.aare.R
 import net.prototux.aare.ui.car.myplay.myplayEnginePreview
+import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
+import net.prototux.aare.ui.car.myplay.MyPlaySkins
 import net.prototux.aare.Settings
 import net.prototux.aare.ui.car.CarLayout
 import net.prototux.aare.ui.car.CarLayoutSpec
@@ -321,9 +323,23 @@ private fun OrbitPreviewSwitch() {
     val ctx = LocalContext.current
     val settings = remember { Settings(ctx) }
     var on by remember { mutableStateOf(settings.myplayEnginePreview) }
+    var language by remember { mutableStateOf(settings.myplayEngineLanguage) }
     Spacer(Modifier.height(12.dp))
     RowGroup(rows = listOf {
         SwitchRow(Icons.Rounded.Layers, stringResource(R.string.phone_orbit_preview_title), on, TileTone.VIOLET,
             stringResource(R.string.phone_orbit_preview_hint)) { on = it; settings.myplayEnginePreview = it }
     })
+    // N15: which of MyPlay's own designs; it takes effect at once, without reconnecting.
+    if (on) {
+        Spacer(Modifier.height(12.dp))
+        PhoneChoices(
+            stringResource(R.string.phone_engine_language),
+            MyPlaySkins.ALL.map { it.id to engineLanguageName(it.id) },
+            language,
+        ) { id -> language = MyPlaySkins.byId(id).id; settings.myplayEngineLanguage = language }
+        if (language == "deck") HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_engine_deck_preview))
+    }
 }
+
+/** A design's name as the phone shows it: its stored id in capitals (ORBIT, DECK). */
+fun engineLanguageName(id: String): String = id.uppercase(java.util.Locale.ROOT)
