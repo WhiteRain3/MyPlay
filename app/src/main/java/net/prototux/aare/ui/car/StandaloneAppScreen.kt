@@ -2,6 +2,7 @@ package net.prototux.aare.ui.car
 
 import android.graphics.SurfaceTexture
 import android.view.KeyEvent
+import net.prototux.aare.car.myplayMirrorTurns
 import android.view.MotionEvent
 import android.view.Surface
 import android.view.TextureView
@@ -113,6 +114,11 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
                     }
                 }
             })
+            // MyPlay (G1): the knob and the pad go into the app as keys.
+            MirroredKeyStop(
+                net.prototux.aare.car.MirroredKeys.turnFor(runtime.settings.myplayMirrorTurns, packageName),
+                send = { action, code -> launcher.key(android.os.SystemClock.uptimeMillis(), action, code) },
+            )
             // A quiet reminder that this isn't an Android Auto app.
             Text(
                 stringResource(R.string.standalone_not_native),
