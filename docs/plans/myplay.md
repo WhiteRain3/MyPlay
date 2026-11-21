@@ -610,6 +610,10 @@ possible at all.
 - 2026-11-21, answers: the limit file covers **Lithuania** only; the warning starts at **9 km/h
   over the limit**, a setting with 9 as the default. Also an optional **Waze speed limit hook**
   in the host shims module, ahead of OpenStreetMap (N22).
+- 2026-11-21, evening: **ORBIT only.** "I do like the orbit more, so I think we can just fully
+  focus on that one." DECK is **frozen** as it is in 0.1.37 (no more work; its code stays), and
+  RACE is **paused** (its sheet stays on AA-Experiments). The rest of phase N polishes ORBIT
+  (O1 to O4 below), then N10 and N12.
 
 **Why the screen still looks like AARE today.** The "map behind" layout replaced only the
 home screen and the bar. Apps, the app grid, notifications, calls, car settings and the music
@@ -660,6 +664,18 @@ A chunk is one change a Worker pushes and the Reviewer checks before it ships. C
 car Worker, unless marked. Until N10 the new screen is one more layout choice ("MyPlay"), off
 by default, so every release before it is safe and the owner can try each piece in the car.
 
+**Order from 2026-11-21 evening (ORBIT only):** O1, O2, O3, O4, then N10, N11's remaining
+phone work, N12. N13 to N15 (DECK) are done as far as they go and frozen; N16 and N17 (RACE)
+are paused; N18 is ORBIT's preset only. N19 to N22 (speed limits) carry on as planned.
+
+| # | ORBIT polish | Needs |
+|---|---|---|
+| O1 | **The music disc opens controls, not the app.** A push on the song disc on ORBIT's home opens a small round control panel beside it (previous, play/pause, next, and seeking as R5 built it, R5-5 kept), drawn in ORBIT's parts and declared as covering the map; "open the music app" is one stop inside the panel, not the push itself. Pad right on home stays next song, holding the knob stays next song. Tests: pad walk through the panel; screenshot day and night. Bench `gestures`, `music` | N7 |
+| O2 | **Transient panels close by themselves after about 5 s.** The music panel (O1), the dial (N6) and any other panel opened over the map close after about 5 s without a knob, pad or touch input, and the ring goes back to where it was on home; any input restarts the time. Not for real screens (apps, lists, calls, settings). The time is one engine constant (a setting only if the owner asks). Tests: a fake clock closes each panel at 5 s and not before; input restarts it | O1, N6 |
+| O3 | **Apps open with an expand animation, no side rail.** An app (hosted, mirrored, or MyPlay's own pages) grows out of the place it was chosen (the dial or the honeycomb) to the full screen, without the thin strip and its Home button; Back (or Home) shrinks it back. The way home without the rail: Back, the car's Home key, and the gesture line's hint the first few times. The map's free area is the whole screen while an app is open. Tests: the animation's start and end frames; Back returns to the same stop; pad walk in a full-screen app finds no trap; touch still reaches the app. Bench `open-back`, `back-out`, `maps`, `map-move` | N6 |
+| O4 | **Better darkening over Waze.** ORBIT's corner parts get a soft dark gradient behind them (a vignette at the corners, not a box), so text reads over any map, and the map colour filter gets an ORBIT preset (N18) that darkens mildly. Waze's police and hazard icons must stay readable: the bench shows one report icon under the preset. Tests: screenshot over a light and a dark fixture map; contrast of the turn and speed text above a set minimum | N5, N3 |
+
+
 | # | Chunk | Needs |
 |---|---|---|
 | N1 | **Engine skeleton.** New package `ui/car/myplay/`: the screen model, the skin interface (tokens plus one composable per slot), a plain test skin, and a hidden layout choice "MyPlay" that draws it. Tests: the screen model's moves; a screenshot of the test skin at 1280x720 and 1200x723 | — |
@@ -671,19 +687,19 @@ by default, so every release before it is safe and the owner can try each piece 
 | N7 | **ORBIT music.** The music world: the round artwork box with its floating buttons, now playing, seeking (R5-5 kept), the browser with its test seam (R4-2). Bench `music` | N6 |
 | N8 | **ORBIT calls, phone and notifications.** Incoming call, in call, the phone screen (test seam), notification banner and list. R5-2 (where the ring lands after a call). Bench: a call from a second phone | N6 |
 | N9 | **ORBIT car, settings and mirror.** The Car world (car data), Settings world (MyPlay's car settings, status settings), the mirror screen (test seam). Bench `settings` | N6 |
-| N10 | **The switch to ORBIT.** "MyPlay" becomes the only layout; stored layouts (taskbar, dock, classic, map behind) move to ORBIT, keeping wallpaper, bar items, map filter and card order where they still mean something; car styles stop choosing a shell. Tests: migration from each old id and a 0.1.x backup (F6) | N5 to N9, N11 |
+| N10 | **The switch to ORBIT** (after O1 to O4). "MyPlay" becomes the only layout; stored layouts (taskbar, dock, classic, map behind) move to ORBIT, keeping wallpaper, bar items, map filter and card order where they still mean something; car styles stop choosing a shell. Tests: migration from each old id and a 0.1.x backup (F6) | N5 to N9, N11 |
 | N11 | **Phone side for the new screen** (phone worker). Layout page shows the language (ORBIT now, DECK when it exists) and its options; bar and cards pages and the setup wizard follow; the phone picture draws the new screen | N5 |
 | N12 | **Delete the old car UI.** Taskbar, dock, classic and map-behind shells, `SpecShell`, AARE's launcher, notification, call, phone, music browser and settings screens that the engine replaced. Shared bits still used move into `ui/car/myplay/` first. `PadWalkTest`, `CarStylesTest`, `BarPageTest`, `MyPlayWeatherTest` cases for old shells go. Only after the owner has driven with N10 | N10 |
-| N13 | **DECK tokens, parts and home.** Tall index cards with a thick coloured edge, one flat hue per world, 92 px turn read-out, caps labels; the fanned hand bottom right (Navigate, Phone, Car, Apps, Music), turn to swing, push to open, Back for the map (holding the knob is "next song" in every language); the hand declared as covering the map | N12 |
-| N14 | **DECK worlds.** Music, calls and phone, apps, car and settings drawn with DECK's parts on the same engine screens. Bench: every walk, with DECK chosen | N13 |
-| N15 | **Choosing the language** (phone worker, plus a car setting): ORBIT or DECK in the phone app's layout page and in F7's whole looks; switching takes effect without reconnecting | N13 |
-| N16 | **RACE tokens, parts and home.** The Design reviewer draws RACE first, on the engine's slots, inside the limits of the next section: a big turn read-out, speed, a trip "lap" strip, a bold game-like frame at the edges; nothing in the middle of the map. Then its parts and home screen | N15; RACE's drawing sheet |
-| N17 | **RACE worlds.** Reaching apps, music, calls and phone, apps, car and settings in RACE's parts; RACE added to the language choice. Bench: every walk, with RACE chosen | N16 |
+| N13 | **Frozen 2026-11-21 as in 0.1.37.** **DECK tokens, parts and home.** Tall index cards with a thick coloured edge, one flat hue per world, 92 px turn read-out, caps labels; the fanned hand bottom right (Navigate, Phone, Car, Apps, Music), turn to swing, push to open, Back for the map (holding the knob is "next song" in every language); the hand declared as covering the map | N12 |
+| N14 | **Frozen 2026-11-21 as in 0.1.37.** **DECK worlds.** Music, calls and phone, apps, car and settings drawn with DECK's parts on the same engine screens. Bench: every walk, with DECK chosen | N13 |
+| N15 | **Frozen 2026-11-21.** **Choosing the language** (phone worker, plus a car setting): ORBIT or DECK in the phone app's layout page and in F7's whole looks; switching takes effect without reconnecting | N13 |
+| N16 | **Paused 2026-11-21.** **RACE tokens, parts and home.** The Design reviewer draws RACE first, on the engine's slots, inside the limits of the next section: a big turn read-out, speed, a trip "lap" strip, a bold game-like frame at the edges; nothing in the middle of the map. Then its parts and home screen | N15; RACE's drawing sheet |
+| N17 | **Paused 2026-11-21.** **RACE worlds.** Reaching apps, music, calls and phone, apps, car and settings in RACE's parts; RACE added to the language choice. Bench: every walk, with RACE chosen | N16 |
 | N19 | **Speed limit file builder** (car Worker, CI only). A GitHub Actions job turns an OpenStreetMap extract of the owner's region (Geofabrik) into a small MyPlay file: road pieces with their `maxspeed`, plus the country's default limits where a road has no `maxspeed` tag but has a zone or road type that implies one; tiled so the phone reads only the tiles near the car. Published as a release file with OpenStreetMap's licence notice (ODbL). Region: Lithuania (Geofabrik's `europe/lithuania` extract). Rebuilt monthly. Tests: a tiny extract gives the expected pieces and defaults | N3 |
 | N20 | **Speed limit lookup and warning** (car side). Match the car's position and direction to the nearest road piece in the file (heading and the previous match break ties between parallel roads); show "no limit known" rather than a guess when the match is unsure. Sources in order: a limit from Waze's car data, if N3's check finds one; the Waze hook (N22), when it gives an answer; the car's feed, if the box ever sends one; the file. The over-limit warning is a colour change of the read-out, no sound unless switched on; it starts at the limit plus a margin that is a setting, **default 9 km/h**. Same battery rules as the speed: only while the read-out is on screen, from the same location fixes, no extra requests. Tests: matching on a fixture with parallel roads and a junction; the warning margin | N19 |
 | N21 | **Speed limit file on the phone** (phone worker). Choose the region, download once on Wi-Fi (and again monthly on Wi-Fi), show its size and date, delete it; the OpenStreetMap notice on the phone's About page | N19 |
 | N22 | **Waze speed limit hook (optional, pending research).** In the host shims module (`xposed/`, W1), read the limit Waze itself shows, only if it can be found cleanly, and hand it to MyPlay. Rules: it is off unless the owner turns it on; any failure is silent and never crashes Waze (every hook body in a catch-all, no change to Waze's own behaviour, read only); when it gives no answer, N20 falls back to the next source. Where Waze holds the limit is **not known**: the owner's "Waze talk" session may research it, and this chunk waits for that. Tests: the module's parsing on recorded values; MyPlay's fallback when the hook is silent | W1; the research |
-| N18 | **Map colour filter presets per language** (ORBIT, DECK, RACE), using the filter that exists; only colour, see below | N5 |
+| N18 | **Map colour filter presets per language** (now ORBIT only, done as part of O4), using the filter that exists; only colour, see below | N5 |
 
 **N19, the workflow on `main` (2026-11-21, approved by the owner through the dispatcher).** The
 speed limit workflow (`.github/workflows/myplay-speed-limits.yml`) is also on `main` (`702e769`,
@@ -695,7 +711,7 @@ if the latest release is not a MyPlay one. A run by hand on `claude/myplay` buil
 the workflow builds and tests only, never publishes (WF-1). When the workflow changes on
 `claude/myplay`, copy it to `main` again once cleared.
 
-About **22 chunks**, plus the Design reviewer's RACE sheet before N16. The speed read-out in N5 (ORBIT), N13 (DECK) and N16 (RACE) always has a place for the limit; N20 fills it. Every chunk has: a
+Remaining after 2026-11-21 evening: O1 to O4, N10, N11's rest, N12, and N19 to N22 where not done; DECK and RACE chunks are not counted. The speed read-out in N5 (ORBIT), N13 (DECK) and N16 (RACE) always has a place for the limit; N20 fills it. Every chunk has: a
 Robolectric screenshot of each new screen, day and night, at 1280x720 and 1200x723; a pad walk
 of each screen (every stop reachable, one ring, Back returns, no trap); unit tests for placement
 and stored settings; and the bench walks named in its row, with the Audi profile.
@@ -774,6 +790,7 @@ battery drain (the rules are in N3).
 Answered: the limit file covers Lithuania; the warning margin is 9 km/h, a setting.
 
 Open:
+0. After the switch (N10): does the frozen DECK stay choosable on the phone, or is it hidden?
 1. After N3's bench pictures: if Waze shows its own limit sign, show MyPlay's as well, or
    only Waze's?
 
