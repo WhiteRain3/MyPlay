@@ -1,0 +1,82 @@
+# MyPlay (plan N19): builds the speed limit file for Lithuania from OpenStreetMap once a month and
+# puts it on the "speed-limits" release, where the phone app downloads it (Settings, Speed limits).
+#
+# The file is a database derived from OpenStreetMap, so it is under the Open Database Licence
+# (ODbL 1.0) like the data it comes from; the release says so. The release is never marked as the
+# latest one (the app's update check reads the latest release), and it is a prerelease for the same
+# reason.
+name: MyPlay speed limits
+
+on:
+  schedule:
+    - cron: "17 3 4 * *" # 03:17 UTC on the 4th of each month
+  # By hand from the Actions page.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: myplay-speed-limits
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and publish the speed limit file
+    runs-on: ubuntu-latest
+    env:
+      REGION: lithuania
+      EXTRACT: https://download.geofabrik.de/europe/lithuania-latest.osm.pbf
+      TAG: speed-limits
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
+      - name: Tools
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q osmium-tool
+      - name: Test and build the file tool
+        run: ./gradlew --no-daemon :speedlimit:test :speedlimit:installDist
+      - name: Download the OpenStreetMap extract
+        run: |
+          mkdir -p work
+          curl -fsSL --retry 3 -o work/region.osm.pbf "$EXTRACT"
+          osmium fileinfo work/region.osm.pbf
+      - name: Roads, with their points
+        run: |
+          osmium tags-filter work/region.osm.pbf w/highway -o work/roads.osm.pbf
+          osmium add-locations-to-ways work/roads.osm.pbf -f opl -o work/roads.opl
+      - name: Build the file
+        run: |
+          speedlimit/build/install/myplay-speedlimit/bin/myplay-speedlimit "$REGION" work/roads.opl out "$(date -u +%F)"
+          ls -l out
+          # A broken extract or a bug must not replace a good file with a nearly empty one.
+          size=$(stat -c %s "out/speed-limits-$REGION.bin")
+          if [ "$size" -lt 200000 ]; then echo "The file is only $size bytes: not publishing it." >&2; exit 1; fi
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            cat > work/notes.md <<'EOF'
+          Speed limit files for MyPlay, rebuilt once a month by `.github/workflows/myplay-speed-limits.yml`.
+          The phone app downloads them (Settings, Speed limits); there is nothing to install by hand.
+
+          The limits come from map data and may be wrong or out of date. The road signs always count.
+
+          Map data © OpenStreetMap contributors, from Geofabrik's extract. These files are a database
+          derived from OpenStreetMap and are available under the Open Database Licence (ODbL 1.0):
+          https://www.openstreetmap.org/copyright. The code that builds them is in this repository
+          (`speedlimit/`), under the GPL.
+          EOF
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "Speed limit files (map data)" --notes-file work/notes.md --prerelease --latest=false
+          fi
+          # The file first, then the manifest that describes it, so the phone never sees a manifest
+          # for a file that is not there yet.
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "out/speed-limits-$REGION.bin"
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "out/speed-limits-$REGION.json"
