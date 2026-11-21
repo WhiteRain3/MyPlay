@@ -84,6 +84,8 @@ $AudiMargins = @('--margins', '0,0,80,0')   # left,top,right,bottom
 # The walks: name = events. Each event is what@seconds, counted from the moment the phone connects.
 #   rotate:N (knob clicks, negative = back)   dpad:up|down|left|right|center (center = press the knob)
 #   key:CODE (4 Back, 3 Home, 66 Enter)       park   drive   night   day   reverse:SECS   tap:X,Y
+#   hold:CODE,MS (held MS ms)   double:CODE (two quick presses)   holdturn:CODE,N (held while N knob clicks)
+#   (codes: 23 knob push, 85 wheel click / play-pause, 82 Menu, 4 Back; the car's real codes come with R8)
 # A picture is saved at most every 3 seconds, and only when a new video frame arrives, so leave at
 # least 3 seconds between events.
 # Add your own walks here.
@@ -131,6 +133,16 @@ $Walks = [ordered]@{
     # The same for a maps app (give the place of Organic Maps as -Tile): the ring should start
     # inside the app and reach its buttons.
     'maps'       = "$OpenGrid $ToTile " + (Get-Turns 23 20)
+    # Each button gesture once, with music playing (start a song first), plan R2, R3, R6. A line
+    # should show at the top for each one that acts away from the ring:
+    # knob held: next song; wheel double click: previous song; wheel click: pause, then play;
+    # knob held and turned two clicks: two songs on; Menu held: the assistant (Back closes it);
+    # Back held: home.
+    'gestures'   = 'park@2 hold:23,900@5 double:85@10 key:85@15 key:85@19 holdturn:23,2@23 hold:82,900@29 key:4@35 hold:4,900@39'
+    # The pad like a TV remote on the home screen (plan R4): one click to put the ring on the
+    # screen, then right, right, down, down, left, up, up, left. The ring should move that way
+    # each time, from the bar to the cards and back, and never get stuck.
+    'pad'        = 'park@2 rotate:1@5 dpad:right@8 dpad:right@11 dpad:down@14 dpad:down@17 dpad:left@20 dpad:up@23 dpad:up@26 dpad:left@29'
     # The music browser (give the place of a music app as -Tile; one with folders, such as the
     # phone's own music player or a podcast app): 15 clicks forward through its top level, press
     # the knob to open what is ringed, 10 clicks through that level, 10 clicks back, then Back.
