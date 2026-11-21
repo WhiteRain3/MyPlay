@@ -63,4 +63,9 @@
     <string name="myplay_speed_limit_unknown" translatable="false">no limit known</string>
     <string name="myplay_setting_speed_limit_margin" translatable="false">Speed colour over the limit</string>
     <string name="myplay_setting_speed_limit_margin_by" translatable="false">over by %d km/h</string>
+    <string name="myplay_deck_hint_navigate" translatable="false">Push: your maps app, with its search and places</string>
+    <string name="myplay_deck_hint_calls" translatable="false">Recent calls and favourites</string>
+    <string name="myplay_deck_hint_car" translatable="false">Fuel, temperature, tyres, doors</string>
+    <string name="myplay_deck_hint_settings" translatable="false">What you can change from the car</string>
+    <string name="myplay_deck_hint_apps" translatable="false">Push to see all your apps</string>
 </resources>

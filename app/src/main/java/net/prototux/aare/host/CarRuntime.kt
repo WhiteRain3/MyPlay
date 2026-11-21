@@ -42,6 +42,7 @@ import net.prototux.aare.Settings
 import net.prototux.aare.host.templates.myplayDebugMapAreas
 import net.prototux.aare.ui.theme.MapColourFilter
 import net.prototux.aare.ui.theme.myplayMapFilter
+import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
 import net.prototux.aare.ui.car.myplay.myplayEnginePreview
 import net.prototux.aare.car.Calls
 import net.prototux.aare.car.DashboardInfo
@@ -335,6 +336,7 @@ class CarRuntime(
         net.prototux.aare.host.templates.MapAreaDebug.show = settings.myplayDebugMapAreas // MyPlay: Waze centring check
         mapFilter = settings.myplayMapFilter // MyPlay: map colour filter, the chosen look's
         ui.enginePreview = settings.myplayEnginePreview // MyPlay (N1): hidden preview of the new car screen
+        ui.engineLanguage = settings.myplayEngineLanguage // MyPlay (N13): ORBIT or DECK
         ui.speedSource = settings.myplaySpeedSource // MyPlay (N3): the engine's speed source
         NavTextCheck.on = settings.myplayDebugNavText // MyPlay (N3 check): maps apps' text in the log
         ui.textScale = CarTextSize.byId(settings.carTextSize).fontScale

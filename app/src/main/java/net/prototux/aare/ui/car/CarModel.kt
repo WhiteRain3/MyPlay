@@ -121,6 +121,8 @@ class CarUiState {
     var gestureLine by mutableStateOf<GestureLine?>(null)
     /** MyPlay (N1): draw with MyPlay's own engine (ui/car/myplay/), a hidden preview while phase N is built. */
     var enginePreview by mutableStateOf(false)
+    /** MyPlay (N13): the new screen's design language ("orbit", "deck"; MyPlaySkins). */
+    var engineLanguage by mutableStateOf("orbit")
     /** MyPlay (N7): what the playing source allows (seek, previous, next) and its next songs. */
     var transport by mutableStateOf(net.prototux.aare.media.MediaTransport())
     /** MyPlay (N3): where the engine's speed comes from (car/MyPlaySpeed.kt). */

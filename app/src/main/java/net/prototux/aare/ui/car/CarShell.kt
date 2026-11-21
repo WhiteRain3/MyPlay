@@ -128,7 +128,11 @@ private fun CarShellLayout(
     modifier: Modifier,
 ) {
     // MyPlay (N1): the hidden preview of MyPlay's own engine, before any layout.
-    if (state.enginePreview) { net.prototux.aare.ui.car.myplay.MyPlayEngineShell(state, actions, appContent, navMap, overlay, modifier); return }
+    if (state.enginePreview) {
+        net.prototux.aare.ui.car.myplay.MyPlayEngineShell(state, actions, appContent, navMap, overlay, modifier,
+            skin = net.prototux.aare.ui.car.myplay.MyPlaySkins.byId(state.engineLanguage))
+        return
+    }
     when (state.layout) {
         CarLayout.DOCK -> { DockShell(state, actions, appContent, navMap, overlay, modifier); return }
         CarLayout.CLASSIC -> { ClassicShell(state, actions, appContent, navMap, overlay, modifier); return }
