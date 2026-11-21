@@ -229,6 +229,24 @@ As before: push to branch `claude/test-reports` of `WhiteRain3/MyPlay`, in
 what was expected and what the picture shows. A head unit result says the app works; it does not
 say the box or the Audi's knob behaves the same.
 
+## What to check in 0.1.36 and 0.1.37
+
+In the car
+1. Phone, Layout: turn on "Try MyPlay's own car screen" and choose Design: DECK. Turning the knob swings the cards; a push opens the front one; Back comes home.
+2. Push the turn arrow (top left): Waze fills the screen beside a thin strip with a Home button; Back comes home.
+3. Have someone call you while Waze is open: answer with a knob push. After the call, turn the knob: it should still move around Waze.
+4. A message with Reply arriving while an app is open: turn to Reply and push, or press Back to dismiss it. The knob works the app again straight after.
+5. Speed limits (phone, Speed: Lithuania downloaded, speed source Auto): while driving, the limit shows under your speed. Note any place where it's wrong. If it doesn't show, the Car page's "Speed limit" line says why.
+6. In a busy group chat while driving: say if messages take the knob too often.
+7. DECK's Apps page: do your apps' icons show clearly in the tiles?
+
+On the PC bench (the desktop head unit)
+8. DECK: tap the visible corner of a card behind the front one. It should come to the front, not open the front card.
+9. With no maps app chosen, push Navigate: the Apps page lists only maps apps.
+10. Apps page: Settings, Car data, Phone and Notifications open MyPlay's own pages, and Back returns to Apps.
+11. Switch ORBIT and DECK on the phone while connected: the car screen changes at once.
+12. Phone, Speed: download Lithuania on Wi-Fi. It shows the file's date and size.
+
 ## The Audi profile
 
 | Option | Why |
