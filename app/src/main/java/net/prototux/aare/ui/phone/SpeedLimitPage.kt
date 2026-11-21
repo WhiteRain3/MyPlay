@@ -68,6 +68,8 @@ fun SpeedLimitPage() {
             region,
         ) { id ->
             region = id; settings.myplaySpeedLimitRegion = id
+            // Another region's file is of no use any more: it goes (SL-3).
+            SpeedLimitDownload.deleteOthers(ctx, id)
             if (id.isNotEmpty()) scope.launch { SpeedLimitDownload.update(ctx, force = true) }
         }
         if (region.isNotEmpty()) {

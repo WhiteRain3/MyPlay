@@ -81,4 +81,38 @@ class SpeedLimitTest {
             assertTrue(speedLimitStatus(it) != null)
         }
     }
+
+    @Test
+    fun onlyKnownRegionsNameAFile() {
+        assertEquals("lithuania", SpeedLimitFiles.known("lithuania"))
+        assertEquals("", SpeedLimitFiles.known("../shared_prefs/settings"))
+        assertEquals("", SpeedLimitFiles.known("atlantis"))
+        val dir = File("/data/x/files")
+        listOf("../shared_prefs/x", "a/b", "", "..").forEach { bad ->
+            assertTrue(runCatching { SpeedLimitFiles.file(dir, bad) }.isFailure)
+            assertTrue(runCatching { SpeedLimitFiles.manifestFile(dir, bad) }.isFailure)
+        }
+    }
+
+    @Test
+    fun onlyAnAnsweredLookWaitsAMonth() {
+        assertTrue(SpeedLimitCheck.counts(SpeedLimitDownload.State.Done))
+        assertTrue(SpeedLimitCheck.counts(SpeedLimitDownload.State.UpToDate))
+        assertTrue(SpeedLimitCheck.counts(SpeedLimitDownload.State.NotPublished))
+        assertFalse(SpeedLimitCheck.counts(SpeedLimitDownload.State.Failed))
+    }
+}
+
+@org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(sdk = [35])
+class SpeedLimitRegionSettingTest {
+    @Test
+    fun aRegionFromABackupThatIsNotKnownReadsAsNone() {
+        val ctx = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val s = net.prototux.aare.Settings(ctx)
+        s.prefs.edit().putString(KEY_SPEED_LIMIT_REGION, "../shared_prefs/settings").commit()
+        assertEquals("", s.myplaySpeedLimitRegion)
+        s.myplaySpeedLimitRegion = "lithuania"
+        assertEquals("lithuania", s.myplaySpeedLimitRegion)
+    }
 }

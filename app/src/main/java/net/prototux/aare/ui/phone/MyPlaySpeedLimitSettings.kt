@@ -9,10 +9,13 @@ import java.io.File
  * [myplaySpeedLimitRegion] and the file through [SpeedLimitFiles.file].
  */
 
-/** The region whose speed limit file is kept ("" = none), e.g. "lithuania". Backed up. */
+/**
+ * The region whose speed limit file is kept ("" = none), e.g. "lithuania". Backed up. Only a region
+ * MyPlay knows is ever returned: the value can come from a backup file, and it names a file.
+ */
 var Settings.myplaySpeedLimitRegion: String
-    get() = prefs.getString(KEY_SPEED_LIMIT_REGION, "") ?: ""
-    set(v) = prefs.edit { putString(KEY_SPEED_LIMIT_REGION, v) }
+    get() = SpeedLimitFiles.known(prefs.getString(KEY_SPEED_LIMIT_REGION, "") ?: "")
+    set(v) = prefs.edit { putString(KEY_SPEED_LIMIT_REGION, SpeedLimitFiles.known(v)) }
 
 /** When the phone last looked for a newer file (ms since 1970), 0 never. Not backed up: it belongs to this phone. */
 var Settings.myplaySpeedLimitChecked: Long
@@ -34,11 +37,19 @@ object SpeedLimitFiles {
     const val FORMAT = 1
     val MAGIC = byteArrayOf('M'.code.toByte(), 'P'.code.toByte(), 'S'.code.toByte(), 'L'.code.toByte())
 
+    /** [region] if it is one of [REGIONS], else "" (none). */
+    fun known(region: String): String = region.takeIf { r -> REGIONS.any { it.id == r } } ?: ""
+
     fun dir(filesDir: File) = File(filesDir, "speed_limits")
-    /** The file the car side reads for [region]. */
-    fun file(filesDir: File, region: String) = File(dir(filesDir), "$region.bin")
+    /** The file the car side reads for [region] (a known region; anything else is refused). */
+    fun file(filesDir: File, region: String) = File(dir(filesDir), "${safe(region)}.bin")
     /** Its description, kept beside it (size, date, licence). */
-    fun manifestFile(filesDir: File, region: String) = File(dir(filesDir), "$region.json")
+    fun manifestFile(filesDir: File, region: String) = File(dir(filesDir), "${safe(region)}.json")
+
+    private fun safe(region: String): String {
+        require(region.matches(Regex("[a-z0-9_-]+"))) { "not a region id" }
+        return region
+    }
 
     /** The release the files are published in (rolling, rebuilt monthly; not a myplay-v* tag, so the updater ignores it). */
     private const val DOWNLOADS = "https://github.com/WhiteRain3/MyPlay/releases/download/speed-limits/"
@@ -79,6 +90,10 @@ object SpeedLimitCheck {
     /** Whether [remote] should replace what is kept ([local], null if nothing): newer, or nothing kept. */
     fun wanted(local: SpeedLimitManifest?, haveFile: Boolean, remote: SpeedLimitManifest): Boolean =
         !haveFile || local == null || remote.built > local.built
+
+    /** Whether a try counts as the month's look: it reached the release page and got an answer. */
+    fun counts(state: SpeedLimitDownload.State): Boolean = state == SpeedLimitDownload.State.Done ||
+        state == SpeedLimitDownload.State.UpToDate || state == SpeedLimitDownload.State.NotPublished
 
     /** Whether [head] starts as a file of this format. */
     fun headerOk(head: ByteArray): Boolean =

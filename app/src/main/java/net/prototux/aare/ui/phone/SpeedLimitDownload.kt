@@ -69,10 +69,16 @@ object SpeedLimitDownload {
         if (!busy.compareAndSet(false, true)) return
         try {
             _state.value = State.Checking
-            val ok = withContext(Dispatchers.IO) { fetch(context, region) }
-            settings.myplaySpeedLimitChecked = System.currentTimeMillis()
-            _state.value = ok
+            val result = withContext(Dispatchers.IO) { fetch(context, region) }
+            // A failed try (a timeout, Wi-Fi lost midway) is tried again next time the app opens.
+            if (SpeedLimitCheck.counts(result)) settings.myplaySpeedLimitChecked = System.currentTimeMillis()
+            _state.value = result
         } finally { busy.set(false) }
+    }
+
+    /** Removes the file and description of every region but [keep] ("" = all). */
+    fun deleteOthers(context: Context, keep: String) {
+        SpeedLimitFiles.REGIONS.filter { it.id != keep }.forEach { delete(context, it.id) }
     }
 
     /** Removes the region's file and its description. */
