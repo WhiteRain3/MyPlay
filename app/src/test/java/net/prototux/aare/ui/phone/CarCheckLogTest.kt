@@ -34,6 +34,16 @@ class CarCheckLogTest {
     }
 
     @Test
+    fun theMapsAppsTextsKeepOnlyTheirSpeeds() {
+        assertEquals("21/11 02:40:00  nav text com.waze trip: [text hidden]",
+            CarCheckLog.withoutPrivate("21/11 02:40:00  nav text com.waze trip: Home, Gedimino pr. 9, Vilnius"))
+        assertEquals("nav text com.waze turn card: [text hidden; speeds: 50 km/h]",
+            CarCheckLog.withoutPrivate("nav text com.waze turn card: Turn left onto Main St, limit 50 km/h  [looks like a speed]"))
+        assertEquals("nav text com.waze alert: [text hidden; speeds: 90kmh, 70 km/h]",
+            CarCheckLog.withoutPrivate("nav text com.waze alert: Camera 90kmh: reported by Anna, then 70 km/h"))
+    }
+
+    @Test
     fun phoneNumbersWrittenInGroupsAreTakenOut() {
         assertEquals("from [number]", CarCheckLog.withoutPrivate("from 06 12 34 56 78"))
         assertEquals("from [number]", CarCheckLog.withoutPrivate("from 555-123-4567"))

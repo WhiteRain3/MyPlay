@@ -116,3 +116,11 @@ class SpeedLimitRegionSettingTest {
         assertEquals("lithuania", s.myplaySpeedLimitRegion)
     }
 }
+
+class SpeedSourceChoiceTest {
+    @Test
+    fun everySourceIsOfferedOnce() {
+        assertEquals(net.prototux.aare.car.SpeedSourceMode.entries.toSet(), SPEED_SOURCE_NAMES.map { it.first }.toSet())
+        assertEquals(SPEED_SOURCE_NAMES.size, SPEED_SOURCE_NAMES.map { it.first }.distinct().size)
+    }
+}

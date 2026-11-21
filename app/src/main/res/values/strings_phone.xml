@@ -364,7 +364,7 @@
     <string name="phone_map_with_look" translatable="false">The filter is part of the look: saving a look keeps it, and choosing a look brings its own (or none).</string>
     <string name="phone_buttons_line_title" translatable="false">Show what a button did</string>
     <string name="phone_buttons_line_hint" translatable="false">A short line at the top of the car screen after a button changes the song, plays or pauses, or starts the assistant.</string>
-    <string name="phone_tile_speed_limits" translatable="false">Speed limits</string>
+    <string name="phone_tile_speed" translatable="false">Speed</string>
     <string name="phone_speed_region" translatable="false">Region</string>
     <string name="phone_speed_region_none" translatable="false">None</string>
     <string name="phone_speed_file" translatable="false">Speed limit file</string>
@@ -388,4 +388,14 @@
     <string name="phone_mirror_turn" translatable="false">Turning the knob in this app moves</string>
     <string name="phone_mirror_turn_up_down" translatable="false">Up and down</string>
     <string name="phone_mirror_turn_left_right" translatable="false">Left and right</string>
+    <string name="phone_speed_source_title" translatable="false">Speed on the car screen</string>
+    <string name="phone_speed_source_which" translatable="false">Where the speed comes from</string>
+    <string name="phone_speed_source_auto" translatable="false">Auto</string>
+    <string name="phone_speed_source_car" translatable="false">Car only</string>
+    <string name="phone_speed_source_off" translatable="false">Off</string>
+    <string name="phone_speed_source_auto_hint" translatable="false">From the car; else from the phone\'s location, only while a maps app runs.</string>
+    <string name="phone_speed_source_car_hint" translatable="false">Only the car\'s own speed; never the phone\'s location.</string>
+    <string name="phone_speed_source_off_hint" translatable="false">No speed is shown.</string>
+    <string name="phone_nav_text_title" translatable="false">Log the maps app\'s texts</string>
+    <string name="phone_nav_text_hint" translatable="false">For the Waze check: every text the maps app sends to the car screen goes into the connection log, marked when it looks like a speed. The log on the phone then holds street names and your destination; a shared Car check log keeps only the speeds. Off when done.</string>
 </resources>

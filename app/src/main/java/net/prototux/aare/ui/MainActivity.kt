@@ -179,6 +179,7 @@ import net.prototux.aare.ui.phone.SpeedLimitPage
 import net.prototux.aare.ui.phone.SpeedLimitDownload
 import net.prototux.aare.ui.phone.HintLine
 import net.prototux.aare.ui.phone.MapAreasSwitch
+import net.prototux.aare.ui.phone.NavTextSwitch
 import net.prototux.aare.ui.phone.CarCheckPage
 import net.prototux.aare.ui.phone.toCheckInput
 import net.prototux.aare.car.CarInputEvents
@@ -256,7 +257,7 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     COLOURS(R.string.phone_part_colours, R.string.phone_part_colours, Icons.Rounded.Dashboard),
     LOOKS(R.string.phone_part_looks, R.string.phone_part_looks, Icons.Rounded.Dashboard),
     CAR_CHECK(R.string.phone_tile_car_check, R.string.phone_tile_car_check, Icons.Rounded.Dashboard),
-    SPEED_LIMITS(R.string.phone_tile_speed_limits, R.string.phone_tile_speed_limits, Icons.Rounded.Dashboard),
+    SPEED_LIMITS(R.string.phone_tile_speed, R.string.phone_tile_speed, Icons.Rounded.Dashboard),
     LAYOUT(R.string.phone_part_layout, R.string.phone_part_layout, Icons.Rounded.Dashboard),
     SIZE(R.string.phone_part_size, R.string.phone_part_size, Icons.Rounded.Dashboard),
     CLOCK(R.string.phone_part_clock, R.string.phone_part_clock, Icons.Rounded.Dashboard),
@@ -341,6 +342,7 @@ private fun Home() {
                             item { CertificatesCard(certs, state) }
                             item { VehicleOverridesCard() }
                             item { MapAreasSwitch() }
+                            item { NavTextSwitch() }
                             item { LogCard() }
                         }
                         Page.BAR -> item { BarPage { page = Page.LAYOUT } }

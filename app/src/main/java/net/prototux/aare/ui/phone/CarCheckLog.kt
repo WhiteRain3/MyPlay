@@ -31,9 +31,21 @@ object CarCheckLog {
     )
     private val QUOTED = Regex(""""[^"]*"""")
 
+    /**
+     * The maps app text check (host/NavTextCheck): its lines hold street names and the destination,
+     * so only the speeds in them are kept ("nav text <app> <where>: [text hidden; speeds: 50 km/h]").
+     */
+    private val NAV_TEXT = Regex("""(nav text \S+ (?:turn card|alert|trip): ).*""")
+    private val SPEED = Regex("""\b\d{1,3}\s?(km/h|kmh|kph|mph)\b""", RegexOption.IGNORE_CASE)
+
+    private fun navText(line: String): String = line.replace(NAV_TEXT) { m ->
+        val speeds = SPEED.findAll(m.value.removePrefix(m.groupValues[1])).map { it.value }.toList()
+        m.groupValues[1] + if (speeds.isEmpty()) "[text hidden]" else "[text hidden; speeds: ${speeds.joinToString()}]"
+    }
+
     /** [line] with names, addresses, e-mails, phone numbers and VINs replaced by what they were. */
     fun withoutPrivate(line: String): String {
-        var out = line
+        var out = navText(line)
         for ((pattern, replacement) in NAMES) out = out.replace(pattern, replacement)
         if (out.contains("wireless: ")) out = out.replace(QUOTED, "\"[network]\"")
         return out

@@ -61,6 +61,7 @@ fun SpeedLimitPage() {
     LaunchedEffect(Unit) { SpeedLimitDownload.checkIfDue(ctx) }
 
     Column {
+        SpeedSourceChoice(settings)
         SectionHeading(stringResource(R.string.phone_speed_region))
         PhoneChoices(
             stringResource(R.string.phone_speed_region_which),

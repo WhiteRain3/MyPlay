@@ -162,7 +162,7 @@ fun BehindTheScenesTiles(connected: Boolean, audioCapture: Boolean, refresh: Int
                 if (n == 0) stringResource(R.string.phone_tile_buttons_default) else stringResource(R.string.phone_tile_buttons_changed, n)
             }),
         TileSpec(BehindTile.CAR_CHECK, Icons.Rounded.Checklist, TileTone.CORAL, stringResource(R.string.phone_tile_car_check), stringResource(R.string.phone_check_start)),
-        TileSpec(BehindTile.SPEED_LIMITS, Icons.Rounded.Speed, TileTone.GREEN, stringResource(R.string.phone_tile_speed_limits),
+        TileSpec(BehindTile.SPEED_LIMITS, Icons.Rounded.Speed, TileTone.GREEN, stringResource(R.string.phone_tile_speed),
             speedLimitRegionName ?: stringResource(R.string.phone_speed_region_none)),
         TileSpec(BehindTile.SOUND, Icons.AutoMirrored.Rounded.VolumeUp, TileTone.AMBER, stringResource(R.string.phone_tile_sound),
             stringResource(when (sound) {
