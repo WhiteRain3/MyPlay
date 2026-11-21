@@ -18,6 +18,7 @@ internal object MyPlayBackupKeys {
         "car_control_size" to Type.STRING,
         "log_car_input" to Type.BOOLEAN,
         "myplay_maps_follow_car_lights" to Type.BOOLEAN,
+        "myplay_gesture_line" to Type.BOOLEAN, // the line after a button gesture (R6)
         "myplay_map_filter" to Type.STRING, // the map colour filter, one of a look's settings
         "myplay_layout_spec" to Type.STRING,
         "myplay_layout_preset" to Type.STRING,

@@ -20,6 +20,11 @@ var Settings.myplayGestureDoubleMs: Long
     get() = prefs.getLong("myplay_gesture_double_ms", GestureEngine.DOUBLE_MS).coerceIn(DOUBLE_RANGE)
     set(v) = prefs.edit { putLong("myplay_gesture_double_ms", v.coerceIn(DOUBLE_RANGE)) }
 
+/** MyPlay (R6): the short line on the car screen after a button gesture (on unless turned off). */
+var Settings.myplayGestureLine: Boolean
+    get() = prefs.getBoolean("myplay_gesture_line", true)
+    set(v) = prefs.edit { putBoolean("myplay_gesture_line", v) }
+
 internal val Settings.gestureTimings: GestureEngine.Timings
     get() = GestureEngine.Timings(holdMs = myplayGestureHoldMs, doubleMs = myplayGestureDoubleMs)
 

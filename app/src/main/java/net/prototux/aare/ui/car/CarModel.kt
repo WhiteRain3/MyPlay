@@ -117,6 +117,8 @@ class CarUiState {
     var nextEvent by mutableStateOf<NextEvent?>(null)
     /** The phone call ringing or on, if any. */
     var call by mutableStateOf<CarCall?>(null)
+    /** MyPlay (R6): the last button gesture's line (GestureLine.kt). */
+    var gestureLine by mutableStateOf<GestureLine?>(null)
     /** The apps opened last, newest first (ids): the rail shows the recent ones. */
     val recentAppIds = mutableStateListOf<String>()
     /** The voice assistant showing as a bar over the screen (an app entry id), or null. */

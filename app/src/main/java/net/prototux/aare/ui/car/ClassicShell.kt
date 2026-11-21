@@ -71,6 +71,7 @@ internal fun ClassicShell(
             }
             overlay(Modifier.align(Alignment.BottomCenter))
             NoticeOverlay(state, actions, Modifier.align(Alignment.TopCenter))
+            GestureLineOverlay(state, Modifier.align(Alignment.TopCenter)) // MyPlay (R6)
             CallOverlay(state, actions, Modifier.align(Alignment.TopCenter))
         }
     }
