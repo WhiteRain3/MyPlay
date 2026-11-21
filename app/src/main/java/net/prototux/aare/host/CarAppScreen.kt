@@ -229,7 +229,8 @@ private class ConnectionTemplateHost(val conn: CarAppConnection, val runtime: Ca
         // filtered view stays while any filter is set, even one that changes nothing now (darker at
         // night only, by day), so a day/night switch does not rebuild the app's map surface.
         // MF-2: night as the maps apps are told it.
-        val filter = runtime.mapFilter
+        // N3: a MyPlay skin may suggest one while the look sets none.
+        val filter = MapColourFilter.chosen(runtime.mapFilter, LocalSkinMapFilter.current)
         if (!filter.isIdentity(night = true)) {
             FilteredMapSurface(conn, runtime.densityDpi, filter.matrix(runtime.mapFilterNight) ?: MapColourFilter.IDENTITY, modifier)
             return

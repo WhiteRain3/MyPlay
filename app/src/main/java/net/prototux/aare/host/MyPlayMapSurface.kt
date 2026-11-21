@@ -8,8 +8,13 @@ import android.view.TextureView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
+import net.prototux.aare.ui.theme.MapColourFilter
+
+/** N3: the map colour filter the screen's skin suggests (MapColourFilter.chosen), or null. */
+internal val LocalSkinMapFilter = staticCompositionLocalOf<MapColourFilter?> { null }
 
 /**
  * MyPlay (map recolouring, option 1): a hosted maps app's map drawn through a colour filter.

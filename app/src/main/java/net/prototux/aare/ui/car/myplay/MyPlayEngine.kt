@@ -35,6 +35,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.unit.dp
+import net.prototux.aare.host.LocalSkinMapFilter
+import net.prototux.aare.host.templates.LocalMapCovers
+import net.prototux.aare.host.templates.MapCoverRegistry
+import net.prototux.aare.host.templates.coversMap
 import net.prototux.aare.ui.car.CallOverlay
 import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarAppEntry
@@ -56,9 +60,12 @@ import net.prototux.aare.ui.car.Wallpaper
  * chooser a turn or left and right move the choice, a push enters; Back goes up. The Apps world
  * opens the app grid until it draws its own (N6), so the knob always has a way out (N1-1).
  *
- * Every other screen is still the "map behind" layout's until the chunks after N2 replace them;
- * the slots do not yet tell the maps app what they cover (N3). Shown only with the hidden setting
- * myplay_engine_preview.
+ * N3: the slots tell the maps app what they cover ([MyPlaySkin.coversMap]), so it keeps its
+ * arrow in the free part, and the skin may suggest a map colour filter ([SkinTokens.mapFilter]).
+ * A slot that is not drawn (no route yet) covers nothing until it appears.
+ *
+ * Every other screen is still the "map behind" layout's until the chunks after N2 replace them.
+ * Shown only with the hidden setting myplay_engine_preview.
  */
 @Composable
 internal fun MyPlayEngineShell(
@@ -92,6 +99,7 @@ internal fun MyPlayEngineShell(
     val live = boxes.filterKeys { it in actionsOf }
     val ring = chosen.takeIf { it in actionsOf } ?: STOP_HUB
     fun move(to: String?) { if (to != null) chosen = to }
+    val covers = remember { MapCoverRegistry() }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     BackHandler(enabled = model.place != Place.Home) { model.back() }
@@ -127,25 +135,31 @@ internal fun MyPlayEngineShell(
                 .onPreviewKeyEvent { e -> e.type == KeyEventType.KeyDown && onKey(e.key, e.isShiftPressed) }
                 .focusable(),
         ) {
-            val nav = state.app(state.homeNavAppId)
-            CompositionLocalProvider(LocalMapTapIsKnobStop provides false) {
-                if (nav != null) navMap(nav, Modifier.fillMaxSize()) else Wallpaper(state, Modifier.fillMaxSize())
-            }
-            val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)
-            val showRing = model.place == Place.Home && CarFocusVisibility.keyInput
-            fun Modifier.stop(id: String): Modifier = this
-                .onGloballyPositioned { c -> c.boundsInRoot().let { boxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
-                .semantics { selected = ring == id }
-                .let { if (showRing && ring == id) it.border(3.dp, tokens.accent, RoundedCornerShape(tokens.corner)) else it }
-                .testTag(id)
-            slots.turn?.let { skin.Turn(it, edge.align(Alignment.TopStart).stop(STOP_TURN)) }
-            skin.Status(edge.align(Alignment.TopEnd).testTag(SLOT_STATUS))
-            skin.Hub(slots.trip, edge.align(Alignment.BottomStart).stop(STOP_HUB))
-            slots.song?.let { skin.Song(it, edge.align(Alignment.BottomEnd).stop(STOP_SONG)) }
-            when (val p = model.place) {
-                is Place.Chooser -> skin.Chooser(p.selected, Modifier.align(Alignment.Center).testTag(SLOT_CHOOSER))
-                is Place.InWorld -> skin.WorldPlaceholder(p.world, Modifier.align(Alignment.Center).testTag(SLOT_WORLD))
-                Place.Home -> Unit
+            // N3: the maps app is told what the slots cover (as the spec layouts do, M2), and gets the
+            // skin's colour filter while the look sets none.
+            CompositionLocalProvider(LocalMapCovers provides covers) {
+                val nav = state.app(state.homeNavAppId)
+                CompositionLocalProvider(LocalMapTapIsKnobStop provides false, LocalSkinMapFilter provides tokens.mapFilter) {
+                    if (nav != null) navMap(nav, Modifier.fillMaxSize()) else Wallpaper(state, Modifier.fillMaxSize())
+                }
+                val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)
+                val showRing = model.place == Place.Home && CarFocusVisibility.keyInput
+                @Composable
+                fun Modifier.slot(slot: Slot): Modifier = if (skin.coversMap(slot)) coversMap() else this
+                fun Modifier.stop(id: String): Modifier = this
+                    .onGloballyPositioned { c -> c.boundsInRoot().let { boxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                    .semantics { selected = ring == id }
+                    .let { if (showRing && ring == id) it.border(3.dp, tokens.accent, RoundedCornerShape(tokens.corner)) else it }
+                    .testTag(id)
+                slots.turn?.let { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) }
+                skin.Status(edge.align(Alignment.TopEnd).slot(Slot.STATUS).testTag(SLOT_STATUS))
+                skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB))
+                slots.song?.let { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) }
+                when (val p = model.place) {
+                    is Place.Chooser -> skin.Chooser(p.selected, Modifier.align(Alignment.Center).slot(Slot.CHOOSER).testTag(SLOT_CHOOSER))
+                    is Place.InWorld -> skin.WorldPlaceholder(p.world, Modifier.align(Alignment.Center).slot(Slot.WORLD).testTag(SLOT_WORLD))
+                    Place.Home -> Unit
+                }
             }
             overlay(Modifier.align(Alignment.BottomCenter))
             TopLines(state, actions, Modifier.align(Alignment.TopCenter))

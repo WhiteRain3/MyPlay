@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import net.prototux.aare.host.templates.CarFormat
 import net.prototux.aare.ui.car.CarUiState
+import net.prototux.aare.ui.theme.MapColourFilter
 
 /**
  * MyPlay (plan phase N, N1): a skin draws MyPlay's car screen in one design language (ORBIT, DECK,
@@ -26,7 +27,15 @@ data class SkinTokens(
     val corner: Dp,
     /** Room between a slot and the screen's edge. */
     val edge: Dp = 16.dp,
+    /**
+     * The map colour filter this skin suggests (N3), used only while the chosen look sets none;
+     * null leaves the map as the app draws it.
+     */
+    val mapFilter: MapColourFilter? = null,
 )
+
+/** The places the engine offers a skin. */
+enum class Slot { TURN, STATUS, HUB, SONG, CHOOSER, WORLD }
 
 /** The next turn: the distance, then the road or instruction. Null fields are not known. */
 data class TurnSlot(val distance: String?, val road: String?)
@@ -76,6 +85,13 @@ interface MyPlaySkin {
     @Composable fun Chooser(selected: World, modifier: Modifier)
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)
+
+    /**
+     * N3: whether [slot] covers the map, so the maps app keeps its arrow and its own signs out of
+     * it. The corner slots do; the chooser and a world's page come and go over the middle, and
+     * counting them would make the map jump each time, so by default they do not.
+     */
+    fun coversMap(slot: Slot): Boolean = slot != Slot.CHOOSER && slot != Slot.WORLD
 }
 
 internal val LocalSkinTokens = staticCompositionLocalOf<SkinTokens> { error("no MyPlay skin") }

@@ -80,4 +80,15 @@ class MapColourFilterTest {
         assertEquals(MapColourFilter.PRESETS["muted"], MapColourFilter.decode("muted"))
         assertEquals(MapColourFilter(), MapColourFilter.decode(null))
     }
+
+    @Test fun theLooksOwnFilterWinsOverTheSkins() {
+        val look = MapColourFilter(saturation = 50)
+        val skin = MapColourFilter(hueShift = 20)
+        assertEquals(look, MapColourFilter.chosen(look, skin))
+        assertEquals(skin, MapColourFilter.chosen(MapColourFilter(), skin))
+        assertEquals(MapColourFilter(), MapColourFilter.chosen(MapColourFilter(), null))
+        // Darker at night only is the look's own choice, even by day.
+        val nightOnly = MapColourFilter(nightDarker = 30)
+        assertEquals(nightOnly, MapColourFilter.chosen(nightOnly, skin))
+    }
 }

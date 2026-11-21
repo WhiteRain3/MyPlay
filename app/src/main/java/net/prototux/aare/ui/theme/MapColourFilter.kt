@@ -65,6 +65,10 @@ data class MapColourFilter(
     }
 
     companion object {
+        /** N3: the filter the map gets: the look's own when it sets one, else the skin's suggestion, else none. */
+        fun chosen(look: MapColourFilter, skin: MapColourFilter?): MapColourFilter =
+            if (look.isIdentity(night = true) && skin != null) skin else look
+
         /** Presets the phone can offer; each look can take one or its own values. */
         val PRESETS: Map<String, MapColourFilter> = linkedMapOf(
             "none" to MapColourFilter(),

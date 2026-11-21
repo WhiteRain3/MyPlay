@@ -18,6 +18,10 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
+import net.prototux.aare.host.templates.LocalMapCovers
+import net.prototux.aare.host.templates.MapAreas
+import net.prototux.aare.host.templates.MapCoverRegistry
+import net.prototux.aare.host.templates.MapGeometry
 import net.prototux.aare.notify.PhoneGuidance
 import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarAppEntry
@@ -28,6 +32,7 @@ import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.PadWalkStates
 import net.prototux.aare.ui.theme.CarTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -45,6 +50,9 @@ import java.io.File
 class MyPlayEngineTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
+    private var state: CarUiState? = null
+    private fun guidance() = PhoneGuidance("k", "mock.maps", "Maps", "300 m", "Main Street", "", null, null, "")
+
     /** What the engine asked of the app: "launcher", or "app:<id>". */
     private val asked = mutableListOf<String>()
     private val actions = object : CarActions by PadWalkStates.NoActions {
@@ -52,16 +60,31 @@ class MyPlayEngineTest {
         override fun openApp(app: CarAppEntry) { asked += "app:${app.id}" }
     }
 
+    /** What the engine tells the maps app covers its map, as the map sees it. */
+    private var covers: MapCoverRegistry? = null
+
+    private fun bounds(tag: String) = rule.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
+        .let { MapGeometry.Box(it.left, it.top, it.right, it.bottom) }
+
+    /** The map's free area, as the maps app would be told it, on the whole screen. */
+    private fun freeArea(): MapAreas.Areas {
+        val c = rule.runOnIdle { covers }!!
+        val screen = bounds(ENGINE_TAG)
+        fun boxes(m: Map<Any, androidx.compose.ui.geometry.Rect>) = m.values.map { MapGeometry.Box(it.left, it.top, it.right, it.bottom) }
+        return MapAreas.compute(screen, boxes(c.shown), boxes(c.reserved))
+    }
+
     private fun show(night: Boolean = true, guidance: Boolean = false): CarUiState {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
             enginePreview = true
             this.night = night
-            if (guidance) phoneGuidance = PhoneGuidance("k", "mock.maps", "Maps", "300 m", "Main Street", "", null, null, "")
+            if (guidance) phoneGuidance = guidance()
         }
+        this.state = state
         rule.setContent {
             CarTheme(night = state.night, theme = state.theme) {
                 CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
-                    navMap = { _, m -> Box(m.background(Color(0xFF2E4A3A))) })
+                    navMap = { _, m -> covers = LocalMapCovers.current; Box(m.background(Color(0xFF2E4A3A))) })
             }
         }
         rule.waitForIdle()
@@ -131,6 +154,31 @@ class MyPlayEngineTest {
         repeat(3) { engine.performKeyInput { pressKey(Key.DirectionRight) } }
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         assertEquals(listOf("launcher"), asked)
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theFreeAreaMissesEverySlotAndTheChooserDoesNotMoveIt() {
+        show(guidance = true)
+        val withAll = freeArea()
+        for (tag in listOf(STOP_TURN, SLOT_STATUS, STOP_HUB, STOP_SONG)) {
+            assertNull("$tag overlaps the free area", bounds(tag).intersect(withAll.visible))
+        }
+        assertTrue("the map keeps a usable middle", withAll.visible.width > 400f && withAll.visible.height > 200f)
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+        assertEquals(withAll, freeArea())
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aSlotCountsFromWhenItAppears() {
+        show(guidance = false)
+        val area = freeArea()
+        for (tag in listOf(SLOT_STATUS, STOP_HUB, STOP_SONG)) assertNull(tag, bounds(tag).intersect(area.visible))
+        // When a turn appears, its slot is counted from then on.
+        rule.runOnIdle { state!!.phoneGuidance = guidance() }
+        rule.waitForIdle()
+        assertNull(bounds(STOP_TURN).intersect(freeArea().visible))
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun screenshot1280x720Night() = screenshot("test-skin-1280x720-night", true, 1280, 720)
