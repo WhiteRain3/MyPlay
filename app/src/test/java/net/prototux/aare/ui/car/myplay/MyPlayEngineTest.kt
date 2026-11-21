@@ -69,6 +69,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import net.prototux.aare.car.PhoneFix
+import net.prototux.aare.car.SpeedLimits
+import net.prototux.aare.car.LimitShown
 
 /** MyPlay (N1, N2, N3): the engine with the test skin. */
 @RunWith(RobolectricTestRunner::class)
@@ -861,8 +864,8 @@ class MyPlayEngineTest {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply { enginePreview = true }
         val car = MutableStateFlow(CarData.State(connected = true))
         val phone = object : PhoneFixes {
-            var onFix: ((Float, Long) -> Unit)? = null
-            override fun start(onFix: (Float, Long) -> Unit): Boolean { this.onFix = onFix; return true }
+            var onFix: ((PhoneFix) -> Unit)? = null
+            override fun start(onFix: (PhoneFix) -> Unit): Boolean { this.onFix = onFix; return true }
             override fun stop() { onFix = null }
         }
         var shown by mutableStateOf(true)
@@ -877,7 +880,7 @@ class MyPlayEngineTest {
         rule.waitForIdle()
         rule.onNodeWithText("– km/h").assertExists()
         assertTrue("listening with a maps app", rule.runOnIdle { phone.onFix != null })
-        rule.runOnIdle { phone.onFix!!(15f, System.currentTimeMillis()) }
+        rule.runOnIdle { phone.onFix!!(PhoneFix(15f, 54.68, 25.27, null, 5f, System.currentTimeMillis())) }
         rule.onNodeWithText("54 km/h").assertExists()
 
         rule.runOnIdle { state.activeNavAppId = null }
@@ -891,6 +894,50 @@ class MyPlayEngineTest {
         rule.runOnIdle { shown = false }
         rule.waitForIdle()
         assertTrue("off the screen: no location", rule.runOnIdle { phone.onFix == null })
+    }
+
+    /** N20: the map's limit, always labelled; over it by more than the margin the speed changes colour (silently). */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theMapsLimitIsLabelledAndTheMarginDecidesTheColour() {
+        val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply { enginePreview = true }
+        val car = MutableStateFlow(CarData.State(connected = true, speed = CarData.Timed(CarData.Speed(60 / 3.6f, null, null), System.currentTimeMillis())))
+        val phone = object : PhoneFixes {
+            var onFix: ((PhoneFix) -> Unit)? = null
+            override fun start(onFix: (PhoneFix) -> Unit): Boolean { this.onFix = onFix; return true }
+            override fun stop() { onFix = null }
+        }
+        val limits = object : SpeedLimits {
+            var closed = false
+            override fun available() = true
+            override fun lookup(fix: PhoneFix, onResult: (LimitShown) -> Unit) = onResult(LimitShown.Known(50))
+            override fun close() { closed = true }
+        }
+        var margin = 9
+        var shown by mutableStateOf(true)
+        rule.setContent {
+            CarTheme(night = state.night, theme = state.theme) {
+                if (shown) {
+                    val sources = EngineSources.of(state, actions, LocalContext.current)
+                        .copy(speed = SpeedSource(car, { phone }, limits = { limits }, margin = { margin }))
+                    MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m) }, navMap = { _, m -> Box(m) }, overlay = {}, skin = TestSkin, sources = sources)
+                }
+            }
+        }
+        // The car sends its speed; with a limit file the phone's fixes are wanted for the position.
+        rule.waitUntil(5_000) { rule.runOnIdle { phone.onFix != null } }
+        rule.onNodeWithText("60 km/h").assertExists()
+        rule.onNodeWithText("no limit known").assertExists()
+        rule.onNodeWithTag(SPEED_OVER_TAG).assertDoesNotExist()
+        rule.runOnIdle { phone.onFix!!(PhoneFix(16.7f, 54.68, 25.27, 90f, 5f, System.currentTimeMillis())) }
+        rule.onNodeWithText("limit 50 · limit from map data, may be wrong").assertExists()
+        rule.onNodeWithTag(SPEED_OVER_TAG).assertExists()
+        margin = 15
+        rule.mainClock.advanceTimeBy(1_100)
+        rule.waitForIdle()
+        rule.onNodeWithTag(SPEED_OVER_TAG).assertDoesNotExist()
+        rule.runOnIdle { shown = false }
+        rule.waitForIdle()
+        assertTrue("off the screen: no location, file closed", rule.runOnIdle { phone.onFix == null && limits.closed })
     }
 
     /** N11: the phone's picture gets a fixed speed, takes no focus and never listens for location. */

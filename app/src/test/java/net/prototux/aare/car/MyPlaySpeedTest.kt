@@ -15,17 +15,29 @@ class MyPlaySpeedTest {
 
     /** A phone whose fixes the test sends; counts starts and stops. */
     private class FakeFixes(var permitted: Boolean = true) : PhoneFixes {
-        var onFix: ((Float, Long) -> Unit)? = null
+        var onFix: ((PhoneFix) -> Unit)? = null
         var starts = 0
         var stops = 0
         val on get() = onFix != null
-        override fun start(onFix: (Float, Long) -> Unit): Boolean {
+        override fun start(onFix: (PhoneFix) -> Unit): Boolean {
             if (!permitted) return false
             starts++
             this.onFix = onFix
             return true
         }
         override fun stop() { stops++; onFix = null }
+    }
+
+    private fun fix(mps: Float?, at: Long) = PhoneFix(mps, 54.68, 25.27, 90f, 5f, at)
+
+    /** Limits the test answers by hand (as the real lookup answers later, on the main thread). */
+    private class FakeLimits(var there: Boolean = true) : SpeedLimits {
+        val asked = ArrayList<Pair<PhoneFix, (LimitShown) -> Unit>>()
+        var closed = false
+        override fun available() = there
+        override fun lookup(fix: PhoneFix, onResult: (LimitShown) -> Unit) { asked += fix to onResult }
+        override fun close() { closed = true }
+        fun answer(r: LimitShown) = asked.last().second(r)
     }
 
     @Test fun kmhRoundsAndNeverGoesBelowZero() {
@@ -64,7 +76,7 @@ class MyPlaySpeedTest {
         feed.update(inputs)
         assertTrue(feed.listening)
         assertNull("no fix yet: no guess", feed.reading)
-        phone.onFix!!(25f, now)
+        phone.onFix!!(fix(25f, now))
         assertEquals(SpeedReading(90, SpeedReading.From.PHONE), feed.reading)
 
         // The maps app stops: no location at all.
@@ -110,5 +122,88 @@ class MyPlaySpeedTest {
         val feed = SpeedFeed(phone) { now }
         feed.update(SpeedFeed.Inputs(SpeedSourceMode.CAR, shown = true, mapsRunning = true, car = connected))
         assertEquals(0, phone.starts)
+    }
+
+    // N20: the speed limit.
+
+    @Test fun overTheLimitOnlyByMoreThanTheMargin() {
+        val fifty = LimitShown.Known(50)
+        assertFalse(SpeedRules.over(59, fifty, 9))
+        assertTrue(SpeedRules.over(60, fifty, 9))
+        assertFalse(SpeedRules.over(64, fifty, 15))
+        assertTrue(SpeedRules.over(56, fifty, 5))
+        assertFalse("the warning turned off", SpeedRules.over(150, fifty, SpeedRules.MARGIN_OFF))
+        assertFalse("no limit known: never", SpeedRules.over(150, LimitShown.Unknown, 9))
+        assertFalse(SpeedRules.over(150, null, 9))
+    }
+
+    @Test fun withALimitFileThePhonesFixesAreWantedEvenWithTheCarsSpeed() {
+        assertTrue(SpeedRules.phoneWanted(SpeedSourceMode.AUTO, shown = true, connected = true, mapsRunning = true, carFresh = true, limitsOn = true))
+        // The other battery rules still hold.
+        assertFalse(SpeedRules.phoneWanted(SpeedSourceMode.AUTO, shown = true, connected = true, mapsRunning = false, carFresh = true, limitsOn = true))
+        assertFalse(SpeedRules.phoneWanted(SpeedSourceMode.AUTO, shown = false, connected = true, mapsRunning = true, carFresh = true, limitsOn = true))
+        assertFalse(SpeedRules.phoneWanted(SpeedSourceMode.CAR, shown = true, connected = true, mapsRunning = true, carFresh = true, limitsOn = true))
+    }
+
+    @Test fun theFeedShowsTheLimitFromAFreshFixAndColoursTheSpeedOverIt() {
+        val phone = FakeFixes()
+        val limits = FakeLimits()
+        val feed = SpeedFeed(phone, limits) { now }
+        val inputs = SpeedFeed.Inputs(SpeedSourceMode.AUTO, shown = true, mapsRunning = true, car = carAt(60 / 3.6f, now), limitsOn = true)
+        feed.update(inputs)
+        assertTrue("the car's speed, and the phone's fixes for the position", phone.on)
+        assertEquals(SpeedReading(60, SpeedReading.From.CAR, LimitShown.Unknown), feed.reading)
+        phone.onFix!!(fix(16.7f, now))
+        assertEquals(1, limits.asked.size)
+        limits.answer(LimitShown.Known(50))
+        assertEquals(SpeedReading(60, SpeedReading.From.CAR, LimitShown.Known(50), over = true), feed.reading)
+        feed.update(inputs.copy(margin = 15))
+        assertEquals(SpeedReading(60, SpeedReading.From.CAR, LimitShown.Known(50), over = false), feed.reading)
+        feed.update(inputs.copy(margin = SpeedRules.MARGIN_OFF))
+        assertFalse(feed.reading!!.over)
+
+        // No fix for a while: no limit known (never an old one).
+        now += SpeedRules.PHONE_FRESH_MS + 1
+        feed.update(inputs.copy(car = carAt(60 / 3.6f, now)))
+        assertEquals(LimitShown.Unknown, feed.reading!!.limit)
+        assertFalse(feed.reading!!.over)
+
+        // An answer to an older fix that arrives late is dropped.
+        phone.onFix!!(fix(16.7f, now))
+        val late = limits.asked.last().second
+        phone.onFix!!(fix(16.7f, now))
+        limits.answer(LimitShown.Known(90))
+        late(LimitShown.Known(30))
+        assertEquals(LimitShown.Known(90), feed.reading!!.limit)
+    }
+
+    @Test fun noFileNoLimitAndThePhoneRestsWhileTheCarSendsItsSpeed() {
+        val phone = FakeFixes()
+        val limits = FakeLimits()
+        val feed = SpeedFeed(phone, limits) { now }
+        feed.update(SpeedFeed.Inputs(SpeedSourceMode.AUTO, shown = true, mapsRunning = true, car = carAt(10f, now), limitsOn = false))
+        assertFalse(phone.on)
+        assertEquals(SpeedReading(36, SpeedReading.From.CAR), feed.reading)
+        assertTrue(limits.asked.isEmpty())
+    }
+
+    @Test fun aLimitAnswerAfterTheSpeedLeftTheScreenIsDropped() {
+        val phone = FakeFixes()
+        val limits = FakeLimits()
+        val feed = SpeedFeed(phone, limits) { now }
+        feed.update(SpeedFeed.Inputs(SpeedSourceMode.AUTO, shown = true, mapsRunning = true, car = carAt(10f, now), limitsOn = true))
+        phone.onFix!!(fix(10f, now))
+        feed.release()
+        limits.answer(LimitShown.Known(50))
+        assertNull(feed.reading)
+        assertFalse(phone.on)
+    }
+
+    @Test fun carModeShowsNoLimit() {
+        val phone = FakeFixes()
+        val feed = SpeedFeed(phone, FakeLimits()) { now }
+        feed.update(SpeedFeed.Inputs(SpeedSourceMode.CAR, shown = true, mapsRunning = true, car = carAt(10f, now), limitsOn = true))
+        assertEquals(0, phone.starts)
+        assertEquals(SpeedReading(36, SpeedReading.From.CAR), feed.reading)
     }
 }

@@ -137,6 +137,8 @@ import net.prototux.aare.ui.car.myplay.World
 import net.prototux.aare.ui.car.rememberPhoneStatus
 import kotlin.math.cos
 import kotlin.math.sin
+import androidx.compose.ui.text.font.FontWeight
+import net.prototux.aare.car.LimitShown
 
 /**
  * MyPlay (plan phase N, N5): ORBIT, MyPlay's first car screen language, from the Design reviewer's
@@ -360,12 +362,40 @@ object OrbitSkin : MyPlaySkin {
     override fun Speed(reading: SpeedReading?, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            OrbitDisc(104.dp, LocalSkinTokens.current.night, Modifier.padding(top = 12.dp).carPart(CarPart.OrbitSpeed)) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(reading?.kmh?.toString() ?: "–", style = Orbit.Type.name.copy(color = g.text, lineHeight = 36.sp), maxLines = 1)
-                    Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, color = g.secondary), maxLines = 1)
+            val night = LocalSkinTokens.current.night
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                OrbitDisc(104.dp, night, Modifier.padding(top = 12.dp).carPart(CarPart.OrbitSpeed)) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        // N20: over the limit by more than the margin, the number turns a calm amber; no sound.
+                        val colour = if (reading?.over == true) Orbit.caution(night) else g.text
+                        Text(reading?.kmh?.toString() ?: "–", style = Orbit.Type.name.copy(color = colour, lineHeight = 36.sp), maxLines = 1)
+                        Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, color = g.secondary), maxLines = 1)
+                    }
                 }
+                reading?.limit?.let { SpeedLimit(it, night) }
             }
+        }
+    }
+
+    /**
+     * N20: the limit from the map data, under the speed: a plain ring (not made to look like a road
+     * sign: it is advice, and may be wrong) and always its label.
+     */
+    @Composable
+    private fun SpeedLimit(limit: LimitShown, night: Boolean) {
+        val g = Orbit.glass(night)
+        Column(Modifier.padding(top = 8.dp).widthIn(max = 150.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            OrbitDisc(60.dp, night, Modifier.border(3.dp, g.secondary, CircleShape)) {
+                Text(
+                    (limit as? LimitShown.Known)?.kmh?.toString() ?: "–",
+                    style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1,
+                )
+            }
+            Text(
+                stringResource(if (limit is LimitShown.Known) R.string.myplay_speed_limit_map_data else R.string.myplay_speed_limit_unknown),
+                style = TextStyle(fontSize = 15.sp, lineHeight = 17.sp, textAlign = TextAlign.Center).floating(g.secondary),
+                maxLines = 2, modifier = Modifier.padding(top = 4.dp),
+            )
         }
     }
 

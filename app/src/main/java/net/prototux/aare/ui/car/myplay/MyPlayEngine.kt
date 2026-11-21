@@ -68,6 +68,8 @@ import net.prototux.aare.ui.car.LocalMapTapIsKnobStop
 import net.prototux.aare.ui.car.SpecShell
 import net.prototux.aare.ui.car.GestureLineOverlay
 import net.prototux.aare.ui.car.Wallpaper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * MyPlay (plan phase N): the engine of MyPlay's own car screen, drawn by a [MyPlaySkin].
@@ -641,21 +643,33 @@ internal fun MyPlayEngineShell(
 private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Composable (SpeedReading?) -> Unit) {
     // The phone's picture shows a fixed speed and never listens to anything.
     source.fixed?.let { content(it); return }
-    val feed = remember(source) { SpeedFeed(source.fixes()) }
+    val limits = remember(source) { source.limits() }
+    val feed = remember(source) { SpeedFeed(source.fixes(), limits) }
     val car by source.car.collectAsState()
-    val inputs = SpeedFeed.Inputs(state.speedSource, shown = true, mapsRunning = state.activeNavAppId != null, car = car)
+    // N20: whether the phone keeps a speed limit file (looked at off the main thread, now and then:
+    // the phone may download one while the car is connected).
+    val limitsOn by produceState(false, limits, state.speedSource) {
+        value = false
+        if (limits == null || state.speedSource != SpeedSourceMode.AUTO) return@produceState
+        while (true) {
+            value = withContext(Dispatchers.IO) { limits.available() }
+            delay(LIMITS_RECHECK_MS)
+        }
+    }
+    val inputs = SpeedFeed.Inputs(state.speedSource, shown = true, mapsRunning = state.activeNavAppId != null, car = car, limitsOn = limitsOn)
     // Again each second, so a speed the car stopped sending goes away.
     LaunchedEffect(feed, inputs) {
         while (true) {
-            feed.update(inputs)
+            feed.update(inputs.copy(margin = source.margin()))
             delay(SPEED_TICK_MS)
         }
     }
-    DisposableEffect(feed) { onDispose { feed.release() } }
+    DisposableEffect(feed) { onDispose { feed.release(); limits?.close() } }
     content(feed.reading)
 }
 
 private const val SPEED_TICK_MS = 1_000L
+private const val LIMITS_RECHECK_MS = 60_000L
 
 /** How long a notice shows (as the car's notice overlay). */
 internal const val NOTICE_SHOW_MS = 8_000L

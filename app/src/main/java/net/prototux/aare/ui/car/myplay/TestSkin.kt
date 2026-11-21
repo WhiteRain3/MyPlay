@@ -23,6 +23,10 @@ import net.prototux.aare.ui.car.CarCall
 import net.prototux.aare.ui.car.CarNotice
 import net.prototux.aare.media.LibraryRow
 import android.graphics.Bitmap
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import net.prototux.aare.R
+import net.prototux.aare.car.LimitShown
 
 /**
  * MyPlay (N1): a plain skin for the engine's tests and the hidden preview: grey boxes with text,
@@ -76,8 +80,14 @@ object TestSkin : MyPlaySkin {
     override val showsSpeed get() = true
 
     @Composable
-    override fun Speed(reading: SpeedReading?, modifier: Modifier) = Box(modifier) {
-        Text("${reading?.kmh ?: "–"} km/h", color = LocalSkinTokens.current.onSurface, fontSize = 22.sp)
+    override fun Speed(reading: SpeedReading?, modifier: Modifier) = Column(modifier) {
+        Text("${reading?.kmh ?: "–"} km/h", color = LocalSkinTokens.current.onSurface, fontSize = 22.sp,
+            modifier = if (reading?.over == true) Modifier.testTag(SPEED_OVER_TAG) else Modifier)
+        when (val l = reading?.limit) {
+            is LimitShown.Known -> Text("limit ${l.kmh} · ${stringResource(R.string.myplay_speed_limit_map_data)}", color = LocalSkinTokens.current.onSurface)
+            LimitShown.Unknown -> Text(stringResource(R.string.myplay_speed_limit_unknown), color = LocalSkinTokens.current.onSurface)
+            null -> Unit
+        }
     }
 
     @Composable
@@ -235,3 +245,6 @@ object TestSkin : MyPlaySkin {
         Text(world.name, color = t.onSurface, fontSize = 28.sp, fontWeight = FontWeight.Bold)
     }
 }
+
+/** N20: on the speed while it is over the limit by more than the margin (tests). */
+internal const val SPEED_OVER_TAG = "speed_over"

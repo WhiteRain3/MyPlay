@@ -3,7 +3,9 @@ package net.prototux.aare.ui.car.myplay
 import android.content.Context
 import net.prototux.aare.R
 import net.prototux.aare.Settings
+import net.prototux.aare.car.SpeedRules
 import net.prototux.aare.car.SpeedSourceMode
+import net.prototux.aare.car.myplaySpeedLimitMargin
 import net.prototux.aare.car.myplayGestureLine
 import net.prototux.aare.car.myplaySpeedSource
 import net.prototux.aare.ui.car.CarAppKind
@@ -70,6 +72,14 @@ internal class CarSettingsSource(private val context: Context, private val state
                 SpeedSourceMode.OFF.id to s(R.string.myplay_off)),
             settings.myplaySpeedSource.id,
         ) { settings.myplaySpeedSource = SpeedSourceMode.byId(it) },
+        // N20: how far over the map's limit before the speed turns amber (silent; Off: never).
+        SettingItem.Choice(
+            "speed_limit_margin", s(R.string.myplay_setting_speed_limit_margin),
+            SpeedRules.MARGINS.map { m ->
+                m.toString() to if (m == SpeedRules.MARGIN_OFF) s(R.string.myplay_off) else context.getString(R.string.myplay_setting_speed_limit_margin_by, m)
+            },
+            settings.myplaySpeedLimitMargin.toString(),
+        ) { settings.myplaySpeedLimitMargin = it.toInt() },
         SettingItem.Toggle("gesture_line", s(R.string.myplay_setting_gesture_line), settings.myplayGestureLine) { settings.myplayGestureLine = it },
         SettingItem.Toggle("banners", s(R.string.setup_switch_message_notifications), settings.messageBanners) { settings.messageBanners = it },
         SettingItem.Toggle("read_aloud", s(R.string.msg_toggle_read_aloud_title), settings.readMessagesAloud) { settings.readMessagesAloud = it },

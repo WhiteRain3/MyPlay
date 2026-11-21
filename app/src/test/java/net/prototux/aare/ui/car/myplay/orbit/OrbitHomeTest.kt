@@ -78,6 +78,12 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 import java.util.TimeZone
+import net.prototux.aare.car.CarData
+import net.prototux.aare.car.LimitShown
+import net.prototux.aare.car.PhoneFix
+import net.prototux.aare.car.PhoneFixes
+import net.prototux.aare.car.SpeedReading
+import net.prototux.aare.ui.car.myplay.SpeedSource
 
 /** MyPlay (N5): ORBIT's home through the car shell's hidden preview, its pictures and its knob walk. */
 @RunWith(RobolectricTestRunner::class)
@@ -153,7 +159,7 @@ class OrbitHomeTest {
         override fun open() = Unit
     }
 
-    private fun show(night: Boolean = true, trip: Boolean = true, withArt: Boolean = true): CarUiState {
+    private fun show(night: Boolean = true, trip: Boolean = true, withArt: Boolean = true, speed: SpeedReading? = null): CarUiState {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
             enginePreview = true
             this.night = night
@@ -169,7 +175,9 @@ class OrbitHomeTest {
                     EngineSources.of(state, actions, context).copy(phone = PicturePhone, carLines = {
                         listOf("Car" to "Audi A4 2016", "Driving" to "Moving", "Speed" to "48 km/h", "Fuel" to "62% · 480 km",
                             "Outside" to "7.5 °C · 101 kPa", "Tyres" to "230 · 230 · 240 · 240 kPa", "Doors" to "Closed")
-                    })
+                    }).let { s ->
+                        if (speed == null) s else s.copy(speed = SpeedSource(kotlinx.coroutines.flow.MutableStateFlow(CarData.State()), { NoPhoneFixes }, speed))
+                    }
                 }) {
                     CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
                         navMap = { _, m -> Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
@@ -339,6 +347,21 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun home1280x720Day() = picture("orbit-home-1280x720-day", night = false)
     @Test @Config(qualifiers = "w1200dp-h723dp-land-mdpi") fun home1200x723Night() = picture("orbit-home-1200x723-night", night = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun home901x543Night() = picture("orbit-home-901x543-night", night = true)
+    // N20: the map's limit under the speed, always labelled; over it, the speed turns amber.
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun speedOverTheLimitNight() =
+        picture("orbit-speed-limit-over-1280x720-night", night = true, speed = SpeedReading(64, SpeedReading.From.CAR, LimitShown.Known(50), over = true))
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun speedWithinTheLimit901x543Day() =
+        picture("orbit-speed-limit-901x543-day", night = false, speed = SpeedReading(48, SpeedReading.From.CAR, LimitShown.Known(50)))
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun speedOverTheLimitDay() =
+        picture("orbit-speed-limit-over-1280x720-day", night = false, speed = SpeedReading(64, SpeedReading.From.CAR, LimitShown.Known(50), over = true))
+    @Test @Config(qualifiers = "w1200dp-h723dp-land-mdpi") fun speedNoLimitKnown() =
+        picture("orbit-speed-limit-unknown-1200x723-night", night = true, speed = SpeedReading(48, SpeedReading.From.CAR, LimitShown.Unknown))
+
+    private object NoPhoneFixes : PhoneFixes {
+        override fun start(onFix: (PhoneFix) -> Unit) = false
+        override fun stop() = Unit
+    }
+
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNoRoute() = picture("orbit-home-no-route-night", night = true, trip = false)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNoArtDay() = picture("orbit-home-no-art-day", night = false, withArt = false)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun dialNight() = picture("orbit-dial-1280x720-night", night = true, dial = true)
@@ -382,8 +405,8 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null, calls: Boolean = false, notice: Boolean = false, bell: Int = 0, world: Int = -1) {
-        val state = show(night, trip, withArt)
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null, calls: Boolean = false, notice: Boolean = false, bell: Int = 0, world: Int = -1, speed: SpeedReading? = null) {
+        val state = show(night, trip, withArt, speed)
         if (world >= 0) {
             val engine = rule.onNodeWithTag(ENGINE_TAG)
             engine.performKeyInput { pressKey(Key.DirectionCenter) }

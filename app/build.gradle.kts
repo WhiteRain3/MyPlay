@@ -131,6 +131,7 @@ androidComponents {
 
 dependencies {
     implementation(project(":aap"))
+    implementation(project(":speedlimit")) // MyPlay (N20): the speed limit file and its matcher
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

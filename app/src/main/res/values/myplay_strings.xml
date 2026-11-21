@@ -59,4 +59,8 @@
     <string name="myplay_settings_hint" translatable="false">turn: choose · push: change · Back: back</string>
     <string name="myplay_car_hint" translatable="false">turn: read on · Back: back</string>
     <string name="myplay_setting_passenger_stopped" translatable="false">Can be turned on only while the car is stopped</string>
+    <string name="myplay_speed_limit_map_data" translatable="false">limit from map data, may be wrong</string>
+    <string name="myplay_speed_limit_unknown" translatable="false">no limit known</string>
+    <string name="myplay_setting_speed_limit_margin" translatable="false">Speed colour over the limit</string>
+    <string name="myplay_setting_speed_limit_margin_by" translatable="false">over by %d km/h</string>
 </resources>

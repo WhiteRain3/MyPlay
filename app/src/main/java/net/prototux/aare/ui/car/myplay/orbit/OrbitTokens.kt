@@ -51,6 +51,9 @@ object Orbit {
     /** A low battery and other warnings: the sheet's decline red by night, a darker red by day (5.6:1 on the day glass). */
     fun warning(night: Boolean): Color = if (night) Color(0xFFFF6B6B) else Color(0xFFC62828)
 
+    /** N20: a calm amber, for the speed over the limit (not the red of a warning). */
+    fun caution(night: Boolean): Color = if (night) Color(0xFFFFC857) else Color(0xFF8A5A00)
+
     /** Text and icons on a filled accent disc: dark on the pale night accents, white on the dark day ones. */
     fun onAccent(night: Boolean): Color = if (night) Color(0xFF06251A) else Color.White
 

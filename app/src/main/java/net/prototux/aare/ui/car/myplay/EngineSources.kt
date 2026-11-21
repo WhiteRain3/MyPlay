@@ -28,6 +28,12 @@ import net.prototux.aare.ui.car.CarCall
 import net.prototux.aare.ui.car.CarNotice
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.NowPlaying
+import net.prototux.aare.Settings
+import net.prototux.aare.car.FileSpeedLimits
+import net.prototux.aare.car.PhoneFix
+import net.prototux.aare.car.SpeedLimits
+import net.prototux.aare.car.SpeedRules
+import net.prototux.aare.car.myplaySpeedLimitMargin
 
 /**
  * MyPlay (plan phase N, N2): what the engine's screens read and do, behind small interfaces, so
@@ -101,7 +107,14 @@ interface MirrorSource {
  * (car/MyPlaySpeed.kt). With [fixed], that speed is shown and nothing is read or listened to
  * (the phone's picture of the car screen).
  */
-class SpeedSource(val car: StateFlow<CarData.State>, val fixes: () -> PhoneFixes, val fixed: SpeedReading? = null)
+class SpeedSource(
+    val car: StateFlow<CarData.State>,
+    val fixes: () -> PhoneFixes,
+    val fixed: SpeedReading? = null,
+    /** N20: the speed limit file's lookup (null: none), and the margin before the speed changes colour. */
+    val limits: () -> SpeedLimits? = { null },
+    val margin: () -> Int = { SpeedRules.MARGIN_DEFAULT },
+)
 
 /**
  * The sources a caller gives the engine instead of the car's own: the phone's picture of the car
@@ -179,7 +192,11 @@ data class EngineSources(
                 override fun key(action: Int, keyCode: Int) = Unit
             },
             openMaps = { state.app(state.homeNavAppId ?: state.activeNavAppId)?.let(actions::openApp) ?: actions.openLauncher() },
-            speed = SpeedSource(CarData.state, { context?.let(::PassiveFixes) ?: NoFixes }),
+            speed = SpeedSource(
+                CarData.state, { context?.let(::PassiveFixes) ?: NoFixes },
+                limits = { context?.let(::FileSpeedLimits) },
+                margin = { context?.let { Settings(it).myplaySpeedLimitMargin } ?: SpeedRules.MARGIN_DEFAULT },
+            ),
             settings = context?.let { CarSettingsSource(it, state) } ?: object : SettingsSource { override fun items() = emptyList<SettingItem>() },
             apps = object : AppsSource {
                 // Already in the owner's order, as the app grid shows them (CarRuntime.applyApps).
@@ -199,6 +216,6 @@ data class EngineSources(
 
 /** No phone fixes at all. */
 private object NoFixes : PhoneFixes {
-    override fun start(onFix: (Float, Long) -> Unit) = false
+    override fun start(onFix: (PhoneFix) -> Unit) = false
     override fun stop() = Unit
 }
