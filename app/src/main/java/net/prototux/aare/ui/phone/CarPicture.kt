@@ -84,6 +84,7 @@ import net.prototux.aare.ui.theme.withAccent
 import net.prototux.aare.ui.theme.CustomColours
 import net.prototux.aare.ui.theme.myplayLookColours
 import net.prototux.aare.ui.theme.withCustomColours
+import net.prototux.aare.ui.car.myplay.myplayEnginePreview
 
 /**
  * The car screen drawn small on the phone: the car's own drawing code ([CarShell]) with made-up
@@ -170,6 +171,9 @@ internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: C
     ui.railBottom = settings.railPosition == Settings.RAIL_BOTTOM
     ui.railOnRight = pictureRailOnRight(settings.railPosition)
     ui.wallpaper = settings.wallpaper
+    ui.enginePreview = settings.myplayEnginePreview // N11: MyPlay's own screen (ORBIT) while it is tried
+    // The picture never reads the phone's location (N3's battery rules): its speed is off.
+    ui.speedSource = net.prototux.aare.car.SpeedSourceMode.OFF
 }
 
 /** Made-up apps, music and an appointment, so every card has something to show. Nothing here is real. */
@@ -284,7 +288,17 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
         ) {
             // Text and control size as the car applies them (CarRuntime.Root).
             val base = LocalDensity.current
+            // The car screen's own Back handling (ORBIT's) gets a dispatcher of its own: the phone's
+            // Back never reaches the picture, and the picture works where there is no activity.
+            val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+            val pictureBack = remember(lifecycleOwner) {
+                object : androidx.activity.OnBackPressedDispatcherOwner {
+                    override val onBackPressedDispatcher = androidx.activity.OnBackPressedDispatcher()
+                    override val lifecycle get() = lifecycleOwner.lifecycle
+                }
+            }
             CompositionLocalProvider(
+                androidx.activity.compose.LocalOnBackPressedDispatcherOwner provides pictureBack,
                 LocalCarParts provides registry,
                 LocalCarControlScale provides ui.controlScale,
                 LocalDensity provides Density(base.density, base.fontScale * ui.textScale),
