@@ -2,7 +2,6 @@ package net.prototux.aare.ui.car.myplay
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -31,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.focusable
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isShiftPressed
@@ -93,11 +94,43 @@ internal fun MyPlayAppFrame(
             sources.notifications.dismiss(notice)
         }
     }
+    // F1-1 (R5-2): a ringing call takes the knob's keys without taking the focus from the app: the
+    // frame sees every key before the focused part of the app does (onPreviewKeyEvent on an
+    // ancestor), so while the call rings it keeps them; when it ends the focus is still where it was
+    // in the app (a mirrored app's key stop too), and nothing has to be given back.
+    // When nothing in the app holds the focus (an app with nothing to focus, like a bare map), the
+    // keys would reach no one: only then does the call's own layer take the focus.
+    var frameHasFocus by remember { mutableStateOf(false) }
     val callFocus = remember { FocusRequester() }
-    LaunchedEffect(ringing) { if (ringing && !sources.picture) runCatching { callFocus.requestFocus() } }
+    LaunchedEffect(ringing) {
+        if (ringing && !sources.picture) {
+            delay(50) // let the layer be laid out
+            if (!frameHasFocus) runCatching { callFocus.requestFocus() }
+        }
+    }
+    val currentCall by rememberUpdatedState(callActions)
+    val currentRing by rememberUpdatedState(callRing)
+    fun callKey(key: Key, shift: Boolean): Boolean {
+        val live = callBoxes.filterKeys { it in currentCall }
+        when (key) {
+            Key.Tab -> FocusGraph.knob(live, currentRing, if (shift) -1 else 1)?.let { callChosen = it }
+            Key.DirectionLeft -> FocusGraph.pad(live, currentRing, FocusGraph.Direction.LEFT)?.let { callChosen = it }
+            Key.DirectionRight -> FocusGraph.pad(live, currentRing, FocusGraph.Direction.RIGHT)?.let { callChosen = it }
+            Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> currentCall[currentRing]?.invoke()
+            // Up and down do nothing while it rings; anything else (Back, media keys) goes on as usual.
+            Key.DirectionUp, Key.DirectionDown -> Unit
+            else -> return false
+        }
+        return true
+    }
 
     CompositionLocalProvider(LocalSkinTokens provides tokens) {
-        BoxWithConstraints(Modifier.fillMaxSize().background(tokens.background).then(modifier).testTag(FRAME_TAG)) {
+        BoxWithConstraints(
+            Modifier.fillMaxSize().background(tokens.background).then(modifier).testTag(FRAME_TAG)
+                .onFocusChanged { frameHasFocus = it.hasFocus }
+                // Key ups of the call's keys are kept too, so the app never sees half a press.
+                .onPreviewKeyEvent { e -> ringing && (if (e.type == KeyEventType.KeyDown) callKey(e.key, e.isShiftPressed) else e.key in CALL_KEYS) },
+        ) {
             Row(Modifier.fillMaxSize()) {
                 val rail = @Composable { skin.AppRail(actions::goHome, Modifier.fillMaxHeight().testTag(FRAME_RAIL_TAG)) }
                 if (!state.railOnRight) rail()
@@ -125,23 +158,7 @@ internal fun MyPlayAppFrame(
             }
             // A ringing call: the skin's, over everything, with the knob, as on the home (C-1: touches stop here).
             if (ringing) {
-                val currentCall by rememberUpdatedState(callActions)
-                Box(
-                    Modifier.fillMaxSize().focusRequester(callFocus)
-                        .onPreviewKeyEvent { e ->
-                            if (e.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
-                            val live = callBoxes.filterKeys { it in currentCall }
-                            when (e.key) {
-                                Key.Tab -> FocusGraph.knob(live, callRing, if (e.isShiftPressed) -1 else 1)?.let { callChosen = it }
-                                Key.DirectionLeft -> FocusGraph.pad(live, callRing, FocusGraph.Direction.LEFT)?.let { callChosen = it }
-                                Key.DirectionRight -> FocusGraph.pad(live, callRing, FocusGraph.Direction.RIGHT)?.let { callChosen = it }
-                                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> currentCall[callRing]?.invoke()
-                                else -> return@onPreviewKeyEvent false
-                            }
-                            true
-                        }
-                        .focusable(),
-                ) {
+                Box(Modifier.fillMaxSize().focusRequester(callFocus).focusable()) {
                     skin.Ringing(call!!, canEnd, callRing, { id ->
                         Modifier
                             .pointerInput(id) { detectTapGestures { callChosen = id; currentCall[id]?.invoke() } }
@@ -179,6 +196,9 @@ internal fun DefaultAppRail(home: () -> Unit, modifier: Modifier) {
         }
     }
 }
+
+/** The keys a ringing call keeps (down and up) while it rings over an app. */
+private val CALL_KEYS = setOf(Key.Tab, Key.DirectionLeft, Key.DirectionRight, Key.DirectionUp, Key.DirectionDown, Key.Enter, Key.DirectionCenter, Key.NumPadEnter)
 
 internal const val FRAME_TAG = "app_frame"
 internal const val FRAME_RAIL_TAG = "app_frame_rail"

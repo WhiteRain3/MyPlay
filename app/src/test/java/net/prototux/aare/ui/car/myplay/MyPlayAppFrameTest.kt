@@ -8,6 +8,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -127,6 +133,9 @@ class MyPlayAppFrameTest {
         rule.waitForIdle()
         rule.onNodeWithTag(SLOT_CALL).assertExists()
         rule.onNodeWithText("Anna K.", substring = true).assertExists()
+        // The knob's push, as the car sends it: to whatever holds the focus; the frame keeps it for the call.
+        // (This app has nothing to focus: the call's layer holds the focus then.)
+        rule.mainClock.advanceTimeBy(100)
         rule.onNodeWithTag(SLOT_CALL).performKeyInput { pressKey(Key.DirectionCenter) }
         assertEquals(listOf("answer"), asked)
     }
@@ -151,5 +160,47 @@ class MyPlayAppFrameTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun deckFrameNight() { show("deck"); picture("frame-deck-1280x720-night") }
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun orbitFrameDay901() {
         show("orbit"); rule.runOnIdle { state!!.night = false }; rule.waitForIdle(); picture("frame-orbit-901x543-day")
+    }
+
+    /**
+     * F1-1 (R5-2): a call rings over an app and ends; the knob is back where it was in the app (here
+     * a mirrored app's key stop, the second stop), so the next push goes to the app, not Home.
+     */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun afterACallTheKnobIsBackWhereItWasInTheApp() {
+        Shadows.shadowOf(rule.activity.application).grantPermissions(android.Manifest.permission.ANSWER_PHONE_CALLS)
+        val sent = mutableListOf<Int>()
+        val mirror = androidx.compose.ui.focus.FocusRequester()
+        val s = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
+            enginePreview = true
+            screen = CarScreen.App("music")
+        }
+        state = s
+        rule.setContent {
+            CarTheme(night = s.night, theme = s.theme) {
+                CarShell(s, actions, appContent = { _, m ->
+                    androidx.compose.foundation.layout.Column(m) {
+                        Box(Modifier.size(80.dp).focusable().testTag("app_first"))
+                        net.prototux.aare.ui.car.MirroredKeyStop(net.prototux.aare.car.MirroredKeys.TurnMode.UP_DOWN, { action, _ -> sent += action },
+                            Modifier.focusRequester(mirror).testTag("app_mirror"))
+                    }
+                }, navMap = { _, m -> Box(m) })
+            }
+        }
+        rule.waitForIdle()
+        rule.runOnIdle { mirror.requestFocus() }
+        rule.onNodeWithTag("app_mirror").assertIsFocused()
+        // A call rings: it takes the knob's keys (the app's stop keeps the focus but gets nothing).
+        rule.runOnIdle { s.call = CarCall(true, "Anna K.", 1L) }
+        rule.waitForIdle()
+        rule.onNodeWithTag("app_mirror").performKeyInput { pressKey(Key.Tab); pressKey(Key.DirectionDown) }
+        assertTrue("the app got no keys while it rang: $sent", sent.isEmpty())
+        // It ends (declined on the phone): the knob is the mirrored app's again.
+        rule.runOnIdle { s.call = null }
+        rule.waitForIdle()
+        rule.onNodeWithTag("app_mirror").assertIsFocused()
+        rule.onNodeWithTag("app_mirror").performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP), sent)
+        assertTrue("never home: $asked", "home" !in asked)
     }
 }
