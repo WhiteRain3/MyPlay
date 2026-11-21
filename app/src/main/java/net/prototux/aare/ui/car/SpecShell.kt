@@ -307,7 +307,12 @@ private fun onClick(card: SpecCard, state: CarUiState, actions: CarActions): (()
 private class CardKnob {
     var inside by mutableStateOf(false)
     val first = FocusRequester()
+    /** Whether the first button holds the ring (H-1: the press keeps asking until it does). */
+    var firstFocused by mutableStateOf(false)
 }
+
+/** H-1: how many frames the music card's press keeps asking for its first button. */
+private const val FIRST_BUTTON_TRIES = 10
 
 /** One card: its frame and content, and for the music card its knob behaviour. */
 @Composable
@@ -326,9 +331,14 @@ private fun SpecCard(card: SpecCard, spec: CarLayoutSpec, state: CarUiState, act
         else knob.inside = true
     }
     // The buttons become stops only once that change is drawn: ask for the focus after it.
+    // H-1: a frame's callbacks run before that frame's recomposition, so after one frame the first
+    // button may not be a stop yet and the request fails quietly (the ring stayed on the card and
+    // the driver had to press again). Ask again each frame until the button holds the ring.
     LaunchedEffect(knob.inside) {
-        if (knob.inside) {
+        if (!knob.inside) return@LaunchedEffect
+        repeat(FIRST_BUTTON_TRIES) {
             withFrameNanos { }
+            if (!knob.inside || knob.firstFocused) return@LaunchedEffect
             runCatching { knob.first.requestFocus() }
         }
     }
@@ -432,7 +442,8 @@ private fun Music(state: CarUiState, actions: CarActions, knob: CardKnob?) {
         }
         // Stops for the knob only inside the card (M3-6); a touch reaches them always.
         val stop = knob == null || knob.inside
-        CardButton(Icons.Rounded.SkipPrevious, stringResource(R.string.media_action_previous), filled = false, stop, knob?.first) { actions.mediaPrevious() }
+        CardButton(Icons.Rounded.SkipPrevious, stringResource(R.string.media_action_previous), filled = false, stop, knob?.first,
+            onFocus = knob?.let { k -> { focused: Boolean -> k.firstFocused = focused } }) { actions.mediaPrevious() }
         CardButton(if (np.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, stringResource(R.string.media_action_play_pause), filled = true, stop) { actions.mediaPlayPause() }
         CardButton(Icons.Rounded.SkipNext, stringResource(R.string.media_action_next), filled = false, stop) { actions.mediaNext() }
     }
@@ -440,13 +451,15 @@ private fun Music(state: CarUiState, actions: CarActions, knob: CardKnob?) {
 
 /** A round button on a card, like [RoundIcon], that is a knob stop only when [knobStop]. */
 @Composable
-private fun CardButton(icon: ImageVector, label: String, filled: Boolean, knobStop: Boolean, requester: FocusRequester? = null, onClick: () -> Unit) {
+private fun CardButton(icon: ImageVector, label: String, filled: Boolean, knobStop: Boolean, requester: FocusRequester? = null,
+                       onFocus: ((Boolean) -> Unit)? = null, onClick: () -> Unit) {
     val d = LocalCarDimens.current
     val bg = if (filled) MaterialTheme.colorScheme.primary else Color.Transparent
     val fg = if (filled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
     Box(
         Modifier.size(d.touchTarget).clip(CircleShape).background(bg)
             .let { if (requester != null) it.focusRequester(requester) else it }
+            .let { if (onFocus != null) it.onFocusChanged { f -> onFocus(f.isFocused) } else it }
             .focusProperties { canFocus = knobStop }.carFocusHighlight(CircleShape).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, label, tint = fg, modifier = Modifier.size(d.iconSize)) }
