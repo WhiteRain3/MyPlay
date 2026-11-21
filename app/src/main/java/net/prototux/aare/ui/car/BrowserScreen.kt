@@ -60,7 +60,7 @@ import net.prototux.aare.media.Placeholder
  * mirror it is paused while driving.
  */
 @Composable
-internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: String, modifier: Modifier) {
+internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: String, modifier: Modifier, tv: Boolean = false) {
     val home = startUrl.ifBlank { Settings.BROWSER_DEFAULT_URL }
     var web by remember { mutableStateOf<WebView?>(null) }
     var currentUrl by remember { mutableStateOf(home) }
@@ -143,6 +143,9 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
                     WebView(ctx).apply {
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
+                        // MyPlay (the owner: YouTube by the knob): ask as a TV does, for the site's TV
+                        // interface, made for a remote (big highlights, controls on a button press).
+                        if (tv) settings.userAgentString = BrowserFocus.TV_USER_AGENT
                         // A video's fullscreen button asks the browser for a fullscreen view: shown
                         // over everything; Back (or the page) closes it.
                         webChromeClient = object : WebChromeClient() {
@@ -153,6 +156,11 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
                         // Videos start on a push of their play button, as on a phone.
                         settings.mediaPlaybackRequiresUserGesture = true
                         webViewClient = object : WebViewClient() {
+                            // MyPlay (the owner: "I can't see where I'm pointing"): every page shows the
+                            // knob's place with a bright outline on the focused element.
+                            override fun onPageFinished(view: WebView, url: String?) {
+                                view.evaluateJavascript(BrowserFocus.OUTLINE_JS, null)
+                            }
                             override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
                                 url?.let { currentUrl = it }
                                 canBack = view.canGoBack(); canForward = view.canGoForward()
@@ -255,6 +263,28 @@ internal class BrowserFullscreen(private val onChange: (Boolean) -> Unit) {
         closed = null
         onChange(false)
     }
+}
+
+/** MyPlay: the knob's place on a web page, and the TV interface for YouTube. */
+internal object BrowserFocus {
+    /** MyPlay's teal: the same as ORBIT's and DECK's focus. */
+    const val COLOUR = "#2DD4BF"
+
+    /** A style for every page: the focused element (the knob's place) gets a thick outline. Added once per page. */
+    val OUTLINE_JS = """
+        (function(){
+          if (document.getElementById('myplay-focus')) return;
+          var s = document.createElement('style');
+          s.id = 'myplay-focus';
+          s.textContent = '*:focus, *:focus-visible { outline: 4px solid $COLOUR !important; outline-offset: 2px !important; ' +
+            'box-shadow: 0 0 0 7px rgba(0,0,0,0.55) !important; }';
+          (document.head || document.documentElement).appendChild(s);
+        })();
+    """.trimIndent()
+
+    /** A TV's browser, so sites (YouTube) serve their interface for a remote control. */
+    const val TV_USER_AGENT = "Mozilla/5.0 (Linux; Android 12; SHIELD Android TV Build/SR1A.211012.001) AppleWebKit/537.36 " +
+        "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Cobalt/23.lts.4 (unlike Gecko) v8/8.8.278.17-jit gles Starboard/15"
 }
 
 /** MyPlay: the page's fullscreen view, while it shows (tests). */

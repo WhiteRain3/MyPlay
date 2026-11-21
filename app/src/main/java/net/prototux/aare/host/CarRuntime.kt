@@ -828,7 +828,8 @@ class CarRuntime(
                             CarAppKind.MESSAGING -> MessagingScreen(app, ui.drivingRestricted, this, mod)
                             CarAppKind.PHONE_SCREEN -> MirrorScreen(this, ui.drivingRestricted, mod)
                             CarAppKind.STANDALONE -> StandaloneAppScreen(this, ui.drivingRestricted, app.packageName, mod)
-                            CarAppKind.BROWSER -> BrowserScreen(this, ui.drivingRestricted, if (app.id == YOUTUBE_ID) YOUTUBE_URL else settings.browserUrl, mod)
+                            CarAppKind.BROWSER -> if (app.id == YOUTUBE_ID) BrowserScreen(this, ui.drivingRestricted, YOUTUBE_URL, mod, tv = true)
+                                else BrowserScreen(this, ui.drivingRestricted, settings.browserUrl, mod)
                             CarAppKind.CAR_DATA -> CarDataScreen(mod)
                             CarAppKind.PHONE -> PhoneScreen(this, mod)
                             CarAppKind.SETTINGS -> CarSettingsScreen(settings, mod, ui.apps.filter { it.kind == CarAppKind.NAVIGATION }) { ui.drivingRestricted }
@@ -907,9 +908,13 @@ class CarRuntime(
         fun standaloneId(pkg: String) = "standalone:$pkg"
         const val PHONE_SCREEN_ID = "phone-screen"
         const val BROWSER_ID = "browser"
-        /** MyPlay: YouTube's mobile site in the car browser. */
+        /**
+         * MyPlay: YouTube in the car browser, its TV interface (made for a remote: the knob's place is
+         * highlighted, the video's controls come up on a button press). If YouTube does not serve it,
+         * it sends its ordinary site instead.
+         */
         const val YOUTUBE_ID = "youtube"
-        const val YOUTUBE_URL = "https://m.youtube.com/"
+        const val YOUTUBE_URL = "https://www.youtube.com/tv"
         const val YOUTUBE_PACKAGE = "com.google.android.youtube"
         const val CAR_DATA_ID = "car-data"
         const val PHONE_ID = "phone"
