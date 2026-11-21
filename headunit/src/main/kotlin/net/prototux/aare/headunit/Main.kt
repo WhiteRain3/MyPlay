@@ -73,6 +73,8 @@ private const val USAGE = """AARE desktop head unit: a car screen on your deskto
   --headless DIR         no window: save a PNG of the screen to DIR every few seconds (for tests)
   --script "EV@S ..."    scripted input, seconds after connecting: tap:X,Y  key:CODE  rotate:N
                          dpad:up|down|left|right|center  reverse:SECS  night  day  park  drive
+                         hold:CODE,MS  double:CODE  holdturn:CODE,N   (button gestures: held, two quick presses,
+                         held while the knob turns N clicks)
 
 Keys: Esc/Backspace back · H home · V voice · arrows/wheel rotary · numpad 8/4/6/2 + 5 D-pad
       Enter select · K play/pause · , . prev/next
@@ -384,6 +386,16 @@ private class DesktopHeadUnit(val opts: Map<String, String>) {
                 Thread.sleep((at.toDouble() * 1000).toLong())
                 if (hu !== unit) return@thread
                 println("script: $what")
+                // MyPlay (R7): holds, double presses and hold-and-turn.
+                ScriptGestures.steps(what)?.let { steps ->
+                    for (step in steps) when (step) {
+                        is ScriptGestures.Step.Down -> unit.key(step.code, true)
+                        is ScriptGestures.Step.Up -> unit.key(step.code, false)
+                        is ScriptGestures.Step.Turn -> unit.rotate(step.clicks)
+                        is ScriptGestures.Step.Wait -> Thread.sleep(step.ms)
+                    }
+                    return@thread
+                }
                 when {
                     what.startsWith("tap:") -> what.removePrefix("tap:").split(',').let { (x, y) ->
                         unit.touch(PointerAction.ACTION_DOWN, x.toInt(), y.toInt()); Thread.sleep(60)
