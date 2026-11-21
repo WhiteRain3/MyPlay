@@ -385,4 +385,7 @@
     <string name="phone_osm_notice" translatable="false">Speed limit data © OpenStreetMap contributors, available under the Open Database Licence (ODbL) 1.0: openstreetmap.org/copyright</string>
     <string name="phone_speed_region_which" translatable="false">Which region\'s speed limits the car screen shows</string>
     <string name="phone_speed_not_published" translatable="false">No speed limit file for this region has been published yet.</string>
+    <string name="phone_mirror_turn" translatable="false">Turning the knob in this app moves</string>
+    <string name="phone_mirror_turn_up_down" translatable="false">Up and down</string>
+    <string name="phone_mirror_turn_left_right" translatable="false">Left and right</string>
 </resources>

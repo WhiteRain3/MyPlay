@@ -174,6 +174,7 @@ import net.prototux.aare.ui.phone.SizePage
 import net.prototux.aare.ui.phone.StatusIconsPage
 import net.prototux.aare.ui.phone.ColoursPage
 import net.prototux.aare.ui.phone.LooksPage
+import net.prototux.aare.ui.phone.MirrorTurnChoice
 import net.prototux.aare.ui.phone.SpeedLimitPage
 import net.prototux.aare.ui.phone.SpeedLimitDownload
 import net.prototux.aare.ui.phone.HintLine
@@ -1216,6 +1217,8 @@ private fun StandaloneAppsSection(settings: Settings, ctx: android.content.Conte
                         allowed = if (on) allowed + pkg else allowed - pkg
                         settings.standaloneAppPackages = allowed
                     }
+                    // MyPlay (G1): what a knob turn does inside this app.
+                    if (pkg in allowed) MirrorTurnChoice(settings, pkg)
                 }
             }
         }
