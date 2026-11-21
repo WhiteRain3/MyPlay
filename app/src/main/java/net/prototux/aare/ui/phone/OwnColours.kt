@@ -30,7 +30,7 @@ fun roleColour(scheme: ColorScheme, role: ColourRole): Int = when (role) {
 /** The role a tap on the picture's [part] changes on the Colours page: what that part is mostly painted with. */
 fun colourRoleOf(part: PicturePart): ColourRole = when (part) {
     PicturePart.BAR, PicturePart.APPS -> ColourRole.BAR
-    PicturePart.CLOCK, PicturePart.CARDS -> ColourRole.CARD
+    PicturePart.CLOCK, PicturePart.CARDS, PicturePart.HUB, PicturePart.SPEED -> ColourRole.CARD
     PicturePart.STATUS -> ColourRole.TEXT
     PicturePart.WALLPAPER, PicturePart.WHOLE -> ColourRole.BACKGROUND
 }

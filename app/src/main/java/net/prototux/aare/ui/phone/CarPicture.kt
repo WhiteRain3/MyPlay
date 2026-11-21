@@ -121,7 +121,14 @@ fun pictureNight(carTheme: String): Boolean = carTheme != Settings.THEME_LIGHT
 fun pictureRailOnRight(railPosition: String): Boolean = railPosition == Settings.RAIL_RIGHT
 
 /** Which page a part of the picture opens. [WHOLE]: the Car screen page with every setting. */
-enum class PicturePart { BAR, CLOCK, STATUS, CARDS, WALLPAPER, APPS, WHOLE }
+enum class PicturePart {
+    BAR, CLOCK, STATUS, CARDS, WALLPAPER, APPS,
+    /** ORBIT's hub: the screen's language and layout. */
+    HUB,
+    /** ORBIT's speed disc: where the speed comes from and the speed limits. */
+    SPEED,
+    WHOLE,
+}
 
 /** The page for a tapped car-screen part. */
 fun picturePartOf(part: CarPart?): PicturePart = when (part) {
@@ -131,7 +138,13 @@ fun picturePartOf(part: CarPart?): PicturePart = when (part) {
     CarPart.AppsButton -> PicturePart.APPS
     CarPart.Wallpaper -> PicturePart.WALLPAPER
     is CarPart.DashboardCard, is CarPart.MapBehindCard -> PicturePart.CARDS
-    // A part the phone does not know yet (the car side adds ORBIT's) opens the car screen settings.
+    // ORBIT (N5): the song disc stands for the music card; the turn has no page of its own yet.
+    CarPart.OrbitHub -> PicturePart.HUB
+    CarPart.OrbitSong -> PicturePart.CARDS
+    CarPart.OrbitSpeed -> PicturePart.SPEED
+    CarPart.OrbitTurn -> PicturePart.WHOLE
+    // A part the car side adds before the phone maps it opens the car screen settings (a test
+    // lists every part, so a forgotten one is still caught).
     else -> PicturePart.WHOLE
 }
 

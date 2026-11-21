@@ -389,6 +389,8 @@ private fun pageOf(part: PicturePart): Page = when (part) {
     PicturePart.CARDS -> Page.CARDS
     PicturePart.WALLPAPER -> Page.WALLPAPER
     PicturePart.APPS -> Page.APPS
+    PicturePart.HUB -> Page.LAYOUT
+    PicturePart.SPEED -> Page.SPEED_LIMITS
     PicturePart.WHOLE -> Page.CAR_SCREEN
 }
 
