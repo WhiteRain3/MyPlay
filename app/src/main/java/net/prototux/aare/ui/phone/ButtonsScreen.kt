@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.prototux.aare.R
 import net.prototux.aare.Settings
+import net.prototux.aare.car.myplayGestureLine
 import net.prototux.aare.car.ButtonAction
 import net.prototux.aare.car.ButtonTable
 import net.prototux.aare.car.ButtonTable.Control
@@ -155,6 +156,7 @@ fun ButtonsScreen() {
     var stored by remember { mutableStateOf(settings.myplayButtons) }
     var holdMs by remember { mutableFloatStateOf(settings.myplayGestureHoldMs.toFloat()) }
     var doubleMs by remember { mutableFloatStateOf(settings.myplayGestureDoubleMs.toFloat()) }
+    var line by remember { mutableStateOf(settings.myplayGestureLine) }
     var part by rememberSaveable { mutableStateOf("knob_push") }
     var open by rememberSaveable { mutableStateOf<String?>(null) }
     val selected: Part = Control.byId(part)?.let { Part.Of(it) } ?: Part.Pad
@@ -227,6 +229,11 @@ fun ButtonsScreen() {
             }
         }
         HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_codes_unknown))
+        Spacer(Modifier.height(8.dp))
+        RowGroup(rows = listOf {
+            SwitchRow(Icons.Rounded.Info, stringResource(R.string.phone_buttons_line_title), line, TileTone.BLUE,
+                stringResource(R.string.phone_buttons_line_hint)) { line = it; settings.myplayGestureLine = it }
+        })
         Spacer(Modifier.height(8.dp))
         WideButton(stringResource(R.string.phone_buttons_reset), Icons.Rounded.Refresh) {
             stored = ""; settings.myplayButtons = ""

@@ -362,4 +362,6 @@
     <string name="phone_map_night_darker" translatable="false">Darker at night: %1$d %% (when the maps app is in night colours)</string>
     <string name="phone_map_what" translatable="false">It recolours everything the maps app draws on its map, its own buttons and speed sign too. It works on colours only, so it cannot tell water from roads, and it costs a little more work per frame.</string>
     <string name="phone_map_with_look" translatable="false">The filter is part of the look: saving a look keeps it, and choosing a look brings its own (or none).</string>
+    <string name="phone_buttons_line_title" translatable="false">Show what a button did</string>
+    <string name="phone_buttons_line_hint" translatable="false">A short line at the top of the car screen after a button changes the song, plays or pauses, or starts the assistant.</string>
 </resources>
