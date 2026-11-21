@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import net.prototux.aare.R
 import net.prototux.aare.Settings
+import net.prototux.aare.car.SpeedRules
+import net.prototux.aare.car.myplaySpeedLimitMargin
 
 /** What the page says about the download now; null when there is nothing to say. */
 fun speedLimitStatus(state: SpeedLimitDownload.State): Int? = when (state) {
@@ -98,8 +100,25 @@ fun SpeedLimitPage() {
             }
             HintLine(Icons.Rounded.Wifi, stringResource(R.string.phone_speed_wifi_only))
         }
+        SpeedMarginChoice(settings)
         HintLine(Icons.Rounded.Speed, stringResource(R.string.phone_speed_hint_only))
         HintLine(Icons.Rounded.Info, stringResource(R.string.phone_speed_offline))
         Text(stringResource(R.string.phone_osm_notice), color = PhoneColors.Muted, fontSize = 12.sp)
     }
+}
+
+/** The margins in the order offered, with their words: Off, or "over by N km/h" (N20's setting). */
+@Composable
+private fun SpeedMarginChoice(settings: Settings) {
+    var margin by remember { mutableIntStateOf(settings.myplaySpeedLimitMargin) }
+    SectionHeading(stringResource(R.string.phone_speed_warning))
+    PhoneChoices(
+        stringResource(R.string.myplay_setting_speed_limit_margin),
+        SpeedRules.MARGINS.map { m ->
+            m.toString() to if (m == SpeedRules.MARGIN_OFF) stringResource(R.string.phone_speed_source_off)
+            else stringResource(R.string.myplay_setting_speed_limit_margin_by, m)
+        },
+        margin.toString(),
+    ) { id -> id.toIntOrNull()?.takeIf { it in SpeedRules.MARGINS }?.let { margin = it; settings.myplaySpeedLimitMargin = it } }
+    HintLine(Icons.Rounded.Speed, stringResource(R.string.phone_speed_warning_hint))
 }
