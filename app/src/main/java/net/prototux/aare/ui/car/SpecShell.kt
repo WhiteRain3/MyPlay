@@ -334,6 +334,9 @@ private fun SpecCard(card: SpecCard, spec: CarLayoutSpec, state: CarUiState, act
         else {
             // H-1c: the buttons read [CardKnob.inside] when focus asks whether they are stops, not
             // when they are drawn, so the ring can go to the first one at once.
+            // H-1d: reset before going inside, not in the retry below, which could start only after
+            // the first button already took the ring and would then forget that it had.
+            knob.reached = false
             knob.inside = true
             runCatching { knob.first.requestFocus() }
             Unit
@@ -347,7 +350,6 @@ private fun SpecCard(card: SpecCard, spec: CarLayoutSpec, state: CarUiState, act
     // moved on by the next frame (a quick turn): asking again would pull it back.
     LaunchedEffect(knob.inside) {
         if (!knob.inside) return@LaunchedEffect
-        knob.reached = false
         repeat(FIRST_BUTTON_TRIES) {
             withFrameNanos { }
             if (!knob.inside || knob.reached) return@LaunchedEffect
