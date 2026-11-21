@@ -711,6 +711,9 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
     val why = feed.why
     LaunchedEffect(why) {
         SpeedLimitDiag.why = why
+        // WD-1: only a reason that held a while goes in the log, so a limit flickering at a junction
+        // does not push the rest of the drive's lines out (the log keeps 1000).
+        delay(WHY_LOG_AFTER_MS)
         if (why != null) net.prototux.aare.DiagLog.add("Speed limit: ${why.line}")
     }
     // Again each second, so a speed the car stopped sending goes away.
@@ -731,6 +734,7 @@ internal object SpeedLimitDiag {
     var why by mutableStateOf<LimitWhy?>(null)
 }
 private const val LIMITS_RECHECK_MS = 60_000L
+private const val WHY_LOG_AFTER_MS = 10_000L
 
 /** How long a notice shows (as the car's notice overlay). */
 internal const val NOTICE_SHOW_MS = 8_000L
