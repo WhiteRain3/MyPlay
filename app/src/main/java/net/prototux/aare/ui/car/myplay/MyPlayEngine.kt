@@ -103,7 +103,9 @@ internal fun MyPlayEngineShell(
         SpecShell(state, actions, appContent, navMap, overlay, modifier)
         return
     }
-    val model = remember { MyPlayScreenModel() }
+    // N13: a new language starts afresh (a hand has no dial to be in).
+    val hand = skin.hand
+    val model = remember(skin.id) { MyPlayScreenModel(hand) }
     val tokens = skin.tokens(state.night)
     val context = LocalContext.current
     val timeFormat = remember(context) { DateFormat.getTimeFormat(context) }
@@ -147,6 +149,8 @@ internal fun MyPlayEngineShell(
     var listOpen by remember { mutableStateOf(false) }
     var listChosen by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(model.place) { if (model.place != Place.Home) listOpen = false }
+    // N13: the hand's push; set further down, once the worlds' state it resets is declared.
+    var openFront: () -> Unit = {}
     val actionsOf: Map<String, () -> Unit> = buildMap {
         if (notes.unseen > 0 && model.place == Place.Home && !listOpen) put(STOP_BELL) { listOpen = true; listChosen = null; notes.markSeen() }
         if (notice != null && model.place == Place.Home) {
@@ -160,13 +164,25 @@ internal fun MyPlayEngineShell(
             if (canEnd) put(STOP_HANG_UP, sources.calls::end)
         }
         if (slots.turn != null) put(STOP_TURN, sources.openMaps)
-        put(STOP_HUB) { model.push() }
-        if (slots.song != null) put(STOP_SONG, sources.music::open)
+        if (hand != null) put(STOP_HUB) { openFront() } else put(STOP_HUB) { model.push() }
+        if (slots.song != null && hand == null) put(STOP_SONG, sources.music::open)
     }
     // A stop that went away (the song ended) leaves the graph; the ring goes back to the hub.
     val live = boxes.filterKeys { it in actionsOf }
     val ring = chosen.takeIf { it in actionsOf } ?: STOP_HUB
     fun move(to: String?) { if (to != null) chosen = to }
+    /**
+     * N13: a knob click or a pad left/right on the hand: the next card; past the end, on to the
+     * other home stops (as a knob or pad move from the hand), or round to the other end of the
+     * hand when there is none (a knob only: the pad just stops).
+     */
+    fun swing(step: Int, knob: Boolean) {
+        val h = hand ?: return
+        HandMoves.turn(h, model.front, step)?.let { model.front = it; return }
+        val to = if (knob) FocusGraph.knob(live, ring, step)
+        else FocusGraph.pad(live, ring, if (step > 0) FocusGraph.Direction.RIGHT else FocusGraph.Direction.LEFT)
+        if (to != null && to != STOP_HUB) move(to) else if (knob) model.front = HandMoves.wrap(h, step)
+    }
     // N7: the Music world: its stops, which holds the ring, and a pad seek not yet confirmed.
     val music = sources.music
     val musicPage = MusicPage(slots.song, music.transport)
@@ -298,6 +314,22 @@ internal fun MyPlayEngineShell(
             else -> appIndex
         }
     }
+    /** A world just entered starts with its ring on its first stop. */
+    fun freshWorld(w: World) {
+        when (w) {
+            World.APPS -> appRing = 0
+            World.MUSIC -> musicChosen = MUSIC_PLAY
+            World.CALLS -> phoneChosen = null
+            World.SETTINGS -> settingChosen = null
+            World.CAR -> carChosen = null
+            World.NAVIGATE -> Unit
+        }
+    }
+    // N13: the hand's push. Navigate is the maps app itself (as on the dial, N9); the others open their world.
+    openFront = {
+        val w = model.front
+        if (w == World.NAVIGATE) sources.openMaps() else { model.enter(w); freshWorld(w) }
+    }
     // N6-2: taps run what the screen shows now, not what it showed when the tap handler started.
     val currentActions by rememberUpdatedState(actionsOf)
     val currentApps by rememberUpdatedState(apps)
@@ -343,18 +375,24 @@ internal fun MyPlayEngineShell(
         key in WORLD_KEYS
     } else when (val p = model.place) {
         Place.Home -> when (key) {
-            Key.Tab -> { move(FocusGraph.knob(live, ring, if (shift) -1 else 1)); true }
-            Key.DirectionUp -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.UP)); true }
-            Key.DirectionDown -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.DOWN)); true }
-            Key.DirectionLeft -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.LEFT)); true }
-            // N6, the ORBIT sheet: pad right is the next song. N6-1: it first moves the ring, as the
-            // other directions do (else a car with a pad and no knob could never reach the song);
-            // with nothing further right (the ring on the song) it plays the next song.
-            Key.DirectionRight -> {
+            Key.Tab -> { if (hand != null && ring == STOP_HUB) swing(if (shift) -1 else 1, knob = true) else move(FocusGraph.knob(live, ring, if (shift) -1 else 1)); true }
+            // N13: on the hand, left and right swing it; past its ends they move on as elsewhere.
+            Key.DirectionLeft, Key.DirectionRight -> if (hand != null && ring == STOP_HUB) {
+                swing(if (key == Key.DirectionRight) 1 else -1, knob = false)
+                true
+            } else if (key == Key.DirectionLeft) {
+                move(FocusGraph.pad(live, ring, FocusGraph.Direction.LEFT))
+                true
+            } else {
+                // N6, the ORBIT sheet: pad right is the next song. N6-1: it first moves the ring, as the
+                // other directions do (else a car with a pad and no knob could never reach the song);
+                // with nothing further right (the ring on the song) it plays the next song.
                 val to = FocusGraph.pad(live, ring, FocusGraph.Direction.RIGHT)
-                if (to != null) move(to) else if (slots.song != null) sources.music.next()
+                if (to != null) move(to) else if (slots.song != null && hand == null) sources.music.next()
                 true
             }
+            Key.DirectionUp -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.UP)); true }
+            Key.DirectionDown -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.DOWN)); true }
             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> { actionsOf[ring]?.invoke(); true }
             else -> false
         }
@@ -370,11 +408,7 @@ internal fun MyPlayEngineShell(
                     sources.openMaps()
                 } else {
                     model.push()
-                    if (p.selected == World.APPS) appRing = 0
-                    if (p.selected == World.MUSIC) musicChosen = MUSIC_PLAY
-                    if (p.selected == World.CALLS) phoneChosen = null
-                    if (p.selected == World.SETTINGS) settingChosen = null
-                    if (p.selected == World.CAR) carChosen = null
+                    freshWorld(p.selected)
                 }
                 true
             }
@@ -483,7 +517,13 @@ internal fun MyPlayEngineShell(
                 // Inside a world only the status corner stays: the world's page has the screen.
                 // (and over the notifications list, likewise)
                 val home = model.place !is Place.InWorld && !listOpen
-                if (home) slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) } }
+                if (home && hand != null) {
+                    // N13: with a hand, the trip goes under the turn read-out (there is no hub to carry it).
+                    Column(edge.align(Alignment.TopStart)) {
+                        slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, Modifier.slot(Slot.TURN).stop(STOP_TURN)) } }
+                        slots.trip?.let { skin.Trip(it, Modifier.slot(Slot.TURN).testTag(SLOT_TRIP)) }
+                    }
+                } else if (home) slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) } }
                 Column(edge.align(Alignment.TopEnd), horizontalAlignment = Alignment.End) {
                     skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
                     if (STOP_BELL in actionsOf) {
@@ -493,7 +533,13 @@ internal fun MyPlayEngineShell(
                         EngineSpeed(state, sources.speed) { skin.Speed(it, Modifier.slot(Slot.SPEED).testTag(SLOT_SPEED)) }
                     }
                 }
-                if (home) ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }
+                if (home && hand != null) {
+                    // N13: the hand, bottom right; it is the hub's stop (a push opens the front card).
+                    ringed(STOP_HUB) {
+                        skin.Hand(model.front, slots.song, LocalStopRinged.current, { w -> chosen = STOP_HUB; model.front = w },
+                            edge.align(Alignment.BottomEnd).slot(Slot.HUB).stop(STOP_HUB))
+                    }
+                } else if (home) ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }
                 // N8: at the top of the home: in a call its strip, and a notice under it; their parts are home stops.
                 Column(Modifier.align(Alignment.TopCenter).padding(top = tokens.edge), horizontalAlignment = Alignment.CenterHorizontally) {
                     if (model.place == Place.Home && call != null && !ringing) {
@@ -506,7 +552,7 @@ internal fun MyPlayEngineShell(
                             { id -> if (atHome) Modifier.stop(id) else Modifier.testTag(id) }, Modifier.padding(top = 12.dp))
                     }
                 }
-                if (home) slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
+                if (home && hand == null) slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
                 when (val p = model.place) {
                     is Place.Chooser -> skin.Chooser(p.selected, Modifier.align(Alignment.Center).slot(Slot.CHOOSER).testTag(SLOT_CHOOSER))
                     is Place.InWorld -> if (p.world == World.MUSIC && lib != null) {
@@ -692,6 +738,8 @@ const val STOP_HANG_UP = "stop_hang_up"
 const val STOP_BELL = "stop_bell"
 internal const val SLOT_STATUS = "slot_status"
 internal const val SLOT_SPEED = "slot_speed"
+/** N13: the trip under the turn read-out (a skin with a hand; the hand itself is [STOP_HUB]). */
+internal const val SLOT_TRIP = "slot_trip"
 internal const val SLOT_CHOOSER = "slot_chooser"
 internal const val SLOT_WORLD = "slot_world"
 internal const val SLOT_APPS = "slot_apps"

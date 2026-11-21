@@ -47,6 +47,17 @@ object Moves {
     }
 }
 
+/**
+ * N13: a hand of cards (DECK): a knob click moves the front card one along [hand]; null past
+ * either end (the ring then leaves the hand for the other home stops). Pure.
+ */
+object HandMoves {
+    fun turn(hand: List<World>, front: World, step: Int): World? = hand.getOrNull(hand.indexOf(front) + step)
+
+    /** Back round to the other end, when there is no other stop to go to. */
+    fun wrap(hand: List<World>, step: Int): World = if (step > 0) hand.first() else hand.last()
+}
+
 /** The engine's state for one car screen. */
 /** N6: the Apps world's pages and the knob's walk through all its apps. Pure. */
 object AppsPages {
@@ -57,10 +68,22 @@ object AppsPages {
     fun knob(index: Int, steps: Int, count: Int): Int = if (count <= 0) 0 else ((index + steps) % count + count) % count
 }
 
-class MyPlayScreenModel {
+class MyPlayScreenModel(
+    /** N13: the skin's hand (DECK), or null for the hub and its dial (ORBIT). */
+    val hand: List<World>? = null,
+) {
     var place by mutableStateOf<Place>(Place.Home)
     /** The world last entered, where the chooser opens next time. */
     var last by mutableStateOf(World.NAVIGATE)
+    /** N13: the hand's front card at home (the last card at first: DECK's sheet has Music in front). */
+    var front by mutableStateOf(hand?.lastOrNull() ?: World.NAVIGATE)
+
+    /** N13: open [world] from the hand. */
+    fun enter(world: World) {
+        last = world
+        front = world
+        place = Place.InWorld(world)
+    }
 
     fun push() {
         val next = Moves.push(place, last)
@@ -72,6 +95,9 @@ class MyPlayScreenModel {
 
     /** True when Back was used here. */
     fun back(): Boolean {
+        val p = place
+        // N13: with a hand there is no dial: a world goes straight home, its card in front.
+        if (hand != null && p is Place.InWorld) { front = p.world; place = Place.Home; return true }
         place = Moves.back(place) ?: return false
         return true
     }

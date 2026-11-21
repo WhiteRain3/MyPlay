@@ -200,6 +200,23 @@ interface MyPlaySkin {
     /** N5: drawn over the map and under the slots, e.g. a shade in the corners so their text reads. */
     @Composable fun Backdrop(modifier: Modifier) = Unit
 
+    /**
+     * N13: a skin whose home is a hand of cards (DECK) instead of the hub and its dial (ORBIT): the
+     * worlds it holds, in the order a knob turn walks them. At home a turn swings the hand (past
+     * either end it goes on to the other home stops); a push opens the front card's world; Back
+     * comes home with that card in front. Null: the hub and the dial.
+     */
+    val hand: List<World>? get() = null
+
+    /**
+     * N13: the hand at home, bottom right, with [front] in front; the music card carries [song].
+     * [pick] brings a card that was tapped to the front. Only for a skin with a [hand].
+     */
+    @Composable fun Hand(front: World, song: SongSlot?, ringed: Boolean, pick: (World) -> Unit, modifier: Modifier) = Unit
+
+    /** N13: the trip under the turn read-out (a skin with a [hand]; ORBIT's hub shows it instead). */
+    @Composable fun Trip(trip: TripSlot, modifier: Modifier) = Unit
+
     /** The hub: always there (the knob's way into the worlds), with the trip when there is a route. */
     @Composable fun Hub(trip: TripSlot?, modifier: Modifier)
     @Composable fun Song(song: SongSlot, modifier: Modifier)
