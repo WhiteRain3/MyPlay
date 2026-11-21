@@ -585,7 +585,7 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
         val p = Deck.paper(night)
         val shape = RoundedCornerShape(12.dp)
         Column(
-            modifier.size(196.dp, 168.dp).deckFocusOn(on).clip(shape)
+            modifier.size(196.dp, 168.dp).deckFocus(on).clip(shape)
                 .background(if (on) hue.copy(alpha = 0.30f).compositeOver(p.card) else p.card.copy(alpha = 0.6f).compositeOver(Deck.cardColour(World.APPS, night))),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
         ) {
@@ -596,9 +596,6 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
             )
         }
     }
-
-    @Composable
-    private fun Modifier.deckFocusOn(on: Boolean): Modifier = deckFocus(on)
 
     @Composable
     override fun MusicWorld(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier) {
@@ -617,7 +614,8 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
                     MusicArt(song, ringed == MUSIC_ART, stop(MUSIC_ART))
                     // The sheet's floating pill of buttons under the artwork.
                     Row(
-                        Modifier.padding(top = 18.dp).clip(RoundedCornerShape(44.dp)).background(p.halo.copy(alpha = if (night) 0.55f else 0.10f)).padding(10.dp),
+                        // A shaped background, not a clip: the keys' focus halo reaches outside the pill (N14-1).
+                        Modifier.padding(top = 18.dp).background(p.halo.copy(alpha = if (night) 0.55f else 0.10f), RoundedCornerShape(44.dp)).padding(10.dp),
                         horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically,
                     ) {
                         MusicKey(MUSIC_PREV, Icons.Rounded.SkipPrevious, false, ringed, hue, night, stop)
