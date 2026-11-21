@@ -166,6 +166,25 @@ class DeckHomeTest {
         rule.mainClock.advanceTimeBy(800)
     }
 
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsPageNight() {
+        net.prototux.aare.ui.car.CarFocusVisibility.keyInput = true
+        show(); page(1); picture("deck-apps-page-1280x720-night")
+    }
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun appsPage901Day() { show(night = false); page(1); picture("deck-apps-page-901x543-day") }
+
+    private fun musicPage(night: Boolean, name: String) {
+        val state = show(night = night, withArt = true)
+        rule.runOnIdle {
+            state.transport = net.prototux.aare.media.MediaTransport(canSeek = true, canPrevious = true, canNext = true, upNext = listOf(
+                net.prototux.aare.media.UpNextItem(7, "Midnight Run", "Blue Harbor"), net.prototux.aare.media.UpNextItem(8, "Glass Roads", "Kite & Co."),
+                net.prototux.aare.media.UpNextItem(9, "Slow Harbour", "Lumen")))
+        }
+        page(0)
+        picture(name)
+    }
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun musicPageNight() = musicPage(true, "deck-music-1280x720-night")
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun musicPage901Day() = musicPage(false, "deck-music-901x543-day")
+
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun settingsPageNight() { show(); page(2); picture("deck-settings-1280x720-night") }
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun settingsPage901Day() { show(night = false); page(2); picture("deck-settings-901x543-day") }
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun carPageNight() { show(); page(3); picture("deck-car-1280x720-night") }

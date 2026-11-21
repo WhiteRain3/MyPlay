@@ -40,6 +40,23 @@ import net.prototux.aare.ui.car.myplay.NoticeListPage
 import net.prototux.aare.ui.car.myplay.PhonePage
 import net.prototux.aare.ui.car.myplay.PhoneRow
 import net.prototux.aare.ui.car.myplay.SettingsPage
+import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.SkipNext
+import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.vector.ImageVector
+import net.prototux.aare.ui.car.CarAppEntry
+import net.prototux.aare.ui.car.myplay.MUSIC_ART
+import net.prototux.aare.ui.car.myplay.MUSIC_LIBRARY
+import net.prototux.aare.ui.car.myplay.MUSIC_NEXT
+import net.prototux.aare.ui.car.myplay.MUSIC_PLAY
+import net.prototux.aare.ui.car.myplay.MUSIC_PREV
+import net.prototux.aare.ui.car.myplay.MusicPage
+import net.prototux.aare.ui.car.myplay.upNextStop
+import net.prototux.aare.ui.car.myplay.orbit.orbitFocus
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -352,6 +369,152 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
     }
     // N14: DECK's pages (DeckPages.kt). Each world's card opened to fill the screen.
 
+    /** The sheet's app list: five tiles a row, two rows a page. */
+    private const val APPS_COLUMNS = 5
+    override val appsPerPage get() = 2 * APPS_COLUMNS
+
+    @Composable
+    override fun AppsWorld(apps: List<CarAppEntry>, ringed: Int, page: Int, pages: Int, tile: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val p = Deck.paper(night)
+        val hue = Deck.hue(World.APPS, night)
+        DeckPage(World.APPS, OrbitSkin.worldName(World.APPS), stringResource(R.string.myplay_apps_hint), night, modifier) {
+            if (apps.isEmpty()) {
+                DeckNote(stringResource(R.string.myplay_apps_none), night)
+                return@DeckPage
+            }
+            Column(Modifier.fillMaxWidth().weight(1f).padding(top = 26.dp), verticalArrangement = Arrangement.spacedBy(18.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                apps.chunked(APPS_COLUMNS).forEachIndexed { r, chunk ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                        chunk.forEachIndexed { c, app ->
+                            val i = r * APPS_COLUMNS + c
+                            AppTile(app, i == ringed, hue, night, tile(i))
+                        }
+                    }
+                }
+            }
+            if (pages > 1) {
+                Row(Modifier.align(Alignment.CenterHorizontally).padding(bottom = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    repeat(pages) { n -> Box(Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(if (n == page) hue else p.secondary.copy(alpha = 0.4f))) }
+                }
+            }
+        }
+    }
+
+    /** One app: a tinted tile with its icon and name; the ringed one in the Apps hue with the teal outline. */
+    @Composable
+    private fun AppTile(app: CarAppEntry, on: Boolean, hue: Color, night: Boolean, modifier: Modifier) {
+        val p = Deck.paper(night)
+        val shape = RoundedCornerShape(12.dp)
+        Column(
+            modifier.size(196.dp, 168.dp).deckFocusOn(on).clip(shape)
+                .background(if (on) hue.copy(alpha = 0.30f).compositeOver(p.card) else p.card.copy(alpha = 0.6f).compositeOver(Deck.cardColour(World.APPS, night))),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+        ) {
+            net.prototux.aare.ui.car.AppIcon(app, 64)
+            Text(
+                app.label, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
+                style = TextStyle(fontSize = 23.sp, fontWeight = FontWeight.Bold, color = p.text), modifier = Modifier.padding(top = 12.dp, start = 8.dp, end = 8.dp),
+            )
+        }
+    }
+
+    @Composable
+    private fun Modifier.deckFocusOn(on: Boolean): Modifier = deckFocus(on)
+
+    @Composable
+    override fun MusicWorld(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val p = Deck.paper(night)
+        val hue = Deck.hue(World.MUSIC, night)
+        DeckPage(World.MUSIC, OrbitSkin.worldName(World.MUSIC), null, night, modifier) {
+            val song = page.song
+            if (song == null) {
+                DeckNote(stringResource(R.string.myplay_music_nothing), night)
+                Box(Modifier.padding(top = 24.dp)) { MusicKey(MUSIC_LIBRARY, Icons.Rounded.LibraryMusic, false, ringed, hue, night, stop) }
+                return@DeckPage
+            }
+            Row(Modifier.fillMaxSize().padding(top = 22.dp), horizontalArrangement = Arrangement.spacedBy(40.dp)) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    MusicArt(song, ringed == MUSIC_ART, stop(MUSIC_ART))
+                    // The sheet's floating pill of buttons under the artwork.
+                    Row(
+                        Modifier.padding(top = 18.dp).clip(RoundedCornerShape(44.dp)).background(p.halo.copy(alpha = if (night) 0.55f else 0.10f)).padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        MusicKey(MUSIC_PREV, Icons.Rounded.SkipPrevious, false, ringed, hue, night, stop)
+                        MusicKey(MUSIC_PLAY, if (song.playing) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, true, ringed, hue, night, stop)
+                        MusicKey(MUSIC_NEXT, Icons.Rounded.SkipNext, false, ringed, hue, night, stop)
+                        MusicKey(MUSIC_LIBRARY, Icons.Rounded.LibraryMusic, false, ringed, hue, night, stop)
+                    }
+                }
+                if (page.transport.upNext.isNotEmpty()) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.myplay_music_up_next).uppercase(), style = Deck.Type.label.copy(color = hue, fontSize = 20.sp))
+                        Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            page.transport.upNext.forEachIndexed { i, u ->
+                                val id = upNextStop(u.queueId)
+                                DeckRow(u.title, u.subtitle, Icons.Rounded.MusicNote, hue, night, ringed == id, stop(id), trailing = "${i + 1}")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** The artwork box: the art, the title, artist and the progress bar over its bottom (left and right seek here, R5-5). */
+    @Composable
+    private fun MusicArt(song: SongSlot, on: Boolean, modifier: Modifier) {
+        var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+        LaunchedEffect(song.playing, song.updatedAtMs) {
+            now = SystemClock.elapsedRealtime()
+            while (song.playing) {
+                delay(500)
+                now = SystemClock.elapsedRealtime()
+            }
+        }
+        val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
+        val shape = RoundedCornerShape(Deck.CORNER)
+        Box(modifier.size(330.dp).deckFocus(on).clip(shape)) {
+            val art = song.art
+            if (art != null) {
+                val image = remember(art) { art.asImageBitmap() }
+                Image(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            } else {
+                Box(Modifier.fillMaxSize().background(ART), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Rounded.MusicNote, null, Modifier.padding(bottom = 70.dp).size(120.dp), tint = Color.White)
+                }
+            }
+            Column(
+                Modifier.align(Alignment.BottomStart).fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xCC000000))))
+                    .padding(start = 22.dp, end = 22.dp, top = 40.dp, bottom = 20.dp),
+            ) {
+                Text(song.title, style = Deck.Type.title.copy(color = Color.White, fontSize = 34.sp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(song.subtitle, style = Deck.Type.secondary.copy(color = Color(0xFFE3E6EE), fontSize = 25.sp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (progress != null) {
+                    Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(Color(0x55FFFFFF)).testTag(DECK_MUSIC_PROGRESS_TAG)) {
+                        Box(Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(6.dp).background(Deck.hue(World.MUSIC, true)))
+                    }
+                }
+            }
+        }
+    }
+
+    /** One of the music buttons: a round key on the pill, the big one (play) filled in the Music hue. */
+    @Composable
+    private fun MusicKey(id: String, icon: ImageVector, big: Boolean, ringed: String, hue: Color, night: Boolean, stop: (String) -> Modifier) {
+        val p = Deck.paper(night)
+        val size = if (big) 84.dp else 68.dp
+        Box(
+            stop(id).size(size).orbitFocus(ringed == id, Deck.hue(World.NAVIGATE, night), p.halo).clip(CircleShape)
+                .background(if (big) hue else p.card),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, null, Modifier.size(if (big) 44.dp else 34.dp), tint = if (big) (if (night) Color(0xFF1A1033) else Color.White) else p.text) }
+    }
+
+
     @Composable
     override fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
         val night = LocalSkinTokens.current.night
@@ -446,3 +609,4 @@ internal fun deckCardTag(w: World) = "deck_card_${w.id}"
 internal const val DECK_ART_TAG = "deck_art"
 internal const val DECK_PROGRESS_TAG = "deck_progress"
 internal const val DECK_BATTERY_TAG = "deck_battery"
+internal const val DECK_MUSIC_PROGRESS_TAG = "deck_music_progress"

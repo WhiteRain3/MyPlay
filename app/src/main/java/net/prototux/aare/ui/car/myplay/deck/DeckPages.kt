@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -67,7 +68,7 @@ internal fun DeckScaled(content: @Composable () -> Unit) {
 
 /** The page's card: [world]'s tint and edge, its caps [label], a [hint] line, then [body]. */
 @Composable
-internal fun DeckPage(world: World, label: String, hint: String?, night: Boolean, modifier: Modifier, body: @Composable () -> Unit) {
+internal fun DeckPage(world: World, label: String, hint: String?, night: Boolean, modifier: Modifier, body: @Composable ColumnScope.() -> Unit) {
     val p = Deck.paper(night)
     val hue = Deck.hue(world, night)
     val shape = RoundedCornerShape(Deck.CORNER)
