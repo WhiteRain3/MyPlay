@@ -49,6 +49,8 @@ import net.prototux.aare.R
 import net.prototux.aare.ui.car.myplay.myplayEnginePreview
 import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
 import net.prototux.aare.ui.car.myplay.MyPlaySkins
+import net.prototux.aare.ui.car.myplay.PanelTimeout
+import net.prototux.aare.ui.car.myplay.myplayPanelTimeout
 import net.prototux.aare.Settings
 import net.prototux.aare.ui.car.CarLayout
 import net.prototux.aare.ui.car.CarLayoutSpec
@@ -324,6 +326,7 @@ private fun OrbitPreviewSwitch() {
     val settings = remember { Settings(ctx) }
     var on by remember { mutableStateOf(settings.myplayEnginePreview) }
     var language by remember { mutableStateOf(settings.myplayEngineLanguage) }
+    var panelTimeout by remember { mutableIntStateOf(settings.myplayPanelTimeout) }
     Spacer(Modifier.height(12.dp))
     RowGroup(rows = listOf {
         SwitchRow(Icons.Rounded.Layers, stringResource(R.string.phone_orbit_preview_title), on, TileTone.VIOLET,
@@ -338,6 +341,17 @@ private fun OrbitPreviewSwitch() {
             language,
         ) { id -> language = MyPlaySkins.byId(id).id; settings.myplayEngineLanguage = language }
         if (language == "deck") HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_engine_deck_preview))
+        // O2: how long the music panel and ORBIT's dial stay open with nothing pressed.
+        Spacer(Modifier.height(12.dp))
+        PhoneChoices(
+            stringResource(R.string.myplay_setting_panel_timeout),
+            PanelTimeout.CHOICES.map { s ->
+                s.toString() to if (s == PanelTimeout.NEVER) stringResource(R.string.myplay_setting_panel_timeout_never)
+                else stringResource(R.string.myplay_setting_panel_timeout_after, s)
+            },
+            panelTimeout.toString(),
+        ) { id -> id.toIntOrNull()?.let { panelTimeout = PanelTimeout.valid(it); settings.myplayPanelTimeout = panelTimeout } }
+        HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_panel_timeout_hint))
     }
 }
 
