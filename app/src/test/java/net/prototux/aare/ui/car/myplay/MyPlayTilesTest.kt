@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -92,11 +93,19 @@ class MyPlayTilesTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun builtInTilesOpenTheEnginesOwnPages() {
         show()
-        toApps(); tap("car-settings"); rule.onNodeWithTag(SLOT_SETTINGS).assertExists(); back(); back()
-        toApps(World.SETTINGS); tap("car-data"); rule.onNodeWithTag(SLOT_CAR).assertExists(); back(); back()
-        toApps(World.CAR); tap("phone"); rule.onNodeWithTag(SLOT_PHONE).assertExists(); back(); back()
-        toApps(World.CALLS); tap("notifications"); rule.onNodeWithTag(SLOT_NOTICES).assertExists()
+        toApps()
+        // F2-1: Back from each page returns to the Apps world, the ring on the tile that opened it.
+        for ((id, slot) in listOf("car-settings" to SLOT_SETTINGS, "car-data" to SLOT_CAR, "phone" to SLOT_PHONE, "notifications" to SLOT_NOTICES)) {
+            tap(id)
+            rule.onNodeWithTag(slot).assertExists()
+            back()
+            rule.onNodeWithTag(SLOT_APPS).assertExists()
+            rule.onNodeWithTag(appTag(tiles.single { it.id == id })).assertIsSelected()
+        }
         assertTrue("none of them opened an old screen: $asked", asked.isEmpty())
+        // From the Apps world itself, Back goes to the dial as always.
+        back()
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")

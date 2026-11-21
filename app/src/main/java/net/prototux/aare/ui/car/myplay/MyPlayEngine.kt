@@ -302,9 +302,17 @@ internal fun MyPlayEngineShell(
         settingsVersion++
     }
     // N6: the Apps world: which app holds the ring (over all pages), and where this page's discs are.
+    // F2-1: the page on screen was opened from an Apps tile (Back returns to the Apps world). Any
+    // other way out of it forgets that: home, the dial, another world.
+    var fromApps by remember { mutableStateOf(false) }
     // F3: the Apps world opened as a fallback shows only the kinds asked for (maps apps, music apps).
     var appsKinds by remember { mutableStateOf<Set<CarAppKind>?>(null) }
     LaunchedEffect(model.place) { if (model.place != Place.InWorld(World.APPS)) appsKinds = null }
+    LaunchedEffect(model.place, listOpen) {
+        val p = model.place
+        val onTilePage = (p is Place.InWorld && p.world in setOf(World.SETTINGS, World.CAR, World.CALLS)) || (p == Place.Home && listOpen)
+        if (!onTilePage && p != Place.InWorld(World.APPS)) fromApps = false
+    }
     val apps = sources.apps.apps.let { all -> appsKinds?.let { k -> all.filter { it.kind in k }.ifEmpty { null } } ?: all }
     val perPage = skin.appsPerPage
     var appRing by remember { mutableStateOf(0) }
@@ -375,6 +383,7 @@ internal fun MyPlayEngineShell(
      * engine's frame, F1), the phone's screen and the browser among them.
      */
     fun openTile(app: CarAppEntry) {
+        fromApps = app.kind in setOf(CarAppKind.SETTINGS, CarAppKind.CAR_DATA, CarAppKind.PHONE, CarAppKind.NOTIFICATIONS)
         val world = when (app.kind) {
             CarAppKind.SETTINGS -> World.SETTINGS
             CarAppKind.CAR_DATA -> World.CAR
@@ -400,8 +409,14 @@ internal fun MyPlayEngineShell(
     val focus = remember { FocusRequester() }
     // Not in the phone's picture of the car screen: it must not pull focus into the phone's own UI.
     LaunchedEffect(Unit) { if (!sources.picture) runCatching { focus.requestFocus() } }
-    BackHandler(enabled = model.place != Place.Home) { model.back() }
-    BackHandler(enabled = listOpen) { listOpen = false }
+    BackHandler(enabled = model.place != Place.Home) {
+        // F2-1: a page opened from an Apps tile goes back to the Apps world, the ring on that tile.
+        if (fromApps && model.place != Place.InWorld(World.APPS)) { fromApps = false; model.enter(World.APPS) } else model.back()
+    }
+    BackHandler(enabled = listOpen) {
+        listOpen = false
+        if (fromApps) { fromApps = false; model.enter(World.APPS) }
+    }
     // The list's rows: one per notification (keyed by it, so new ones arriving do not move the ring), then Clear all.
     val driving = state.drivingRestricted
     val listKeys: List<String> = notes.history.map { "n:${it.key}" } + CLEAR_ALL_KEY
