@@ -607,6 +607,9 @@ possible at all.
 - 2026-11-21: the **speed limit is very important** and is part of the speed read-out in all
   three languages, RACE especially. Over the limit: a clear but calm warning (a colour change,
   no sound by default). Same battery rules as the speed.
+- 2026-11-21, answers: the limit file covers **Lithuania** only; the warning starts at **9 km/h
+  over the limit**, a setting with 9 as the default. Also an optional **Waze speed limit hook**
+  in the host shims module, ahead of OpenStreetMap (N22).
 
 **Why the screen still looks like AARE today.** The "map behind" layout replaced only the
 home screen and the bar. Apps, the app grid, notifications, calls, car settings and the music
@@ -676,12 +679,13 @@ by default, so every release before it is safe and the owner can try each piece 
 | N15 | **Choosing the language** (phone worker, plus a car setting): ORBIT or DECK in the phone app's layout page and in F7's whole looks; switching takes effect without reconnecting | N13 |
 | N16 | **RACE tokens, parts and home.** The Design reviewer draws RACE first, on the engine's slots, inside the limits of the next section: a big turn read-out, speed, a trip "lap" strip, a bold game-like frame at the edges; nothing in the middle of the map. Then its parts and home screen | N15; RACE's drawing sheet |
 | N17 | **RACE worlds.** Reaching apps, music, calls and phone, apps, car and settings in RACE's parts; RACE added to the language choice. Bench: every walk, with RACE chosen | N16 |
-| N19 | **Speed limit file builder** (car Worker, CI only). A GitHub Actions job turns an OpenStreetMap extract of the owner's region (Geofabrik) into a small MyPlay file: road pieces with their `maxspeed`, plus the country's default limits where a road has no `maxspeed` tag but has a zone or road type that implies one; tiled so the phone reads only the tiles near the car. Published as a release file with OpenStreetMap's licence notice (ODbL). Rebuilt monthly. Tests: a tiny extract gives the expected pieces and defaults | N3 |
-| N20 | **Speed limit lookup and warning** (car side). Match the car's position and direction to the nearest road piece in the file (heading and the previous match break ties between parallel roads); show "no limit known" rather than a guess when the match is unsure. Sources in order: a limit from Waze, if N3's check finds one; the car's feed, if the box ever sends one; the file. The over-limit warning is a colour change of the read-out, no sound unless switched on; its margin is a setting. Same battery rules as the speed: only while the read-out is on screen, from the same location fixes, no extra requests. Tests: matching on a fixture with parallel roads and a junction; the warning margin | N19 |
+| N19 | **Speed limit file builder** (car Worker, CI only). A GitHub Actions job turns an OpenStreetMap extract of the owner's region (Geofabrik) into a small MyPlay file: road pieces with their `maxspeed`, plus the country's default limits where a road has no `maxspeed` tag but has a zone or road type that implies one; tiled so the phone reads only the tiles near the car. Published as a release file with OpenStreetMap's licence notice (ODbL). Region: Lithuania (Geofabrik's `europe/lithuania` extract). Rebuilt monthly. Tests: a tiny extract gives the expected pieces and defaults | N3 |
+| N20 | **Speed limit lookup and warning** (car side). Match the car's position and direction to the nearest road piece in the file (heading and the previous match break ties between parallel roads); show "no limit known" rather than a guess when the match is unsure. Sources in order: a limit from Waze's car data, if N3's check finds one; the Waze hook (N22), when it gives an answer; the car's feed, if the box ever sends one; the file. The over-limit warning is a colour change of the read-out, no sound unless switched on; it starts at the limit plus a margin that is a setting, **default 9 km/h**. Same battery rules as the speed: only while the read-out is on screen, from the same location fixes, no extra requests. Tests: matching on a fixture with parallel roads and a junction; the warning margin | N19 |
 | N21 | **Speed limit file on the phone** (phone worker). Choose the region, download once on Wi-Fi (and again monthly on Wi-Fi), show its size and date, delete it; the OpenStreetMap notice on the phone's About page | N19 |
+| N22 | **Waze speed limit hook (optional, pending research).** In the host shims module (`xposed/`, W1), read the limit Waze itself shows, only if it can be found cleanly, and hand it to MyPlay. Rules: it is off unless the owner turns it on; any failure is silent and never crashes Waze (every hook body in a catch-all, no change to Waze's own behaviour, read only); when it gives no answer, N20 falls back to the next source. Where Waze holds the limit is **not known**: the owner's "Waze talk" session may research it, and this chunk waits for that. Tests: the module's parsing on recorded values; MyPlay's fallback when the hook is silent | W1; the research |
 | N18 | **Map colour filter presets per language** (ORBIT, DECK, RACE), using the filter that exists; only colour, see below | N5 |
 
-About **21 chunks**, plus the Design reviewer's RACE sheet before N16. The speed read-out in N5 (ORBIT), N13 (DECK) and N16 (RACE) always has a place for the limit; N20 fills it. Every chunk has: a
+About **22 chunks**, plus the Design reviewer's RACE sheet before N16. The speed read-out in N5 (ORBIT), N13 (DECK) and N16 (RACE) always has a place for the limit; N20 fills it. Every chunk has: a
 Robolectric screenshot of each new screen, day and night, at 1280x720 and 1200x723; a pad walk
 of each screen (every stop reachable, one ring, Back returns, no trap); unit tests for placement
 and stored settings; and the bench walks named in its row, with the Audi profile.
@@ -719,7 +723,7 @@ darken and tint only, and the bench must show a report icon still readable.
   updates (often weekly). A broken hook can crash Waze while driving. Hiding Waze's parts
   risks hiding the very alerts the owner wants. Changing the Waze app is also against its terms
   of use.
-- **Recommendation: no hooks beyond W1's host check.** Instead, use Waze's own settings on the
+- **Recommendation: no hooks that change Waze beyond W1's host check.** The owner has asked for one read-only exception, the speed limit hook (N22), under strict rules. Instead, use Waze's own settings on the
   phone where it has them (to be checked on the owner's phone, not assumed): its map view, its
   day and night mode, its speedometer, and the look of its car arrow.
 
@@ -729,7 +733,7 @@ darken and tint only, and the bench must show a report icon still readable.
 |---|---|---|
 | Big turn read-out (arrow, distance, street) | **Yes** | From Waze's template data, drawn by MyPlay in any style, in a corner |
 | Speed | **Yes, if there is a source** | Not from Waze's data: the car library's navigation data (version 1.8.0-rc01, which MyPlay builds with) has no field for the current speed or the speed limit. `Trip`, `TravelEstimate`, `RoutingInfo` and `NavigationTemplate` carry steps, distances, times, arrival, the current road and free trip text only; checked in the library's classes, 2026-11-21. Waze could put a speed into its free text, which N3's bench check looks for. Otherwise the car's speed from the box (`car/CarData.kt` reads it when the car sends it; the connection log (R8) shows whether it does), else the phone's location, with the battery rules in N3 (approved 2026-11-21) |
-| Speed limit | **Yes, from three sources, none of them Waze's data** | The car library's navigation data has **no field** for it. Sources, in order (N20): a limit in Waze's free text or alerts if N3 finds one; the car's feed (MyPlay's car data has no speed limit field today, and none is known in the protocol it reads, so only if the box turns out to send one); an offline OpenStreetMap file (N19 to N21). If Waze draws **its own limit sign** on the map, MyPlay's read-out must not cover it; whether to show MyPlay's own as well is the owner's choice once the bench pictures exist |
+| Speed limit | **Yes, from several sources** | The car library's navigation data has **no field** for it. Sources, in order (N20): a limit in Waze's free text or alerts if N3 finds one; the optional Waze hook (N22, pending research); the car's feed (MyPlay's car data has no speed limit field today, and none is known in the protocol it reads, so only if the box turns out to send one); an offline OpenStreetMap file (N19 to N21). If Waze draws **its own limit sign** on the map, MyPlay's read-out must not cover it; whether to show MyPlay's own as well is the owner's choice once the bench pictures exist |
 | Arrival, time left, distance left | **Yes** | Template data, e.g. a racing "lap" strip |
 | A game-like frame (edges, corner brackets, a dark vignette, angled panels) | **Yes, at the edges** | Drawn over the outer strip of the screen, declared as covering the map, so the free area (and Waze's icons, if it honours it) stays in the middle |
 | Gear, rev-style bar, boost meter | **Only as decoration** | The box does not send revs or gear as far as known; a bar could show speed or turn distance instead |
@@ -757,12 +761,10 @@ from Waze, else the car, else the phone's GPS (GPS waits for approval); ORBIT, D
 The phone's location as the speed fallback was approved the same day, on condition of no extra
 battery drain (the rules are in N3).
 
+Answered: the limit file covers Lithuania; the warning margin is 9 km/h, a setting.
+
 Open:
-1. **Region** for the speed limit file: which country or countries (sizes differ a lot; one
-   country is the default).
-2. **Warning margin:** how far over the limit before the read-out changes colour (for example
-   at the limit, +3 km/h, or +10 %).
-3. After N3's bench pictures: if Waze shows its own limit sign, show MyPlay's as well, or
+1. After N3's bench pictures: if Waze shows its own limit sign, show MyPlay's as well, or
    only Waze's?
 
 ## Standing rules for every task
