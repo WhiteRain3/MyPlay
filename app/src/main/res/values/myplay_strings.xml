@@ -38,4 +38,6 @@
     <string name="myplay_world_not_yet" translatable="false">Not drawn yet. Back to return.</string>
     <string name="myplay_speed_unit_kmh" translatable="false">km/h</string>
     <string name="myplay_hub_menu" translatable="false">Menu</string>
+    <string name="myplay_apps_hint" translatable="false">turn: move around · push: open · Back: back</string>
+    <string name="myplay_apps_none" translatable="false">No apps to show.</string>
 </resources>

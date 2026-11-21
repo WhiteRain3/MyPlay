@@ -11,6 +11,7 @@ import net.prototux.aare.car.SpeedReading
 import androidx.car.app.model.Distance
 import androidx.car.app.navigation.model.Maneuver
 import net.prototux.aare.host.templates.CarFormat
+import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.theme.MapColourFilter
 
@@ -166,6 +167,16 @@ interface MyPlaySkin {
     @Composable fun Speed(reading: SpeedReading?, modifier: Modifier) = Unit
     /** The six worlds, [selected] ringed. */
     @Composable fun Chooser(selected: World, modifier: Modifier)
+    /** N6: how many apps one page of the Apps world holds. */
+    val appsPerPage: Int get() = 10
+
+    /**
+     * N6: the Apps world, one page of [apps]; [ringed] is the one holding the ring (an index into
+     * [apps]). Each app's part takes [tile] (its index), which the engine uses for the knob, the
+     * pad and taps; the skin draws the ring on [ringed].
+     */
+    @Composable fun AppsWorld(apps: List<CarAppEntry>, ringed: Int, page: Int, pages: Int, tile: (Int) -> Modifier, modifier: Modifier)
+
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)
 

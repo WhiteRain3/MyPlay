@@ -53,6 +53,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -74,6 +75,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import net.prototux.aare.R
 import net.prototux.aare.car.SpeedReading
+import net.prototux.aare.ui.car.AppIcon
+import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.mediaProgress
 import net.prototux.aare.ui.car.myplay.LocalSkinTokens
 import net.prototux.aare.ui.car.myplay.LocalStopRinged
@@ -344,6 +347,73 @@ object OrbitSkin : MyPlaySkin {
     }
 
     private val DIAL = 552.dp
+
+    /** The honeycomb's rows (the sheet: 3, 4, 3), for [appsPerPage] apps. */
+    private val ROWS = listOf(3, 4, 3)
+
+    override val appsPerPage get() = ROWS.sum()
+
+    @Composable
+    override fun AppsWorld(apps: List<CarAppEntry>, ringed: Int, page: Int, pages: Int, tile: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        val accent = Orbit.accent(World.APPS, night)
+        // The map stays behind, dimmed, as the sheet draws it.
+        Box(modifier.background(g.halo.copy(alpha = 0.7f)).orbitRipple(0.5f, 0.5f)) {
+            Scaled {
+                Column(Modifier.padding(start = 60.dp, top = 40.dp)) {
+                    Text(worldName(World.APPS), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
+                    Text(stringResource(R.string.myplay_apps_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
+                }
+            }
+            Box(Modifier.align(Alignment.Center)) {
+                Scaled {
+                    if (apps.isEmpty()) {
+                        Text(stringResource(R.string.myplay_apps_none), style = Orbit.Type.secondary.copy(color = g.secondary))
+                        return@Scaled
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        var i = 0
+                        for (size in ROWS) {
+                            if (i >= apps.size) break
+                            Row(horizontalArrangement = Arrangement.spacedBy(44.dp)) {
+                                repeat(size) {
+                                    val index = i
+                                    apps.getOrNull(index)?.let { app -> AppDisc(app, index == ringed, accent, night, tile(index)) }
+                                    i++
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (pages > 1) {
+                Row(Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    repeat(pages) { p ->
+                        Box(Modifier.size(12.dp).clip(CircleShape).background(if (p == page) accent else g.edge))
+                    }
+                }
+            }
+        }
+    }
+
+    /** One app in the honeycomb: a disc with its icon, its name under it; the ringed one lit in the Apps colour. */
+    @Composable
+    private fun AppDisc(app: CarAppEntry, on: Boolean, accent: Color, night: Boolean, modifier: Modifier) {
+        val g = Orbit.glass(night)
+        Column(modifier.width(160.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            OrbitDisc(
+                128.dp, night, Modifier.orbitFocus(on, accent, g.halo),
+                fill = if (on) accent.copy(alpha = 0.22f).compositeOver(g.glass) else null,
+                edge = if (on) accent else null, edgeWidth = 3.dp,
+            ) { AppIcon(app, 64) }
+            Text(
+                app.label, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
+                style = TextStyle(fontSize = 25.sp, fontWeight = if (on) androidx.compose.ui.text.font.FontWeight.ExtraBold else androidx.compose.ui.text.font.FontWeight.SemiBold).floating(if (on) g.text else g.secondary),
+                modifier = Modifier.padding(top = 6.dp),
+            )
+        }
+    }
 
     /** Test tags. */
     const val BATTERY_TAG = "orbit_battery"

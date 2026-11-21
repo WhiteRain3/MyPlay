@@ -9,6 +9,7 @@ import net.prototux.aare.car.CarData
 import net.prototux.aare.car.PassiveFixes
 import net.prototux.aare.car.PhoneFixes
 import net.prototux.aare.ui.car.CarActions
+import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarCall
 import net.prototux.aare.ui.car.CarNotice
 import net.prototux.aare.ui.car.CarUiState
@@ -37,6 +38,12 @@ interface CallSource {
 interface NotificationSource {
     val notices: List<CarNotice>
     fun dismiss(notice: CarNotice)
+}
+
+/** N6: the apps of the Apps world, in the owner's order, and opening one. */
+interface AppsSource {
+    val apps: List<CarAppEntry>
+    fun open(app: CarAppEntry)
 }
 
 /** A person or number in the phone's recent calls or contacts. */
@@ -76,9 +83,8 @@ data class EngineSources(
     val mirror: MirrorSource,
     /** Open the maps app (the turn slot's push), or the app grid when there is none. */
     val openMaps: () -> Unit,
-    /** The app grid, until the Apps world draws its own (N6). */
-    val openApps: () -> Unit,
     val speed: SpeedSource,
+    val apps: AppsSource,
     /** The phone's picture of the car screen: the engine takes no focus and reads no speed. */
     val picture: Boolean = false,
 ) {
@@ -113,8 +119,12 @@ data class EngineSources(
                 override fun key(action: Int, keyCode: Int) = Unit
             },
             openMaps = { state.app(state.homeNavAppId ?: state.activeNavAppId)?.let(actions::openApp) ?: actions.openLauncher() },
-            openApps = { actions.openLauncher() },
             speed = SpeedSource(CarData.state, { context?.let(::PassiveFixes) ?: NoFixes }),
+            apps = object : AppsSource {
+                // Already in the owner's order, as the app grid shows them (CarRuntime.applyApps).
+                override val apps get() = state.launcherApps
+                override fun open(app: CarAppEntry) = actions.openApp(app)
+            },
         )
 
         /**

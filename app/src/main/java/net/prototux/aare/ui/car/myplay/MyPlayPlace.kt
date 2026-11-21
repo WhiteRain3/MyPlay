@@ -48,6 +48,15 @@ object Moves {
 }
 
 /** The engine's state for one car screen. */
+/** N6: the Apps world's pages and the knob's walk through all its apps. Pure. */
+object AppsPages {
+    fun pages(count: Int, perPage: Int): Int = if (count <= 0) 1 else (count + perPage - 1) / perPage
+    fun pageOf(index: Int, perPage: Int): Int = if (index < 0) 0 else index / perPage
+
+    /** The app [steps] knob clicks from [index] among [count], wrapping round all pages. */
+    fun knob(index: Int, steps: Int, count: Int): Int = if (count <= 0) 0 else ((index + steps) % count + count) % count
+}
+
 class MyPlayScreenModel {
     var place by mutableStateOf<Place>(Place.Home)
     /** The world last entered, where the chooser opens next time. */

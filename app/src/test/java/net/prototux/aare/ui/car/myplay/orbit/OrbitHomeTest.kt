@@ -33,7 +33,10 @@ import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.NowPlaying
 import net.prototux.aare.ui.car.PadWalkStates
 import net.prototux.aare.ui.car.myplay.ENGINE_TAG
+import net.prototux.aare.ui.car.myplay.SLOT_APPS
 import net.prototux.aare.ui.car.myplay.SLOT_CHOOSER
+import net.prototux.aare.ui.car.myplay.appTag
+import net.prototux.aare.ui.car.CarAppKind
 import net.prototux.aare.ui.car.myplay.STOP_HUB
 import net.prototux.aare.ui.car.myplay.STOP_SONG
 import net.prototux.aare.ui.car.myplay.STOP_TURN
@@ -161,7 +164,41 @@ class OrbitHomeTest {
         assertEquals(2, rule.onAllNodesWithText("Navigate").fetchSemanticsNodes().size)
         repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        assertEquals(listOf("launcher"), asked)
+        // N6: the Apps world, the first app ringed; a push opens it.
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("app:maps"), asked)
+    }
+
+    /** N6: more apps than a page holds: the knob goes on to the next page, the pad off the right edge too. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theHoneycombPages() {
+        val state = show()
+        rule.runOnIdle { addApps(state) }
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        val apps = state.launcherApps
+        assertEquals(14, apps.size)
+        rule.onNodeWithTag(appTag(apps[0])).assertIsSelected()
+        assertTrue(rule.onAllNodes(hasTestTag(appTag(apps[10]))).fetchSemanticsNodes().isEmpty())
+        repeat(10) { engine.performKeyInput { pressKey(Key.Tab) } }
+        rule.onNodeWithTag(appTag(apps[10])).assertIsSelected()
+        assertTrue("page 1 is gone", rule.onAllNodes(hasTestTag(appTag(apps[0]))).fetchSemanticsNodes().isEmpty())
+        // Back a page with the pad off the left edge.
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        rule.onNodeWithTag(appTag(apps[9])).assertIsSelected()
+    }
+
+    /** Six more apps (14 in all, two pages); every app gets a plain coloured icon so the pictures show where icons go. */
+    private fun addApps(state: CarUiState) {
+        val colours = listOf(0xFF4CC9F0, 0xFFFFC24A, 0xFF5FD39A, 0xFFFF8FB1, 0xFFA78BFA, 0xFF9DB4E8).map { it.toInt() }
+        fun icon(i: Int) = Bitmap.createBitmap(48, 48, Bitmap.Config.ARGB_8888).apply { eraseColor(colours[i % colours.size]) }
+        val old = state.apps.toList()
+        state.apps.clear()
+        old.forEachIndexed { i, a -> state.apps += CarAppEntry(a.id, a.packageName, a.label, icon(i), a.kind) }
+        for (i in 1..6) state.apps += CarAppEntry("extra$i", "mock.extra$i", "Extra $i", icon(i + 1), CarAppKind.TEMPLATED)
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
@@ -215,9 +252,20 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNoArtDay() = picture("orbit-home-no-art-day", night = false, withArt = false)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun dialNight() = picture("orbit-dial-1280x720-night", night = true, dial = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun dial901x543Day() = picture("orbit-dial-901x543-day", night = false, dial = true)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true) {
-        show(night, trip, withArt)
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false) {
+        val state = show(night, trip, withArt)
+        if (apps) {
+            rule.runOnIdle { addApps(state) }
+            val engine = rule.onNodeWithTag(ENGINE_TAG)
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            engine.performKeyInput { pressKey(Key.Tab) }
+            rule.mainClock.advanceTimeBy(1_000)
+        }
         if (dial) {
             val engine = rule.onNodeWithTag(ENGINE_TAG)
             engine.performKeyInput { pressKey(Key.DirectionCenter) }

@@ -22,6 +22,9 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
 import androidx.compose.runtime.CompositionLocalProvider
@@ -73,6 +76,7 @@ class MyPlayEngineTest {
     private val actions = object : CarActions by PadWalkStates.NoActions {
         override fun openLauncher() { asked += "launcher" }
         override fun openApp(app: CarAppEntry) { asked += "app:${app.id}" }
+        override fun mediaNext() { asked += "next" }
     }
 
     /** What the engine tells the maps app covers its map, as the map sees it. */
@@ -156,10 +160,17 @@ class MyPlayEngineTest {
         // A push runs the stop: the turn opens the maps app, the song the music app.
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         engine.performKeyInput { pressKey(Key.DirectionDown) }
+        ringed(STOP_HUB)
+        // N6: pad right on the home is the next song while one is there; the ring stays.
         engine.performKeyInput { pressKey(Key.DirectionRight) }
+        ringed(STOP_HUB)
+        engine.performKeyInput { pressKey(Key.Tab) }
         ringed(STOP_SONG)
         engine.performKeyInput { pressKey(Key.Enter) }
-        assertEquals(listOf("app:maps", "app:music"), asked)
+        assertEquals(listOf("app:maps", "next", "app:music"), asked)
+        // A tap does what a push does.
+        rule.onNodeWithTag(STOP_TURN).performClick()
+        assertEquals("app:maps", asked.last())
     }
 
     /** N2-1: turns inside a world not drawn yet stay with the engine; Back still leaves. */
@@ -181,15 +192,52 @@ class MyPlayEngineTest {
         rule.onNodeWithText(World.MUSIC.name, useUnmergedTree = true).assertExists()
     }
 
+    /** N6: the Apps world lists the apps; knob, pad, push and tap; Back returns to the dial. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
-    fun theAppsWorldOpensTheAppGrid() {
-        show()
+    fun theAppsWorldWalksTheAppsAndOpensOne() {
+        val state = show(otherStop = true)
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         // NAVIGATE, MUSIC, CALLS, APPS: three turns forward.
         repeat(3) { engine.performKeyInput { pressKey(Key.DirectionRight) } }
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        assertEquals(listOf("launcher"), asked)
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        val apps = state.launcherApps
+        fun ringed(i: Int) = rule.onNodeWithTag(appTag(apps[i])).assertIsSelected()
+        ringed(0)
+        engine.performKeyInput { pressKey(Key.Tab) }
+        ringed(1)
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        ringed(2)
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        // The test skin's rows hold 5: down lands in the second row (which disc depends on the labels' widths).
+        val below = apps.indices.single { i ->
+            rule.onNodeWithTag(appTag(apps[i])).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Selected) == true
+        }
+        assertTrue("row 2: $below", below in 5 until apps.size)
+        engine.performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } }
+        ringed(below - 1)
+        // The knob wraps round.
+        repeat(apps.size - (below - 1)) { engine.performKeyInput { pressKey(Key.Tab) } }
+        ringed(0)
+        engine.assertIsFocused()
+        rule.onNodeWithTag("other_stop").assertIsNotFocused()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("app:${apps[0].id}"), asked)
+        rule.onNodeWithTag(appTag(apps[3])).performClick()
+        assertEquals("app:${apps[3].id}", asked.last())
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+        assertTrue("no app grid any more", "launcher" !in asked)
+    }
+
+    @Test fun appsPagesWrapAndPage() {
+        assertEquals(1, AppsPages.pages(0, 10))
+        assertEquals(2, AppsPages.pages(14, 10))
+        assertEquals(1, AppsPages.pageOf(10, 10))
+        assertEquals(13, AppsPages.knob(0, -1, 14))
+        assertEquals(0, AppsPages.knob(13, 1, 14))
+        assertEquals(0, AppsPages.knob(5, 1, 0))
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")

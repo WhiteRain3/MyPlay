@@ -31,6 +31,8 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -115,6 +117,25 @@ internal fun MyPlayEngineShell(
     val live = boxes.filterKeys { it in actionsOf }
     val ring = chosen.takeIf { it in actionsOf } ?: STOP_HUB
     fun move(to: String?) { if (to != null) chosen = to }
+    // N6: the Apps world: which app holds the ring (over all pages), and where this page's discs are.
+    val apps = sources.apps.apps
+    val perPage = skin.appsPerPage
+    var appRing by remember { mutableStateOf(0) }
+    val appIndex = appRing.coerceIn(0, (apps.size - 1).coerceAtLeast(0))
+    val page = AppsPages.pageOf(appIndex, perPage)
+    val pageApps = apps.drop(page * perPage).take(perPage)
+    val appBoxes = remember(page) { mutableStateMapOf<String, FocusGraph.Box>() }
+    fun padApps(dir: FocusGraph.Direction) {
+        val next = FocusGraph.pad(appBoxes, appIndex.toString(), dir)?.toIntOrNull()
+        val pages = AppsPages.pages(apps.size, perPage)
+        appRing = when {
+            next != null -> next
+            // Off the right or left edge: the next or the previous page.
+            dir == FocusGraph.Direction.RIGHT && page + 1 < pages -> (page + 1) * perPage
+            dir == FocusGraph.Direction.LEFT && page > 0 -> page * perPage - 1
+            else -> appIndex
+        }
+    }
     val covers = remember { MapCoverRegistry() }
     val focus = remember { FocusRequester() }
     // Not in the phone's picture of the car screen: it must not pull focus into the phone's own UI.
@@ -127,7 +148,12 @@ internal fun MyPlayEngineShell(
             Key.DirectionUp -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.UP)); true }
             Key.DirectionDown -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.DOWN)); true }
             Key.DirectionLeft -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.LEFT)); true }
-            Key.DirectionRight -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.RIGHT)); true }
+            // N6, the ORBIT sheet: on the home, pad right is the next song (one step) while a song
+            // is there; without one it moves the ring as the other directions do.
+            Key.DirectionRight -> {
+                if (slots.song != null) sources.music.next() else move(FocusGraph.pad(live, ring, FocusGraph.Direction.RIGHT))
+                true
+            }
             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> { actionsOf[ring]?.invoke(); true }
             else -> false
         }
@@ -137,14 +163,27 @@ internal fun MyPlayEngineShell(
             Key.DirectionRight, Key.DirectionDown -> { model.turn(1); true }
             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> {
                 model.push()
-                if (p.selected == World.APPS) sources.openApps() // N1-1: until the Apps world draws its own (N6)
+                if (p.selected == World.APPS) appRing = 0
                 true
             }
             else -> false
         }
         // N2-1: until the worlds draw their own stops, a world keeps the knob and pad (only Back,
         // through the BackHandler, leaves), so a turn cannot carry focus off the engine.
-        is Place.InWorld -> key in WORLD_KEYS
+        is Place.InWorld -> if (p.world == World.APPS) {
+            when (key) {
+                Key.Tab -> appRing = AppsPages.knob(appIndex, if (shift) -1 else 1, apps.size)
+                Key.DirectionUp -> padApps(FocusGraph.Direction.UP)
+                Key.DirectionDown -> padApps(FocusGraph.Direction.DOWN)
+                Key.DirectionLeft -> padApps(FocusGraph.Direction.LEFT)
+                Key.DirectionRight -> padApps(FocusGraph.Direction.RIGHT)
+                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> apps.getOrNull(appIndex)?.let(sources.apps::open)
+                else -> Unit
+            }
+            key in WORLD_KEYS
+        } else {
+            key in WORLD_KEYS
+        }
     }
 
     CompositionLocalProvider(LocalSkinTokens provides tokens) {
@@ -167,6 +206,9 @@ internal fun MyPlayEngineShell(
                 @Composable
                 fun Modifier.slot(slot: Slot): Modifier = if (skin.coversMap(slot)) coversMap() else this
                 fun Modifier.stop(id: String): Modifier = this
+                    // A tap does what a push does. Not clickable(): that would make the slot a
+                    // Compose focus stop, and a knob turn could then leave the engine (N2-1).
+                    .pointerInput(id) { detectTapGestures { chosen = id; actionsOf[id]?.invoke() } }
                     .onGloballyPositioned { c -> c.boundsInRoot().let { boxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
                     .semantics { selected = ring == id }
                     .let { if (showRing && ring == id && !skin.drawsFocus) it.border(3.dp, tokens.accent, RoundedCornerShape(tokens.corner)) else it }
@@ -174,18 +216,36 @@ internal fun MyPlayEngineShell(
                 @Composable
                 fun ringed(id: String, content: @Composable () -> Unit) =
                     CompositionLocalProvider(LocalStopRinged provides (showRing && ring == id), content = content)
-                slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) } }
+                // Inside a world only the status corner stays: the world's page has the screen.
+                val home = model.place !is Place.InWorld
+                if (home) slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) } }
                 Column(edge.align(Alignment.TopEnd), horizontalAlignment = Alignment.End) {
                     skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
                     if (skin.showsSpeed && state.speedSource != SpeedSourceMode.OFF) {
                         EngineSpeed(state, sources.speed) { skin.Speed(it, Modifier.slot(Slot.SPEED).testTag(SLOT_SPEED)) }
                     }
                 }
-                ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }
-                slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
+                if (home) ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }
+                if (home) slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
                 when (val p = model.place) {
                     is Place.Chooser -> skin.Chooser(p.selected, Modifier.align(Alignment.Center).slot(Slot.CHOOSER).testTag(SLOT_CHOOSER))
-                    is Place.InWorld -> skin.WorldPlaceholder(p.world, Modifier.align(Alignment.Center).slot(Slot.WORLD).testTag(SLOT_WORLD))
+                    is Place.InWorld -> if (p.world == World.APPS) {
+                        val first = page * perPage
+                        skin.AppsWorld(
+                            pageApps, appIndex - first, page, AppsPages.pages(apps.size, perPage),
+                            { i ->
+                                val global = first + i
+                                Modifier
+                                    .pointerInput(global) { detectTapGestures { appRing = global; apps.getOrNull(global)?.let(sources.apps::open) } }
+                                    .onGloballyPositioned { c -> c.boundsInRoot().let { appBoxes[global.toString()] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                                    .semantics { selected = global == appIndex }
+                                    .testTag(appTag(apps[global]))
+                            },
+                            Modifier.fillMaxSize().testTag(SLOT_APPS),
+                        )
+                    } else {
+                        skin.WorldPlaceholder(p.world, Modifier.align(Alignment.Center).slot(Slot.WORLD).testTag(SLOT_WORLD))
+                    }
                     Place.Home -> Unit
                 }
             }
@@ -235,3 +295,7 @@ internal const val SLOT_STATUS = "slot_status"
 internal const val SLOT_SPEED = "slot_speed"
 internal const val SLOT_CHOOSER = "slot_chooser"
 internal const val SLOT_WORLD = "slot_world"
+internal const val SLOT_APPS = "slot_apps"
+
+/** An app's disc in the Apps world (its test tag). */
+internal fun appTag(app: CarAppEntry) = "app_${app.id}"

@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.prototux.aare.car.SpeedReading
+import net.prototux.aare.ui.car.CarAppEntry
 
 /**
  * MyPlay (N1): a plain skin for the engine's tests and the hidden preview: grey boxes with text,
@@ -73,6 +74,23 @@ object TestSkin : MyPlaySkin {
     @Composable
     override fun Speed(reading: SpeedReading?, modifier: Modifier) = Box(modifier) {
         Text("${reading?.kmh ?: "–"} km/h", color = LocalSkinTokens.current.onSurface, fontSize = 22.sp)
+    }
+
+    @Composable
+    override fun AppsWorld(apps: List<CarAppEntry>, ringed: Int, page: Int, pages: Int, tile: (Int) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        Column(modifier.background(t.background.copy(alpha = 0.8f)).padding(24.dp)) {
+            Text("APPS ${page + 1}/$pages", color = t.onSurface, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            apps.chunked(5).forEachIndexed { row, chunk ->
+                Row {
+                    chunk.forEachIndexed { col, app ->
+                        val i = row * 5 + col
+                        Text(app.label, color = if (i == ringed) t.accent else t.onSurface, fontSize = 18.sp,
+                            modifier = tile(i).padding(12.dp))
+                    }
+                }
+            }
+        }
     }
 
     @Composable
