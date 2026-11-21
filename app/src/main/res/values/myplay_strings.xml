@@ -70,4 +70,5 @@
     <string name="myplay_deck_hint_apps" translatable="false">Push to see all your apps</string>
     <string name="myplay_car_line_speed_limit" translatable="false">Speed limit</string>
     <string name="myplay_frame_home" translatable="false">Home</string>
+    <string name="myplay_youtube_label" translatable="false">YouTube</string>
 </resources>

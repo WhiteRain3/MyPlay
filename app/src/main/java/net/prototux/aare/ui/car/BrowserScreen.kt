@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -69,6 +70,19 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
     var editing by remember { mutableStateOf(false) }
     // The keyboard for the page's focused text field, or null (#148).
     var pageField by remember { mutableStateOf<KeyboardMode?>(null) }
+    // MyPlay (the owner: "I can't full screen the video"): a page's fullscreen view (a video), shown
+    // over the whole car screen, and how to tell the page it was closed.
+    var fullView by remember { mutableStateOf<android.view.View?>(null) }
+    var fullClosed by remember { mutableStateOf<WebChromeClient.CustomViewCallback?>(null) }
+    fun leaveFullscreen() {
+        fullClosed?.onCustomViewHidden()
+        fullView = null
+        fullClosed = null
+    }
+    DisposableEffect(fullView) {
+        runtime.ui.appFullscreen = fullView != null
+        onDispose { runtime.ui.appFullscreen = false }
+    }
 
     fun go(query: String) {
         web?.loadUrl(toUrl(query))
@@ -92,6 +106,7 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
         // Back closes a keyboard first, then walks the page history.
         val back: () -> Boolean = {
             when {
+                fullView != null -> { leaveFullscreen(); true }
                 editing -> { editing = false; true }
                 pageField != null -> { closePageField(); true }
                 web?.canGoBack() == true -> { web?.goBack(); true }
@@ -133,7 +148,21 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
                     WebView(ctx).apply {
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
-                        webChromeClient = WebChromeClient()
+                        // A video's fullscreen button asks the browser for a fullscreen view: shown
+                        // over everything; Back (or the page) closes it.
+                        webChromeClient = object : WebChromeClient() {
+                            override fun onShowCustomView(view: android.view.View, callback: CustomViewCallback) {
+                                if (fullView != null) { callback.onCustomViewHidden(); return }
+                                fullView = view
+                                fullClosed = callback
+                            }
+                            override fun onHideCustomView() {
+                                fullView = null
+                                fullClosed = null
+                            }
+                        }
+                        // Videos start on a push of their play button, as on a phone.
+                        settings.mediaPlaybackRequiresUserGesture = true
                         webViewClient = object : WebViewClient() {
                             override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
                                 url?.let { currentUrl = it }
@@ -183,8 +212,26 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
                 CarKeyboard(field, sink, submitIcon = Icons.AutoMirrored.Rounded.KeyboardReturn)
             }
         }
+        // The page's fullscreen view (a video), over the toolbar and the page.
+        fullView?.let { v ->
+            AndroidView(
+                factory = { ctx -> android.widget.FrameLayout(ctx).apply { setBackgroundColor(android.graphics.Color.BLACK) } },
+                update = { frame ->
+                    if (v.parent !== frame) {
+                        (v.parent as? android.view.ViewGroup)?.removeView(v)
+                        frame.removeAllViews()
+                        frame.addView(v, android.widget.FrameLayout.LayoutParams(android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT))
+                    }
+                },
+                onRelease = { it.removeAllViews() },
+                modifier = Modifier.fillMaxSize().testTag(BROWSER_FULLSCREEN_TAG),
+            )
+        }
     }
 }
+
+/** MyPlay: the page's fullscreen view, while it shows (tests). */
+internal const val BROWSER_FULLSCREEN_TAG = "browser_fullscreen"
 
 @Composable
 private fun ToolButton(icon: ImageVector, desc: String, enabled: Boolean = true, onClick: () -> Unit) {

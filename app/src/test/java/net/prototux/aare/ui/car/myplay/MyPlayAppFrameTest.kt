@@ -330,4 +330,19 @@ class MyPlayAppFrameTest {
         val dismiss = rule.onNodeWithTag(NOTICE_DISMISS).fetchSemanticsNode().boundsInRoot
         assertTrue("the line ($line) is under the notice (its Dismiss at $dismiss)", line.top >= dismiss.bottom)
     }
+
+    /** The owner: a browser video in fullscreen takes the whole screen (no rail); after it, the rail again. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun anAppsFullscreenHidesTheRail() {
+        val s = show()
+        rule.onNodeWithTag(FRAME_RAIL_TAG).assertExists()
+        rule.runOnIdle { s.appFullscreen = true }
+        rule.waitForIdle()
+        rule.onNodeWithTag(FRAME_RAIL_TAG).assertDoesNotExist()
+        val app = rule.onNodeWithTag("app_music").fetchSemanticsNode().boundsInRoot
+        assertTrue("the app takes the whole width: $app", app.left == 0f && app.right == 1280f)
+        rule.runOnIdle { s.appFullscreen = false }
+        rule.waitForIdle()
+        rule.onNodeWithTag(FRAME_RAIL_TAG).assertExists()
+    }
 }

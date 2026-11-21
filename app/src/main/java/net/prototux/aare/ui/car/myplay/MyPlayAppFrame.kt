@@ -172,7 +172,8 @@ internal fun MyPlayAppFrame(
                 },
         ) {
             Row(Modifier.fillMaxSize()) {
-                val rail = @Composable { skin.AppRail(actions::goHome, Modifier.fillMaxHeight().testTag(FRAME_RAIL_TAG)) }
+                // An app's fullscreen video takes the whole screen: no rail meanwhile (Back leaves fullscreen).
+                val rail = @Composable { if (!state.appFullscreen) skin.AppRail(actions::goHome, Modifier.fillMaxHeight().testTag(FRAME_RAIL_TAG)) }
                 if (!state.railOnRight) rail()
                 ContentArea(state, actions, appContent, navMap, Modifier.weight(1f).fillMaxHeight().testTag(FRAME_APP_TAG))
                 if (state.railOnRight) rail()

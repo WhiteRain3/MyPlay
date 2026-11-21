@@ -505,6 +505,10 @@ class CarRuntime(
         }
         if (settings.browser) {
             entries += CarAppEntry(BROWSER_ID, context.packageName, context.getString(R.string.browser_app_label), builtinIcon(R.drawable.ic_car_browser), CarAppKind.BROWSER)
+            // MyPlay (the owner: "Add YouTube"): YouTube in the car browser (its mobile site, videos can
+            // go fullscreen), with the YouTube app's icon when it is installed. Parked only, as the browser.
+            val ytIcon = runCatching { context.packageManager.getApplicationIcon(YOUTUBE_PACKAGE).toBitmap(128, 128) }.getOrNull()
+            entries += CarAppEntry(YOUTUBE_ID, context.packageName, context.getString(R.string.myplay_youtube_label), ytIcon ?: builtinIcon(R.drawable.ic_car_browser), CarAppKind.BROWSER)
         }
         if (settings.carDataApp) {
             entries += CarAppEntry(CAR_DATA_ID, context.packageName, context.getString(R.string.car_data_app_label), builtinIcon(R.drawable.ic_car_data), CarAppKind.CAR_DATA)
@@ -824,7 +828,7 @@ class CarRuntime(
                             CarAppKind.MESSAGING -> MessagingScreen(app, ui.drivingRestricted, this, mod)
                             CarAppKind.PHONE_SCREEN -> MirrorScreen(this, ui.drivingRestricted, mod)
                             CarAppKind.STANDALONE -> StandaloneAppScreen(this, ui.drivingRestricted, app.packageName, mod)
-                            CarAppKind.BROWSER -> BrowserScreen(this, ui.drivingRestricted, settings.browserUrl, mod)
+                            CarAppKind.BROWSER -> BrowserScreen(this, ui.drivingRestricted, if (app.id == YOUTUBE_ID) YOUTUBE_URL else settings.browserUrl, mod)
                             CarAppKind.CAR_DATA -> CarDataScreen(mod)
                             CarAppKind.PHONE -> PhoneScreen(this, mod)
                             CarAppKind.SETTINGS -> CarSettingsScreen(settings, mod, ui.apps.filter { it.kind == CarAppKind.NAVIGATION }) { ui.drivingRestricted }
@@ -903,6 +907,10 @@ class CarRuntime(
         fun standaloneId(pkg: String) = "standalone:$pkg"
         const val PHONE_SCREEN_ID = "phone-screen"
         const val BROWSER_ID = "browser"
+        /** MyPlay: YouTube's mobile site in the car browser. */
+        const val YOUTUBE_ID = "youtube"
+        const val YOUTUBE_URL = "https://m.youtube.com/"
+        const val YOUTUBE_PACKAGE = "com.google.android.youtube"
         const val CAR_DATA_ID = "car-data"
         const val PHONE_ID = "phone"
         const val SETTINGS_ID = "car-settings"

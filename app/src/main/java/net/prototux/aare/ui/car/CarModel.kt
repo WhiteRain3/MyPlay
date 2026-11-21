@@ -128,6 +128,8 @@ class CarUiState {
      * engine opens it and clears this. Set by the car runtime (a call placed from an app).
      */
     var engineOpenWorld by mutableStateOf<String?>(null)
+    /** MyPlay: an app shows something fullscreen (the browser's video): MyPlay's frame hides its rail. */
+    var appFullscreen by mutableStateOf(false)
     /** MyPlay (N7): what the playing source allows (seek, previous, next) and its next songs. */
     var transport by mutableStateOf(net.prototux.aare.media.MediaTransport())
     /** MyPlay (N3): where the engine's speed comes from (car/MyPlaySpeed.kt). */
