@@ -15,6 +15,8 @@ import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.withKeyDown
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -231,5 +233,86 @@ class MyPlayAppFrameTest {
         rule.onNodeWithTag("app_mirror").performKeyInput { keyUp(Key.DirectionCenter) }
         assertEquals("down, then its up: nothing left pressed", listOf(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP), sent)
         assertTrue("the held key did not answer the call: $asked", "answer" !in asked)
+    }
+
+    // F1-5: the owner's car has no touch screen: a notice's buttons by the knob over an app too.
+
+    private val sentToApp = mutableListOf<Int>()
+    private val appStop = androidx.compose.ui.focus.FocusRequester()
+
+    /** An app whose knob stop (a mirrored app's) holds the focus, as in the car. */
+    private fun showMirroredApp(): CarUiState {
+        val s = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
+            enginePreview = true
+            screen = CarScreen.App("music")
+        }
+        state = s
+        rule.setContent {
+            CarTheme(night = s.night, theme = s.theme) {
+                CarShell(s, actions, appContent = { _, m ->
+                    net.prototux.aare.ui.car.MirroredKeyStop(net.prototux.aare.car.MirroredKeys.TurnMode.UP_DOWN, { action, _ -> sentToApp += action },
+                        m.focusRequester(appStop).testTag("app_mirror"))
+                }, navMap = { _, m -> Box(m) })
+            }
+        }
+        rule.waitForIdle()
+        rule.runOnIdle { appStop.requestFocus() }
+        return s
+    }
+
+    private val replied = mutableListOf<String>()
+    private fun withButtons(key: String = "n1") = CarNotice(key, "Anna K.", "Running late", null, listOf("Reply" to { replied += key }, "Mark read" to { replied += "read:$key" }), message = true)
+    private fun keys(block: androidx.compose.ui.test.KeyInjectionScope.() -> Unit) = rule.onNodeWithTag("app_mirror").performKeyInput(block)
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aNoticesButtonsByTheKnobOverAnApp() {
+        val s = showMirroredApp()
+        rule.runOnIdle { s.notices.add(0, withButtons()) }
+        rule.waitForIdle()
+        // The ring starts on Dismiss; a turn back reaches its buttons (Reply, Mark read, Dismiss).
+        rule.onNodeWithTag(NOTICE_DISMISS).assertIsSelected()
+        keys { withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } }
+        keys { withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } }
+        rule.onNodeWithTag(noticeActionStop(0)).assertIsSelected()
+        keys { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("n1"), replied)
+        assertEquals(listOf("dismiss:n1"), asked)
+        assertTrue("the app got none of these keys: $sentToApp", sentToApp.isEmpty())
+        // The notice gone, the knob is the app's again, and it never lost the focus.
+        rule.onNodeWithTag("app_mirror").assertIsFocused()
+        keys { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP), sentToApp)
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aPushAsTheNoticeAppearsOnlyDismissesIt() {
+        val s = showMirroredApp()
+        rule.runOnIdle { s.notices.add(0, withButtons()) }
+        rule.waitForIdle()
+        keys { pressKey(Key.DirectionCenter) }
+        assertTrue("no button ran: $replied", replied.isEmpty())
+        assertEquals(listOf("dismiss:n1"), asked)
+        assertTrue(sentToApp.isEmpty())
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun backDismissesTheNoticeNotTheApp() {
+        val s = showMirroredApp()
+        rule.runOnIdle { s.notices.add(0, withButtons()) }
+        rule.waitForIdle()
+        keys { pressKey(Key.Back) }
+        assertEquals(listOf("dismiss:n1"), asked)
+        assertTrue("still in the app: ${s.screen}", s.screen == CarScreen.App("music"))
+        rule.onNodeWithTag("app_mirror").assertIsFocused()
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aNoticeWithoutButtonsLeavesTheKnobToTheApp() {
+        val s = showMirroredApp()
+        rule.runOnIdle { s.notices.add(0, CarNotice("n2", "Calendar", "Dentist at 15:00", null)) }
+        rule.waitForIdle()
+        keys { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP), sentToApp)
+        assertTrue(asked.isEmpty())
     }
 }

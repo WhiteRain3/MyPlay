@@ -1,5 +1,6 @@
 package net.prototux.aare.ui.car.myplay
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -108,22 +109,46 @@ internal fun MyPlayAppFrame(
             if (!frameHasFocus) runCatching { callFocus.requestFocus() }
         }
     }
-    // F1-4: keys down when the call starts ringing went down to the app; their ups go to it too, so
-    // the app (a mirrored app's key stop) never keeps a key pressed.
+    // F1-5 (the owner's car has no touch screen): a notice with buttons takes the knob's keys too,
+    // the same way, while it shows; the ring starts on Dismiss, so a push meant for the app at the
+    // moment it appears only dismisses it. Back dismisses it. A notice without buttons never does.
+    val noticeKnob = !ringing && notice != null && notice.actions.isNotEmpty()
+    val noticeBoxes = remember(notice?.key) { mutableStateMapOf<String, FocusGraph.Box>() }
+    var noticeChosen by remember(notice?.key) { mutableStateOf(NOTICE_DISMISS) }
+    val noticeActions: Map<String, () -> Unit> = buildMap {
+        if (noticeKnob) {
+            val n = notice!!
+            n.actions.take(2).forEachIndexed { i, (_, run) -> put(noticeActionStop(i)) { run(); sources.notifications.dismiss(n) } }
+            put(NOTICE_DISMISS) { sources.notifications.dismiss(n) }
+        }
+    }
+    val noticeRing = noticeChosen.takeIf { it in noticeActions } ?: NOTICE_DISMISS
+    // The knob is the call's or the notice's for now (the app keeps its focus all along).
+    val modal = ringing || noticeKnob
+    // F1-4: keys down when the call starts ringing (or the notice appears) went down to the app;
+    // their ups go to it too, so the app (a mirrored app's key stop) never keeps a key pressed.
     val down = remember { HashSet<Key>() }
     val passUps = remember { HashSet<Key>() }
-    LaunchedEffect(ringing) { passUps.clear(); if (ringing) passUps.addAll(down) }
-    val currentCall by rememberUpdatedState(callActions)
-    val currentRing by rememberUpdatedState(callRing)
-    fun callKey(key: Key, shift: Boolean): Boolean {
-        val live = callBoxes.filterKeys { it in currentCall }
+    LaunchedEffect(modal) { passUps.clear(); if (modal) passUps.addAll(down) }
+    val currentActions by rememberUpdatedState(if (ringing) callActions else noticeActions)
+    val currentRing by rememberUpdatedState(if (ringing) callRing else noticeRing)
+    val currentNoticeDismiss by rememberUpdatedState(noticeActions[NOTICE_DISMISS])
+    val currentCallActions by rememberUpdatedState(callActions)
+    // Back as the system's Back too (not only as a key): it dismisses a notice holding the knob.
+    BackHandler(enabled = noticeKnob) { currentNoticeDismiss?.invoke() }
+    fun choose(id: String) { if (ringing) callChosen = id else noticeChosen = id }
+    fun modalKey(key: Key, shift: Boolean): Boolean {
+        val live = (if (ringing) callBoxes else noticeBoxes).filterKeys { it in currentActions }
         when (key) {
-            Key.Tab -> FocusGraph.knob(live, currentRing, if (shift) -1 else 1)?.let { callChosen = it }
-            Key.DirectionLeft -> FocusGraph.pad(live, currentRing, FocusGraph.Direction.LEFT)?.let { callChosen = it }
-            Key.DirectionRight -> FocusGraph.pad(live, currentRing, FocusGraph.Direction.RIGHT)?.let { callChosen = it }
-            Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> currentCall[currentRing]?.invoke()
-            // Up and down do nothing while it rings; anything else (Back, media keys) goes on as usual.
+            Key.Tab -> FocusGraph.knob(live, currentRing, if (shift) -1 else 1)?.let(::choose)
+            Key.DirectionLeft -> FocusGraph.pad(live, currentRing, FocusGraph.Direction.LEFT)?.let(::choose)
+            Key.DirectionRight -> FocusGraph.pad(live, currentRing, FocusGraph.Direction.RIGHT)?.let(::choose)
+            Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> currentActions[currentRing]?.invoke()
+            // Up and down do nothing meanwhile.
             Key.DirectionUp, Key.DirectionDown -> Unit
+            // Back dismisses a notice (a ringing call leaves Back to the car, as before).
+            Key.Back, Key.Escape -> if (!ringing) currentNoticeDismiss?.invoke() else return false
+            // Anything else (media keys) goes on as usual.
             else -> return false
         }
         return true
@@ -136,10 +161,10 @@ internal fun MyPlayAppFrame(
                 // Key ups of the call's keys are kept too, so the app never sees half a press.
                 .onPreviewKeyEvent { e ->
                     when (e.type) {
-                        KeyEventType.KeyDown -> { down += e.key; ringing && callKey(e.key, e.isShiftPressed) }
+                        KeyEventType.KeyDown -> { down += e.key; modal && modalKey(e.key, e.isShiftPressed) }
                         KeyEventType.KeyUp -> {
                             down -= e.key
-                            ringing && e.key in CALL_KEYS && !passUps.remove(e.key)
+                            modal && (e.key in CALL_KEYS || (!ringing && e.key in BACK_KEYS)) && !passUps.remove(e.key)
                         }
                         else -> false
                     }
@@ -152,11 +177,11 @@ internal fun MyPlayAppFrame(
                 if (state.railOnRight) rail()
             }
             overlay(Modifier.align(Alignment.BottomCenter))
-            // A notice for a few seconds at the top; its buttons by touch (the knob is the app's here).
+            // A notice for a few seconds at the top: its buttons by touch, and (F1-5) by the knob.
             if (notice != null && !ringing) {
                 val currentNotice by rememberUpdatedState(notice)
                 skin.Notice(
-                    notice, hideText = state.drivingRestricted && notice.message, ringed = null,
+                    notice, hideText = state.drivingRestricted && notice.message, ringed = noticeRing.takeIf { noticeKnob },
                     stop = { id ->
                         Modifier.pointerInput(id) {
                             detectTapGestures {
@@ -165,7 +190,10 @@ internal fun MyPlayAppFrame(
                                 (0 until 2).firstOrNull { noticeActionStop(it) == id }?.let { i -> n.actions.getOrNull(i)?.second?.invoke() }
                                 sources.notifications.dismiss(n)
                             }
-                        }.testTag(id)
+                        }
+                            .onGloballyPositioned { c -> c.boundsInRoot().let { noticeBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                            .semantics { selected = noticeKnob && id == noticeRing }
+                            .testTag(id)
                     },
                     Modifier.align(Alignment.TopCenter).padding(top = tokens.edge),
                 )
@@ -175,7 +203,7 @@ internal fun MyPlayAppFrame(
                 Box(Modifier.fillMaxSize().focusRequester(callFocus).focusable()) {
                     skin.Ringing(call!!, canEnd, callRing, { id ->
                         Modifier
-                            .pointerInput(id) { detectTapGestures { callChosen = id; currentCall[id]?.invoke() } }
+                            .pointerInput(id) { detectTapGestures { callChosen = id; currentCallActions[id]?.invoke() } }
                             .onGloballyPositioned { c -> c.boundsInRoot().let { callBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
                             .semantics { selected = id == callRing }
                             .testTag(id)
@@ -210,6 +238,9 @@ internal fun DefaultAppRail(home: () -> Unit, modifier: Modifier) {
         }
     }
 }
+
+/** Back, which a notice that holds the knob keeps (it dismisses the notice). */
+private val BACK_KEYS = setOf(Key.Back, Key.Escape)
 
 /** The keys a ringing call keeps (down and up) while it rings over an app. */
 private val CALL_KEYS = setOf(Key.Tab, Key.DirectionLeft, Key.DirectionRight, Key.DirectionUp, Key.DirectionDown, Key.Enter, Key.DirectionCenter, Key.NumPadEnter)
