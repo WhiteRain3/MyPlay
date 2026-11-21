@@ -457,6 +457,21 @@ class MyPlayEngineTest {
         assertEquals("end", asked.last())
     }
 
+    /** C-1: while a call rings, a tap on the screen around it reaches nothing underneath. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aRingingCallKeepsTapsFromTheHome() {
+        val state = show()
+        rule.runOnIdle { state.call = CarCall(ringing = true, name = "Anna K.", sinceMs = 1L) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(STOP_HUB).performClick()
+        rule.onNodeWithTag(STOP_SONG).performClick()
+        assertTrue(rule.onAllNodes(hasTestTag(SLOT_CHOOSER)).fetchSemanticsNodes().isEmpty())
+        assertTrue("nothing opened: $asked", asked.isEmpty())
+        // Answer itself still takes its tap.
+        rule.onNodeWithTag(CALL_ANSWER).performClick()
+        assertEquals(listOf("answer"), asked)
+    }
+
     /** Without the permission to end calls there is no Decline: Answer only. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun noDeclineWithoutThePermission() {

@@ -470,7 +470,10 @@ internal fun MyPlayEngineShell(
                         .onGloballyPositioned { c -> c.boundsInRoot().let { callBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
                         .semantics { selected = id == callRing }
                         .testTag(id)
-                }, Modifier.fillMaxSize().testTag(SLOT_CALL))
+                }, Modifier.fillMaxSize().testTag(SLOT_CALL)
+                    // C-1: the call covers the screen: a touch anywhere else on it stops here and never
+                    // reaches the home's stops underneath (its own buttons see their touches first).
+                    .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } })
             }
         }
     }

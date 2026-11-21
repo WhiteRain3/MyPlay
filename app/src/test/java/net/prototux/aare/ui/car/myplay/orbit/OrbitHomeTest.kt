@@ -88,6 +88,7 @@ class OrbitHomeTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     private val asked = mutableListOf<String>()
+    private var libraryShown: MediaLibrary = PictureLibrary
 
     /** A library for the pictures: a few folders and songs, the first with artwork. */
     private object PictureLibrary : MediaLibrary {
@@ -114,7 +115,7 @@ class OrbitHomeTest {
     private val actions = object : CarActions by PadWalkStates.NoActions {
         override fun openLauncher() { asked += "launcher" }
         override fun openApp(app: CarAppEntry) { asked += "app:${app.id}" }
-        override fun mediaLibrary(): MediaLibrary = PictureLibrary
+        override fun mediaLibrary(): MediaLibrary = libraryShown
     }
 
     private fun estimate(meters: Double, seconds: Long) = TravelEstimate.Builder(
@@ -344,6 +345,17 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun ringingNight() = picture("orbit-call-ringing-1280x720-night", night = true, call = CarCall(true, "Anna K.", 1L))
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun ringing901x543Day() = picture("orbit-call-ringing-901x543-day", night = false, call = CarCall(true, "+370 612 34567", 1L))
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun inCallNight() = picture("orbit-call-in-call-1280x720-night", night = true, call = CarCall(false, "Anna K.", System.currentTimeMillis() - 133_000))
+
+    /** L-1: a level that lists the same id twice (a song twice in a playlist) draws, rather than crash. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aLibraryWithARepeatedIdDraws() {
+        libraryShown = object : MediaLibrary by PictureLibrary {
+            // The repeat is second, so both copies are on screen together.
+            override val rows = listOf(PictureLibrary.rows.first()) + PictureLibrary.rows
+        }
+        picture("orbit-library-repeated-id", night = true, music = true, library = true)
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.libraryRowTag(1), useUnmergedTree = true).assertExists()
+    }
 
     @Test fun initialsAreLettersOrNone() {
         assertEquals("AK", OrbitSkin.initials("Anna K."))

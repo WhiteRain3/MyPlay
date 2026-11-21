@@ -618,7 +618,9 @@ object OrbitSkin : MyPlaySkin {
                         verticalArrangement = Arrangement.spacedBy(18.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
                     ) {
-                        items(page.rows.size, key = { page.rows[it].id }) { i ->
+                        // L-1: apps repeat ids (a song twice in a playlist, overlapping pages): the key
+                        // must stay unique, or the list throws. As the app's own screen keys them.
+                        items(page.rows.size, key = { "${it}_${page.rows[it].id}" }) { i ->
                             LibraryPill(page.rows[i], i == ringed, accent, night, art, row(i))
                         }
                     }
