@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import net.prototux.aare.car.SpeedReading
 import net.prototux.aare.host.templates.CarFormat
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.theme.MapColourFilter
@@ -35,7 +36,7 @@ data class SkinTokens(
 )
 
 /** The places the engine offers a skin. */
-enum class Slot { TURN, STATUS, HUB, SONG, CHOOSER, WORLD }
+enum class Slot { TURN, STATUS, SPEED, HUB, SONG, CHOOSER, WORLD }
 
 /** The next turn: the distance, then the road or instruction. Null fields are not known. */
 data class TurnSlot(val distance: String?, val road: String?)
@@ -81,6 +82,15 @@ interface MyPlaySkin {
     @Composable fun Hub(trip: TripSlot?, modifier: Modifier)
     @Composable fun Song(song: SongSlot, modifier: Modifier)
     @Composable fun Status(modifier: Modifier)
+
+    /**
+     * N3: whether this skin shows the speed (under the status). Only while it is drawn does the
+     * engine read a speed at all; the phone's location is used only then (car/MyPlaySpeed.kt).
+     */
+    val showsSpeed: Boolean get() = false
+
+    /** The speed, or null when none is known (show a dash, never a guess). */
+    @Composable fun Speed(reading: SpeedReading?, modifier: Modifier) = Unit
     /** The six worlds, [selected] ringed. */
     @Composable fun Chooser(selected: World, modifier: Modifier)
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */

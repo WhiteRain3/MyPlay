@@ -121,6 +121,8 @@ class CarUiState {
     var gestureLine by mutableStateOf<GestureLine?>(null)
     /** MyPlay (N1): draw with MyPlay's own engine (ui/car/myplay/), a hidden preview while phase N is built. */
     var enginePreview by mutableStateOf(false)
+    /** MyPlay (N3): where the engine's speed comes from (car/MyPlaySpeed.kt). */
+    var speedSource by mutableStateOf(net.prototux.aare.car.SpeedSourceMode.AUTO)
     /** The apps opened last, newest first (ids): the rail shows the recent ones. */
     val recentAppIds = mutableStateListOf<String>()
     /** The voice assistant showing as a bar over the screen (an app entry id), or null. */

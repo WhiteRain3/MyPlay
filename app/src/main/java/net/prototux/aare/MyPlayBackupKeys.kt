@@ -20,6 +20,7 @@ internal object MyPlayBackupKeys {
         "myplay_maps_follow_car_lights" to Type.BOOLEAN,
         "myplay_mirror_turns" to Type.STRING, // what a knob turn means in each mirrored app (G1)
         "myplay_gesture_line" to Type.BOOLEAN, // the line after a button gesture (R6)
+        "myplay_speed_source" to Type.STRING, // where the car screen's speed comes from (N3)
         "myplay_map_filter" to Type.STRING, // the map colour filter, one of a look's settings
         "myplay_layout_spec" to Type.STRING,
         "myplay_layout_preset" to Type.STRING,

@@ -1,5 +1,10 @@
 package net.prototux.aare.ui.car.myplay
 
+import android.content.Context
+import kotlinx.coroutines.flow.StateFlow
+import net.prototux.aare.car.CarData
+import net.prototux.aare.car.PassiveFixes
+import net.prototux.aare.car.PhoneFixes
 import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarCall
 import net.prototux.aare.ui.car.CarNotice
@@ -46,6 +51,9 @@ interface MirrorSource {
     fun key(action: Int, keyCode: Int)
 }
 
+/** N3: the speed's inputs: the car's data, and the phone's fixes when the rules allow them (car/MyPlaySpeed.kt). */
+class SpeedSource(val car: StateFlow<CarData.State>, val fixes: () -> PhoneFixes)
+
 /** Everything the engine reads and does, in one place. */
 data class EngineSources(
     val music: MusicSource,
@@ -57,10 +65,11 @@ data class EngineSources(
     val openMaps: () -> Unit,
     /** The app grid, until the Apps world draws its own (N6). */
     val openApps: () -> Unit,
+    val speed: SpeedSource,
 ) {
     companion object {
         /** The car's sources: the car state and actions; no phone list or mirror yet (N8, N9). */
-        fun of(state: CarUiState, actions: CarActions) = EngineSources(
+        fun of(state: CarUiState, actions: CarActions, context: Context) = EngineSources(
             music = object : MusicSource {
                 override val nowPlaying get() = state.nowPlaying
                 override fun playPause() = actions.mediaPlayPause()
@@ -90,6 +99,7 @@ data class EngineSources(
             },
             openMaps = { state.app(state.homeNavAppId ?: state.activeNavAppId)?.let(actions::openApp) ?: actions.openLauncher() },
             openApps = { actions.openLauncher() },
+            speed = SpeedSource(CarData.state) { PassiveFixes(context) },
         )
     }
 }

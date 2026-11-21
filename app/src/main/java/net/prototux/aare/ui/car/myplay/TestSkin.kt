@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import net.prototux.aare.car.SpeedReading
 
 /**
  * MyPlay (N1): a plain skin for the engine's tests and the hidden preview: grey boxes with text,
@@ -65,6 +66,13 @@ object TestSkin : MyPlaySkin {
         val t = LocalSkinTokens.current
         val context = LocalContext.current
         Text(DateFormat.getTimeFormat(context).format(System.currentTimeMillis()), color = t.onSurface, fontSize = 22.sp)
+    }
+
+    override val showsSpeed get() = true
+
+    @Composable
+    override fun Speed(reading: SpeedReading?, modifier: Modifier) = Box(modifier) {
+        Text("${reading?.kmh ?: "–"} km/h", color = LocalSkinTokens.current.onSurface, fontSize = 22.sp)
     }
 
     @Composable

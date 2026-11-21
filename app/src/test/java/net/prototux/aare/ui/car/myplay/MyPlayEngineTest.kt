@@ -18,6 +18,14 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import net.prototux.aare.car.CarData
+import net.prototux.aare.car.PhoneFixes
+import net.prototux.aare.car.SpeedSourceMode
 import net.prototux.aare.host.templates.LocalMapCovers
 import net.prototux.aare.host.templates.MapAreas
 import net.prototux.aare.host.templates.MapCoverRegistry
@@ -179,6 +187,58 @@ class MyPlayEngineTest {
         rule.runOnIdle { state!!.phoneGuidance = guidance() }
         rule.waitForIdle()
         assertNull(bounds(STOP_TURN).intersect(freeArea().visible))
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theSpeedListensOnlyWhileShownAndWithAMapsApp() {
+        val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply { enginePreview = true }
+        val car = MutableStateFlow(CarData.State(connected = true))
+        val phone = object : PhoneFixes {
+            var onFix: ((Float, Long) -> Unit)? = null
+            override fun start(onFix: (Float, Long) -> Unit): Boolean { this.onFix = onFix; return true }
+            override fun stop() { onFix = null }
+        }
+        var shown by mutableStateOf(true)
+        rule.setContent {
+            CarTheme(night = state.night, theme = state.theme) {
+                if (shown) {
+                    val sources = EngineSources.of(state, actions, LocalContext.current).copy(speed = SpeedSource(car) { phone })
+                    MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m) }, navMap = { _, m -> Box(m) }, overlay = {}, sources = sources)
+                }
+            }
+        }
+        rule.waitForIdle()
+        rule.onNodeWithText("– km/h").assertExists()
+        assertTrue("listening with a maps app", rule.runOnIdle { phone.onFix != null })
+        rule.runOnIdle { phone.onFix!!(15f, System.currentTimeMillis()) }
+        rule.onNodeWithText("54 km/h").assertExists()
+
+        rule.runOnIdle { state.activeNavAppId = null }
+        rule.waitForIdle()
+        assertTrue("no maps app: no location", rule.runOnIdle { phone.onFix == null })
+        rule.onNodeWithText("– km/h").assertExists()
+
+        rule.runOnIdle { state.activeNavAppId = "maps" }
+        rule.waitForIdle()
+        assertTrue(rule.runOnIdle { phone.onFix != null })
+        rule.runOnIdle { shown = false }
+        rule.waitForIdle()
+        assertTrue("off the screen: no location", rule.runOnIdle { phone.onFix == null })
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun speedOffDrawsNoSpeed() {
+        val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
+            enginePreview = true
+            speedSource = SpeedSourceMode.OFF
+        }
+        rule.setContent {
+            CarTheme(night = state.night, theme = state.theme) {
+                CarShell(state, actions, appContent = { _, m -> Box(m) }, navMap = { _, m -> Box(m) })
+            }
+        }
+        rule.waitForIdle()
+        assertTrue(rule.onAllNodes(hasTestTag(SLOT_SPEED)).fetchSemanticsNodes().isEmpty())
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun screenshot1280x720Night() = screenshot("test-skin-1280x720-night", true, 1280, 720)

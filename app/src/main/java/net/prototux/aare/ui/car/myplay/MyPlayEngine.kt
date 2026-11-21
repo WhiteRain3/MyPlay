@@ -6,12 +6,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -35,6 +38,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import net.prototux.aare.car.SpeedFeed
+import net.prototux.aare.car.SpeedReading
+import net.prototux.aare.car.SpeedSourceMode
 import net.prototux.aare.host.LocalSkinMapFilter
 import net.prototux.aare.host.templates.LocalMapCovers
 import net.prototux.aare.host.templates.MapCoverRegistry
@@ -76,7 +83,7 @@ internal fun MyPlayEngineShell(
     overlay: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
     skin: MyPlaySkin = TestSkin,
-    sources: EngineSources = remember(state, actions) { EngineSources.of(state, actions) },
+    sources: EngineSources = LocalContext.current.let { c -> remember(state, actions) { EngineSources.of(state, actions, c) } },
 ) {
     if (state.screen != CarScreen.Dashboard) {
         SpecShell(state, actions, appContent, navMap, overlay, modifier)
@@ -152,7 +159,12 @@ internal fun MyPlayEngineShell(
                     .let { if (showRing && ring == id) it.border(3.dp, tokens.accent, RoundedCornerShape(tokens.corner)) else it }
                     .testTag(id)
                 slots.turn?.let { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) }
-                skin.Status(edge.align(Alignment.TopEnd).slot(Slot.STATUS).testTag(SLOT_STATUS))
+                Column(edge.align(Alignment.TopEnd), horizontalAlignment = Alignment.End) {
+                    skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
+                    if (skin.showsSpeed && state.speedSource != SpeedSourceMode.OFF) {
+                        EngineSpeed(state, sources.speed) { skin.Speed(it, Modifier.slot(Slot.SPEED).testTag(SLOT_SPEED)) }
+                    }
+                }
                 skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB))
                 slots.song?.let { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) }
                 when (val p = model.place) {
@@ -168,11 +180,34 @@ internal fun MyPlayEngineShell(
     }
 }
 
+/**
+ * N3: the speed, read only while this is composed (the skin draws a speed): the car's, else the
+ * phone's passive fixes under the battery rules ([SpeedFeed]); everything stops when it leaves.
+ */
+@Composable
+private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Composable (SpeedReading?) -> Unit) {
+    val feed = remember(source) { SpeedFeed(source.fixes()) }
+    val car by source.car.collectAsState()
+    val inputs = SpeedFeed.Inputs(state.speedSource, shown = true, mapsRunning = state.activeNavAppId != null, car = car)
+    // Again each second, so a speed the car stopped sending goes away.
+    LaunchedEffect(feed, inputs) {
+        while (true) {
+            feed.update(inputs)
+            delay(SPEED_TICK_MS)
+        }
+    }
+    DisposableEffect(feed) { onDispose { feed.release() } }
+    content(feed.reading)
+}
+
+private const val SPEED_TICK_MS = 1_000L
+
 internal const val ENGINE_TAG = "engine_root"
 /** The home's stops; also their test tags. */
 internal const val STOP_TURN = "stop_turn"
 internal const val STOP_HUB = "stop_hub"
 internal const val STOP_SONG = "stop_song"
 internal const val SLOT_STATUS = "slot_status"
+internal const val SLOT_SPEED = "slot_speed"
 internal const val SLOT_CHOOSER = "slot_chooser"
 internal const val SLOT_WORLD = "slot_world"
