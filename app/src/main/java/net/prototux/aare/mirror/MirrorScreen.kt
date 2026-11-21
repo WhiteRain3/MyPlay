@@ -20,6 +20,8 @@ import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -70,20 +72,37 @@ internal fun MirrorScreen(runtime: CarRuntime, driving: Boolean, modifier: Modif
         }
     }
 
+    // MyPlay (the owner: "it's not filling the full screen"): with the phone sideways the mirror is
+    // stretched to fill the car screen ([MirrorFill]); upright it keeps its shape. Looked at each
+    // second: a turn of the phone starts a new view at the new shape.
+    var sideways by remember { mutableStateOf(PhoneMirror.phoneScreenSize(context).let { MirrorFill.fills(it.x, it.y) }) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1_000)
+            sideways = PhoneMirror.phoneScreenSize(context).let { MirrorFill.fills(it.x, it.y) }
+        }
+    }
     Box(modifier.background(Color.Black)) {
-        if (allowed) key(consent) {
+        if (allowed) key(consent, sideways) {
             // A new view when the consent comes or goes, so the mirror starts as soon as it's given.
             AndroidView(
                 factory = { ctx ->
                     var surface: Surface? = null
                     TextureView(ctx).apply {
                         surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+                            /** The mirror at the phone's shape, which the view then stretches to fill (sideways only). */
+                            fun start(st: SurfaceTexture, s: Surface, w: Int, h: Int) {
+                                val phone = PhoneMirror.phoneScreenSize(ctx)
+                                val (dw, dh) = MirrorFill.size(w, h, phone.x, phone.y)
+                                st.setDefaultBufferSize(dw, dh)
+                                mirroring = PhoneMirror.attach(runtime.projection(), s, dw, dh, runtime.densityDpi)
+                            }
                             override fun onSurfaceTextureAvailable(st: SurfaceTexture, w: Int, h: Int) {
                                 surface = Surface(st)
-                                mirroring = PhoneMirror.attach(runtime.projection(), surface!!, w, h, runtime.densityDpi)
+                                start(st, surface!!, w, h)
                             }
                             override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) {
-                                surface?.let { mirroring = PhoneMirror.attach(runtime.projection(), it, w, h, runtime.densityDpi) }
+                                surface?.let { start(st, it, w, h) }
                             }
                             override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean {
                                 PhoneMirror.detach()
@@ -153,11 +172,7 @@ private fun rememberKeyguardLocked(): Boolean {
 private fun replay(context: android.content.Context, viewW: Int, viewH: Int, points: List<Pair<Float, Float>>, durationMs: Long, slop: Float) {
     val touch = MirrorTouchService.instance ?: return
     val phone = PhoneMirror.phoneScreenSize(context)
-    // The mirror keeps the phone's aspect ratio, centered.
-    val scale = minOf(viewW.toFloat() / phone.x, viewH.toFloat() / phone.y)
-    val ox = (viewW - phone.x * scale) / 2
-    val oy = (viewH - phone.y * scale) / 2
-    val mapped = points.map { (x, y) -> (x - ox) / scale to (y - oy) / scale }
+    val mapped = points.map { (x, y) -> MirrorFill.toPhone(x, y, viewW, viewH, phone.x, phone.y) }
         .filter { (x, y) -> x in 0f..phone.x.toFloat() && y in 0f..phone.y.toFloat() }
     if (mapped.isEmpty()) return
     val (x0, y0) = points.first()
@@ -199,3 +214,29 @@ internal val KNOWN_NAVIGATION = setOf(
     "com.locnall.KimGiSa", // Kakao Navi
     "com.skt.tmap.ku", // TMAP
 )
+
+/**
+ * MyPlay: how the phone's screen fills the car's. Sideways (wider than tall) it is stretched to the
+ * whole car screen, the owner's choice over black bars; upright it keeps its shape, centred
+ * (stretching a tall phone to a wide screen would make it unreadable). Pure.
+ */
+internal object MirrorFill {
+    fun fills(phoneW: Int, phoneH: Int): Boolean = phoneW >= phoneH
+
+    /** The mirror's size in pixels for a [viewW]x[viewH] view: the phone's shape when it fills, else the view's. */
+    fun size(viewW: Int, viewH: Int, phoneW: Int, phoneH: Int): Pair<Int, Int> {
+        if (!fills(phoneW, phoneH) || phoneW <= 0 || phoneH <= 0 || viewW <= 0 || viewH <= 0) return viewW to viewH
+        val s = minOf(viewW.toFloat() / phoneW, viewH.toFloat() / phoneH)
+        return maxOf(1, Math.round(phoneW * s)) to maxOf(1, Math.round(phoneH * s))
+    }
+
+    /** A point on the car's view to the phone's pixels. */
+    fun toPhone(x: Float, y: Float, viewW: Int, viewH: Int, phoneW: Int, phoneH: Int): Pair<Float, Float> {
+        if (fills(phoneW, phoneH)) return x * phoneW / viewW to y * phoneH / viewH
+        // Upright: kept in shape, centred.
+        val scale = minOf(viewW.toFloat() / phoneW, viewH.toFloat() / phoneH)
+        val ox = (viewW - phoneW * scale) / 2
+        val oy = (viewH - phoneH * scale) / 2
+        return (x - ox) / scale to (y - oy) / scale
+    }
+}
