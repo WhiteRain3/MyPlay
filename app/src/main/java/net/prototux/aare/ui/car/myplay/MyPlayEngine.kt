@@ -61,6 +61,7 @@ import net.prototux.aare.host.templates.coversMap
 import net.prototux.aare.ui.car.rememberCanEnd
 import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarAppEntry
+import net.prototux.aare.ui.car.CarAppKind
 import net.prototux.aare.ui.car.CarFocusVisibility
 import net.prototux.aare.ui.car.CarScreen
 import net.prototux.aare.ui.car.CarUiState
@@ -332,6 +333,30 @@ internal fun MyPlayEngineShell(
         val w = model.front
         if (w == World.NAVIGATE) sources.openMaps() else { model.enter(w); freshWorld(w) }
     }
+    /**
+     * F2, the owner's first drive: an Apps world tile. MyPlay's built-in screens that the engine has
+     * its own page for open that page, not the old screen: Settings, the car's data, the phone (the
+     * Calls world) and the notifications (the bell's list). Any other app opens full screen (in the
+     * engine's frame, F1), the phone's screen and the browser among them.
+     */
+    fun openTile(app: CarAppEntry) {
+        val world = when (app.kind) {
+            CarAppKind.SETTINGS -> World.SETTINGS
+            CarAppKind.CAR_DATA -> World.CAR
+            CarAppKind.PHONE -> World.CALLS
+            else -> null
+        }
+        when {
+            world != null -> { model.enter(world); freshWorld(world) }
+            app.kind == CarAppKind.NOTIFICATIONS -> {
+                model.place = Place.Home
+                listOpen = true
+                listChosen = null
+                notes.markSeen()
+            }
+            else -> sources.apps.open(app)
+        }
+    }
     // N6-2: taps run what the screen shows now, not what it showed when the tap handler started.
     val currentActions by rememberUpdatedState(actionsOf)
     val currentApps by rememberUpdatedState(apps)
@@ -477,7 +502,7 @@ internal fun MyPlayEngineShell(
                 Key.DirectionDown -> padApps(FocusGraph.Direction.DOWN)
                 Key.DirectionLeft -> padApps(FocusGraph.Direction.LEFT)
                 Key.DirectionRight -> padApps(FocusGraph.Direction.RIGHT)
-                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> apps.getOrNull(appIndex)?.let(sources.apps::open)
+                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> apps.getOrNull(appIndex)?.let(::openTile)
                 else -> Unit
             }
             key in WORLD_KEYS
@@ -631,7 +656,7 @@ internal fun MyPlayEngineShell(
                                     .let { m ->
                                         val id = apps[global].id
                                         m.pointerInput(id) {
-                                            detectTapGestures { currentApps.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { appRing = it; sources.apps.open(currentApps[it]) } }
+                                            detectTapGestures { currentApps.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { appRing = it; openTile(currentApps[it]) } }
                                         }
                                     }
                                     .onGloballyPositioned { c -> c.boundsInRoot().let { appBoxes[global.toString()] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
