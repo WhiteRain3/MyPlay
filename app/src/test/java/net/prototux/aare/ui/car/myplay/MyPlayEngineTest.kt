@@ -435,6 +435,30 @@ class MyPlayEngineTest {
         assertEquals(15, PanelTimeout.valid(15))
     }
 
+    /** O1-1: a new language while the panel is open (DECK has no song slot): the panel is gone, the knob is the home's. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aNewLanguageClosesThePanel() {
+        val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply { enginePreview = true }
+        var skin by mutableStateOf<MyPlaySkin>(TestSkin)
+        rule.setContent {
+            CarTheme(night = state.night, theme = state.theme) {
+                MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
+                    navMap = { _, m -> Box(m.background(Color(0xFF2E4A3A))) }, overlay = {}, skin = skin,
+                    sources = EngineSources.of(state, actions, LocalContext.current))
+            }
+        }
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.Tab) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        rule.runOnIdle { skin = TestHandSkin }
+        rule.waitForIdle()
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertDoesNotExist()
+        // The hand takes the knob again: a push opens its front card's world.
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertTrue("the hand's push did something", rule.onAllNodes(hasTestTag(SLOT_MUSIC)).fetchSemanticsNodes().isNotEmpty() || asked.isNotEmpty())
+    }
+
     /** O1: without the player's leave to seek the panel has no progress bar stop. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun thePanelSeeksOnlyWithThePlayersLeave() {
