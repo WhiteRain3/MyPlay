@@ -46,7 +46,7 @@ param(
     [int]$Seconds = 0,
     # Where result folders go. Default: a folder "myplay-bench" next to the head unit folder.
     [string]$OutRoot,
-    # For the walks settings, maps, map-move, music and back-out: the place of the app to open in the app grid,
+    # For the walks settings, maps, map-move, music, back-out and waze-check: the place of the app to open in the app grid,
     # counted from 1 in the order the ring moves through the grid (see the grid-end pictures).
     [int]$Tile = 1,
     # For the walk map-move: how many clicks forward from where the maps app starts the ring reach
@@ -155,6 +155,14 @@ $Walks = [ordered]@{
     # the two pushes.
     'map-move'   = "$OpenGrid $ToTile " + (Get-Turns 23 $MapClicks) + " dpad:center@$(26 + 3 * $MapClicks) dpad:right@$(29 + 3 * $MapClicks) dpad:right@$(32 + 3 * $MapClicks) dpad:down@$(35 + 3 * $MapClicks) rotate:1@$(38 + 3 * $MapClicks) rotate:1@$(41 + 3 * $MapClicks) rotate:-1@$(44 + 3 * $MapClicks) dpad:center@$(47 + 3 * $MapClicks) key:4@$(50 + 3 * $MapClicks)"
     'music'      = "$OpenGrid $ToTile " + (Get-Turns 23 15) + ' dpad:center@68 ' + (Get-Turns 71 10) + ' ' + (Get-BackTurns 101 10) + ' key:4@131'
+    # The Waze check (plan N3; give the place of Waze as -Tile and a long -Seconds, such as 600,
+    # while driving a route or with Waze's own demo drive): opens Waze and leaves it, so the head
+    # unit saves a picture every 3 seconds. With MyPlay's "maps app text" check switched on
+    # (setting myplay_debug_nav_text), phone-log.txt gets every text Waze sends ("nav text" lines,
+    # marked "[looks like a speed]" when one does). Look in the pictures for: police and hazard
+    # reports (as alerts at the top, or only on Waze's own map), Waze's own speed read-out and
+    # speed limit sign (and where), and whether Waze keeps its icons out of MyPlay's corners.
+    'waze-check' = "$OpenGrid $ToTile"
     # Open the app grid, open tile -Tile, then Back twice within a second: the home screen should
     # show, also for an app that ignores Back. (Holding Back cannot be played from here.)
     'back-out'   = "$OpenGrid $ToTile key:4@26 key:4@27"
@@ -165,7 +173,7 @@ $Package = 'io.github.whiterain3.myplay'
 if ($ListWalks) {
     foreach ($name in $Walks.Keys) { Write-Host ("{0,-12} {1}" -f $name, $Walks[$name]) }
     Write-Host ''
-    Write-Host "settings, maps, map-move, music and back-out open tile number -Tile of the app grid (now $Tile)."
+    Write-Host "settings, maps, map-move, music, back-out and waze-check open tile number -Tile of the app grid (now $Tile)."
     Write-Host "map-move turns -MapClicks times (now $MapClicks) to reach the map before pushing."
     exit 0
 }

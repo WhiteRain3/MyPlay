@@ -336,6 +336,7 @@ class CarRuntime(
         mapFilter = settings.myplayMapFilter // MyPlay: map colour filter, the chosen look's
         ui.enginePreview = settings.myplayEnginePreview // MyPlay (N1): hidden preview of the new car screen
         ui.speedSource = settings.myplaySpeedSource // MyPlay (N3): the engine's speed source
+        NavTextCheck.on = settings.myplayDebugNavText // MyPlay (N3 check): maps apps' text in the log
         ui.textScale = CarTextSize.byId(settings.carTextSize).fontScale
         ui.controlScale = CarControlSize.byId(settings.carControlSize).scale
         ui.darkBar = settings.darkBar
@@ -365,7 +366,7 @@ class CarRuntime(
         when (key) {
             // MyPlay (K11-1): the map apps' day/night switch too.
             "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
-            "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", "myplay_speed_source" -> main.post { applyScreenSettings() }
+            "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", "myplay_speed_source", "myplay_debug_nav_text" -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
             "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }
@@ -384,6 +385,7 @@ class CarRuntime(
         running += this
         // Messages, directions and now playing all need the listener bound: make sure it is.
         CarNotificationListener.rebind(context)
+        NavTextCheck.reset() // MyPlay (N3 check): each connection logs its texts afresh
         applyScreenSettings()
         settings.registerListener(settingsListener)
         refreshApps()

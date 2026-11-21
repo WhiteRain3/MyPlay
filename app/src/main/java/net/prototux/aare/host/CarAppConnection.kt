@@ -334,6 +334,7 @@ class CarAppConnection(
             val refresh = templateId != null && isRefresh(screenStack, stack)
             screenStack = stack
             template = wrapper.template
+            NavTextCheck.note(info.packageName, "turn card") { NavTextCheck.templateTexts(wrapper.template) } // MyPlay (N3 check)
             // A refresh of the same screen (search results while typing, a navigation update, a
             // toggled row) keeps the on-screen state: what's typed, pan mode, the scroll position.
             if (!refresh) templateId = wrapper.id
@@ -502,6 +503,7 @@ class CarAppConnection(
 
         override fun showAlert(alertBundle: Bundleable) {
             val a = runCatching { alertBundle.get() as Alert }.getOrNull() ?: return
+            NavTextCheck.note(info.packageName, "alert") { NavTextCheck.alertTexts(a) } // MyPlay (N3 check)
             main.post { alert = a }
         }
 
@@ -525,6 +527,7 @@ class CarAppConnection(
 
         override fun updateTrip(tripBundle: Bundleable) {
             val t = runCatching { tripBundle.get() as Trip }.getOrNull() ?: return
+            NavTextCheck.note(info.packageName, "trip") { NavTextCheck.tripTexts(t) } // MyPlay (N3 check)
             main.post { trip = t; env.tripUpdated(this@CarAppConnection, t) }
         }
     }
