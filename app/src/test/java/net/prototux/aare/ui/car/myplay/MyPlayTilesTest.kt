@@ -116,4 +116,70 @@ class MyPlayTilesTest {
         rule.onNodeWithTag(SLOT_SETTINGS).assertExists()
         assertTrue(asked.isEmpty())
     }
+
+    // F3: with no maps app or no music app known, the Apps world with those apps, never the old grid.
+
+    private fun showNoChoice(apps: List<CarAppEntry>): CarUiState {
+        val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
+            enginePreview = true
+            this.apps.clear()
+            this.apps.addAll(apps)
+            activeNavAppId = null
+            nowPlaying = null
+            activeMediaAppId = null
+        }
+        rule.setContent {
+            CarTheme(night = state.night, theme = state.theme) {
+                MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
+                    navMap = { _, m -> Box(m.background(Color(0xFF2E4A3A))) }, overlay = {}, skin = TestSkin,
+                    sources = EngineSources.of(state, actions, LocalContext.current))
+            }
+        }
+        rule.waitForIdle()
+        return state
+    }
+
+    private val maps = entry("maps", CarAppKind.NAVIGATION)
+    private val radio = entry("radio", CarAppKind.MEDIA)
+    private val browser = entry("browser", CarAppKind.BROWSER)
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun navigateWithNoMapsAppShowsTheMapsApps() {
+        showNoChoice(listOf(browser, maps, radio))
+        // The dial opens on Navigate.
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        rule.onNodeWithTag(appTag(maps)).assertExists()
+        rule.onNodeWithTag(appTag(radio)).assertDoesNotExist()
+        rule.onNodeWithTag(appTag(browser)).assertDoesNotExist()
+        assertTrue("never the old grid: $asked", asked.isEmpty())
+        rule.onNodeWithTag(appTag(maps)).performClick()
+        assertEquals(listOf("app:maps"), asked)
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun withNoMapsAppAtAllEveryAppIsShown() {
+        showNoChoice(listOf(browser, radio))
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(appTag(radio)).assertExists()
+        rule.onNodeWithTag(appTag(browser)).assertExists()
+        assertTrue(asked.isEmpty())
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theLibraryWithNoMusicAppShowsTheMusicApps() {
+        showNoChoice(listOf(browser, maps, radio))
+        // Navigate, Music: one turn, then the library button (the only stop with nothing playing).
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC).assertExists()
+        rule.onNodeWithTag(MUSIC_LIBRARY).performClick()
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        rule.onNodeWithTag(appTag(radio)).assertExists()
+        rule.onNodeWithTag(appTag(maps)).assertDoesNotExist()
+        assertTrue("never the old grid: $asked", asked.isEmpty())
+    }
 }

@@ -154,6 +154,9 @@ internal fun MyPlayEngineShell(
     LaunchedEffect(model.place) { if (model.place != Place.Home) listOpen = false }
     // N13: the hand's push; set further down, once the worlds' state it resets is declared.
     var openFront: () -> Unit = {}
+    // F3: the maps app, or the music app; with none known, the Apps world with those apps (set further down).
+    var openMaps: () -> Unit = {}
+    var openMusic: () -> Unit = {}
     val actionsOf: Map<String, () -> Unit> = buildMap {
         if (notes.unseen > 0 && model.place == Place.Home && !listOpen) put(STOP_BELL) { listOpen = true; listChosen = null; notes.markSeen() }
         if (notice != null && model.place == Place.Home) {
@@ -166,9 +169,9 @@ internal fun MyPlayEngineShell(
             put(STOP_CALL, sources.phone::open)
             if (canEnd) put(STOP_HANG_UP, sources.calls::end)
         }
-        if (slots.turn != null) put(STOP_TURN, sources.openMaps)
+        if (slots.turn != null) put(STOP_TURN) { openMaps() }
         if (hand != null) put(STOP_HUB) { openFront() } else put(STOP_HUB) { model.push() }
-        if (slots.song != null && hand == null) put(STOP_SONG, sources.music::open)
+        if (slots.song != null && hand == null) put(STOP_SONG) { openMusic() }
     }
     // A stop that went away (the song ended) leaves the graph; the ring goes back to the hub.
     val live = boxes.filterKeys { it in actionsOf }
@@ -226,7 +229,7 @@ internal fun MyPlayEngineShell(
             put(MUSIC_NEXT, music::next)
         }
         // N7: the library drawn by the skin when the app offers one, else the app's own screen.
-        put(MUSIC_LIBRARY) { music.library()?.let { library = it } ?: music.open() }
+        put(MUSIC_LIBRARY) { music.library()?.let { library = it } ?: openMusic() }
         for (u in musicPage.transport.upNext) put(upNextStop(u.queueId)) { music.skipTo(u.queueId) }
     }
     val musicRing = musicChosen.takeIf { it in musicActions } ?: if (musicPage.song != null) MUSIC_PLAY else MUSIC_LIBRARY
@@ -297,7 +300,10 @@ internal fun MyPlayEngineShell(
         settingsVersion++
     }
     // N6: the Apps world: which app holds the ring (over all pages), and where this page's discs are.
-    val apps = sources.apps.apps
+    // F3: the Apps world opened as a fallback shows only the kinds asked for (maps apps, music apps).
+    var appsKinds by remember { mutableStateOf<Set<CarAppKind>?>(null) }
+    LaunchedEffect(model.place) { if (model.place != Place.InWorld(World.APPS)) appsKinds = null }
+    val apps = sources.apps.apps.let { all -> appsKinds?.let { k -> all.filter { it.kind in k }.ifEmpty { null } } ?: all }
     val perPage = skin.appsPerPage
     var appRing by remember { mutableStateOf(0) }
     val appIndex = appRing.coerceIn(0, (apps.size - 1).coerceAtLeast(0))
@@ -331,7 +337,23 @@ internal fun MyPlayEngineShell(
     // N13: the hand's push. Navigate is the maps app itself (as on the dial, N9); the others open their world.
     openFront = {
         val w = model.front
-        if (w == World.NAVIGATE) sources.openMaps() else { model.enter(w); freshWorld(w) }
+        if (w == World.NAVIGATE) openMaps() else { model.enter(w); freshWorld(w) }
+    }
+    /** F3: the Apps world with only apps of [kinds] (all apps when there are none of them). */
+    fun showApps(kinds: Set<CarAppKind>) {
+        model.enter(World.APPS)
+        freshWorld(World.APPS)
+        appsKinds = kinds
+    }
+    // F3, the owner's first drive: with no maps app (or no music app) known, the old app grid opened;
+    // now the Apps world does, with the maps apps (or the music apps) to choose from.
+    openMaps = {
+        if (!sources.picture && state.app(state.homeNavAppId ?: state.activeNavAppId) == null) showApps(setOf(CarAppKind.NAVIGATION))
+        else sources.openMaps()
+    }
+    openMusic = {
+        if (!sources.picture && state.app(state.nowPlaying?.appId ?: state.activeMediaAppId) == null) showApps(setOf(CarAppKind.MEDIA))
+        else sources.music.open()
     }
     /**
      * F2, the owner's first drive: an Apps world tile. MyPlay's built-in screens that the engine has
@@ -432,7 +454,7 @@ internal fun MyPlayEngineShell(
                     // N9, the dispatcher: Navigate is the maps app itself, full screen with its own search
                     // and destinations (the last used one); Back from it comes home. The dial closes.
                     model.back()
-                    sources.openMaps()
+                    openMaps()
                 } else {
                     model.push()
                     freshWorld(p.selected)
