@@ -108,6 +108,11 @@ internal fun MyPlayAppFrame(
             if (!frameHasFocus) runCatching { callFocus.requestFocus() }
         }
     }
+    // F1-4: keys down when the call starts ringing went down to the app; their ups go to it too, so
+    // the app (a mirrored app's key stop) never keeps a key pressed.
+    val down = remember { HashSet<Key>() }
+    val passUps = remember { HashSet<Key>() }
+    LaunchedEffect(ringing) { passUps.clear(); if (ringing) passUps.addAll(down) }
     val currentCall by rememberUpdatedState(callActions)
     val currentRing by rememberUpdatedState(callRing)
     fun callKey(key: Key, shift: Boolean): Boolean {
@@ -129,7 +134,16 @@ internal fun MyPlayAppFrame(
             Modifier.fillMaxSize().background(tokens.background).then(modifier).testTag(FRAME_TAG)
                 .onFocusChanged { frameHasFocus = it.hasFocus }
                 // Key ups of the call's keys are kept too, so the app never sees half a press.
-                .onPreviewKeyEvent { e -> ringing && (if (e.type == KeyEventType.KeyDown) callKey(e.key, e.isShiftPressed) else e.key in CALL_KEYS) },
+                .onPreviewKeyEvent { e ->
+                    when (e.type) {
+                        KeyEventType.KeyDown -> { down += e.key; ringing && callKey(e.key, e.isShiftPressed) }
+                        KeyEventType.KeyUp -> {
+                            down -= e.key
+                            ringing && e.key in CALL_KEYS && !passUps.remove(e.key)
+                        }
+                        else -> false
+                    }
+                },
         ) {
             Row(Modifier.fillMaxSize()) {
                 val rail = @Composable { skin.AppRail(actions::goHome, Modifier.fillMaxHeight().testTag(FRAME_RAIL_TAG)) }

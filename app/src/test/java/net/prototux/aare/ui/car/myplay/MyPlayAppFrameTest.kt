@@ -203,4 +203,33 @@ class MyPlayAppFrameTest {
         assertEquals(listOf(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP), sent)
         assertTrue("never home: $asked", "home" !in asked)
     }
+
+    /** F1-4: a key held as the call starts ringing: its up still goes to the app (no key left pressed). */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aKeyHeldAsTheCallRingsIsReleasedInTheApp() {
+        Shadows.shadowOf(rule.activity.application).grantPermissions(android.Manifest.permission.ANSWER_PHONE_CALLS)
+        val sent = mutableListOf<Int>()
+        val mirror = androidx.compose.ui.focus.FocusRequester()
+        val s = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
+            enginePreview = true
+            screen = CarScreen.App("music")
+        }
+        state = s
+        rule.setContent {
+            CarTheme(night = s.night, theme = s.theme) {
+                CarShell(s, actions, appContent = { _, m ->
+                    net.prototux.aare.ui.car.MirroredKeyStop(net.prototux.aare.car.MirroredKeys.TurnMode.UP_DOWN, { action, _ -> sent += action },
+                        m.focusRequester(mirror).testTag("app_mirror"))
+                }, navMap = { _, m -> Box(m) })
+            }
+        }
+        rule.waitForIdle()
+        rule.runOnIdle { mirror.requestFocus() }
+        rule.onNodeWithTag("app_mirror").performKeyInput { keyDown(Key.DirectionCenter) }
+        rule.runOnIdle { s.call = CarCall(true, "Anna K.", 1L) }
+        rule.waitForIdle()
+        rule.onNodeWithTag("app_mirror").performKeyInput { keyUp(Key.DirectionCenter) }
+        assertEquals("down, then its up: nothing left pressed", listOf(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.ACTION_UP), sent)
+        assertTrue("the held key did not answer the call: $asked", "answer" !in asked)
+    }
 }
