@@ -42,6 +42,7 @@ import net.prototux.aare.Settings
 import net.prototux.aare.host.templates.myplayDebugMapAreas
 import net.prototux.aare.ui.theme.MapColourFilter
 import net.prototux.aare.ui.theme.myplayMapFilter
+import net.prototux.aare.ui.car.myplay.KEY_ENGINE_LANGUAGE
 import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
 import net.prototux.aare.ui.car.myplay.myplayEnginePreview
 import net.prototux.aare.car.Calls
@@ -366,9 +367,7 @@ class CarRuntime(
 
     private val settingsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
-            // MyPlay (K11-1): the map apps' day/night switch too.
-            "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
-            "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", "myplay_engine_language", "myplay_speed_source", "myplay_debug_nav_text" -> main.post { applyScreenSettings() }
+            in SCREEN_SETTING_KEYS -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
             "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }
@@ -875,6 +874,16 @@ class CarRuntime(
     }
 
     companion object {
+        /**
+         * The settings [applyScreenSettings] reads: a change to any of them while the car is
+         * connected is applied at once (MyPlay K11-1: the map apps' day/night switch too; LG-1: the
+         * new screen's language). A key [applyScreenSettings] reads must be here.
+         */
+        internal val SCREEN_SETTING_KEYS = setOf(
+            "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
+            "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", KEY_ENGINE_LANGUAGE, "myplay_speed_source", "myplay_debug_nav_text",
+        )
+
         private const val TAG = "AareRuntime"
         fun carId(app: CarAppInfo) = "car:${app.service.flattenToShortString()}"
         fun mediaId(pkg: String) = "media:$pkg"
