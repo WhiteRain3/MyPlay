@@ -243,7 +243,9 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
                         w, isFront, ringed && isFront, song, night,
                         Modifier.align(Alignment.BottomEnd)
                             .graphicsLayer { rotationZ = angle; transformOrigin = TransformOrigin(0.5f, FAN_PIVOT_Y) }
-                            .then(if (isFront) Modifier else Modifier.pointerInput(w) { detectTapGestures { pick(w) } })
+                            // Every card, the front one too, so a tap on the front card never falls
+                            // through to a card behind it (whose unrotated box can reach under it).
+                            .pointerInput(w) { detectTapGestures { pick(w) } }
                             .testTag(deckCardTag(w)),
                     )
                 }

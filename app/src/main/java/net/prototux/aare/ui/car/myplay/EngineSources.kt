@@ -137,7 +137,10 @@ data class EngineSources(
     val carLines: @Composable () -> List<Pair<String, String>> = {
         val car by CarData.state.collectAsState()
         val proj by net.prototux.aare.service.ProjectionService.state.collectAsState()
-        net.prototux.aare.ui.car.carDataLines(car, proj)
+        // N20, the owner's drive: why the speed limit shows or not, while a speed is on the screen.
+        val why = SpeedLimitDiag.why
+        net.prototux.aare.ui.car.carDataLines(car, proj) +
+            listOfNotNull(why?.let { androidx.compose.ui.res.stringResource(net.prototux.aare.R.string.myplay_car_line_speed_limit) to it.line })
     },
     /** N9: the settings of the Settings world. */
     val settings: SettingsSource = object : SettingsSource { override fun items() = emptyList<SettingItem>() },

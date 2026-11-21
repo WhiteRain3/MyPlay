@@ -70,6 +70,8 @@ import net.prototux.aare.ui.car.GestureLineOverlay
 import net.prototux.aare.ui.car.Wallpaper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.prototux.aare.car.LimitWhy
+import net.prototux.aare.car.LimitFile
 
 /**
  * MyPlay (plan phase N): the engine of MyPlay's own car screen, drawn by a [MyPlaySkin].
@@ -536,7 +538,7 @@ internal fun MyPlayEngineShell(
                 if (home && hand != null) {
                     // N13: the hand, bottom right; it is the hub's stop (a push opens the front card).
                     ringed(STOP_HUB) {
-                        skin.Hand(model.front, slots.song, LocalStopRinged.current, { w -> chosen = STOP_HUB; model.front = w },
+                        skin.Hand(model.front, slots.song, LocalStopRinged.current, { w -> chosen = STOP_HUB; if (w == model.front) openFront() else model.front = w },
                             edge.align(Alignment.BottomEnd).slot(Slot.HUB).stop(STOP_HUB))
                     }
                 } else if (home) ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }
@@ -694,15 +696,23 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
     val car by source.car.collectAsState()
     // N20: whether the phone keeps a speed limit file (looked at off the main thread, now and then:
     // the phone may download one while the car is connected).
-    val limitsOn by produceState(false, limits, state.speedSource) {
-        value = false
+    val limitFile by produceState(LimitFile.NO_FILE, limits, state.speedSource) {
+        value = LimitFile.NO_FILE
         if (limits == null || state.speedSource != SpeedSourceMode.AUTO) return@produceState
         while (true) {
-            value = withContext(Dispatchers.IO) { limits.available() }
+            value = withContext(Dispatchers.IO) { limits.file() }
             delay(LIMITS_RECHECK_MS)
         }
     }
-    val inputs = SpeedFeed.Inputs(state.speedSource, shown = true, mapsRunning = state.activeNavAppId != null, car = car, limitsOn = limitsOn)
+    val inputs = SpeedFeed.Inputs(state.speedSource, shown = true, mapsRunning = state.activeNavAppId != null, car = car,
+        limitsOn = limitFile == LimitFile.READY, limitFile = limitFile)
+    // The owner's drive: why the limit shows or not goes in the connection log (the Car check) when it
+    // changes, and into the Car world. Never a position, only the reason.
+    val why = feed.why
+    LaunchedEffect(why) {
+        SpeedLimitDiag.why = why
+        if (why != null) net.prototux.aare.DiagLog.add("Speed limit: ${why.line}")
+    }
     // Again each second, so a speed the car stopped sending goes away.
     LaunchedEffect(feed, inputs) {
         while (true) {
@@ -710,11 +720,16 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
             delay(SPEED_TICK_MS)
         }
     }
-    DisposableEffect(feed) { onDispose { feed.release(); limits?.close() } }
+    DisposableEffect(feed) { onDispose { feed.release(); limits?.close(); SpeedLimitDiag.why = null } }
     content(feed.reading)
 }
 
 private const val SPEED_TICK_MS = 1_000L
+
+/** N20: the speed limit's last reason (while a speed is on the screen), for the Car world's line. */
+internal object SpeedLimitDiag {
+    var why by mutableStateOf<LimitWhy?>(null)
+}
 private const val LIMITS_RECHECK_MS = 60_000L
 
 /** How long a notice shows (as the car's notice overlay). */

@@ -368,7 +368,7 @@ class CarRuntime(
         when (key) {
             // MyPlay (K11-1): the map apps' day/night switch too.
             "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
-            "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", "myplay_speed_source", "myplay_debug_nav_text" -> main.post { applyScreenSettings() }
+            "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", "myplay_engine_language", "myplay_speed_source", "myplay_debug_nav_text" -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
             "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }

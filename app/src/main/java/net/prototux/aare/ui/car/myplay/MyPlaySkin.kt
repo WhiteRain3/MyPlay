@@ -210,7 +210,8 @@ interface MyPlaySkin {
 
     /**
      * N13: the hand at home, bottom right, with [front] in front; the music card carries [song].
-     * [pick] brings a card that was tapped to the front. Only for a skin with a [hand].
+     * Every card takes taps with [pick]: the front card opens, any other comes to the front (so a
+     * tap is never caught by a card behind the one that was hit). Only for a skin with a [hand].
      */
     @Composable fun Hand(front: World, song: SongSlot?, ringed: Boolean, pick: (World) -> Unit, modifier: Modifier) = Unit
 

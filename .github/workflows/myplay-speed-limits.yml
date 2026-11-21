@@ -5,6 +5,11 @@
 # (ODbL 1.0) like the data it comes from; the release says so. The release is never marked as the
 # latest one (the app's update check reads the latest release), and it is a prerelease for the same
 # reason.
+#
+# The same file is on main (for the monthly schedule, which GitHub runs from the default branch
+# only) and on claude/myplay. main holds upstream AARE's code, not MyPlay's builder, so a run from
+# main (the schedule, or by hand there) checks out the latest MyPlay release: a tip the Reviewer
+# cleared (WF-2). Anything else builds the commit it was started on.
 name: MyPlay speed limits
 
 on:
@@ -38,7 +43,26 @@ jobs:
       EXTRACT: https://download.geofabrik.de/europe/lithuania-latest.osm.pbf
       TAG: speed-limits
     steps:
+      - name: Which code to build
+        id: code
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = schedule ] || [ "$GITHUB_REF" = refs/heads/main ]; then
+            # The newest MyPlay release ("latest" is always an app release: speed-limits never is).
+            ref=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+            case "$ref" in
+              myplay-v*) ;;
+              *) echo "The latest release is \"$ref\", not a MyPlay release: not building." >&2; exit 1 ;;
+            esac
+          else
+            ref="$GITHUB_SHA"
+          fi
+          echo "Building $ref"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ steps.code.outputs.ref }}
       - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
           distribution: temurin
@@ -84,7 +108,7 @@ jobs:
           https://www.openstreetmap.org/copyright. The code that builds them is in this repository
           (`speedlimit/`), under the GPL.
           EOF
-            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$(git rev-parse HEAD)" \
               --title "Speed limit files (map data)" --notes-file work/notes.md --prerelease --latest=false
           fi
           # The file first, then the manifest that describes it, so the phone never sees a manifest
