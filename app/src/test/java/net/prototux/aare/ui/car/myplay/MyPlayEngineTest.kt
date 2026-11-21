@@ -169,10 +169,11 @@ class MyPlayEngineTest {
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         engine.performKeyInput { pressKey(Key.DirectionDown) }
         ringed(STOP_HUB)
-        // N6: pad right on the home is the next song while one is there; the ring stays.
+        // N6-1: the pad alone reaches the song (right from the hub); right again, with nothing
+        // further right, is the next song, and the ring stays on the song.
         engine.performKeyInput { pressKey(Key.DirectionRight) }
-        ringed(STOP_HUB)
-        engine.performKeyInput { pressKey(Key.Tab) }
+        ringed(STOP_SONG)
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
         ringed(STOP_SONG)
         engine.performKeyInput { pressKey(Key.Enter) }
         assertEquals(listOf("app:maps", "next", "app:music"), asked)
@@ -306,6 +307,23 @@ class MyPlayEngineTest {
         rule.onNodeWithTag(MUSIC_LIBRARY).assertIsSelected()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         assertEquals(1, asked.size)
+    }
+
+    /** N6-2: a tap opens the app the disc shows now, also after the list changed under it. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aTapOpensTheAppShownAfterTheListChanged() {
+        val state = show()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(3) { engine.performKeyInput { pressKey(Key.DirectionRight) } }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        // The first app goes away (uninstalled, or moved on the phone): every disc now shows another app.
+        rule.runOnIdle { state.apps.removeAt(0) }
+        rule.waitForIdle()
+        val first = state.launcherApps.first()
+        rule.onNodeWithTag(appTag(first)).performClick()
+        assertEquals(listOf("app:${first.id}"), asked)
     }
 
     @Test fun appsPagesWrapAndPage() {

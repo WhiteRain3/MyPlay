@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -165,6 +166,8 @@ internal fun MyPlayEngineShell(
     val pageApps = apps.drop(page * perPage).take(perPage)
     val appBoxes = remember(page) { mutableStateMapOf<String, FocusGraph.Box>() }
     fun padApps(dir: FocusGraph.Direction) {
+        // N6-3: before this page is laid out there is nothing to move to: wait rather than turn the page.
+        if (appBoxes.isEmpty()) return
         val next = FocusGraph.pad(appBoxes, appIndex.toString(), dir)?.toIntOrNull()
         val pages = AppsPages.pages(apps.size, perPage)
         appRing = when {
@@ -175,6 +178,10 @@ internal fun MyPlayEngineShell(
             else -> appIndex
         }
     }
+    // N6-2: taps run what the screen shows now, not what it showed when the tap handler started.
+    val currentActions by rememberUpdatedState(actionsOf)
+    val currentApps by rememberUpdatedState(apps)
+    val currentMusicActions by rememberUpdatedState(musicActions)
     val covers = remember { MapCoverRegistry() }
     val focus = remember { FocusRequester() }
     // Not in the phone's picture of the car screen: it must not pull focus into the phone's own UI.
@@ -187,10 +194,12 @@ internal fun MyPlayEngineShell(
             Key.DirectionUp -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.UP)); true }
             Key.DirectionDown -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.DOWN)); true }
             Key.DirectionLeft -> { move(FocusGraph.pad(live, ring, FocusGraph.Direction.LEFT)); true }
-            // N6, the ORBIT sheet: on the home, pad right is the next song (one step) while a song
-            // is there; without one it moves the ring as the other directions do.
+            // N6, the ORBIT sheet: pad right is the next song. N6-1: it first moves the ring, as the
+            // other directions do (else a car with a pad and no knob could never reach the song);
+            // with nothing further right (the ring on the song) it plays the next song.
             Key.DirectionRight -> {
-                if (slots.song != null) sources.music.next() else move(FocusGraph.pad(live, ring, FocusGraph.Direction.RIGHT))
+                val to = FocusGraph.pad(live, ring, FocusGraph.Direction.RIGHT)
+                if (to != null) move(to) else if (slots.song != null) sources.music.next()
                 true
             }
             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> { actionsOf[ring]?.invoke(); true }
@@ -259,7 +268,7 @@ internal fun MyPlayEngineShell(
                 fun Modifier.stop(id: String): Modifier = this
                     // A tap does what a push does. Not clickable(): that would make the slot a
                     // Compose focus stop, and a knob turn could then leave the engine (N2-1).
-                    .pointerInput(id) { detectTapGestures { chosen = id; actionsOf[id]?.invoke() } }
+                    .pointerInput(id) { detectTapGestures { chosen = id; currentActions[id]?.invoke() } }
                     .onGloballyPositioned { c -> c.boundsInRoot().let { boxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
                     .semantics { selected = ring == id }
                     .let { if (showRing && ring == id && !skin.drawsFocus) it.border(3.dp, tokens.accent, RoundedCornerShape(tokens.corner)) else it }
@@ -285,7 +294,7 @@ internal fun MyPlayEngineShell(
                             musicPage, musicRing,
                             { id ->
                                 Modifier
-                                    .pointerInput(id) { detectTapGestures { musicChosen = id; musicActions[id]?.invoke() } }
+                                    .pointerInput(id) { detectTapGestures { musicChosen = id; currentMusicActions[id]?.invoke() } }
                                     .onGloballyPositioned { c -> c.boundsInRoot().let { musicBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
                                     .semantics { selected = id == musicRing }
                                     .testTag(id)
@@ -299,7 +308,10 @@ internal fun MyPlayEngineShell(
                             { i ->
                                 val global = first + i
                                 Modifier
-                                    .pointerInput(global) { detectTapGestures { appRing = global; apps.getOrNull(global)?.let(sources.apps::open) } }
+                                    // N6-2: keyed on the app, and opening the app shown now, should the list change.
+                                    .pointerInput(apps[global].id) {
+                                        detectTapGestures { currentApps.indexOfFirst { it.id == apps[global].id }.takeIf { it >= 0 }?.let { appRing = it; sources.apps.open(currentApps[it]) } }
+                                    }
                                     .onGloballyPositioned { c -> c.boundsInRoot().let { appBoxes[global.toString()] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
                                     .semantics { selected = global == appIndex }
                                     .testTag(appTag(apps[global]))
