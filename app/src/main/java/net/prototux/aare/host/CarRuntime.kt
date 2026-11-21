@@ -41,6 +41,7 @@ import net.prototux.aare.Settings
 import net.prototux.aare.host.templates.myplayDebugMapAreas
 import net.prototux.aare.ui.theme.MapColourFilter
 import net.prototux.aare.ui.theme.myplayMapFilter
+import net.prototux.aare.ui.car.myplay.myplayEnginePreview
 import net.prototux.aare.car.Calls
 import net.prototux.aare.car.DashboardInfo
 import net.prototux.aare.media.MediaHub
@@ -332,6 +333,7 @@ class CarRuntime(
         ui.homeMaps = settings.myplayHomeMaps // MyPlay (K9)
         net.prototux.aare.host.templates.MapAreaDebug.show = settings.myplayDebugMapAreas // MyPlay: Waze centring check
         mapFilter = settings.myplayMapFilter // MyPlay: map colour filter, the chosen look's
+        ui.enginePreview = settings.myplayEnginePreview // MyPlay (N1): hidden preview of the new car screen
         ui.textScale = CarTextSize.byId(settings.carTextSize).fontScale
         ui.controlScale = CarControlSize.byId(settings.carControlSize).scale
         ui.darkBar = settings.darkBar
@@ -361,7 +363,7 @@ class CarRuntime(
         when (key) {
             // MyPlay (K11-1): the map apps' day/night switch too.
             "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
-            "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter" -> main.post { applyScreenSettings() }
+            "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview" -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
             "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }

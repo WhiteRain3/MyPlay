@@ -1,0 +1,90 @@
+package net.prototux.aare.ui.car.myplay
+
+import android.text.format.DateFormat
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+/**
+ * MyPlay (N1): a plain skin for the engine's tests and the hidden preview: grey boxes with text,
+ * the chosen one outlined. It shows that every slot is placed and filled, nothing more. Not a
+ * design language; ORBIT (N4, N5) is the first real one.
+ */
+object TestSkin : MyPlaySkin {
+    override val id = "test"
+
+    override fun tokens(night: Boolean) = if (night) {
+        SkinTokens(Color(0xFF101214), Color(0xE0262A2E), Color(0xFFEDEFF1), Color(0xFFA0A6AD), Color(0xFF4FC3F7), Color(0xFF00222E), corner = 12.dp)
+    } else {
+        SkinTokens(Color(0xFFF3F4F6), Color(0xE0FFFFFF), Color(0xFF15181B), Color(0xFF5A6169), Color(0xFF0277BD), Color.White, corner = 12.dp)
+    }
+
+    @Composable
+    private fun Box(modifier: Modifier, content: @Composable () -> Unit) {
+        val t = LocalSkinTokens.current
+        Column(modifier.clip(RoundedCornerShape(t.corner)).background(t.surface).padding(12.dp)) { content() }
+    }
+
+    @Composable
+    override fun Turn(turn: TurnSlot, modifier: Modifier) = Box(modifier) {
+        val t = LocalSkinTokens.current
+        turn.distance?.let { Text(it, color = t.onSurface, fontSize = 28.sp, fontWeight = FontWeight.Bold) }
+        turn.road?.let { Text(it, color = t.dim, fontSize = 18.sp, maxLines = 2) }
+    }
+
+    @Composable
+    override fun Trip(trip: TripSlot, modifier: Modifier) = Box(modifier) {
+        val t = LocalSkinTokens.current
+        val context = LocalContext.current
+        trip.arrival?.let { Text(DateFormat.getTimeFormat(context).format(it), color = t.accent, fontSize = 24.sp) }
+        trip.distanceLeft?.let { Text(it, color = t.dim, fontSize = 16.sp) }
+    }
+
+    @Composable
+    override fun Song(song: SongSlot, modifier: Modifier) = Box(modifier) {
+        val t = LocalSkinTokens.current
+        Text(song.title, color = t.onSurface, fontSize = 20.sp, maxLines = 1)
+        Text(song.subtitle, color = t.dim, fontSize = 16.sp, maxLines = 1)
+    }
+
+    @Composable
+    override fun Status(modifier: Modifier) = Box(modifier) {
+        val t = LocalSkinTokens.current
+        val context = LocalContext.current
+        Text(DateFormat.getTimeFormat(context).format(System.currentTimeMillis()), color = t.onSurface, fontSize = 22.sp)
+    }
+
+    @Composable
+    override fun Chooser(selected: World, modifier: Modifier) = Box(modifier) {
+        val t = LocalSkinTokens.current
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (w in World.entries) {
+                val on = w == selected
+                Text(
+                    w.name, color = if (on) t.onAccent else t.onSurface, fontSize = 18.sp,
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(if (on) t.accent else Color.Transparent)
+                        .border(1.dp, t.dim, RoundedCornerShape(8.dp)).padding(horizontal = 12.dp, vertical = 8.dp),
+                )
+            }
+        }
+    }
+
+    @Composable
+    override fun WorldPlaceholder(world: World, modifier: Modifier) = Box(modifier) {
+        val t = LocalSkinTokens.current
+        Text(world.name, color = t.onSurface, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+    }
+}
