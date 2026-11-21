@@ -67,6 +67,27 @@ sealed interface LimitShown {
     data object Unknown : LimitShown
 }
 
+/** N20: whether the phone keeps a speed limit file to read. */
+enum class LimitFile { NO_REGION, NO_FILE, READY }
+
+/**
+ * N20, the owner's drive: why the speed limit shows or not, for the connection log (the Car check)
+ * and the Car world. In order: the first that holds is the reason. Lines in plain English.
+ */
+enum class LimitWhy(val line: String) {
+    SOURCE_OFF("not shown: the speed source is Off"),
+    CAR_ONLY("not shown: the speed source is Car only (the limit needs Auto, for the phone's location)"),
+    NO_REGION("not shown: no region chosen on the phone (MyPlay, Speed)"),
+    NO_FILE("not shown: the region's file is not downloaded yet (MyPlay, Speed)"),
+    NOT_CONNECTED("not shown: no car connected"),
+    NO_MAPS_APP("not shown: no maps app running (its location fixes are the ones used)"),
+    NO_PERMISSION("not shown: MyPlay has no location permission on the phone"),
+    NO_FIX("no limit known: no location fix yet (the maps app has not asked for one lately)"),
+    NO_SPEED("not shown: no speed known (the car sends none and no phone fix has a speed)"),
+    NO_ROAD("no limit known: no road matched here, or not sure which"),
+    SHOWN("shown"),
+}
+
 /** N20: how far over the limit before the speed changes colour ([SpeedRules.MARGIN_OFF]: never). Backed up. */
 const val KEY_SPEED_LIMIT_MARGIN = "myplay_speed_limit_margin"
 var Settings.myplaySpeedLimitMargin: Int
@@ -108,6 +129,24 @@ object SpeedRules {
     fun goodForLimit(fix: PhoneFix): Boolean =
         fix.accuracyM != null && fix.accuracyM <= Matcher.MAX_ACCURACY_M && (fix.metersPerSecond != null || fix.bearingDeg != null)
 
+    /** N20: why the limit shows or not ([LimitWhy]); the first reason that holds. */
+    fun limitWhy(
+        mode: SpeedSourceMode, file: LimitFile, connected: Boolean, mapsRunning: Boolean, listening: Boolean,
+        fixFresh: Boolean, hasSpeed: Boolean, limit: LimitShown?,
+    ): LimitWhy = when {
+        mode == SpeedSourceMode.OFF -> LimitWhy.SOURCE_OFF
+        mode == SpeedSourceMode.CAR -> LimitWhy.CAR_ONLY
+        file == LimitFile.NO_REGION -> LimitWhy.NO_REGION
+        file == LimitFile.NO_FILE -> LimitWhy.NO_FILE
+        !connected -> LimitWhy.NOT_CONNECTED
+        !mapsRunning -> LimitWhy.NO_MAPS_APP
+        !listening -> LimitWhy.NO_PERMISSION
+        !fixFresh -> LimitWhy.NO_FIX
+        !hasSpeed -> LimitWhy.NO_SPEED
+        limit !is LimitShown.Known -> LimitWhy.NO_ROAD
+        else -> LimitWhy.SHOWN
+    }
+
     /** N20: over the limit by more than [margin] (never with [MARGIN_OFF] or no limit known). */
     fun over(kmh: Int, limit: LimitShown?, margin: Int): Boolean =
         margin != MARGIN_OFF && limit is LimitShown.Known && kmh > limit.kmh + margin
@@ -144,6 +183,8 @@ interface PhoneFixes {
 interface SpeedLimits {
     /** Whether there is a file to read (a region is chosen and its file is there). */
     fun available(): Boolean
+    /** Why not, when not ([available] may touch the disk, so may this). */
+    fun file(): LimitFile = if (available()) LimitFile.READY else LimitFile.NO_FILE
     fun lookup(fix: PhoneFix, onResult: (LimitShown) -> Unit)
     fun close()
 }
@@ -217,7 +258,13 @@ class SpeedFeed(
     data class Inputs(
         val mode: SpeedSourceMode, val shown: Boolean, val mapsRunning: Boolean, val car: CarData.State,
         val limitsOn: Boolean = false, val margin: Int = SpeedRules.MARGIN_DEFAULT,
+        /** Why there is no file, when [limitsOn] is false (for [why] only). */
+        val limitFile: LimitFile = if (limitsOn) LimitFile.READY else LimitFile.NO_FILE,
     )
+
+    /** N20: why the limit shows or not, as of the last [update] (null before the first, or with no limit lookup at all). */
+    var why by mutableStateOf<LimitWhy?>(null)
+        private set
 
     fun update(inputs: Inputs) {
         last = inputs
@@ -232,6 +279,11 @@ class SpeedFeed(
         }
         if (!limitsOn) forgetLimit()
         val base = if (inputs.shown) SpeedRules.pick(inputs.mode, carMps, phoneMps.takeIf { listening }, phoneAt, now) else null
+        why = if (!inputs.shown || limits == null) null else SpeedRules.limitWhy(
+            inputs.mode, if (limitsOn) LimitFile.READY else inputs.limitFile, inputs.car.connected, inputs.mapsRunning, listening,
+            limitAt?.let { now - it in 0..SpeedRules.PHONE_FRESH_MS } == true || (phoneAt?.let { now - it in 0..SpeedRules.PHONE_FRESH_MS } == true),
+            base != null, limit,
+        )
         reading = if (base == null || !limitsOn || inputs.mode != SpeedSourceMode.AUTO) base else {
             // A limit only from a fresh fix; otherwise not known.
             val shown = limit.takeIf { listening && limitAt?.let { now - it in 0..SpeedRules.PHONE_FRESH_MS } == true } ?: LimitShown.Unknown
@@ -273,6 +325,7 @@ class SpeedFeed(
         stopFixes()
         last = null
         reading = null
+        why = null
     }
 
     private fun stopFixes() {

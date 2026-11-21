@@ -68,4 +68,5 @@
     <string name="myplay_deck_hint_car" translatable="false">Fuel, temperature, tyres, doors</string>
     <string name="myplay_deck_hint_settings" translatable="false">What you can change from the car</string>
     <string name="myplay_deck_hint_apps" translatable="false">Push to see all your apps</string>
+    <string name="myplay_car_line_speed_limit" translatable="false">Speed limit</string>
 </resources>

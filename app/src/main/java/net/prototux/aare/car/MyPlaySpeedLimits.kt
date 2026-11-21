@@ -34,13 +34,21 @@ class FileSpeedLimits(context: Context) : SpeedLimits {
     private var opened: Triple<String, Long, Long>? = null
     private var matcher: Matcher? = null
 
-    private fun file(): File? {
+    private fun regionFile(): File? {
         val region = settings.myplaySpeedLimitRegion
         if (region.isEmpty()) return null
         return SpeedLimitFiles.file(app.filesDir, region).takeIf { it.isFile && it.length() > 0 }
     }
 
-    override fun available(): Boolean = runCatching { file() != null }.getOrDefault(false)
+    override fun available(): Boolean = runCatching { regionFile() != null }.getOrDefault(false)
+
+    override fun file(): LimitFile = runCatching {
+        when {
+            settings.myplaySpeedLimitRegion.isEmpty() -> LimitFile.NO_REGION
+            regionFile() == null -> LimitFile.NO_FILE
+            else -> LimitFile.READY
+        }
+    }.getOrDefault(LimitFile.NO_FILE)
 
     override fun lookup(fix: PhoneFix, onResult: (LimitShown) -> Unit) {
         runCatching {
@@ -52,7 +60,7 @@ class FileSpeedLimits(context: Context) : SpeedLimits {
     }
 
     private fun match(fix: PhoneFix): LimitShown {
-        val f = file() ?: return LimitShown.Unknown
+        val f = regionFile() ?: return LimitShown.Unknown
         val key = Triple(f.path, f.length(), f.lastModified())
         if (key != opened) {
             matcher = null

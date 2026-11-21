@@ -237,4 +237,54 @@ class MyPlaySpeedTest {
         feed.update(inputs.copy(car = carAt(10f, now)))
         assertEquals(LimitShown.Unknown, feed.reading!!.limit)
     }
+
+    // The owner's drive: why the limit shows or not.
+
+    @Test fun theFirstReasonThatHoldsIsTheOneGiven() {
+        fun why(mode: SpeedSourceMode = SpeedSourceMode.AUTO, file: LimitFile = LimitFile.READY, connected: Boolean = true, maps: Boolean = true,
+                listening: Boolean = true, fresh: Boolean = true, speed: Boolean = true, limit: LimitShown? = LimitShown.Known(50)) =
+            SpeedRules.limitWhy(mode, file, connected, maps, listening, fresh, speed, limit)
+        assertEquals(LimitWhy.SHOWN, why())
+        assertEquals(LimitWhy.SOURCE_OFF, why(mode = SpeedSourceMode.OFF, file = LimitFile.NO_REGION))
+        assertEquals(LimitWhy.CAR_ONLY, why(mode = SpeedSourceMode.CAR))
+        assertEquals(LimitWhy.NO_REGION, why(file = LimitFile.NO_REGION, maps = false))
+        assertEquals(LimitWhy.NO_FILE, why(file = LimitFile.NO_FILE))
+        assertEquals(LimitWhy.NOT_CONNECTED, why(connected = false, maps = false))
+        assertEquals(LimitWhy.NO_MAPS_APP, why(maps = false, listening = false))
+        assertEquals(LimitWhy.NO_PERMISSION, why(listening = false, fresh = false))
+        assertEquals(LimitWhy.NO_FIX, why(fresh = false, limit = null))
+        assertEquals(LimitWhy.NO_SPEED, why(speed = false))
+        assertEquals(LimitWhy.NO_ROAD, why(limit = LimitShown.Unknown))
+    }
+
+    @Test fun theFeedSaysWhy() {
+        val inputs = SpeedFeed.Inputs(SpeedSourceMode.AUTO, shown = true, mapsRunning = true, car = carAt(10f, now), limitsOn = true)
+        // Without the location permission.
+        val denied = SpeedFeed(FakeFixes(permitted = false), FakeLimits()) { now }
+        denied.update(inputs)
+        assertEquals(LimitWhy.NO_PERMISSION, denied.why)
+        // No region chosen, or no file.
+        val phone = FakeFixes()
+        val limits = FakeLimits()
+        val feed = SpeedFeed(phone, limits) { now }
+        feed.update(inputs.copy(limitsOn = false, limitFile = LimitFile.NO_REGION))
+        assertEquals(LimitWhy.NO_REGION, feed.why)
+        feed.update(inputs.copy(limitsOn = false, limitFile = LimitFile.NO_FILE))
+        assertEquals(LimitWhy.NO_FILE, feed.why)
+        // With a file: waiting for a fix, then the answer.
+        feed.update(inputs)
+        assertEquals(LimitWhy.NO_FIX, feed.why)
+        phone.onFix!!(fix(10f, now))
+        assertEquals(LimitWhy.NO_ROAD, feed.why)
+        limits.answer(LimitShown.Known(50))
+        assertEquals(LimitWhy.SHOWN, feed.why)
+        feed.update(inputs.copy(mode = SpeedSourceMode.CAR))
+        assertEquals(LimitWhy.CAR_ONLY, feed.why)
+        feed.release()
+        assertNull(feed.why)
+        // No limit lookup at all (the phone's picture): no reason either.
+        val none = SpeedFeed(FakeFixes()) { now }
+        none.update(inputs)
+        assertNull(none.why)
+    }
 }
