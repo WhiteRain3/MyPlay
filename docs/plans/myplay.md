@@ -548,11 +548,13 @@ progress bar, push to answer a call; the pointer for mirrored apps comes with G2
 
 **R6. The on-screen line for gestures.**
 - Verified by: bench pictures after a hold and a double push.
+- Built (`2b17f1d`): setting `myplay_gesture_line`, on by default. Check: walk `gestures`.
 
 **R7. The bench script learns holds.** New events: `hold:CODE,MS`, `double:CODE`,
 `holdturn:CODE,N` (needs a small change to the desktop head unit to send a key down, wait, then
 up), and walks `gestures` and `pad`.
 - Verified by: the Tester runs them.
+- Built (`9e5888b`, `9e320a4`). Bench codes until R8: 23 knob push, 85 wheel click, 82 Menu, 4 Back.
 
 **R8. The real codes.** When the owner's connection log arrives: fill in which code is the
 wheel, the knob push, the pad, Menu and Back; if the wheel and knob share codes, say so to the

@@ -147,9 +147,12 @@ The path of the head unit folder must not contain a space (`C:\myplay\aare-headu
 | `back-out` | opens tile `-Tile`, then Back twice in quick succession | K3 |
 | `music` | opens tile `-Tile` (give a music app with folders), 15 clicks forward through its top level, a press to open what is ringed, 10 clicks through that level, 10 back, then Back. The ring should reach every row and button, stay fully on screen, and Back should go up one level | R4 (the music browser) |
 | `map-move` | opens tile `-Tile` (Organic Maps or Waze), turns `-MapClicks` clicks to the map (the app's last stop), pushes, pad right twice and down once, two turns forward and one back, a push to stop, then Back. Expect: the line "Moving the map…" between the two pushes; the map shows more of the right, then more of what is below; it zooms in twice, then out once; after the second push the line is gone, and Back leaves the app | R5, R5-8 |
+| `gestures` | start a song first. Knob held (next song), wheel double click (previous), wheel click twice (pause, then play), knob held while turning 2 clicks (two songs on), Menu held (assistant; Back closes it), Back held (home). Expect: the line at the top shows for each song and assistant gesture ("Next song: …", "Paused: …", "Assistant"), and each does what it says. Needs the head unit from the release after 0.1.29 | R6, R7, K3 (hold Back) |
+| `pad` | on the home screen: one knob click, then pad right, right, down, down, left, up, up, left. Expect: the ring moves that way each time, from the bar to the cards and back, and never gets stuck. Needs the head unit from the release after 0.1.29 | R4, R7 |
 
-The script cannot hold a key down, so "holding Back goes home" (part of K3) cannot be checked
-with it. All text files it writes are UTF-8.
+Holding a key (walk `gestures`, "holding Back goes home" of K3) needs the head unit from the
+release after 0.1.29; older ones do not know the hold events. All text files the script writes
+are UTF-8.
 
 `adb`, `java` and `ffmpeg` must be on the PATH (step 1). Step 3 and the Trust tap in step 4 must
 have been done once, by hand; the script does not do them.
@@ -197,6 +200,12 @@ taskkill /PID $p.Id /T /F
 | `park`, `drive` | the car reports parked or moving |
 | `night`, `day` | the car's lights |
 | `tap:X,Y` | a touch (not with `--no-touch`) |
+| `hold:CODE,MS` | hold that key for MS milliseconds (head unit after 0.1.29) |
+| `double:CODE` | two presses of that key 120 ms apart (head unit after 0.1.29) |
+| `holdturn:CODE,N` | hold that key while the knob turns N clicks (head unit after 0.1.29) |
+
+Key codes the bench uses for the car's controls until the real ones are known (plan task R8):
+23 knob push, 85 wheel click, 82 Menu, 4 Back.
 
 Leave at least 3 seconds between events so each one can have its own picture. A picture is saved
 at most every 3 seconds and only when a new video frame arrives.
