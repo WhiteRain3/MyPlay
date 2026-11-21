@@ -121,4 +121,5 @@ private fun SpeedMarginChoice(settings: Settings) {
         margin.toString(),
     ) { id -> id.toIntOrNull()?.takeIf { it in SpeedRules.MARGINS }?.let { margin = it; settings.myplaySpeedLimitMargin = it } }
     HintLine(Icons.Rounded.Speed, stringResource(R.string.phone_speed_warning_hint))
+    HintLine(Icons.Rounded.Info, stringResource(R.string.phone_speed_limit_needs_location))
 }
