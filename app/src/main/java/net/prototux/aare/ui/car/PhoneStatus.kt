@@ -47,6 +47,8 @@ data class PhoneStatusInfo(
     val wifi: Boolean,
     val battery: Int,
     val charging: Boolean,
+    /** MyPlay (N5-3): whether the phone told its battery level ([battery] is 0 when it did not). */
+    val batteryKnown: Boolean = true,
 ) {
     companion object {
         fun read(context: Context): PhoneStatusInfo {
@@ -65,6 +67,7 @@ data class PhoneStatusInfo(
                 wifi = caps?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true,
                 battery = if (level >= 0) level * 100 / scale else 0,
                 charging = plugged,
+                batteryKnown = level >= 0,
             )
         }
     }

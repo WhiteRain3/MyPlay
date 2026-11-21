@@ -83,7 +83,7 @@ internal fun MyPlayEngineShell(
     overlay: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
     skin: MyPlaySkin = net.prototux.aare.ui.car.myplay.orbit.OrbitSkin,
-    sources: EngineSources = LocalContext.current.let { c -> remember(state, actions) { EngineSources.of(state, actions, c) } },
+    sources: EngineSources = LocalEngineSources.current ?: LocalContext.current.let { c -> remember(state, actions) { EngineSources.of(state, actions, c) } },
 ) {
     if (state.screen != CarScreen.Dashboard) {
         SpecShell(state, actions, appContent, navMap, overlay, modifier)
@@ -94,8 +94,10 @@ internal fun MyPlayEngineShell(
     val context = LocalContext.current
     val timeFormat = remember(context) { DateFormat.getTimeFormat(context) }
     val plain = HomeSlots.from(state) { timeFormat.format(it) }
-    // N5: the trip's progress, from the longest distance left seen on this route.
-    var longest by remember { mutableStateOf<Double?>(null) }
+    // N5: the trip's progress, from the longest distance left seen on this route. N5-4: a new
+    // destination is a new route even when navigation never ended (compared only, never logged).
+    val destination = state.trip?.destinations?.firstOrNull()?.let { it.name?.toString() to it.address?.toString() }
+    var longest by remember(destination) { mutableStateOf<Double?>(null) }
     val left = state.trip?.destinationTravelEstimates?.firstOrNull()?.remainingDistance?.let { TripProgress.meters(it.displayDistance, it.displayUnit) }
     val routeOn = state.trip != null
     val (seen, progress) = TripProgress.update(longest.takeIf { routeOn }, left)
@@ -115,7 +117,8 @@ internal fun MyPlayEngineShell(
     fun move(to: String?) { if (to != null) chosen = to }
     val covers = remember { MapCoverRegistry() }
     val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    // Not in the phone's picture of the car screen: it must not pull focus into the phone's own UI.
+    LaunchedEffect(Unit) { if (!sources.picture) runCatching { focus.requestFocus() } }
     BackHandler(enabled = model.place != Place.Home) { model.back() }
 
     fun onKey(key: Key, shift: Boolean): Boolean = when (val p = model.place) {
@@ -199,6 +202,8 @@ internal fun MyPlayEngineShell(
  */
 @Composable
 private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Composable (SpeedReading?) -> Unit) {
+    // The phone's picture shows a fixed speed and never listens to anything.
+    source.fixed?.let { content(it); return }
     val feed = remember(source) { SpeedFeed(source.fixes()) }
     val car by source.car.collectAsState()
     val inputs = SpeedFeed.Inputs(state.speedSource, shown = true, mapsRunning = state.activeNavAppId != null, car = car)

@@ -24,6 +24,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -229,7 +230,7 @@ class MyPlayEngineTest {
         rule.setContent {
             CarTheme(night = state.night, theme = state.theme) {
                 if (shown) {
-                    val sources = EngineSources.of(state, actions, LocalContext.current).copy(speed = SpeedSource(car) { phone })
+                    val sources = EngineSources.of(state, actions, LocalContext.current).copy(speed = SpeedSource(car, { phone }))
                     MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m) }, navMap = { _, m -> Box(m) }, overlay = {}, skin = TestSkin, sources = sources)
                 }
             }
@@ -251,6 +252,22 @@ class MyPlayEngineTest {
         rule.runOnIdle { shown = false }
         rule.waitForIdle()
         assertTrue("off the screen: no location", rule.runOnIdle { phone.onFix == null })
+    }
+
+    /** N11: the phone's picture gets a fixed speed, takes no focus and never listens for location. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun thePicturesSourcesListenToNothingAndTakeNoFocus() {
+        val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply { enginePreview = true }
+        rule.setContent {
+            CarTheme(night = state.night, theme = state.theme) {
+                CompositionLocalProvider(LocalEngineSources provides EngineSources.picture(state, actions)) {
+                    CarShell(state, actions, appContent = { _, m -> Box(m) }, navMap = { _, m -> Box(m) })
+                }
+            }
+        }
+        rule.waitForIdle()
+        rule.onNodeWithText("48", useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(ENGINE_TAG).assertIsNotFocused()
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
