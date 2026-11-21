@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.prototux.aare.R
+import net.prototux.aare.ui.car.myplay.myplayEnginePreview
 import net.prototux.aare.Settings
 import net.prototux.aare.ui.car.CarLayout
 import net.prototux.aare.ui.car.CarLayoutSpec
@@ -109,6 +110,7 @@ fun LayoutScreen() {
 
     Column {
         PartPicture()
+        OrbitPreviewSwitch()
         SectionHeading(stringResource(R.string.phone_layout_kind))
         PhoneChoices(
             stringResource(R.string.phone_layout_kind_hint),
@@ -312,3 +314,16 @@ private val SpecCard.title: Int
         SpecCard.CLOCK_STATUS -> R.string.phone_layout_card_clock
     }
 
+
+/** N5: try MyPlay's own car screen, ORBIT, while it is being built (myplay_engine_preview, not backed up). */
+@Composable
+private fun OrbitPreviewSwitch() {
+    val ctx = LocalContext.current
+    val settings = remember { Settings(ctx) }
+    var on by remember { mutableStateOf(settings.myplayEnginePreview) }
+    Spacer(Modifier.height(12.dp))
+    RowGroup(rows = listOf {
+        SwitchRow(Icons.Rounded.Layers, stringResource(R.string.phone_orbit_preview_title), on, TileTone.VIOLET,
+            stringResource(R.string.phone_orbit_preview_hint)) { on = it; settings.myplayEnginePreview = it }
+    })
+}
