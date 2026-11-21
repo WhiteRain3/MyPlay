@@ -34,7 +34,10 @@ import androidx.compose.material.icons.rounded.DonutLarge
 import androidx.compose.material.icons.rounded.CallEnd
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Dialpad
 import androidx.compose.material.icons.rounded.Phone
+import androidx.compose.material.icons.rounded.PhoneMissed
+import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MusicNote
@@ -103,6 +106,8 @@ import net.prototux.aare.ui.car.myplay.MUSIC_NEXT
 import net.prototux.aare.ui.car.myplay.MUSIC_PLAY
 import net.prototux.aare.ui.car.myplay.MUSIC_PREV
 import net.prototux.aare.ui.car.myplay.MusicPage
+import net.prototux.aare.ui.car.myplay.PhonePage
+import net.prototux.aare.ui.car.myplay.PhoneRow
 import net.prototux.aare.ui.car.myplay.CALL_ANSWER
 import net.prototux.aare.ui.car.myplay.CALL_DECLINE
 import net.prototux.aare.ui.car.myplay.STOP_CALL
@@ -622,12 +627,24 @@ object OrbitSkin : MyPlaySkin {
         }
     }
 
-    /** One row of the library: a glass pill with a round artwork disc, the title and subtitle; the ringed one in the Music colour. */
+    /** One row of the library: a pill with the row's artwork, a folder or a note. */
     @Composable
     private fun LibraryPill(r: LibraryRow, on: Boolean, accent: Color, night: Boolean, art: suspend (LibraryRow, Int) -> android.graphics.Bitmap?, modifier: Modifier) {
-        val g = Orbit.glass(night)
         val px = with(LocalDensity.current) { 76.dp.roundToPx() }
         val bitmap by androidx.compose.runtime.produceState<android.graphics.Bitmap?>(null, r.id) { value = runCatching { art(r, px) }.getOrNull() }
+        Pill(r.title, r.subtitle, if (r.browsable) Icons.Rounded.Folder else Icons.Rounded.MusicNote, null, bitmap, r.browsable, on, accent, night, modifier)
+    }
+
+    /**
+     * ORBIT's list row (the sheet's "Where to?" rows): a glass pill with a round disc (a picture, or
+     * [icon] in [iconTint]), the title and subtitle, a chevron when it leads on; the ringed one in [accent].
+     */
+    @Composable
+    private fun Pill(
+        title: String, subtitle: String, icon: ImageVector, iconTint: Color?, bitmap: android.graphics.Bitmap?, leadsOn: Boolean,
+        on: Boolean, accent: Color, night: Boolean, modifier: Modifier,
+    ) {
+        val g = Orbit.glass(night)
         val shape = androidx.compose.foundation.shape.RoundedCornerShape(52.dp)
         Row(
             modifier.fillMaxWidth().height(104.dp).orbitFocusRounded(on, accent, g.halo, 52.dp).clip(shape).background(g.glass)
@@ -635,20 +652,58 @@ object OrbitSkin : MyPlaySkin {
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(22.dp),
         ) {
             Box(Modifier.size(76.dp).clip(CircleShape).background(if (on) accent else g.track), contentAlignment = Alignment.Center) {
-                val b = bitmap
-                if (b != null) {
-                    val image = remember(b) { b.asImageBitmap() }
+                if (bitmap != null) {
+                    val image = remember(bitmap) { bitmap.asImageBitmap() }
                     Image(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 } else {
-                    Icon(if (r.browsable) Icons.Rounded.Folder else Icons.Rounded.MusicNote, null, Modifier.size(40.dp),
-                        tint = if (on) Orbit.onAccent(night) else g.text)
+                    Icon(icon, null, Modifier.size(40.dp), tint = if (on) Orbit.onAccent(night) else iconTint ?: g.text)
                 }
             }
             Column(Modifier.weight(1f)) {
-                Text(r.title, style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (r.subtitle.isNotBlank()) Text(r.subtitle, style = TextStyle(fontSize = 24.sp, color = g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(title, style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (subtitle.isNotBlank()) Text(subtitle, style = TextStyle(fontSize = 24.sp, color = g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            if (r.browsable) Icon(Icons.Rounded.ChevronRight, null, Modifier.size(36.dp), tint = g.secondary)
+            if (leadsOn) Icon(Icons.Rounded.ChevronRight, null, Modifier.size(36.dp), tint = g.secondary)
+        }
+    }
+
+    @Composable
+    override fun PhoneWorld(page: PhonePage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        val calls = Orbit.accent(World.CALLS, night)
+        val list = androidx.compose.foundation.lazy.rememberLazyListState()
+        LaunchedEffect(ringed, page.rows.size) { if (page.rows.isNotEmpty()) list.animateScrollToItem((ringed - 1).coerceAtLeast(0)) }
+        Box(modifier.background(g.halo.copy(alpha = 0.7f)).orbitRipple(0.5f, 0.5f)) {
+            Scaled {
+                Column(Modifier.fillMaxSize().padding(start = 60.dp, top = 40.dp)) {
+                    Text(worldName(World.CALLS), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
+                    Text(stringResource(R.string.myplay_phone_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
+                    val note = when {
+                        !page.permitted -> stringResource(R.string.myplay_phone_permissions)
+                        page.loading -> stringResource(R.string.myplay_library_loading)
+                        page.rows.size == 1 -> stringResource(R.string.myplay_phone_none)
+                        else -> null
+                    }
+                    note?.let { Text(it, style = Orbit.Type.secondary.floating(g.secondary), modifier = Modifier.padding(start = 80.dp, top = 24.dp).widthIn(max = 900.dp)) }
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        state = list, modifier = Modifier.padding(start = 80.dp, top = 24.dp).width(640.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
+                    ) {
+                        items(page.rows.size) { i ->
+                            val r = page.rows[i]
+                            val (icon, tint) = when (r.kind) {
+                                PhoneRow.Kind.RECENT -> Icons.Rounded.Phone to null
+                                PhoneRow.Kind.MISSED -> Icons.Rounded.PhoneMissed to Orbit.warning(night)
+                                PhoneRow.Kind.FAVOURITE -> Icons.Rounded.Star to null
+                                PhoneRow.Kind.PHONE_APP -> Icons.Rounded.Dialpad to null
+                            }
+                            Pill(r.title, r.subtitle, icon, tint, null, r.kind == PhoneRow.Kind.PHONE_APP, i == ringed, calls, night, row(i))
+                        }
+                    }
+                }
+            }
         }
     }
 

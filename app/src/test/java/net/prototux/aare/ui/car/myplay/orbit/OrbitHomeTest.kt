@@ -44,6 +44,11 @@ import net.prototux.aare.media.LibraryRow
 import net.prototux.aare.media.MediaLibrary
 import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.media.UpNextItem
+import androidx.compose.runtime.remember
+import net.prototux.aare.ui.car.myplay.EngineSources
+import net.prototux.aare.ui.car.myplay.LocalEngineSources
+import net.prototux.aare.ui.car.myplay.PhoneEntry
+import net.prototux.aare.ui.car.myplay.PhoneSource
 import net.prototux.aare.ui.car.myplay.SLOT_APPS
 import net.prototux.aare.ui.car.myplay.SLOT_CHOOSER
 import net.prototux.aare.ui.car.myplay.appTag
@@ -135,6 +140,18 @@ class OrbitHomeTest {
         for (x in 0 until 64) for (y in 0 until 64) setPixel(x, y, if (x < y) 0xFFFF8A3D.toInt() else 0xFF3D7BFF.toInt())
     }
 
+    /** A phone for the pictures. */
+    private object PicturePhone : PhoneSource {
+        override val permitted = true
+        override suspend fun recents() = listOf(
+            PhoneEntry("Anna K.", "111", "2 min ago", missed = true), PhoneEntry("Ben Ford", "222", "Today, 08:14"),
+            PhoneEntry("", "+370 612 34567", "Yesterday"),
+        )
+        override suspend fun favourites() = listOf(PhoneEntry("Carla", "333", "Mobile · 333"))
+        override fun call(entry: PhoneEntry) = Unit
+        override fun open() = Unit
+    }
+
     private fun show(night: Boolean = true, trip: Boolean = true, withArt: Boolean = true): CarUiState {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
             enginePreview = true
@@ -146,8 +163,11 @@ class OrbitHomeTest {
         this.state = state
         rule.setContent {
             CarTheme(night = state.night, theme = state.theme) {
-                CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
-                    navMap = { _, m -> Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
+                val context = androidx.compose.ui.platform.LocalContext.current
+                CompositionLocalProvider(LocalEngineSources provides remember(state) { EngineSources.of(state, actions, context).copy(phone = PicturePhone) }) {
+                    CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
+                        navMap = { _, m -> Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
+                }
             }
         }
         rule.waitForIdle()
@@ -332,11 +352,21 @@ class OrbitHomeTest {
         assertNull(OrbitSkin.initials(""))
     }
 
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun phoneNight() = picture("orbit-phone-1280x720-night", night = true, calls = true)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun phone901x543Day() = picture("orbit-phone-901x543-day", night = false, calls = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null) {
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null, calls: Boolean = false) {
         val state = show(night, trip, withArt)
+        if (calls) {
+            val engine = rule.onNodeWithTag(ENGINE_TAG)
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            repeat(2) { engine.performKeyInput { pressKey(Key.Tab) } }
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            engine.performKeyInput { pressKey(Key.DirectionDown) }
+            rule.mainClock.advanceTimeBy(1_000)
+        }
         if (call != null) {
             Shadows.shadowOf(rule.activity.application).grantPermissions(android.Manifest.permission.ANSWER_PHONE_CALLS)
             rule.runOnIdle { state.call = call }

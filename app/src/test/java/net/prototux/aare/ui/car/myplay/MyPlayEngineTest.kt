@@ -108,7 +108,7 @@ class MyPlayEngineTest {
     }
 
     /** [otherStop]: a focusable in the overlay, as a notice's buttons would be (N2-1). */
-    private fun show(night: Boolean = true, guidance: Boolean = false, otherStop: Boolean = false): CarUiState {
+    private fun show(night: Boolean = true, guidance: Boolean = false, otherStop: Boolean = false, phone: PhoneSource? = null): CarUiState {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
             enginePreview = true
             this.night = night
@@ -119,7 +119,8 @@ class MyPlayEngineTest {
             CarTheme(night = state.night, theme = state.theme) {
                 MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
                     navMap = { _, m -> covers = LocalMapCovers.current; Box(m.background(Color(0xFF2E4A3A))) },
-                    overlay = { m -> if (otherStop) Box(m.size(40.dp).focusable().testTag("other_stop")) }, skin = TestSkin)
+                    overlay = { m -> if (otherStop) Box(m.size(40.dp).focusable().testTag("other_stop")) }, skin = TestSkin,
+                    sources = EngineSources.of(state, actions, LocalContext.current).let { if (phone != null) it.copy(phone = phone) else it })
             }
         }
         rule.waitForIdle()
@@ -140,11 +141,11 @@ class MyPlayEngineTest {
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
-        // Calls: a world not drawn yet (Music and Apps draw their own).
-        repeat(2) { engine.performKeyInput { pressKey(Key.Tab) } }
+        // Car: a world not drawn yet (Music, Calls and Apps draw their own).
+        repeat(4) { engine.performKeyInput { pressKey(Key.Tab) } }
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_WORLD).assertExists()
-        rule.onNodeWithText(World.CALLS.name, useUnmergedTree = true).assertExists()
+        rule.onNodeWithText(World.CAR.name, useUnmergedTree = true).assertExists()
 
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
@@ -203,9 +204,9 @@ class MyPlayEngineTest {
         rule.onNodeWithTag("other_stop").assertIsNotFocused()
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
-        repeat(2) { engine.performKeyInput { pressKey(Key.Tab) } }
+        repeat(4) { engine.performKeyInput { pressKey(Key.Tab) } }
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        rule.onNodeWithText(World.CALLS.name, useUnmergedTree = true).assertExists()
+        rule.onNodeWithText(World.CAR.name, useUnmergedTree = true).assertExists()
     }
 
     /** N6: the Apps world lists the apps; knob, pad, push and tap; Back returns to the dial. */
@@ -484,6 +485,64 @@ class MyPlayEngineTest {
         rule.onNodeWithTag(STOP_HANG_UP).assertIsSelected()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         assertEquals("end", asked.last())
+    }
+
+    /** A phone with two recent calls (one missed) and two favourites, one of them also a recent call. */
+    private class FakePhone(override val permitted: Boolean = true) : PhoneSource {
+        val called = mutableListOf<String>()
+        var opened = 0
+        override suspend fun recents() = listOf(PhoneEntry("Anna K.", "111", "2 min ago", missed = true), PhoneEntry("Ben", "222", "1 hour ago"))
+        override suspend fun favourites() = listOf(PhoneEntry("Carla", "333", "Mobile"), PhoneEntry("Ben", "222", "Mobile"))
+        override fun call(entry: PhoneEntry) { called += entry.number }
+        override fun open() { opened++ }
+    }
+
+    private fun openCalls(phone: PhoneSource) {
+        show(otherStop = true, phone = phone)
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(2) { engine.performKeyInput { pressKey(Key.Tab) } } // NAVIGATE, MUSIC, CALLS
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_PHONE).assertExists()
+    }
+
+    /** N8: the Calls world lists recent calls, then favourites not already there, then the phone app. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theCallsWorldCallsAndOpensThePhone() {
+        val phone = FakePhone()
+        openCalls(phone)
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        for ((i, name) in listOf("Anna K.", "Ben", "Carla", "Keypad and all contacts").withIndex()) {
+            rule.onNodeWithTag(phoneRowTag(i)).assertExists()
+            rule.onNodeWithText(name, useUnmergedTree = true).assertExists()
+        }
+        assertTrue("Ben once", rule.onAllNodes(hasTestTag(phoneRowTag(4))).fetchSemanticsNodes().isEmpty())
+        rule.onNodeWithTag(phoneRowTag(0)).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("222"), phone.called)
+        repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
+        rule.onNodeWithTag(phoneRowTag(3)).assertIsSelected()
+        engine.assertIsFocused()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(1, phone.opened)
+        rule.onNodeWithTag(phoneRowTag(2)).performClick()
+        assertEquals(listOf("222", "333"), phone.called)
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    /** Without the phone's permissions: nothing is read; only the phone app is offered. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theCallsWorldWithoutPermission() {
+        val phone = FakePhone(permitted = false)
+        openCalls(phone)
+        rule.onNodeWithText("NO PERMISSION").assertExists()
+        rule.onNodeWithTag(phoneRowTag(0)).assertIsSelected()
+        assertTrue(rule.onAllNodes(hasTestTag(phoneRowTag(1))).fetchSemanticsNodes().isEmpty())
+        rule.onNodeWithTag(ENGINE_TAG).performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(1, phone.opened)
+        assertTrue(phone.called.isEmpty())
     }
 
     @Test fun appsPagesWrapAndPage() {

@@ -1,6 +1,14 @@
 package net.prototux.aare.ui.car.myplay
 
 import android.content.Context
+import android.content.pm.PackageManager
+import android.provider.CallLog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import net.prototux.aare.car.Calls
+import net.prototux.aare.ui.car.PHONE_PERMISSIONS
+import net.prototux.aare.ui.car.contacts
+import net.prototux.aare.ui.car.recents
 import androidx.compose.runtime.staticCompositionLocalOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import net.prototux.aare.car.SpeedReading
@@ -59,10 +67,15 @@ interface AppsSource {
 }
 
 /** A person or number in the phone's recent calls or contacts. */
-data class PhoneEntry(val name: String, val number: String)
+data class PhoneEntry(val name: String, val number: String, val detail: String = "", val missed: Boolean = false)
 
 interface PhoneSource {
-    val recents: List<PhoneEntry>
+    /** MyPlay may read the calls and contacts and place calls (the phone's permissions). */
+    val permitted: Boolean get() = false
+    /** N8: the recent calls, newest first, one per number. */
+    suspend fun recents(): List<PhoneEntry> = emptyList()
+    /** N8: the starred contacts, or all of them if none is starred. */
+    suspend fun favourites(): List<PhoneEntry> = emptyList()
     fun call(entry: PhoneEntry)
     /** N8: the phone app's own screen (calls, contacts, keypad). */
     fun open()
@@ -128,8 +141,16 @@ data class EngineSources(
                 override fun dismiss(notice: CarNotice) = actions.dismissNotice(notice)
             },
             phone = object : PhoneSource {
-                override val recents = emptyList<PhoneEntry>()
-                override fun call(entry: PhoneEntry) = Unit
+                override val permitted get() = context != null &&
+                    PHONE_PERMISSIONS.all { context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
+                override suspend fun recents() = withContext(Dispatchers.IO) {
+                    context?.let(::recents).orEmpty().map { PhoneEntry(it.name, it.number, it.detail, missed = it.type == CallLog.Calls.MISSED_TYPE) }
+                }
+                override suspend fun favourites() = withContext(Dispatchers.IO) {
+                    context?.let(::contacts).orEmpty().map { PhoneEntry(it.name, it.number, it.detail) }
+                }
+                // Placed by Android's telephony, so the sound goes through the car's hands-free link as usual.
+                override fun call(entry: PhoneEntry) { if (entry.number.isNotBlank()) context?.let { Calls.place(it, entry.number) } }
                 override fun open() { state.apps.firstOrNull { it.kind == CarAppKind.PHONE }?.let(actions::openApp) }
             },
             mirror = object : MirrorSource {

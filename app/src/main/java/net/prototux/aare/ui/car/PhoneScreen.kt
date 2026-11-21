@@ -64,11 +64,11 @@ import net.prototux.aare.ui.theme.LocalCarColors
 import net.prototux.aare.ui.theme.LocalCarDimens
 
 /** One number to call: a recent call or a contact. */
-private class Callee(val name: String, val number: String, val detail: String, val type: Int = 0)
+internal class Callee(val name: String, val number: String, val detail: String, val type: Int = 0)
 
 private enum class PhoneTab(val labelRes: Int) { RECENTS(R.string.phone_tab_recents), CONTACTS(R.string.phone_tab_contacts), KEYPAD(R.string.phone_tab_keypad) }
 
-private val PERMISSIONS = listOf(Manifest.permission.CALL_PHONE, Manifest.permission.READ_CALL_LOG,
+internal val PHONE_PERMISSIONS = listOf(Manifest.permission.CALL_PHONE, Manifest.permission.READ_CALL_LOG,
     Manifest.permission.READ_CONTACTS, Manifest.permission.READ_PHONE_STATE)
 
 /**
@@ -80,7 +80,7 @@ private val PERMISSIONS = listOf(Manifest.permission.CALL_PHONE, Manifest.permis
 internal fun PhoneScreen(runtime: CarRuntime, modifier: Modifier) {
     val context = LocalContext.current
     val driving = runtime.ui.drivingRestricted
-    if (PERMISSIONS.any { context.checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }) {
+    if (PHONE_PERMISSIONS.any { context.checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }) {
         Placeholder(stringResource(R.string.phone_permissions_placeholder), loading = false,
             icon = Icons.Rounded.Call, modifier = modifier.background(MaterialTheme.colorScheme.background))
         return
@@ -211,7 +211,7 @@ private fun Keypad(onCall: (String) -> Unit) {
 
 // ---------------------------------------------------------------- call history and contacts
 
-private fun recents(context: Context): List<Callee> = runCatching {
+internal fun recents(context: Context): List<Callee> = runCatching {
     val out = ArrayList<Callee>()
     val seen = HashSet<String>()
     context.contentResolver.query(CallLog.Calls.CONTENT_URI,
@@ -229,7 +229,7 @@ private fun recents(context: Context): List<Callee> = runCatching {
 }.getOrDefault(emptyList())
 
 /** Favourite (starred) contacts, or all of them if there are none. */
-private fun contacts(context: Context): List<Callee> = runCatching {
+internal fun contacts(context: Context): List<Callee> = runCatching {
     fun query(starred: Boolean): List<Callee> {
         val out = ArrayList<Callee>()
         val seen = HashSet<String>()

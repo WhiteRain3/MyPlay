@@ -20,7 +20,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.res.stringResource
+import net.prototux.aare.R
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -204,6 +207,24 @@ internal fun MyPlayEngineShell(
         if (musicRing == MUSIC_ART && sideways && musicPage.transport.canSeek) seek(dir == FocusGraph.Direction.RIGHT)
         else FocusGraph.pad(musicBoxes.filterKeys { it in musicActions }, musicRing, dir)?.let { musicChosen = it }
     }
+    // N8: the Calls world: recent calls, then favourites, then the phone app; loaded when entered,
+    // and again after a call.
+    val inCalls = model.place == Place.InWorld(World.CALLS)
+    val phone = sources.phone
+    val phoneData by produceState<Pair<List<PhoneEntry>, List<PhoneEntry>>?>(null, inCalls, call == null) {
+        value = if (inCalls && phone.permitted) runCatching { phone.recents() to phone.favourites() }.getOrNull() ?: (emptyList<PhoneEntry>() to emptyList()) else null
+    }
+    val phoneEntries: List<PhoneEntry> = phoneData?.let { (r, f) -> r + f.filter { fav -> r.none { it.number == fav.number } } }.orEmpty()
+    val phoneRecents = phoneData?.first?.size ?: 0
+    val phoneRows: List<PhoneRow> = phoneEntries.mapIndexed { i, e ->
+        PhoneRow(e.name.ifBlank { e.number }, e.detail, when { i >= phoneRecents -> PhoneRow.Kind.FAVOURITE; e.missed -> PhoneRow.Kind.MISSED; else -> PhoneRow.Kind.RECENT })
+    } + PhoneRow(stringResource(R.string.myplay_phone_app), "", PhoneRow.Kind.PHONE_APP)
+    var phoneRing by remember { mutableStateOf(0) }
+    val phoneIndex = phoneRing.coerceIn(0, phoneRows.size - 1)
+    fun openPhoneRow(i: Int) {
+        phoneRing = i
+        phoneEntries.getOrNull(i)?.let(phone::call) ?: phone.open()
+    }
     // N6: the Apps world: which app holds the ring (over all pages), and where this page's discs are.
     val apps = sources.apps.apps
     val perPage = skin.appsPerPage
@@ -273,6 +294,7 @@ internal fun MyPlayEngineShell(
                 model.push()
                 if (p.selected == World.APPS) appRing = 0
                 if (p.selected == World.MUSIC) musicChosen = MUSIC_PLAY
+                if (p.selected == World.CALLS) phoneRing = 0
                 true
             }
             else -> false
@@ -297,6 +319,16 @@ internal fun MyPlayEngineShell(
                 Key.DirectionLeft -> padMusic(FocusGraph.Direction.LEFT)
                 Key.DirectionRight -> padMusic(FocusGraph.Direction.RIGHT)
                 Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> musicActions[musicRing]?.invoke()
+                else -> Unit
+            }
+            key in WORLD_KEYS
+        } else if (p.world == World.CALLS) {
+            val n = phoneRows.size
+            when (key) {
+                Key.Tab -> phoneRing = (phoneIndex + if (shift) -1 else 1).coerceIn(0, n - 1)
+                Key.DirectionUp -> phoneRing = (phoneIndex - 1).coerceAtLeast(0)
+                Key.DirectionDown -> phoneRing = (phoneIndex + 1).coerceAtMost(n - 1)
+                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> openPhoneRow(phoneIndex)
                 else -> Unit
             }
             key in WORLD_KEYS
@@ -389,6 +421,18 @@ internal fun MyPlayEngineShell(
                             },
                             Modifier.fillMaxSize().testTag(SLOT_MUSIC),
                         )
+                    } else if (p.world == World.CALLS) {
+                        skin.PhoneWorld(
+                            PhonePage(phoneRows, loading = phoneData == null && phone.permitted, permitted = phone.permitted),
+                            phoneIndex,
+                            { i ->
+                                Modifier
+                                    .pointerInput(i, phoneRows.size) { detectTapGestures { openPhoneRow(i) } }
+                                    .semantics { selected = i == phoneIndex }
+                                    .testTag(phoneRowTag(i))
+                            },
+                            Modifier.fillMaxSize().testTag(SLOT_PHONE),
+                        )
                     } else if (p.world == World.APPS) {
                         val first = page * perPage
                         skin.AppsWorld(
@@ -477,6 +521,10 @@ internal const val SLOT_WORLD = "slot_world"
 internal const val SLOT_APPS = "slot_apps"
 internal const val SLOT_MUSIC = "slot_music"
 internal const val SLOT_CALL = "slot_call"
+internal const val SLOT_PHONE = "slot_phone"
+
+/** A row of the Calls world (its test tag). */
+internal fun phoneRowTag(i: Int) = "phone_row_$i"
 internal const val SLOT_LIBRARY = "slot_library"
 
 /** A row of the library (its test tag). */

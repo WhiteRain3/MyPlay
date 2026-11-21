@@ -122,6 +122,14 @@ data class MusicPage(val song: SongSlot?, val transport: MediaTransport)
 /** N7: one level of a music app's library, as the skin draws it. */
 data class LibraryPage(val title: String, val rows: List<LibraryRow>, val loading: Boolean, val error: String?)
 
+/** N8: one row of the Calls world. */
+data class PhoneRow(val title: String, val subtitle: String, val kind: Kind) {
+    enum class Kind { RECENT, MISSED, FAVOURITE, PHONE_APP }
+}
+
+/** N8: what the Calls world shows; [permitted] false: the phone's permissions are missing. */
+data class PhonePage(val rows: List<PhoneRow>, val loading: Boolean, val permitted: Boolean)
+
 /** N8: the stops of a ringing call (also their test tags). */
 const val CALL_ANSWER = "call_answer"
 const val CALL_DECLINE = "call_decline"
@@ -226,6 +234,12 @@ interface MyPlaySkin {
      * opens the phone ([STOP_CALL]), and Hang up ([STOP_HANG_UP]) when [canEnd]; [ringed] as on the home.
      */
     @Composable fun InCall(call: CarCall, canEnd: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier)
+
+    /**
+     * N8: the Calls world: recent calls, favourites and, last, the phone app (keypad, all contacts).
+     * Each row takes `row(i)`; the ring is on [ringed]; the skin keeps it in view.
+     */
+    @Composable fun PhoneWorld(page: PhonePage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier)
 
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)

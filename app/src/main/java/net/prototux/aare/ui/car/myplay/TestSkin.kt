@@ -155,6 +155,17 @@ object TestSkin : MyPlaySkin {
     }
 
     @Composable
+    override fun PhoneWorld(page: PhonePage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        Column(modifier.background(t.background.copy(alpha = 0.8f)).padding(24.dp)) {
+            Text(if (page.permitted) "CALLS" else "NO PERMISSION", color = t.onSurface, fontSize = 20.sp)
+            page.rows.forEachIndexed { i, r ->
+                Text(r.title, color = if (i == ringed) t.accent else t.onSurface, fontSize = 18.sp, modifier = row(i).padding(8.dp))
+            }
+        }
+    }
+
+    @Composable
     override fun Chooser(selected: World, modifier: Modifier) = Box(modifier) {
         val t = LocalSkinTokens.current
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

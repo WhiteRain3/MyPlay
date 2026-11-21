@@ -45,4 +45,8 @@
     <string name="myplay_library_hint" translatable="false">turn: choose · push: open or play · Back: up</string>
     <string name="myplay_library_loading" translatable="false">Loading…</string>
     <string name="myplay_library_empty" translatable="false">Nothing here.</string>
+    <string name="myplay_phone_app" translatable="false">Keypad and all contacts</string>
+    <string name="myplay_phone_hint" translatable="false">turn: choose · push: call · Back: back</string>
+    <string name="myplay_phone_permissions" translatable="false">To call from here, allow MyPlay the phone permissions on the phone (calls and contacts).</string>
+    <string name="myplay_phone_none" translatable="false">No recent calls or favourites yet.</string>
 </resources>
