@@ -140,7 +140,13 @@ internal fun MyPlayEngineShell(
             sources.notifications.dismiss(notice)
         }
     }
+    // N8: the bell (while there are unseen notifications) opens the list over the home.
+    val notes = sources.notifications
+    var listOpen by remember { mutableStateOf(false) }
+    var listChosen by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(model.place) { if (model.place != Place.Home) listOpen = false }
     val actionsOf: Map<String, () -> Unit> = buildMap {
+        if (notes.unseen > 0 && model.place == Place.Home && !listOpen) put(STOP_BELL) { listOpen = true; listChosen = null; notes.markSeen() }
         if (notice != null && model.place == Place.Home) {
             // At most two actions: two fit in the room at the top (a phone's notice can carry more; the
             // rest stay on the phone, and in the notifications list).
@@ -277,6 +283,16 @@ internal fun MyPlayEngineShell(
     // Not in the phone's picture of the car screen: it must not pull focus into the phone's own UI.
     LaunchedEffect(Unit) { if (!sources.picture) runCatching { focus.requestFocus() } }
     BackHandler(enabled = model.place != Place.Home) { model.back() }
+    BackHandler(enabled = listOpen) { listOpen = false }
+    // The list's rows: one per notification (keyed by it, so new ones arriving do not move the ring), then Clear all.
+    val driving = state.drivingRestricted
+    val listKeys: List<String> = notes.history.map { "n:${it.key}" } + CLEAR_ALL_KEY
+    val listIndex = listKeys.indexOf(listChosen).takeIf { it >= 0 } ?: 0
+    fun runListRow(key: String) {
+        listChosen = key
+        if (key == CLEAR_ALL_KEY) { notes.clearAll(); listOpen = false; return }
+        notes.history.firstOrNull { "n:${it.key}" == key }?.actions?.firstOrNull()?.second?.invoke()
+    }
     // Declared later, so it comes first: Back goes up the library, then out of it.
     BackHandler(enabled = lib != null) { if (lib?.canGoBack == true) lib.back() else library = null }
 
@@ -288,6 +304,16 @@ internal fun MyPlayEngineShell(
             Key.DirectionLeft -> FocusGraph.pad(live, callRing, FocusGraph.Direction.LEFT)?.let { callChosen = it }
             Key.DirectionRight -> FocusGraph.pad(live, callRing, FocusGraph.Direction.RIGHT)?.let { callChosen = it }
             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> callActions[callRing]?.invoke()
+            else -> Unit
+        }
+        key in WORLD_KEYS
+    } else if (listOpen) {
+        val n = listKeys.size
+        when (key) {
+            Key.Tab -> listChosen = listKeys[(listIndex + if (shift) -1 else 1).coerceIn(0, n - 1)]
+            Key.DirectionUp -> listChosen = listKeys[(listIndex - 1).coerceAtLeast(0)]
+            Key.DirectionDown -> listChosen = listKeys[(listIndex + 1).coerceAtMost(n - 1)]
+            Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> runListRow(listKeys[listIndex])
             else -> Unit
         }
         key in WORLD_KEYS
@@ -401,10 +427,14 @@ internal fun MyPlayEngineShell(
                 fun ringed(id: String, content: @Composable () -> Unit) =
                     CompositionLocalProvider(LocalStopRinged provides (showRing && ring == id), content = content)
                 // Inside a world only the status corner stays: the world's page has the screen.
-                val home = model.place !is Place.InWorld
+                // (and over the notifications list, likewise)
+                val home = model.place !is Place.InWorld && !listOpen
                 if (home) slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) } }
                 Column(edge.align(Alignment.TopEnd), horizontalAlignment = Alignment.End) {
                     skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
+                    if (STOP_BELL in actionsOf) {
+                        ringed(STOP_BELL) { skin.Bell(notes.unseen, LocalStopRinged.current, Modifier.slot(Slot.STATUS).stop(STOP_BELL)) }
+                    }
                     if (skin.showsSpeed && state.speedSource != SpeedSourceMode.OFF) {
                         EngineSpeed(state, sources.speed) { skin.Speed(it, Modifier.slot(Slot.SPEED).testTag(SLOT_SPEED)) }
                     }
@@ -496,6 +526,22 @@ internal fun MyPlayEngineShell(
             overlay(Modifier.align(Alignment.BottomCenter))
             // The gesture line (R6); the notice is the skin's now (N8).
             GestureLineOverlay(state, Modifier.align(Alignment.TopCenter))
+            // N8: the notifications list, over the home.
+            if (listOpen && !ringing) {
+                val currentKeys by rememberUpdatedState(listKeys)
+                val time = { t: Long -> android.text.format.DateUtils.getRelativeTimeSpanString(t, System.currentTimeMillis(), android.text.format.DateUtils.MINUTE_IN_MILLIS, android.text.format.DateUtils.FORMAT_ABBREV_RELATIVE).toString() }
+                val hidden = stringResource(R.string.notif_new_message_placeholder)
+                val rows = notes.history.map { NoticeRow(it, if (driving) hidden else it.text, time(it.timeMs), it.actions.firstOrNull()?.first) } +
+                    NoticeRow(null, "", "", null)
+                skin.NoticeList(NoticeListPage(rows), listIndex, { i ->
+                    val key = listKeys[i]
+                    Modifier
+                        .pointerInput(key) { detectTapGestures { if (key in currentKeys) runListRow(key) } }
+                        .semantics { selected = i == listIndex }
+                        .testTag(noticeRowTag(i))
+                }, Modifier.fillMaxSize().testTag(SLOT_NOTICES)
+                    .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } })
+            }
             // N8: a ringing call, drawn by the skin over everything.
             if (ringing) {
                 val currentCall by rememberUpdatedState(callActions)
@@ -555,6 +601,8 @@ internal const val STOP_SONG = "stop_song"
 /** N8: in a call, the strip (opens the phone) and Hang up. */
 const val STOP_CALL = "stop_call"
 const val STOP_HANG_UP = "stop_hang_up"
+/** N8: the bell under the clock (while there are unseen notifications). */
+const val STOP_BELL = "stop_bell"
 internal const val SLOT_STATUS = "slot_status"
 internal const val SLOT_SPEED = "slot_speed"
 internal const val SLOT_CHOOSER = "slot_chooser"
@@ -563,6 +611,11 @@ internal const val SLOT_APPS = "slot_apps"
 internal const val SLOT_MUSIC = "slot_music"
 internal const val SLOT_CALL = "slot_call"
 internal const val SLOT_PHONE = "slot_phone"
+internal const val SLOT_NOTICES = "slot_notices"
+private const val CLEAR_ALL_KEY = "clear_all"
+
+/** A row of the notifications list (its test tag). */
+internal fun noticeRowTag(i: Int) = "notice_row_$i"
 private const val PHONE_APP_KEY = "phone_app"
 
 /** A row of the Calls world (its test tag). */

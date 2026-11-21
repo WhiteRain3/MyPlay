@@ -131,6 +131,12 @@ data class PhoneRow(val title: String, val subtitle: String, val kind: Kind) {
 /** N8: what the Calls world shows; [permitted] false: the phone's permissions are missing. */
 data class PhonePage(val rows: List<PhoneRow>, val loading: Boolean, val permitted: Boolean)
 
+/** N8: one row of the notifications list; [action] is the label a push runs, if any. Null [notice]: Clear all. */
+data class NoticeRow(val notice: CarNotice?, val text: String, val time: String, val action: String?)
+
+/** N8: what the notifications list shows. */
+data class NoticeListPage(val rows: List<NoticeRow>)
+
 /** N8: a notice's stops (also their test tags). */
 const val NOTICE_DISMISS = "notice_dismiss"
 fun noticeActionStop(i: Int) = "notice_action_$i"
@@ -252,6 +258,15 @@ interface MyPlaySkin {
      * ([NOTICE_DISMISS]); each takes `stop(id)`; [ringed] as on the home.
      */
     @Composable fun Notice(notice: CarNotice, hideText: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier)
+
+    /** N8: the bell under the clock with the number of unseen notifications ([count] > 0; the engine hides it at 0). */
+    @Composable fun Bell(count: Int, ringed: Boolean, modifier: Modifier)
+
+    /**
+     * N8: the notifications list over the home: one row per notification and, last, Clear all.
+     * Each row takes `row(i)`; the ring is on [ringed]; the skin keeps it in view.
+     */
+    @Composable fun NoticeList(page: NoticeListPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier)
 
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)

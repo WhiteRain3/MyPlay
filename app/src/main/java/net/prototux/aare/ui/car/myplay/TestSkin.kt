@@ -177,6 +177,23 @@ object TestSkin : MyPlaySkin {
     }
 
     @Composable
+    override fun Bell(count: Int, ringed: Boolean, modifier: Modifier) {
+        Text("BELL $count", color = if (ringed) LocalSkinTokens.current.accent else LocalSkinTokens.current.onSurface, modifier = modifier.padding(8.dp))
+    }
+
+    @Composable
+    override fun NoticeList(page: NoticeListPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        Column(modifier.background(t.background.copy(alpha = 0.9f)).padding(24.dp)) {
+            page.rows.forEachIndexed { i, r ->
+                val n = r.notice
+                Text(if (n == null) "CLEAR ALL" else "${n.title}: ${r.text}" + (r.action?.let { " [$it]" } ?: ""),
+                    color = if (i == ringed) t.accent else t.onSurface, fontSize = 18.sp, modifier = row(i).padding(8.dp))
+            }
+        }
+    }
+
+    @Composable
     override fun Chooser(selected: World, modifier: Modifier) = Box(modifier) {
         val t = LocalSkinTokens.current
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

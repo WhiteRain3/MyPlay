@@ -58,6 +58,11 @@ interface CallSource {
 interface NotificationSource {
     val notices: List<CarNotice>
     fun dismiss(notice: CarNotice)
+    /** N8: the notifications of this drive, newest first (the list), and how many are not seen yet. */
+    val history: List<CarNotice> get() = emptyList()
+    val unseen: Int get() = 0
+    fun markSeen() = Unit
+    fun clearAll() = Unit
 }
 
 /** N6: the apps of the Apps world, in the owner's order, and opening one. */
@@ -139,6 +144,10 @@ data class EngineSources(
             notifications = object : NotificationSource {
                 override val notices get() = state.notices
                 override fun dismiss(notice: CarNotice) = actions.dismissNotice(notice)
+                override val history get() = state.history
+                override val unseen get() = state.unseen
+                override fun markSeen() { state.unseen = 0 }
+                override fun clearAll() = state.history.clear()
             },
             phone = object : PhoneSource {
                 override val permitted get() = context != null &&

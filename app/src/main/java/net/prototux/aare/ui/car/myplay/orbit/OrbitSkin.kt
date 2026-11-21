@@ -33,6 +33,7 @@ import androidx.compose.material.icons.rounded.BatteryFull
 import androidx.compose.material.icons.rounded.DonutLarge
 import androidx.compose.material.icons.rounded.CallEnd
 import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.ClearAll
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Dialpad
 import androidx.compose.material.icons.rounded.Phone
@@ -107,6 +108,7 @@ import net.prototux.aare.ui.car.myplay.MUSIC_NEXT
 import net.prototux.aare.ui.car.myplay.MUSIC_PLAY
 import net.prototux.aare.ui.car.myplay.MUSIC_PREV
 import net.prototux.aare.ui.car.myplay.MusicPage
+import net.prototux.aare.ui.car.myplay.NoticeListPage
 import net.prototux.aare.ui.car.myplay.PhonePage
 import net.prototux.aare.ui.car.myplay.PhoneRow
 import net.prototux.aare.ui.car.myplay.CALL_ANSWER
@@ -700,7 +702,7 @@ object OrbitSkin : MyPlaySkin {
     @Composable
     private fun Pill(
         title: String, subtitle: String, icon: ImageVector, iconTint: Color?, bitmap: android.graphics.Bitmap?, leadsOn: Boolean,
-        on: Boolean, accent: Color, night: Boolean, modifier: Modifier,
+        on: Boolean, accent: Color, night: Boolean, modifier: Modifier, trailing: String? = null,
     ) {
         val g = Orbit.glass(night)
         val shape = androidx.compose.foundation.shape.RoundedCornerShape(52.dp)
@@ -721,7 +723,61 @@ object OrbitSkin : MyPlaySkin {
                 Text(title, style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (subtitle.isNotBlank()) Text(subtitle, style = TextStyle(fontSize = 24.sp, color = g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
+            trailing?.let { Text(it, style = TextStyle(fontSize = 24.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = accent), maxLines = 1) }
             if (leadsOn) Icon(Icons.Rounded.ChevronRight, null, Modifier.size(36.dp), tint = g.secondary)
+        }
+    }
+
+    @Composable
+    override fun Bell(count: Int, ringed: Boolean, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        Box(modifier) {
+            Scaled {
+                Box(Modifier.padding(top = 12.dp)) {
+                    OrbitDisc(72.dp, night, Modifier.orbitFocus(ringed, Orbit.accent(World.NAVIGATE, night), g.halo)) {
+                        Icon(Icons.Rounded.Notifications, stringResource(R.string.notif_title), Modifier.size(38.dp), tint = g.text)
+                    }
+                    Box(
+                        Modifier.align(Alignment.TopEnd).size(30.dp).clip(CircleShape).background(Orbit.warning(night)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(if (count > 9) "9+" else "$count", style = TextStyle(fontSize = 16.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = Color.White))
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    override fun NoticeList(page: NoticeListPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        val accent = Orbit.accent(World.NAVIGATE, night)
+        val list = androidx.compose.foundation.lazy.rememberLazyListState()
+        LaunchedEffect(ringed, page.rows.size) { if (page.rows.isNotEmpty()) list.animateScrollToItem((ringed - 1).coerceAtLeast(0)) }
+        Box(modifier.background(g.halo.copy(alpha = 0.7f)).orbitRipple(1f, 0f)) {
+            Scaled {
+                Column(Modifier.fillMaxSize().padding(start = 60.dp, top = 40.dp)) {
+                    Text(stringResource(R.string.notif_title), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
+                    Text(stringResource(R.string.myplay_notices_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        state = list, modifier = Modifier.padding(start = 80.dp, top = 24.dp).width(760.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
+                    ) {
+                        items(page.rows.size) { i ->
+                            val r = page.rows[i]
+                            val n = r.notice
+                            if (n == null) {
+                                Pill(stringResource(R.string.notif_clear_all), "", Icons.Rounded.ClearAll, null, null, false, i == ringed, accent, night, row(i))
+                            } else {
+                                Pill("${n.title} · ${r.time}", r.text, Icons.Rounded.Notifications, null, n.icon, false, i == ringed, accent, night, row(i), trailing = r.action)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

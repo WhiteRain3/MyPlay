@@ -647,6 +647,58 @@ class MyPlayEngineTest {
         rule.onNodeWithTag(appTag(state.launcherApps[1])).assertIsSelected()
     }
 
+    private fun twoInHistory(state: CarUiState) = rule.runOnIdle {
+        state.history.add(CarNotice("h1", "Anna K.", "Running late", null, listOf("Reply" to { asked += "reply:h1" })))
+        state.history.add(CarNotice("h2", "Calendar", "Dentist at 15:00", null))
+        state.unseen = 2
+    }
+
+    /** N8: the bell shows only with unseen notifications; it opens the list, which marks them seen. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theBellOpensTheNotificationsList() {
+        val state = show(otherStop = true)
+        assertTrue("no bell with nothing unseen", rule.onAllNodes(hasTestTag(STOP_BELL)).fetchSemanticsNodes().isEmpty())
+        twoInHistory(state)
+        rule.waitForIdle()
+        rule.onNodeWithText("BELL 2").assertExists()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        // Reading order: the bell is under the clock, top right: after the hub and the song, round to the top.
+        repeat(2) { engine.performKeyInput { pressKey(Key.Tab) } }
+        rule.onNodeWithTag(STOP_BELL).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_NOTICES).assertExists()
+        assertEquals(0, state.unseen)
+        rule.onNodeWithTag(noticeRowTag(0)).assertIsSelected()
+        // A push runs the row's first action; the list stays.
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("reply:h1"), asked)
+        engine.assertIsFocused()
+        // The second has no action: a push does nothing. The last row clears all and closes.
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("reply:h1"), asked)
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.waitForIdle()
+        assertTrue(state.history.isEmpty())
+        assertTrue(rule.onAllNodes(hasTestTag(SLOT_NOTICES)).fetchSemanticsNodes().isEmpty())
+        assertTrue("the bell is gone", rule.onAllNodes(hasTestTag(STOP_BELL)).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theListClosesWithBackAndHidesTextWhileDriving() {
+        val state = show()
+        rule.runOnIdle { state.drivingRestricted = true }
+        twoInHistory(state)
+        rule.onNodeWithTag(STOP_BELL).performClick()
+        rule.onNodeWithTag(SLOT_NOTICES).assertExists()
+        assertTrue(rule.onAllNodesWithText("Running late", substring = true).fetchSemanticsNodes().isEmpty())
+        rule.onNodeWithText("Anna K.", substring = true).assertExists()
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        assertTrue(rule.onAllNodes(hasTestTag(SLOT_NOTICES)).fetchSemanticsNodes().isEmpty())
+        assertEquals(2, state.history.size)
+    }
+
     @Test fun appsPagesWrapAndPage() {
         assertEquals(1, AppsPages.pages(0, 10))
         assertEquals(2, AppsPages.pages(14, 10))
