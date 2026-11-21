@@ -82,7 +82,7 @@ internal fun MyPlayEngineShell(
     navMap: @Composable (CarAppEntry, Modifier) -> Unit,
     overlay: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
-    skin: MyPlaySkin = TestSkin,
+    skin: MyPlaySkin = net.prototux.aare.ui.car.myplay.orbit.OrbitSkin,
     sources: EngineSources = LocalContext.current.let { c -> remember(state, actions) { EngineSources.of(state, actions, c) } },
 ) {
     if (state.screen != CarScreen.Dashboard) {
@@ -93,7 +93,14 @@ internal fun MyPlayEngineShell(
     val tokens = skin.tokens(state.night)
     val context = LocalContext.current
     val timeFormat = remember(context) { DateFormat.getTimeFormat(context) }
-    val slots = HomeSlots.from(state) { timeFormat.format(it) }
+    val plain = HomeSlots.from(state) { timeFormat.format(it) }
+    // N5: the trip's progress, from the longest distance left seen on this route.
+    var longest by remember { mutableStateOf<Double?>(null) }
+    val left = state.trip?.destinationTravelEstimates?.firstOrNull()?.remainingDistance?.let { TripProgress.meters(it.displayDistance, it.displayUnit) }
+    val routeOn = state.trip != null
+    val (seen, progress) = TripProgress.update(longest.takeIf { routeOn }, left)
+    LaunchedEffect(seen, routeOn) { longest = if (routeOn) seen else null }
+    val slots = plain.copy(trip = plain.trip?.copy(progress = progress))
     // The home's stops and where they are, as the slots report them.
     val boxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
     var chosen by remember { mutableStateOf(STOP_HUB) }
@@ -151,22 +158,26 @@ internal fun MyPlayEngineShell(
                 }
                 val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)
                 val showRing = model.place == Place.Home && CarFocusVisibility.keyInput
+                skin.Backdrop(Modifier.fillMaxSize())
                 @Composable
                 fun Modifier.slot(slot: Slot): Modifier = if (skin.coversMap(slot)) coversMap() else this
                 fun Modifier.stop(id: String): Modifier = this
                     .onGloballyPositioned { c -> c.boundsInRoot().let { boxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
                     .semantics { selected = ring == id }
-                    .let { if (showRing && ring == id) it.border(3.dp, tokens.accent, RoundedCornerShape(tokens.corner)) else it }
+                    .let { if (showRing && ring == id && !skin.drawsFocus) it.border(3.dp, tokens.accent, RoundedCornerShape(tokens.corner)) else it }
                     .testTag(id)
-                slots.turn?.let { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) }
+                @Composable
+                fun ringed(id: String, content: @Composable () -> Unit) =
+                    CompositionLocalProvider(LocalStopRinged provides (showRing && ring == id), content = content)
+                slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) } }
                 Column(edge.align(Alignment.TopEnd), horizontalAlignment = Alignment.End) {
                     skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
                     if (skin.showsSpeed && state.speedSource != SpeedSourceMode.OFF) {
                         EngineSpeed(state, sources.speed) { skin.Speed(it, Modifier.slot(Slot.SPEED).testTag(SLOT_SPEED)) }
                     }
                 }
-                skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB))
-                slots.song?.let { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) }
+                ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }
+                slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
                 when (val p = model.place) {
                     is Place.Chooser -> skin.Chooser(p.selected, Modifier.align(Alignment.Center).slot(Slot.CHOOSER).testTag(SLOT_CHOOSER))
                     is Place.InWorld -> skin.WorldPlaceholder(p.world, Modifier.align(Alignment.Center).slot(Slot.WORLD).testTag(SLOT_WORLD))

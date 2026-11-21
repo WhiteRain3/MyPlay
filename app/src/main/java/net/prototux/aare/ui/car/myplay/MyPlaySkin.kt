@@ -8,6 +8,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import net.prototux.aare.car.SpeedReading
+import androidx.car.app.model.Distance
+import androidx.car.app.navigation.model.Maneuver
 import net.prototux.aare.host.templates.CarFormat
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.theme.MapColourFilter
@@ -33,18 +35,79 @@ data class SkinTokens(
      * null leaves the map as the app draws it.
      */
     val mapFilter: MapColourFilter? = null,
+    /** N5: whether these are the night colours, for skins that draw more than the tokens. */
+    val night: Boolean = true,
 )
+
+/**
+ * N5: whether the slot being drawn holds the knob's ring, for a skin that draws its own focus ring
+ * ([MyPlaySkin.drawsFocus]) on the part it chooses (ORBIT: the round part only).
+ */
+val LocalStopRinged = staticCompositionLocalOf { false }
 
 /** The places the engine offers a skin. */
 enum class Slot { TURN, STATUS, SPEED, HUB, SONG, CHOOSER, WORLD }
 
-/** The next turn: the distance, then the road or instruction. Null fields are not known. */
-data class TurnSlot(val distance: String?, val road: String?)
+/**
+ * The next turn: the distance, then the road or instruction. Null fields are not known. [arrow] is
+ * the maps app's own arrow picture when it sends one (phone guidance); else [direction], from the
+ * route step's manoeuvre, when it is one MyPlay can draw; else neither (draw no direction at all).
+ */
+data class TurnSlot(val distance: String?, val road: String?, val arrow: Bitmap? = null, val direction: TurnDirection? = null)
 
-/** The trip: the arrival time, formatted by the engine in the phone's 12 or 24 hour style (N1-2), and the distance left. */
-data class TripSlot(val arrival: String?, val distanceLeft: String?)
+/** The turns a skin can draw an arrow for; anything else gets no arrow (never a guessed one). */
+enum class TurnDirection { STRAIGHT, SLIGHT_LEFT, LEFT, SHARP_LEFT, SLIGHT_RIGHT, RIGHT, SHARP_RIGHT, U_TURN_LEFT, U_TURN_RIGHT;
+    companion object {
+        /** From androidx.car.app.navigation.model.Maneuver's type. */
+        fun of(type: Int?): TurnDirection? = when (type) {
+            Maneuver.TYPE_STRAIGHT, Maneuver.TYPE_DEPART -> STRAIGHT
+            Maneuver.TYPE_TURN_SLIGHT_LEFT, Maneuver.TYPE_KEEP_LEFT -> SLIGHT_LEFT
+            Maneuver.TYPE_TURN_NORMAL_LEFT -> LEFT
+            Maneuver.TYPE_TURN_SHARP_LEFT -> SHARP_LEFT
+            Maneuver.TYPE_TURN_SLIGHT_RIGHT, Maneuver.TYPE_KEEP_RIGHT -> SLIGHT_RIGHT
+            Maneuver.TYPE_TURN_NORMAL_RIGHT -> RIGHT
+            Maneuver.TYPE_TURN_SHARP_RIGHT -> SHARP_RIGHT
+            Maneuver.TYPE_U_TURN_LEFT -> U_TURN_LEFT
+            Maneuver.TYPE_U_TURN_RIGHT -> U_TURN_RIGHT
+            else -> null
+        }
+    }
+}
 
-data class SongSlot(val title: String, val subtitle: String, val playing: Boolean, val art: Bitmap?)
+/**
+ * The trip: the arrival time, formatted by the engine in the phone's 12 or 24 hour style (N1-2),
+ * the distance and time left, and how much of the route is behind (0..1; null until known).
+ */
+data class TripSlot(val arrival: String?, val distanceLeft: String?, val timeLeft: String? = null, val progress: Float? = null)
+
+/** The song; its position as the player last told it ([positionMs] at [updatedAtMs], moving while [playing]). */
+data class SongSlot(
+    val title: String, val subtitle: String, val playing: Boolean, val art: Bitmap?,
+    val positionMs: Long = 0, val durationMs: Long = 0, val updatedAtMs: Long = 0,
+)
+
+/**
+ * N5: a route's progress from its distance left: the longest distance left seen on this route is
+ * its length (the engine starts again when the route ends). Pure.
+ */
+object TripProgress {
+    /** The new longest distance and the progress. */
+    fun update(longest: Double?, left: Double?): Pair<Double?, Float?> {
+        if (left == null || left < 0) return longest to null
+        val l = maxOf(longest ?: 0.0, left)
+        return l to if (l <= 0.0) null else (1 - left / l).toFloat().coerceIn(0f, 1f)
+    }
+
+    /** A Distance's value in metres (androidx.car.app.model.Distance's units). */
+    fun meters(value: Double, unit: Int): Double? = when (unit) {
+        Distance.UNIT_METERS -> value
+        Distance.UNIT_KILOMETERS, Distance.UNIT_KILOMETERS_P1 -> value * 1000
+        Distance.UNIT_MILES, Distance.UNIT_MILES_P1 -> value * 1609.344
+        Distance.UNIT_FEET -> value * 0.3048
+        Distance.UNIT_YARDS -> value * 0.9144
+        else -> null
+    }
+}
 
 /** What the home screen's slots show; null where there is nothing (no route, no song). */
 data class HomeSlots(val turn: TurnSlot?, val trip: TripSlot?, val song: SongSlot?) {
@@ -56,16 +119,17 @@ data class HomeSlots(val turn: TurnSlot?, val trip: TripSlot?, val song: SongSlo
                 val step = trip.steps.firstOrNull()
                 val distance = trip.stepTravelEstimates.firstOrNull()?.remainingDistance?.let { CarFormat.distance(it.displayDistance, it.displayUnit) }
                 val road = (step?.road ?: step?.cue ?: trip.currentRoad)?.toString()?.takeIf { it.isNotBlank() }
-                if (distance == null && road == null) null else TurnSlot(distance, road)
+                if (distance == null && road == null) null else TurnSlot(distance, road, direction = TurnDirection.of(step?.maneuver?.type))
             } else state.phoneGuidance?.let { g ->
-                TurnSlot(g.primary.takeIf { it.isNotBlank() }, g.secondary.takeIf { it.isNotBlank() })
+                TurnSlot(g.primary.takeIf { it.isNotBlank() }, g.secondary.takeIf { it.isNotBlank() }, arrow = g.arrow)
             }
             val est = trip?.destinationTravelEstimates?.firstOrNull()
             val tripSlot = est?.let { e ->
                 TripSlot(e.arrivalTimeAtDestination?.timeSinceEpochMillis?.let(time),
-                    e.remainingDistance?.let { CarFormat.distance(it.displayDistance, it.displayUnit) })
+                    e.remainingDistance?.let { CarFormat.distance(it.displayDistance, it.displayUnit) },
+                    e.remainingTimeSeconds.takeIf { it >= 0 }?.let { CarFormat.duration(it) })
             }
-            val song = state.nowPlaying?.let { SongSlot(it.title, it.subtitle, it.playing, it.art) }
+            val song = state.nowPlaying?.let { SongSlot(it.title, it.subtitle, it.playing, it.art, it.positionMs, it.durationMs, it.updatedAtMs) }
             return HomeSlots(turn, tripSlot, song)
         }
     }
@@ -78,6 +142,15 @@ interface MyPlaySkin {
     fun tokens(night: Boolean): SkinTokens
 
     @Composable fun Turn(turn: TurnSlot, modifier: Modifier)
+    /**
+     * N5: whether the skin draws the knob's ring itself (reading [LocalStopRinged] in each slot);
+     * otherwise the engine draws a plain one around the whole slot.
+     */
+    val drawsFocus: Boolean get() = false
+
+    /** N5: drawn over the map and under the slots, e.g. a shade in the corners so their text reads. */
+    @Composable fun Backdrop(modifier: Modifier) = Unit
+
     /** The hub: always there (the knob's way into the worlds), with the trip when there is a route. */
     @Composable fun Hub(trip: TripSlot?, modifier: Modifier)
     @Composable fun Song(song: SongSlot, modifier: Modifier)

@@ -50,7 +50,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
-/** MyPlay (N1): the engine with the test skin, through the car shell's hidden preview. */
+/** MyPlay (N1, N2, N3): the engine with the test skin. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -91,8 +91,8 @@ class MyPlayEngineTest {
         this.state = state
         rule.setContent {
             CarTheme(night = state.night, theme = state.theme) {
-                CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
-                    navMap = { _, m -> covers = LocalMapCovers.current; Box(m.background(Color(0xFF2E4A3A))) })
+                MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
+                    navMap = { _, m -> covers = LocalMapCovers.current; Box(m.background(Color(0xFF2E4A3A))) }, overlay = {}, skin = TestSkin)
             }
         }
         rule.waitForIdle()
@@ -203,7 +203,7 @@ class MyPlayEngineTest {
             CarTheme(night = state.night, theme = state.theme) {
                 if (shown) {
                     val sources = EngineSources.of(state, actions, LocalContext.current).copy(speed = SpeedSource(car) { phone })
-                    MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m) }, navMap = { _, m -> Box(m) }, overlay = {}, sources = sources)
+                    MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m) }, navMap = { _, m -> Box(m) }, overlay = {}, skin = TestSkin, sources = sources)
                 }
             }
         }

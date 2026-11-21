@@ -27,4 +27,15 @@
     <string name="myplay_gesture_line_paused" translatable="false">Paused</string>
     <string name="myplay_gesture_line_assistant" translatable="false">Assistant</string>
     <string name="myplay_mirror_knob_hint" translatable="false">The knob now works the app. To leave: hold Back, or press Back three times quickly.</string>
+    <!-- N5: ORBIT, MyPlay's first car screen language -->
+    <string name="myplay_world_navigate" translatable="false">Navigate</string>
+    <string name="myplay_world_music" translatable="false">Music</string>
+    <string name="myplay_world_calls" translatable="false">Calls</string>
+    <string name="myplay_world_apps" translatable="false">Apps</string>
+    <string name="myplay_world_car" translatable="false">Car</string>
+    <string name="myplay_world_settings" translatable="false">Settings</string>
+    <string name="myplay_dial_hint" translatable="false">turn: choose · push: open · Back: back</string>
+    <string name="myplay_world_not_yet" translatable="false">Not drawn yet. Back to return.</string>
+    <string name="myplay_speed_unit_kmh" translatable="false">km/h</string>
+    <string name="myplay_hub_menu" translatable="false">Menu</string>
 </resources>

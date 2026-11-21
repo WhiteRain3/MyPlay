@@ -98,7 +98,7 @@ object Orbit {
             background = g.background, surface = g.glass, onSurface = g.text, dim = g.secondary,
             accent = accent(World.NAVIGATE), onAccent = ON_ACCENT,
             // ORBIT is round: a corner larger than any part makes every shape a circle or a pill.
-            corner = 999.dp, edge = 44.dp,
+            corner = 999.dp, edge = 44.dp, night = night,
         )
     }
 
