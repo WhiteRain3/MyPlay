@@ -159,6 +159,9 @@ internal fun MyPlayEngineShell(
     var openMusic: () -> Unit = {}
     // F4: the in-call strip opens the Calls world (set further down).
     var openCalls: () -> Unit = {}
+    // O1: the music panel over the home, opened by a push on the song (never the music app itself).
+    var panelOpen by remember { mutableStateOf(false) }
+    var panelChosen by remember { mutableStateOf(PANEL_PLAY) }
     val actionsOf: Map<String, () -> Unit> = buildMap {
         if (notes.unseen > 0 && model.place == Place.Home && !listOpen) put(STOP_BELL) { listOpen = true; listChosen = null; notes.markSeen() }
         if (notice != null && model.place == Place.Home) {
@@ -173,7 +176,7 @@ internal fun MyPlayEngineShell(
         }
         if (slots.turn != null) put(STOP_TURN) { openMaps() }
         if (hand != null) put(STOP_HUB) { openFront() } else put(STOP_HUB) { model.push() }
-        if (slots.song != null && hand == null) put(STOP_SONG) { openMusic() }
+        if (slots.song != null && hand == null) put(STOP_SONG) { panelOpen = true; panelChosen = PANEL_PLAY }
     }
     // A stop that went away (the song ended) leaves the graph; the ring goes back to the hub.
     val live = boxes.filterKeys { it in actionsOf }
@@ -246,6 +249,24 @@ internal fun MyPlayEngineShell(
         val target = nextSeek(pendingSeek, now, p.durationMs, if (forward) SEEK_STEP_MS else -SEEK_STEP_MS)
         pendingSeek = target
         music.seekTo(target)
+    }
+    // O1: the music panel's stops: the progress bar (left and right seek there, R5-5), previous,
+    // play/pause, next, and the music app as one stop among them.
+    val panelBoxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
+    val panelActions: Map<String, () -> Unit> = buildMap {
+        if (musicPage.transport.canSeek) put(PANEL_SEEK, music::playPause)
+        put(PANEL_APP) { panelOpen = false; openMusic() }
+        put(PANEL_PREV, music::previous)
+        put(PANEL_PLAY, music::playPause)
+        put(PANEL_NEXT, music::next)
+    }
+    val panelRing = panelChosen.takeIf { it in panelActions } ?: PANEL_PLAY
+    // The song ended, or the home was left: the panel closes.
+    LaunchedEffect(model.place, slots.song == null) { if (model.place != Place.Home || slots.song == null) panelOpen = false }
+    fun padPanel(dir: FocusGraph.Direction) {
+        val sideways = dir == FocusGraph.Direction.LEFT || dir == FocusGraph.Direction.RIGHT
+        if (panelRing == PANEL_SEEK && sideways) seek(dir == FocusGraph.Direction.RIGHT)
+        else FocusGraph.pad(panelBoxes.filterKeys { it in panelActions }, panelRing, dir)?.let { panelChosen = it }
     }
     fun padMusic(dir: FocusGraph.Direction) {
         val sideways = dir == FocusGraph.Direction.LEFT || dir == FocusGraph.Direction.RIGHT
@@ -427,6 +448,8 @@ internal fun MyPlayEngineShell(
         if (key == CLEAR_ALL_KEY) { notes.clearAll(); listOpen = false; return }
         notes.history.firstOrNull { "n:${it.key}" == key }?.actions?.firstOrNull()?.second?.invoke()
     }
+    // O1: Back closes the music panel, the ring back on the song.
+    BackHandler(enabled = panelOpen) { panelOpen = false; chosen = STOP_SONG }
     // Declared later, so it comes first: Back goes up the library, then out of it.
     BackHandler(enabled = lib != null) { if (lib?.canGoBack == true) lib.back() else library = null }
 
@@ -448,6 +471,17 @@ internal fun MyPlayEngineShell(
             Key.DirectionUp -> listChosen = listKeys[(listIndex - 1).coerceAtLeast(0)]
             Key.DirectionDown -> listChosen = listKeys[(listIndex + 1).coerceAtMost(n - 1)]
             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> runListRow(listKeys[listIndex])
+            else -> Unit
+        }
+        key in WORLD_KEYS
+    } else if (panelOpen) {
+        when (key) {
+            Key.Tab -> FocusGraph.knob(panelBoxes.filterKeys { it in panelActions }, panelRing, if (shift) -1 else 1)?.let { panelChosen = it }
+            Key.DirectionUp -> padPanel(FocusGraph.Direction.UP)
+            Key.DirectionDown -> padPanel(FocusGraph.Direction.DOWN)
+            Key.DirectionLeft -> padPanel(FocusGraph.Direction.LEFT)
+            Key.DirectionRight -> padPanel(FocusGraph.Direction.RIGHT)
+            Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> panelActions[panelRing]?.invoke()
             else -> Unit
         }
         key in WORLD_KEYS
@@ -577,7 +611,7 @@ internal fun MyPlayEngineShell(
                     if (nav != null) navMap(nav, Modifier.fillMaxSize()) else Wallpaper(state, Modifier.fillMaxSize())
                 }
                 val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)
-                val showRing = model.place == Place.Home && CarFocusVisibility.keyInput
+                val showRing = model.place == Place.Home && CarFocusVisibility.keyInput && !panelOpen
                 skin.Backdrop(Modifier.fillMaxSize())
                 @Composable
                 fun Modifier.slot(slot: Slot): Modifier = if (skin.coversMap(slot)) coversMap() else this
@@ -632,7 +666,22 @@ internal fun MyPlayEngineShell(
                     // The gesture line (R6), under the call's strip and the notice (R6-3: never on top of them).
                     if (model.place == Place.Home) GestureLineOverlay(state, Modifier)
                 }
-                if (home && hand == null) slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
+                if (home && hand == null) slots.song?.let { song ->
+                    // O1: the music panel opens above the song, in the same corner.
+                    Column(edge.align(Alignment.BottomEnd), horizontalAlignment = Alignment.End) {
+                        if (panelOpen) {
+                            val currentPanel by rememberUpdatedState(panelActions)
+                            skin.MusicPanel(musicPage, panelRing, { id ->
+                                Modifier
+                                    .pointerInput(id) { detectTapGestures { panelChosen = id; currentPanel[id]?.invoke() } }
+                                    .onGloballyPositioned { c -> c.boundsInRoot().let { panelBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                                    .semantics { selected = id == panelRing }
+                                    .testTag(id)
+                            }, Modifier.slot(Slot.SONG).testTag(SLOT_MUSIC_PANEL))
+                        }
+                        ringed(STOP_SONG) { skin.Song(song, Modifier.slot(Slot.SONG).stop(STOP_SONG)) }
+                    }
+                }
                 when (val p = model.place) {
                     is Place.Chooser -> skin.Chooser(p.selected, Modifier.align(Alignment.Center).slot(Slot.CHOOSER).testTag(SLOT_CHOOSER))
                     is Place.InWorld -> if (p.world == World.MUSIC && lib != null) {
@@ -841,6 +890,8 @@ internal const val SLOT_CHOOSER = "slot_chooser"
 internal const val SLOT_WORLD = "slot_world"
 internal const val SLOT_APPS = "slot_apps"
 internal const val SLOT_MUSIC = "slot_music"
+/** O1: the music panel over the home. */
+internal const val SLOT_MUSIC_PANEL = "slot_music_panel"
 internal const val SLOT_CALL = "slot_call"
 internal const val SLOT_PHONE = "slot_phone"
 internal const val SLOT_NOTICES = "slot_notices"

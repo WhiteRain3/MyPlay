@@ -201,7 +201,12 @@ class MyPlayEngineTest {
         engine.performKeyInput { pressKey(Key.DirectionRight) }
         ringed(STOP_SONG)
         engine.performKeyInput { pressKey(Key.Enter) }
-        assertEquals(listOf("app:maps", "next", "app:music"), asked)
+        // O1: a push on the song opens the music panel, never the music app; Back closes it.
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        assertEquals(listOf("app:maps", "next"), asked)
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertDoesNotExist()
+        ringed(STOP_SONG)
         // A tap does what a push does.
         rule.onNodeWithTag(STOP_TURN).performClick()
         assertEquals("app:maps", asked.last())
@@ -308,6 +313,76 @@ class MyPlayEngineTest {
         assertEquals("app:music", asked.last())
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    /** O1: the song's push opens the music panel; its knob and pad stay in it; the music app is one stop in it. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theSongOpensTheMusicPanel() {
+        val state = show()
+        rule.runOnIdle {
+            state.nowPlaying = NowPlaying("music", PadWalkStates.SONG_TITLE, "The Synthwaves", null, playing = false,
+                positionMs = 95_000, durationMs = 240_000, updatedAtMs = android.os.SystemClock.elapsedRealtime())
+            state.transport = MediaTransport(canSeek = true, canPrevious = true, canNext = true)
+        }
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.onNodeWithTag(STOP_SONG).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        assertTrue("the push opened no app: $asked", asked.isEmpty())
+        // The ring starts on play/pause.
+        rule.onNodeWithTag(PANEL_PLAY).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        rule.onNodeWithTag(PANEL_NEXT).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        // Right with nothing further: the ring stays (no song skipped by the pad here).
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        rule.onNodeWithTag(PANEL_NEXT).assertIsSelected()
+        engine.performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } }
+        rule.onNodeWithTag(PANEL_PLAY).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        rule.onNodeWithTag(PANEL_PREV).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("playPause", "next", "previous"), asked)
+        // Down to the progress bar: left and right seek there (R5-5); up leaves it.
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNodeWithTag(PANEL_SEEK).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        assertEquals("seek:105000", asked.last())
+        rule.onNodeWithTag(PANEL_SEEK).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
+        // The home's stops are out of reach while it is open: the knob stays in the panel.
+        repeat(6) { engine.performKeyInput { pressKey(Key.Tab) } }
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        engine.assertIsFocused()
+        // The music app is one stop in the panel; it closes the panel.
+        rule.onNodeWithTag(PANEL_APP).performClick()
+        assertEquals("app:music", asked.last())
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertDoesNotExist()
+        // A tap on the song opens it too; the song ending closes it.
+        rule.onNodeWithTag(STOP_SONG).performClick()
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        rule.onNodeWithTag(PANEL_NEXT).performClick()
+        assertEquals("next", asked.last())
+        rule.runOnIdle { state.nowPlaying = null }
+        rule.waitForIdle()
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertDoesNotExist()
+        assertTrue("never the music app from the disc: $asked", asked.count { it == "app:music" } == 1)
+    }
+
+    /** O1: without the player's leave to seek the panel has no progress bar stop. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun thePanelSeeksOnlyWithThePlayersLeave() {
+        val state = show()
+        rule.runOnIdle { state.transport = MediaTransport(canSeek = false, canPrevious = true, canNext = true) }
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.Tab) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        rule.onNodeWithTag(PANEL_SEEK).assertDoesNotExist()
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNodeWithTag(PANEL_PLAY).assertIsSelected()
     }
 
     /** Where the player does not allow seeking, left and right on the artwork move the ring instead. */

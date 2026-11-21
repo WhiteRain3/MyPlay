@@ -158,6 +158,13 @@ const val MUSIC_NEXT = "music_next"
 const val MUSIC_LIBRARY = "music_library"
 fun upNextStop(queueId: Long) = "music_up_$queueId"
 
+/** O1: the music panel's stops (and their test tags). */
+const val PANEL_SEEK = "panel_seek"
+const val PANEL_PREV = "panel_prev"
+const val PANEL_PLAY = "panel_play"
+const val PANEL_NEXT = "panel_next"
+const val PANEL_APP = "panel_app"
+
 /** What the home screen's slots show; null where there is nothing (no route, no song). */
 data class HomeSlots(val turn: TurnSlot?, val trip: TripSlot?, val song: SongSlot?) {
     companion object {
@@ -256,6 +263,15 @@ interface MyPlaySkin {
      * the ring on [ringed]. The artwork carries the progress bar: left and right seek there (R5-5).
      */
     @Composable fun MusicWorld(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier)
+
+    /**
+     * O1: the music panel, opened by a push on the home's song and drawn above it: the music app
+     * ([PANEL_APP]), previous, play/pause and next ([PANEL_PREV], [PANEL_PLAY], [PANEL_NEXT]) and,
+     * when the player can seek, the progress bar ([PANEL_SEEK], left and right seek there). Each
+     * stop takes `stop(id)`; the skin draws the ring on [ringed]. Only a skin with a song slot
+     * (no [hand]) is asked to draw it.
+     */
+    @Composable fun MusicPanel(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier) = Unit
 
     /**
      * N7: a music app's library: one level's rows ([LibraryPage]); [ringed] holds the ring. Each row

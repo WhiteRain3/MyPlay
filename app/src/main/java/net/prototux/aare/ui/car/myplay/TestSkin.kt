@@ -132,6 +132,23 @@ object TestSkin : MyPlaySkin {
     }
 
     @Composable
+    override fun MusicPanel(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        @Composable
+        fun item(id: String, label: String) =
+            Text(label, color = if (id == ringed) t.accent else t.onSurface, fontSize = 18.sp, modifier = stop(id).padding(12.dp))
+        Column(modifier.background(t.background.copy(alpha = 0.8f)).padding(12.dp)) {
+            Row {
+                item(PANEL_APP, "APP")
+                item(PANEL_PREV, "PREV")
+                item(PANEL_PLAY, if (page.song?.playing == true) "PAUSE" else "PLAY")
+                item(PANEL_NEXT, "NEXT")
+            }
+            if (page.transport.canSeek) item(PANEL_SEEK, "SEEK")
+        }
+    }
+
+    @Composable
     override fun Library(page: LibraryPage, ringed: Int, art: suspend (LibraryRow, Int) -> Bitmap?, row: (Int) -> Modifier, modifier: Modifier) {
         val t = LocalSkinTokens.current
         Column(modifier.background(t.background.copy(alpha = 0.8f)).padding(24.dp)) {

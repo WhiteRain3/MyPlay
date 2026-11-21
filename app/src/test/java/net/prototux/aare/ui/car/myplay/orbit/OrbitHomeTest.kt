@@ -368,6 +368,9 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun dial901x543Day() = picture("orbit-dial-901x543-day", night = false, dial = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun musicNight() = picture("orbit-music-1280x720-night", night = true, music = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun music901x543Day() = picture("orbit-music-901x543-day", night = false, music = true)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun musicPanelNight() = picture("orbit-music-panel-1280x720-night", night = true, panel = true)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun musicPanelDay() = picture("orbit-music-panel-1280x720-day", night = false, panel = true)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun musicPanel901x543Night() = picture("orbit-music-panel-901x543-night", night = true, panel = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun libraryNight() = picture("orbit-library-1280x720-night", night = true, music = true, library = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun library901x543Day() = picture("orbit-library-901x543-day", night = false, music = true, library = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun ringingNight() = picture("orbit-call-ringing-1280x720-night", night = true, call = CarCall(true, "Anna K.", 1L))
@@ -405,7 +408,7 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null, calls: Boolean = false, notice: Boolean = false, bell: Int = 0, world: Int = -1, speed: SpeedReading? = null) {
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null, calls: Boolean = false, notice: Boolean = false, bell: Int = 0, world: Int = -1, speed: SpeedReading? = null, panel: Boolean = false) {
         val state = show(night, trip, withArt, speed)
         if (world >= 0) {
             val engine = rule.onNodeWithTag(ENGINE_TAG)
@@ -463,6 +466,15 @@ class OrbitHomeTest {
                 engine.performKeyInput { pressKey(Key.DirectionDown) }
             }
             rule.mainClock.advanceTimeBy(1_000)
+        }
+        if (panel) {
+            // O1: the song's push opens the music panel; the ring on play/pause.
+            rule.runOnIdle { state.transport = MediaTransport(canSeek = true, canPrevious = true, canNext = true) }
+            val engine = rule.onNodeWithTag(ENGINE_TAG)
+            engine.performKeyInput { pressKey(Key.Tab) }
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_MUSIC_PANEL).assertExists()
+            rule.mainClock.advanceTimeBy(500)
         }
         if (apps) {
             rule.runOnIdle { addApps(state) }

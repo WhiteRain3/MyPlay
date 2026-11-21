@@ -111,6 +111,11 @@ import net.prototux.aare.ui.car.myplay.MUSIC_LIBRARY
 import net.prototux.aare.ui.car.myplay.MUSIC_NEXT
 import net.prototux.aare.ui.car.myplay.MUSIC_PLAY
 import net.prototux.aare.ui.car.myplay.MUSIC_PREV
+import net.prototux.aare.ui.car.myplay.PANEL_APP
+import net.prototux.aare.ui.car.myplay.PANEL_NEXT
+import net.prototux.aare.ui.car.myplay.PANEL_PLAY
+import net.prototux.aare.ui.car.myplay.PANEL_PREV
+import net.prototux.aare.ui.car.myplay.PANEL_SEEK
 import net.prototux.aare.ui.car.myplay.MusicPage
 import net.prototux.aare.ui.car.myplay.SettingsPage
 import net.prototux.aare.ui.car.myplay.NoticeListPage
@@ -477,6 +482,58 @@ object OrbitSkin : MyPlaySkin {
             }
         }
     }
+
+    /**
+     * O1: the music panel above the song disc: a glass card with the music app, previous,
+     * play/pause (the big one, in the Music colour) and next, and the progress bar under them,
+     * which seeks with left and right while it holds the ring.
+     */
+    @Composable
+    override fun MusicPanel(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier) = Box(modifier) {
+        Scaled {
+            val night = LocalSkinTokens.current.night
+            val g = Orbit.glass(night)
+            val accent = Orbit.accent(World.MUSIC, night)
+            val song = page.song
+            val card = androidx.compose.foundation.shape.RoundedCornerShape(56.dp)
+            Column(
+                Modifier.padding(bottom = 18.dp).clip(card).background(g.glass).border(2.dp, g.edge, card)
+                    .padding(horizontal = 22.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    MusicButton(PANEL_APP, Icons.Rounded.LibraryMusic, 64.dp, false, ringed, accent, night, stop)
+                    MusicButton(PANEL_PREV, Icons.Rounded.SkipPrevious, 76.dp, false, ringed, accent, night, stop)
+                    MusicButton(PANEL_PLAY, if (song?.playing == true) Icons.Rounded.Pause else Icons.Rounded.PlayArrow, 96.dp, true, ringed, accent, night, stop)
+                    MusicButton(PANEL_NEXT, Icons.Rounded.SkipNext, 76.dp, false, ringed, accent, night, stop)
+                }
+                if (song != null && page.transport.canSeek) PanelProgress(song, ringed == PANEL_SEEK, accent, night, stop(PANEL_SEEK))
+            }
+        }
+    }
+
+    /** O1: the panel's progress bar; ringed, it is outlined and seeks with left and right. */
+    @Composable
+    private fun PanelProgress(song: SongSlot, on: Boolean, accent: Color, night: Boolean, modifier: Modifier) {
+        val g = Orbit.glass(night)
+        var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+        LaunchedEffect(song.playing, song.updatedAtMs) {
+            now = SystemClock.elapsedRealtime()
+            while (song.playing) {
+                delay(500)
+                now = SystemClock.elapsedRealtime()
+            }
+        }
+        val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else 0f
+        Box(modifier.width(372.dp).height(36.dp).orbitFocusRounded(on, accent, g.halo, 18.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(if (on) 10.dp else 6.dp).clip(CircleShape).background(g.track)
+                .testTag(PANEL_PROGRESS_TAG).progressSemantics(progress)) {
+                Box(Modifier.fillMaxWidth(progress).fillMaxSize().clip(CircleShape).background(accent))
+            }
+        }
+    }
+
+    const val PANEL_PROGRESS_TAG = "orbit_panel_progress"
 
     /** The sheet's round colour for each next song (the queue sends no artwork). */
     private val UP_NEXT = listOf(
