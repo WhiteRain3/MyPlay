@@ -260,7 +260,8 @@ internal fun MyPlayEngineShell(
     // N9: the Settings world: read again after each change; the ring stays on a setting (its id).
     var settingsVersion by remember { mutableStateOf(0) }
     val inSettings = model.place == Place.InWorld(World.SETTINGS)
-    val settingItems = remember(inSettings, settingsVersion, sources.settings) { if (inSettings) sources.settings.items() else emptyList() }
+    // S-3: also read again when the car starts or stops (passenger mode's note follows at once).
+    val settingItems = remember(inSettings, settingsVersion, sources.settings, state.drivingRestricted) { if (inSettings) sources.settings.items() else emptyList() }
     var settingChosen by remember { mutableStateOf<String?>(null) }
     val settingIndex = settingItems.indexOfFirst { it.id == settingChosen }.takeIf { it >= 0 } ?: 0
     val currentSettings by rememberUpdatedState(settingItems)
@@ -360,12 +361,19 @@ internal fun MyPlayEngineShell(
             Key.DirectionLeft, Key.DirectionUp -> { model.turn(-1); true }
             Key.DirectionRight, Key.DirectionDown -> { model.turn(1); true }
             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> {
-                model.push()
-                if (p.selected == World.APPS) appRing = 0
-                if (p.selected == World.MUSIC) musicChosen = MUSIC_PLAY
-                if (p.selected == World.CALLS) phoneChosen = null
-                if (p.selected == World.SETTINGS) settingChosen = null
-                if (p.selected == World.CAR) carChosen = null
+                if (p.selected == World.NAVIGATE) {
+                    // N9, the dispatcher: Navigate is the maps app itself, full screen with its own search
+                    // and destinations (the last used one); Back from it comes home. The dial closes.
+                    model.back()
+                    sources.openMaps()
+                } else {
+                    model.push()
+                    if (p.selected == World.APPS) appRing = 0
+                    if (p.selected == World.MUSIC) musicChosen = MUSIC_PLAY
+                    if (p.selected == World.CALLS) phoneChosen = null
+                    if (p.selected == World.SETTINGS) settingChosen = null
+                    if (p.selected == World.CAR) carChosen = null
+                }
                 true
             }
             else -> false

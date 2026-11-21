@@ -148,15 +148,23 @@ class MyPlayEngineTest {
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
-        // Navigate: a world not drawn yet (the others draw their own).
+        // A world: Car (reading its data); Back to the dial, Back home.
+        repeat(4) { engine.performKeyInput { pressKey(Key.Tab) } }
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        rule.onNodeWithTag(SLOT_WORLD).assertExists()
-        rule.onNodeWithText(World.NAVIGATE.name, useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(SLOT_CAR).assertExists()
 
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         assertTrue(rule.onAllNodes(hasTestTag(SLOT_CHOOSER)).fetchSemanticsNodes().isEmpty())
+        // Navigate is the maps app itself: it opens, and the dial closes. (The dial opens on the
+        // last world, Car: two turns on, round to Navigate.)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(2) { engine.performKeyInput { pressKey(Key.Tab) } }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("app:maps"), asked)
+        assertTrue(rule.onAllNodes(hasTestTag(SLOT_CHOOSER)).fetchSemanticsNodes().isEmpty())
+        assertTrue(rule.onAllNodes(hasTestTag(SLOT_WORLD)).fetchSemanticsNodes().isEmpty())
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
@@ -202,8 +210,9 @@ class MyPlayEngineTest {
         show(otherStop = true)
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(4) { engine.performKeyInput { pressKey(Key.Tab) } } // the Car world
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        rule.onNodeWithTag(SLOT_WORLD).assertExists()
+        rule.onNodeWithTag(SLOT_CAR).assertExists()
         repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
         engine.performKeyInput { pressKey(Key.DirectionRight) }
         engine.assertIsFocused()
@@ -211,7 +220,7 @@ class MyPlayEngineTest {
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        rule.onNodeWithText(World.NAVIGATE.name, useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(SLOT_CAR).assertExists()
     }
 
     /** N6: the Apps world lists the apps; knob, pad, push and tap; Back returns to the dial. */

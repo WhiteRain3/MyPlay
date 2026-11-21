@@ -37,7 +37,11 @@ import net.prototux.aare.ui.theme.LocalCarDimens
  * stays in AARE on the phone.
  */
 @Composable
-internal fun CarSettingsScreen(settings: Settings, modifier: Modifier, mapsApps: List<CarAppEntry> = emptyList()) {
+internal fun CarSettingsScreen(
+    settings: Settings, modifier: Modifier, mapsApps: List<CarAppEntry> = emptyList(),
+    /** MyPlay (S-4): whether the car's driving restrictions apply now (the car moving, passenger mode off). */
+    restricted: () -> Boolean = { false },
+) {
     var homeMaps by remember { mutableStateOf(settings.myplayHomeMaps) } // MyPlay (K9)
     var theme by remember { mutableStateOf(settings.carTheme) }
     var rail by remember { mutableStateOf(settings.railPosition) }
@@ -90,7 +94,13 @@ internal fun CarSettingsScreen(settings: Settings, modifier: Modifier, mapsApps:
         item {
             DashboardCardsEditor(cards, LocalCarDimens.current.touchTarget) { cards = it; settings.dashboardCards = it.map(DashCard::id) }
         }
-        item { SwitchRow(stringResource(R.string.setup_switch_passenger), passenger) { passenger = it; settings.ignoreDriving = it } }
+        // MyPlay (S-4, the owner's rule for the car): passenger mode lifts every driving restriction,
+        // so from the car it turns on only while the car is stopped; it can always be turned off.
+        item {
+            SwitchRow(stringResource(R.string.setup_switch_passenger), passenger) {
+                if (!it || !restricted()) { passenger = it; settings.ignoreDriving = it }
+            }
+        }
         item { SwitchRow(stringResource(R.string.setup_switch_message_notifications), banners) { banners = it; settings.messageBanners = it } }
         item { SwitchRow(stringResource(R.string.msg_toggle_read_aloud_title), aloud) { aloud = it; settings.readMessagesAloud = it } }
         item { SwitchRow(stringResource(R.string.setup_switch_audio_next_connection), audio) { audio = it; settings.carAudio = it } }
