@@ -21,7 +21,11 @@ sealed interface SettingItem {
     val id: String
     val title: String
 
-    data class Toggle(override val id: String, override val title: String, val on: Boolean, val set: (Boolean) -> Unit) : SettingItem
+    /** [note]: shown under the title; with [canTurnOn] false a push cannot turn it on (it can still be turned off). */
+    data class Toggle(
+        override val id: String, override val title: String, val on: Boolean,
+        val canTurnOn: Boolean = true, val note: String? = null, val set: (Boolean) -> Unit,
+    ) : SettingItem
 
     /** [options]: value to label; a push steps to the next one, round. */
     data class Choice(
@@ -70,6 +74,20 @@ internal class CarSettingsSource(private val context: Context, private val state
         SettingItem.Toggle("banners", s(R.string.setup_switch_message_notifications), settings.messageBanners) { settings.messageBanners = it },
         SettingItem.Toggle("read_aloud", s(R.string.msg_toggle_read_aloud_title), settings.readMessagesAloud) { settings.readMessagesAloud = it },
         SettingItem.Toggle("car_audio", s(R.string.setup_switch_audio_next_connection), settings.carAudio) { settings.carAudio = it },
-        SettingItem.Toggle("passenger", s(R.string.setup_switch_passenger), settings.ignoreDriving) { settings.ignoreDriving = it },
+        passenger(),
     )
+
+    /**
+     * S-1: passenger mode lifts every driving restriction. From the car it can always be turned off,
+     * but turned on only while the car is stopped (the phone app is unchanged). While it is off, the
+     * car's driving state is [CarUiState.drivingRestricted].
+     */
+    private fun passenger(): SettingItem.Toggle {
+        val on = settings.ignoreDriving
+        val moving = !on && state.drivingRestricted
+        return SettingItem.Toggle(
+            "passenger", s(R.string.setup_switch_passenger), on, canTurnOn = !moving,
+            note = if (moving) s(R.string.myplay_setting_passenger_stopped) else null,
+        ) { v -> if (!v || !(state.drivingRestricted && !settings.ignoreDriving)) settings.ignoreDriving = v }
+    }
 }

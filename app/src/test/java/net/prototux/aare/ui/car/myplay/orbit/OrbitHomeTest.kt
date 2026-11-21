@@ -165,7 +165,12 @@ class OrbitHomeTest {
         rule.setContent {
             CarTheme(night = state.night, theme = state.theme) {
                 val context = androidx.compose.ui.platform.LocalContext.current
-                CompositionLocalProvider(LocalEngineSources provides remember(state) { EngineSources.of(state, actions, context).copy(phone = PicturePhone) }) {
+                CompositionLocalProvider(LocalEngineSources provides remember(state) {
+                    EngineSources.of(state, actions, context).copy(phone = PicturePhone, carLines = {
+                        listOf("Car" to "Audi A4 2016", "Driving" to "Moving", "Speed" to "48 km/h", "Fuel" to "62% · 480 km",
+                            "Outside" to "7.5 °C · 101 kPa", "Tyres" to "230 · 230 · 240 · 240 kPa", "Doors" to "Closed")
+                    })
+                }) {
                     CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
                         navMap = { _, m -> Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
                 }
@@ -373,6 +378,7 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun noticeList901x543Day() = picture("orbit-notice-list-901x543-day", night = false, bell = 2)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun settingsNight() = picture("orbit-settings-1280x720-night", night = true, world = 5)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun settings901x543Day() = picture("orbit-settings-901x543-day", night = false, world = 5)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun carNight() = picture("orbit-car-1280x720-night", night = true, world = 4)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 

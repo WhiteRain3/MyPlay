@@ -253,6 +253,10 @@ internal fun MyPlayEngineShell(
         if (key == PHONE_APP_KEY) { phone.open(); return }
         currentPhoneEntries.firstOrNull { "tel:${it.number}" == key }?.let(phone::call)
     }
+    // N9: the Car world: the car's data to read; the ring stays on a line (its label) as values change.
+    var carChosen by remember { mutableStateOf<String?>(null) }
+    val carLines = if (model.place == Place.InWorld(World.CAR)) sources.carLines() else emptyList()
+    val carLabels = carLines.map { it.first }
     // N9: the Settings world: read again after each change; the ring stays on a setting (its id).
     var settingsVersion by remember { mutableStateOf(0) }
     val inSettings = model.place == Place.InWorld(World.SETTINGS)
@@ -263,7 +267,8 @@ internal fun MyPlayEngineShell(
     fun changeSetting(id: String) {
         settingChosen = id
         when (val item = currentSettings.firstOrNull { it.id == id }) {
-            is SettingItem.Toggle -> item.set(!item.on)
+            // S-1: a switch that cannot be turned on now (passenger mode while moving) stays off.
+            is SettingItem.Toggle -> if (item.on || item.canTurnOn) item.set(!item.on) else return
             is SettingItem.Choice -> if (item.options.isNotEmpty()) item.select(item.next)
             null -> return
         }
@@ -360,6 +365,7 @@ internal fun MyPlayEngineShell(
                 if (p.selected == World.MUSIC) musicChosen = MUSIC_PLAY
                 if (p.selected == World.CALLS) phoneChosen = null
                 if (p.selected == World.SETTINGS) settingChosen = null
+                if (p.selected == World.CAR) carChosen = null
                 true
             }
             else -> false
@@ -384,6 +390,17 @@ internal fun MyPlayEngineShell(
                 Key.DirectionLeft -> padMusic(FocusGraph.Direction.LEFT)
                 Key.DirectionRight -> padMusic(FocusGraph.Direction.RIGHT)
                 Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> musicActions[musicRing]?.invoke()
+                else -> Unit
+            }
+            key in WORLD_KEYS
+        } else if (p.world == World.CAR) {
+            val labels = carLabels
+            val n = labels.size
+            val i = labels.indexOf(carChosen).takeIf { it >= 0 } ?: 0
+            if (n > 0) when (key) {
+                Key.Tab -> carChosen = labels[(i + if (shift) -1 else 1).coerceIn(0, n - 1)]
+                Key.DirectionUp -> carChosen = labels[(i - 1).coerceAtLeast(0)]
+                Key.DirectionDown -> carChosen = labels[(i + 1).coerceAtMost(n - 1)]
                 else -> Unit
             }
             key in WORLD_KEYS
@@ -508,12 +525,17 @@ internal fun MyPlayEngineShell(
                             },
                             Modifier.fillMaxSize().testTag(SLOT_MUSIC),
                         )
+                    } else if (p.world == World.CAR) {
+                        val i = carLines.indexOfFirst { it.first == carChosen }.takeIf { it >= 0 } ?: 0
+                        skin.CarWorld(carLines, i, { r ->
+                            Modifier.semantics { selected = r == i }.testTag(carLineTag(r))
+                        }, Modifier.fillMaxSize().testTag(SLOT_CAR))
                     } else if (p.world == World.SETTINGS) {
                         val on = stringResource(R.string.myplay_on)
                         val off = stringResource(R.string.myplay_off)
                         val rows = settingItems.map {
                             when (it) {
-                                is SettingItem.Toggle -> SettingRow(it.title, if (it.on) on else off, switch = true, on = it.on)
+                                is SettingItem.Toggle -> SettingRow(it.title, if (it.on) on else off, switch = true, on = it.on, note = it.note)
                                 is SettingItem.Choice -> SettingRow(it.title, it.label, switch = false, on = false)
                             }
                         }
@@ -656,6 +678,10 @@ internal const val SLOT_CALL = "slot_call"
 internal const val SLOT_PHONE = "slot_phone"
 internal const val SLOT_NOTICES = "slot_notices"
 internal const val SLOT_SETTINGS = "slot_settings"
+internal const val SLOT_CAR = "slot_car"
+
+/** A line of the Car world (its test tag). */
+internal fun carLineTag(i: Int) = "car_line_$i"
 
 /** A setting's row (its test tag). */
 internal fun settingRowTag(id: String) = "setting_$id"

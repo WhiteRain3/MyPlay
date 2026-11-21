@@ -1,6 +1,9 @@
 package net.prototux.aare.ui.car.myplay
 
 import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import android.content.pm.PackageManager
 import android.provider.CallLog
 import kotlinx.coroutines.Dispatchers
@@ -117,6 +120,12 @@ data class EngineSources(
     val openMaps: () -> Unit,
     val speed: SpeedSource,
     val apps: AppsSource,
+    /** N9: the Car world's lines (label, value), as the car data screen shows them; empty while no car is connected. */
+    val carLines: @Composable () -> List<Pair<String, String>> = {
+        val car by CarData.state.collectAsState()
+        val proj by net.prototux.aare.service.ProjectionService.state.collectAsState()
+        net.prototux.aare.ui.car.carDataLines(car, proj)
+    },
     /** N9: the settings of the Settings world. */
     val settings: SettingsSource = object : SettingsSource { override fun items() = emptyList<SettingItem>() },
     /** The phone's picture of the car screen: the engine takes no focus and reads no speed. */

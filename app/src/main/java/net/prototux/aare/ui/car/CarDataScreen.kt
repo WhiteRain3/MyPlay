@@ -54,7 +54,7 @@ internal fun CarDataScreen(modifier: Modifier) {
 
 /** (label, value) for every datum the car has reported. Mirrors the phone viewer's rows. */
 @Composable
-private fun carDataLines(car: CarData.State, proj: ProjectionService.State): List<Pair<String, String>> {
+internal fun carDataLines(car: CarData.State, proj: ProjectionService.State): List<Pair<String, String>> {
     if (!car.connected) return emptyList()
     val rows = ArrayList<Pair<String, String>>()
     fun add(label: String, value: String?) { if (value != null) rows += label to value }

@@ -138,7 +138,7 @@ data class NoticeRow(val notice: CarNotice?, val text: String, val time: String,
 data class NoticeListPage(val rows: List<NoticeRow>)
 
 /** N9: one row of the Settings world: its title, the value shown ("On", "Dark"), and whether it is a switch that is on. */
-data class SettingRow(val title: String, val value: String, val switch: Boolean, val on: Boolean)
+data class SettingRow(val title: String, val value: String, val switch: Boolean, val on: Boolean, val note: String? = null)
 
 data class SettingsPage(val rows: List<SettingRow>)
 
@@ -272,6 +272,9 @@ interface MyPlaySkin {
      * Each row takes `row(i)`; the ring is on [ringed]; the skin keeps it in view.
      */
     @Composable fun NoticeList(page: NoticeListPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier)
+
+    /** N9: the Car world: the car's data, one row per line, to read (nothing to push); the ring is on [ringed]. */
+    @Composable fun CarWorld(lines: List<Pair<String, String>>, ringed: Int, row: (Int) -> Modifier, modifier: Modifier)
 
     /** N9: the Settings world: one row per setting, its value shown; each row takes `row(i)`; the ring is on [ringed]. */
     @Composable fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier)

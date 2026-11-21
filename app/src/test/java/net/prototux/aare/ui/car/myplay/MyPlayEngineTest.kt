@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -111,7 +112,8 @@ class MyPlayEngineTest {
     }
 
     /** [otherStop]: a focusable in the overlay, as a notice's buttons would be (N2-1). */
-    private fun show(night: Boolean = true, guidance: Boolean = false, otherStop: Boolean = false, phone: PhoneSource? = null, settings: SettingsSource? = null): CarUiState {
+    private fun show(night: Boolean = true, guidance: Boolean = false, otherStop: Boolean = false, phone: PhoneSource? = null, settings: SettingsSource? = null,
+                     carLines: (@Composable () -> List<Pair<String, String>>)? = null): CarUiState {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
             enginePreview = true
             this.night = night
@@ -124,7 +126,8 @@ class MyPlayEngineTest {
                     navMap = { _, m -> covers = LocalMapCovers.current; Box(m.background(Color(0xFF2E4A3A))) },
                     overlay = { m -> if (otherStop) Box(m.size(40.dp).focusable().testTag("other_stop")) }, skin = TestSkin,
                     sources = EngineSources.of(state, actions, LocalContext.current).let { if (phone != null) it.copy(phone = phone) else it }
-                        .let { if (settings != null) it.copy(settings = settings) else it })
+                        .let { if (settings != null) it.copy(settings = settings) else it }
+                        .let { if (carLines != null) it.copy(carLines = carLines) else it })
             }
         }
         rule.waitForIdle()
@@ -746,6 +749,68 @@ class MyPlayEngineTest {
         // The home maps choice offers the maps apps of the car.
         val maps = source.items().filterIsInstance<SettingItem.Choice>().single { it.id == "home_maps" }
         assertTrue(maps.options.any { it.second == "Maps" })
+    }
+
+    /** N9: the Car world shows the car's data to read; the ring stays on a line as values change. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theCarWorldReadsTheCarsData() {
+        var speed by mutableStateOf("48 km/h")
+        var withFuel by mutableStateOf(false)
+        show(otherStop = true, carLines = {
+            listOfNotNull(("Fuel" to "62% · 480 km").takeIf { withFuel }, "Speed" to speed, "Outside" to "7.5 °C", "Tyres" to "230 · 230 · 240 · 240 kPa")
+        })
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(4) { engine.performKeyInput { pressKey(Key.Tab) } } // ... APPS, CAR
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_CAR).assertExists()
+        rule.onNodeWithTag(carLineTag(0)).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNodeWithTag(carLineTag(1)).assertIsSelected()
+        // A new line comes in above (the car sent its fuel) and the speed changes: the ring stays on "Outside".
+        rule.runOnIdle { withFuel = true; speed = "50 km/h" }
+        rule.waitForIdle()
+        rule.onNodeWithText("Outside: 7.5 °C").assertExists()
+        rule.onNodeWithTag(carLineTag(2)).assertIsSelected()
+        // Nothing to push.
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertTrue(asked.isEmpty())
+        engine.assertIsFocused()
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theCarWorldWithoutACar() {
+        show(carLines = { emptyList() })
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(4) { engine.performKeyInput { pressKey(Key.Tab) } }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithText("NO CAR").assertExists()
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        engine.assertIsFocused()
+    }
+
+    /** S-1: passenger mode can be turned off at any time, but on only while the car is stopped. */
+    @Test fun passengerModeTurnsOnOnlyWhileStopped() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val settings = net.prototux.aare.Settings(context)
+        val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard)
+        val source = CarSettingsSource(context, state)
+        fun passenger() = source.items().filterIsInstance<SettingItem.Toggle>().single { it.id == "passenger" }
+        settings.ignoreDriving = false
+        state.drivingRestricted = true // moving
+        assertTrue(!passenger().canTurnOn && passenger().note != null)
+        passenger().set(true)
+        assertTrue("not on while moving", !settings.ignoreDriving)
+        state.drivingRestricted = false // stopped
+        assertTrue(passenger().canTurnOn)
+        passenger().set(true)
+        assertTrue(settings.ignoreDriving)
+        // On while moving (restrictions lifted, so drivingRestricted reads false): it can always be turned off.
+        passenger().set(false)
+        assertTrue(!settings.ignoreDriving)
     }
 
     @Test fun appsPagesWrapAndPage() {

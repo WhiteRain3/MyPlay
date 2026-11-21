@@ -194,11 +194,22 @@ object TestSkin : MyPlaySkin {
     }
 
     @Composable
+    override fun CarWorld(lines: List<Pair<String, String>>, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        Column(modifier.background(t.background.copy(alpha = 0.9f)).padding(24.dp)) {
+            if (lines.isEmpty()) Text("NO CAR", color = t.dim)
+            lines.forEachIndexed { i, (label, value) ->
+                Text("$label: $value", color = if (i == ringed) t.accent else t.onSurface, fontSize = 18.sp, modifier = row(i).padding(8.dp))
+            }
+        }
+    }
+
+    @Composable
     override fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
         val t = LocalSkinTokens.current
         Column(modifier.background(t.background.copy(alpha = 0.9f)).padding(24.dp)) {
             page.rows.forEachIndexed { i, r ->
-                Text("${r.title}: ${r.value}", color = if (i == ringed) t.accent else t.onSurface, fontSize = 18.sp, modifier = row(i).padding(8.dp))
+                Text("${r.title}: ${r.value}" + (r.note?.let { " ($it)" } ?: ""), color = if (i == ringed) t.accent else t.onSurface, fontSize = 18.sp, modifier = row(i).padding(8.dp))
             }
         }
     }
