@@ -169,8 +169,9 @@ internal fun MyPlayEngineShell(
     // F4: the in-call strip opens the Calls world (set further down).
     var openCalls: () -> Unit = {}
     // O1: the music panel over the home, opened by a push on the song (never the music app itself).
-    var panelOpen by remember { mutableStateOf(false) }
-    var panelChosen by remember { mutableStateOf(PANEL_PLAY) }
+    // O1-1: keyed on the skin, so a new language (DECK has no song slot to draw it) starts closed.
+    var panelOpen by remember(skin.id) { mutableStateOf(false) }
+    var panelChosen by remember(skin.id) { mutableStateOf(PANEL_PLAY) }
     val actionsOf: Map<String, () -> Unit> = buildMap {
         if (notes.unseen > 0 && model.place == Place.Home && !listOpen) put(STOP_BELL) { listOpen = true; listChosen = null; notes.markSeen() }
         if (notice != null && model.place == Place.Home) {
@@ -271,7 +272,7 @@ internal fun MyPlayEngineShell(
     }
     val panelRing = panelChosen.takeIf { it in panelActions } ?: PANEL_PLAY
     // The song ended, or the home was left: the panel closes.
-    LaunchedEffect(model.place, slots.song == null) { if (model.place != Place.Home || slots.song == null) panelOpen = false }
+    LaunchedEffect(model.place, slots.song == null, hand) { if (model.place != Place.Home || slots.song == null || hand != null) panelOpen = false }
     // O2: a panel over the map (the music panel, the dial) closes by itself after the driver's
     // chosen time without a knob, pad or touch input; any input starts the time again. The ring
     // goes back to where it was on the home (the song, the hub). Real screens never close so.
