@@ -42,7 +42,7 @@ What is left, and what waits for the car, is in the next section.
 4. **I2, an updater that installs.** Download and install the new release when the owner taps,
    instead of opening the release page (AA-Experiments `Updater.kt`, `core/UpdateCheck.kt`).
 
-**Car Worker**, after R4 to R7 (then phase N, one original car screen, below the M and R sections, after the owner picks a design language):
+**Car Worker**, after R4 to R7 (then phase N, ORBIT and DECK, below the M and R sections):
 1. **G1, keys into mirrored apps**, then **G2, the pointer**, driven by the pad's arrow keys. The
    bench sends arrow keys, so this can be built and tested now; only the Audi's actual codes wait
    for R8.
@@ -583,133 +583,163 @@ R8.
 Safe now, on the bench: R1 to R7 and B1. Needs the car: R8, B2, and whether "hold and turn" is
 possible at all.
 
-## Phase N: one original car screen (planned 2026-11-20, reworked the same evening)
+## Phase N: MyPlay's own car screen, ORBIT and DECK (planned 2026-11-21)
 
-The owner's words: "Sounds like you didn't actually change the original layout and stuff. What
-would it be hard to maybe like remove all of the old one and redo with fully our custom layout
-setup? Because there are more things that are different that I dislike."
+**The owner's decisions so far:**
+- 2026-11-20: "Don't care about future updates". Deleting AARE's old car shells and screens is
+  fine, and phase N does not need to keep upstream merges easy for the car UI (I1). AARE's
+  credits and the GPL licence stay.
+- 2026-11-20: a fully original design language for the whole car screen, not inspired by
+  Android Auto or CarPlay.
+- 2026-11-21: of the Design reviewer's three languages (AA-Experiments, branch
+  `claude/design-options`, `docs/design-options/car-screen/new-language/`) the owner loves
+  **1 ORBIT** and **2 DECK** and wants **both**, switchable in the phone app, built one after
+  the other.
+- 2026-11-21, new wish: navigation should feel like a racing game (a Need for Speed-style HUD:
+  a big turn read-out, speed, a minimap or chevron feel, a bold game-like frame), at least for
+  navigation and possibly for the whole design.
+- 2026-11-21, **hard constraint: Waze stays the map.** The owner needs its police and road
+  reports, which only Waze shows.
 
-**The owner's decisions (2026-11-20, through the dispatcher):**
-1. "Don't care about future updates": deleting AARE's old car shells and screens is fine. For
-   the car UI, phase N does not need to keep upstream merges easy (I1). AARE's credits and the
-   GPL licence stay.
-2. A **fully original design language** for the whole car screen, not inspired by Android Auto
-   or CarPlay. The Design reviewer is drawing three languages; the owner picks one.
+**Why the screen still looks like AARE today.** The "map behind" layout replaced only the
+home screen and the bar. Apps, the app grid, notifications, calls, car settings and the music
+browser are still AARE's screens (`ContentArea`, `Launcher`, `NoticeOverlay`, `CallOverlay` in
+`ui/car/CarShell.kt`, and the screens in `ui/car/`). Phase N replaces all of them.
 
-So phase N is: pick a language, then rebuild the whole car UI on it. The steps below are
-in outline. **Each step is detailed only after the owner's pick**, because the language decides
-what the bar, the cards and the screens even are.
+### The shape of it: one engine, two skins
 
-**Why the screen still looks like AARE.** The "map behind" layout replaced only the home
-screen and the bar. It draws apps, the app grid, notifications, calls, car settings and the
-music browser through the same AARE code as the old layouts (`ContentArea`, `Launcher`,
-`NoticeOverlay`, `CallOverlay` in `CarShell.kt`, and the screens in `ui/car/`). Removing the old
-layouts alone would not change those, so phase N rebuilds them too.
+- **Engine (shared, written once):** the screens and what they do (home, reaching apps, music,
+  calls and phone, notifications, apps, car, settings, mirror); the knob and pad focus; the map
+  behind everything with the free-area reporting (`MapGeometry`, `obstructsMap()`, the visible
+  and stable area messages); the hosted maps app's turn data; and **test seams** (fake music,
+  phone, call, notification and mirror sources, so every screen can be walked in unit tests,
+  which R4-2 deferred to this phase).
+- **Skin (one per language):** colours, type, shapes and motion, plus the drawing of each slot
+  the engine offers. Here a slot is a place a skin draws: the main control, the turn read-out,
+  the trip, the song, the app chooser, a list row, a call. ORBIT and DECK are two skins; a
+  racing HUD can be a third skin, or a navigation style any skin can use (question 1 below).
+- The engine never decides how something looks; a skin never decides what a push does. Then
+  DECK costs drawing work only, and the knob paths stay tested once.
 
-### N-checklist: everything the car screen does today
+**ORBIT first.** It is the language the owner named first. It has the fewest knob stops
+(next song is one pad press), and its sheet says it needs the least drawing apart from the
+radial dial. Most importantly, ORBIT's home is mostly free map with things in the corners. That
+fits "Waze stays the map" best: Waze keeps the most room for its police and hazard icons. DECK's
+fanned hand always takes the bottom-right of the map; it comes second.
 
-Every row must work in the new UI before the old code is deleted (N9). From the code at 0.1.22
-(`ui/car/CarShell.kt`, `DockShell.kt`, `ClassicShell.kt`, `SpecShell.kt`, `CarLayoutSpec.kt`).
+**What stays from today:** layout as data where it still fits (`CarLayoutSpec` becomes the
+engine's per-skin options), `MapGeometry`, the car model and actions (`CarModel.kt`), the knob
+helpers (`MyPlayFocus.kt`, `CarFocus.kt`, `PageInput.kt`), the gesture line (R6), map move
+mode (R5), the map colour filter (`ui/theme/MapColourFilter.kt`), and everything under `host/`
+and `mirror/` apart from its drawing. Settings ids already released are never changed.
 
-From the code at 0.1.22 (`ui/car/CarShell.kt`, `DockShell.kt`, `ClassicShell.kt`,
-`SpecShell.kt`, `CarLayoutSpec.kt`).
+### Everything the car screen must still do (checklist for N10 and N12)
 
-| Piece | Old shell(s) | Spec shell today | Gap |
-|---|---|---|---|
-| Home without a maps app | taskbar: dashboard with the "Where to?" map card | wallpaper plus the maps buttons panel (M3-3) | Small. No "plain colour" choice; covered by N1 |
-| Home as cards | taskbar: map, media, calendar, notification, weather cards in a chosen order (`DashCard`, `DashboardOrder.kt`, `DashboardWidgets.kt`) | next turn, arrival, music, clock and status | **Calendar, notification and weather cards, and the map as a card**, are missing (N2) |
-| Home as an app grid | classic: home *is* the app grid (`launcherHome`). Dock: an icon grid as home (`DockShell.Home`) | home is always the cards | Missing as a choice (N2, N3) |
-| App grid (launcher) | all, the same `Launcher` | the same `Launcher` | None in function. Its look is AARE's (N3) |
-| Full-screen app with the bar | all, the same `ContentArea` | the same, bar beside it, no cards | None in function |
-| Notifications | all: `NoticeOverlay` banner, notifications app | the same, plus a bell in the bar | None in function. Look is AARE's (N5) |
-| Calls | all: `CallOverlay`, `CallCard.kt`, `PhoneScreen.kt` | the same | None in function. Look is AARE's (N5) |
-| Car settings screens | all: `CarSettingsScreen.kt`, `CarDataScreen.kt`, `DashboardSettings.kt`, `MyPlayStatusSettings.kt` | the same | They offer the layout choice (taskbar, dock, classic, map behind); that choice goes in N8. Look is AARE's (N6) |
-| Voice button | taskbar rail, dock, classic bottom bar | in the bar (`MicButton`) | None |
-| Music browser | all: `BrowserScreen.kt` | the same | None in function |
-| Bar items (rail widgets) | taskbar rail: clock, temperature, battery, weather (`RailWidgets.kt`), segment clock, phone status | the same items (`barItems`), phone status, network icons | None. The `sideRailFit` shrinking for short screens is taskbar-only (N2) |
-| App shortcuts in the bar | taskbar: nav, media, phone, settings. Dock: a column of app icons, recent apps first | nav, media, phone, notifications | **A row/column of chosen or recent apps** is missing (N2, N3) |
-| Now-playing pill and turn badge in the bar | classic bottom bar (`ActivityPill`, `TurnBadge`) | not in the bar (cards show them) | Optional bar items (N2) |
-| Driver on the right | dock and taskbar swap sides | the bar side is fixed by the preset (left/right/top/bottom) | Mirror "left/right" to "driver side / passenger side" (N2) |
-| Portrait screens | dock moves to the bottom; taskbar goes horizontal | `SpecPlacement` works on any size; presets are drawn for landscape | Check and fix placement on tall screens (N2) |
-| Split views | none: no shell shows two apps side by side. The map card next to other cards is the closest | — | Not ported; new work if the owner wants it (not in this phase) |
-| Phone picture of the car screen | `CarPicture.kt` draws whichever shell is chosen | works with map behind | Follows automatically. Remove the old choices from it (N7) |
-| Car check (phone) | `CarCheckPage.kt`, `CarCheckLog.kt` | does not depend on the layout | None |
-| Knob walks and tests | `PadWalkTest` walks taskbar, dock, classic, map behind; `CarStylesTest`, `BarPageTest`, `MyPlayWeatherTest` name `CarLayout.TASKBAR` etc. | `mapBehindHome`, `mapBehindHomeAudi`, `launcherAudi`, `settingsScreenAudi` | Move every old-shell case to a preset (each step's tests) |
-| R4 (pad like a TV remote) | walked on all shells | walked | Each new card and bar item gets a pad walk |
-| R5 (map move mode, seeking) | the map card is a stop on the taskbar home | the map behind is not a knob stop (`LocalMapTapIsKnobStop` false) | With "map as a card" (N2) the map card must be a stop for R5. With the map behind, R5 needs its own way in (a long press, R5's own task) |
-| Styles that pick a shell | `CarStyle`: AARE, Android Auto, Material You → taskbar; Android Auto 2019 → classic; CarPlay → dock | — | Styles must stop choosing a shell (N8) |
-| Phone pages | `LayoutScreen.kt` (four choices), `BarPage.kt` and `CardsPage.kt` (notes per shell), setup wizard | map behind options with presets | Show only the new UI (N7) |
+Home with and without a maps app; reaching every app; a full-screen app with a way home; the
+app list; notifications (banner and list); calls (incoming, in call, the phone screen);
+the music card, now playing and the music browser; voice; car settings, the car data screen and
+MyPlay's status settings; mirroring the phone; the phone's own screen; bar items (clock,
+temperature, battery, weather, phone status); driver on the left or right; screens from
+800 px to 1920 px wide and portrait; day and night; the gesture line (R6); map move mode and
+seeking (R5); the knob, pad and buttons everywhere (R4, R8 later); the phone picture of the car
+screen (`ui/phone/CarPicture.kt`); the R5-5 rule (nothing beside a progress bar that left and
+right seek on).
 
+### The chunks
 
-### What stays: the engine, not the look
+A chunk is one change a Worker pushes and the Reviewer checks before it ships. Car side by the
+car Worker, unless marked. Until N10 the new screen is one more layout choice ("MyPlay"), off
+by default, so every release before it is safe and the owner can try each piece in the car.
 
-These are not AARE's look and the new UI is built on them, whatever the language:
+| # | Chunk | Needs |
+|---|---|---|
+| N1 | **Engine skeleton.** New package `ui/car/myplay/`: the screen model, the skin interface (tokens plus one composable per slot), a plain test skin, and a hidden layout choice "MyPlay" that draws it. Tests: the screen model's moves; a screenshot of the test skin at 1280x720 and 1200x723 | — |
+| N2 | **Engine focus and test seams.** Focus graph for knob, pad and buttons over the slots; fake sources for music, phone, calls, notifications and mirror; the pad-walk harness (`PadWalkTest` style) running on the engine with the test skin | N1 |
+| N3 | **Engine map layer.** The hosted maps app (Waze, Organic Maps) full screen behind; each slot declares whether it covers the map, and the free area goes to the app; wallpaper when no maps app; map colour filter hooked in per skin. Tests: free-area numbers per slot set; bench `maps` and `map-move` | N1 |
+| N4 | **ORBIT tokens and parts.** Circles, rings and arcs; the type scale (62 px distance, 36 to 38 px names, 25 to 28 px secondary); near-black glass with one accent per world; ripple and detent motion; the focus ring in ORBIT's form. Screenshot per part, day and night | N1 |
+| N5 | **ORBIT home.** Turn bubble and distance (top left), trip ring hub with arrival time (bottom left), song disc (bottom right), clock and status (top right), all over the map and declared as covering it. Turn data from the hosted app's template (`host/templates/NavigationUi.kt`) or the phone's guidance. Bench `home`, `maps`, `night-day` | N3, N4 |
+| N6 | **ORBIT dial and apps.** Push the hub: the six worlds (Navigate, Music, Calls, Apps, Car, Settings) around the map; turn to choose, push to enter, hold to go back. Apps world is the app list. Pad right = next song on home. Bench `grid-end`, `open-back`, `back-out`, `pad`, `gestures` | N2, N5 |
+| N7 | **ORBIT music.** The music world: the round artwork box with its floating buttons, now playing, seeking (R5-5 kept), the browser with its test seam (R4-2). Bench `music` | N6 |
+| N8 | **ORBIT calls, phone and notifications.** Incoming call, in call, the phone screen (test seam), notification banner and list. R5-2 (where the ring lands after a call). Bench: a call from a second phone | N6 |
+| N9 | **ORBIT car, settings and mirror.** The Car world (car data), Settings world (MyPlay's car settings, status settings), the mirror screen (test seam). Bench `settings` | N6 |
+| N10 | **The switch to ORBIT.** "MyPlay" becomes the only layout; stored layouts (taskbar, dock, classic, map behind) move to ORBIT, keeping wallpaper, bar items, map filter and card order where they still mean something; car styles stop choosing a shell. Tests: migration from each old id and a 0.1.x backup (F6) | N5 to N9, N11 |
+| N11 | **Phone side for the new screen** (phone worker). Layout page shows the language (ORBIT now, DECK when it exists) and its options; bar and cards pages and the setup wizard follow; the phone picture draws the new screen | N5 |
+| N12 | **Delete the old car UI.** Taskbar, dock, classic and map-behind shells, `SpecShell`, AARE's launcher, notification, call, phone, music browser and settings screens that the engine replaced. Shared bits still used move into `ui/car/myplay/` first. `PadWalkTest`, `CarStylesTest`, `BarPageTest`, `MyPlayWeatherTest` cases for old shells go. Only after the owner has driven with N10 | N10 |
+| N13 | **DECK tokens, parts and home.** Tall index cards with a thick coloured edge, one flat hue per world, 92 px turn read-out, caps labels; the fanned hand bottom right (Navigate, Phone, Car, Apps, Music), turn to swing, push to open, hold for the map; the hand declared as covering the map | N12 |
+| N14 | **DECK worlds.** Music, calls and phone, apps, car and settings drawn with DECK's parts on the same engine screens. Bench: every walk, with DECK chosen | N13 |
+| N15 | **Choosing the language** (phone worker, plus a car setting): ORBIT or DECK in the phone app's layout page and in F7's whole looks; switching takes effect without reconnecting | N13 |
+| N16 | **Racing HUD for navigation**, as decided by question 1. See the next section for what it can and cannot do over Waze | N5; the owner's answer |
+| N17 | **Map colour filter presets per language** (ORBIT, DECK, racing), using the filter that exists; only colour, see below | N5 |
 
-- layout as data (`CarLayoutSpec`, `SpecPlacement`): the options are re-cut to the language,
-  but the idea of presets plus options, stored as named keys, stays;
-- the map's free area (`MapGeometry`, `obstructsMap()`, the visible and stable area messages):
-  what makes a maps app centre itself in the free part;
-- the car model and actions (`CarModel.kt`), the knob helpers (`MyPlayFocus.kt`, `CarFocus.kt`,
-  `PageInput.kt`), the phone status sources, the hosted-app and mirror code (`host/`, `mirror/`).
+About **17 chunks**, more if the racing HUD becomes a whole third language. Every chunk has: a
+Robolectric screenshot of each new screen, day and night, at 1280x720 and 1200x723; a pad walk
+of each screen (every stop reachable, one ring, Back returns, no trap); unit tests for placement
+and stored settings; and the bench walks named in its row, with the Audi profile.
 
-Settings ids already released are never changed; new ones are added beside them.
+### Waze stays the map: what MyPlay can and cannot do (research, 2026-11-21)
 
-### The steps, in outline
+Nothing here has been tried with Waze in MyPlay yet: W1 (the host check module) has to work
+first. What is known, from MyPlay's code:
 
-| Step | What | Who | Rough size |
-|---|---|---|---|
-| N0 | **The owner picks a language** from the Design reviewer's three | owner | — |
-| N1 | Foundation: the language as code. Colours, type, shapes, spacing, motion, the focus ring, and the basic parts (button, card, list row, toggle, slider) in a new package, with a screenshot test of each | car Worker | 2 |
-| N2 | Home and the bar replacement: whatever the language puts where AARE has a rail. Background is one option (map, wallpaper, plain colour, or the map as a card), with the free-area reporting kept | car Worker | 2 to 3 |
-| N3 | Getting to apps: what replaces the app grid and the app list, with the knob | car Worker | 1 to 2 |
-| N4 | Music: the card, now playing, the browser | car Worker | 2 |
-| N5 | Notifications and calls: banner, list, incoming call, in-call | car Worker | 2 |
-| N6 | Car settings screens (MyPlay's own and the car data screen) | car Worker | 1 to 2 |
-| N7 | Phone side: the layout page, bar and cards pages, setup wizard and the phone picture show the new UI only | phone worker | 1 to 2 |
-| N8 | The switch: everyone on the new UI; stored layouts move to the nearest preset, keeping card order and bar items | car Worker | 1 |
-| N9 | Delete the old code (taskbar, dock and classic shells and the replaced AARE screens), keep credits and licence | car Worker | 1 |
+- Waze draws its map **itself** into a surface MyPlay hands it (`host/CarAppScreen.kt`,
+  `MapSurface`). Everything on that picture is Waze's: the roads, its car arrow, its police,
+  hazard and traffic icons, and any buttons or speed sign it draws on the map. MyPlay cannot
+  see or change those things one by one.
+- What Waze sends as **template data**, MyPlay draws itself: the next turn and its distance, the
+  arrival estimate, the action strip and the map buttons (`host/templates/NavigationUi.kt`,
+  `MapUi.kt`), and car library alerts (`AlertCard` in `CarAppScreen.kt`). Those can take any
+  look, ORBIT, DECK or racing.
+- **Not known:** whether Waze shows police and hazard reports only as icons on its map, or
+  also as car library alerts (which MyPlay would then draw). Whether Waze honours the visible
+  area MyPlay reports (and so keeps its icons out from under MyPlay's HUD). Whether Waze draws
+  its own speed sign or report button on the car picture. **A bench task (N3) answers all three**
+  with pictures, before N5 places anything.
 
-About **13 to 17 chunks**; a chunk is one change that gets one review and one release. N1 comes
-first; N2 to N6 in the order the owner cares about most; N7 alongside; N8 and N9 last.
-Until N8 the new UI is one more layout choice ("MyPlay"), so every release before the switch
-is safe and the owner can try each piece in the car. No new work goes into the old shells.
+**1. Recolouring: the map colour filter (built).** Tint, hue, saturation, brightness, contrast
+and night darkening of Waze's whole picture. It cannot tell water from roads or icons from
+roads; it recolours Waze's police and hazard icons too. So **keep it mild with Waze**: a strong
+hue shift can make a red police icon look like something else. N17's racing preset should
+darken and tint only, and the bench must show a report icon still readable.
 
-**Tests and bench for every step:** a Robolectric screenshot of each new screen, day and night,
-at 1280x720 and the Audi's 1200x723; a pad walk of each screen (R4: every stop reachable,
-one ring, Back returns); unit tests for placement and stored settings. Bench walks per step:
-`home` (N2), `grid-end`, `open-back`, `back-out` (N3), `night-day` (all), `settings` (N6),
-`maps` (N2, with a maps app). N8 adds a migration test from each old layout id and style, and
-a 0.1.x backup (F6) restored. N9 removes the old shells' cases from `PadWalkTest`,
-`CarStylesTest`, `BarPageTest` and `MyPlayWeatherTest`.
+**2. A hook into Waze (LSPosed), to restyle its map or hide or move its own parts.**
+- Waze draws its map in native code, not in Android views. Restyling the map means changing
+  its native drawing or its packed style data. **Not realistic.**
+- Hiding or moving its own parts: only if Waze draws them as Android views or decides them in
+  Java. That is not known, and its code names are scrambled. Any such hook breaks with Waze
+  updates (often weekly). A broken hook can crash Waze while driving. Hiding Waze's parts
+  risks hiding the very alerts the owner wants. Changing the Waze app is also against its terms
+  of use.
+- **Recommendation: no hooks beyond W1's host check.** Instead, use Waze's own settings on the
+  phone where it has them (to be checked on the owner's phone, not assumed): its map view, its
+  day and night mode, its speedometer, and the look of its car arrow.
 
-**Deleting the old code (N9).** The owner has accepted that later upstream changes to the car UI
-cannot be taken. Delete in one commit after N8 has shipped and the owner has driven with it.
-Protocol, transport and hosting code are not part of phase N, so upstream fixes there can still
-be taken (I1) for as long as those files are not rewritten. The shared parts the new UI still uses
-move out of `CarShell.kt` into MyPlay files before it is deleted.
+**3. A racing-game HUD over Waze: what MyPlay can draw without hiding the reports.**
 
-### Map colours: can the map itself, Waze included, be recoloured? (research, 2026-11-20)
+| HUD part | Possible? | How |
+|---|---|---|
+| Big turn read-out (arrow, distance, street) | **Yes** | From Waze's template data, drawn by MyPlay in any style, in a corner |
+| Speed | **Yes, if there is a source** | The car's speed from the box (`car/CarData.kt` reads it when the car sends it; the connection log (R8) shows whether it does), otherwise the phone's GPS |
+| Speed limit | **Only if Waze sends it** as template data; not known | — |
+| Arrival, time left, distance left | **Yes** | Template data, e.g. a racing "lap" strip |
+| A game-like frame (edges, corner brackets, a dark vignette, angled panels) | **Yes, at the edges** | Drawn over the outer strip of the screen, declared as covering the map, so the free area (and Waze's icons, if it honours it) stays in the middle |
+| Gear, rev-style bar, boost meter | **Only as decoration** | The box does not send revs or gear as far as known; a bar could show speed or turn distance instead |
+| Minimap | **No, not with Waze** | Waze gives one picture. A second map would be a different map source without Waze's reports |
+| Chevron / car arrow | **No, not MyPlay's** | It is Waze's own arrow on its map. Waze's own setting for its car icon, if the owner's version has it |
+| Anything in the middle of the map | **No** | That is where Waze draws the route, the car and the reports |
+| Alerts in a racing style | **Only if** Waze uses car library alerts (not known) | MyPlay draws those itself |
 
-The owner's words: "Maybe it would be possible to fully recolor and change Waze? The map itself
-even." From the code and what is known about the apps; nothing here has been tried.
+So the racing look is real for **MyPlay's own parts** (turn, speed, trip, frame, menus) and for
+the **colour of Waze's picture**, and stops at Waze's map content.
 
-How the map reaches the screen today: a maps app built on the car library (Organic Maps, OsmAnd,
-CoMaps, Waze once W1 works) draws its map itself into a drawing surface MyPlay hands it
-(`host/CarAppScreen.kt`, `MapSurface`, a `SurfaceView`). MyPlay never sees the map's contents.
-It only places that surface on the car screen.
+### Questions for the owner (through the dispatcher)
 
-| Way | What it can do | Effort | Fragility |
-|---|---|---|---|
-| **1. A colour filter on the map surface, in MyPlay** | Tint, hue shift, saturation, brightness, contrast, darker nights, for **any** maps app, Waze included. While a filter is on, draw the map in a `TextureView` with a colour-matrix layer paint (`setLayerPaint`, works from Android 8, MyPlay's minimum); with no filter it stays today's `SurfaceView`, at no extra cost. Off by default. A later version could pass the picture through a small GPU step with a colour lookup table, mapping the app's own colours to the look's colours | Filter: 1 chunk. Lookup table: 1 to 2 more | Low; it does not depend on the app's insides. Limits: it recolours everything the app draws on its map, including its own buttons and speed sign; it cannot tell water from roads, only one colour from another; Waze's own day and night palettes give two different starting points. A `TextureView` costs one extra GPU copy, which a 1280x720 picture at car frame rates should bear. The knob and touch forwarding need checking after the swap |
-| **2. Open-source maps with a style of our own** | A fully custom map design: every road, label and colour. **OsmAnd** reads rendering styles from files (an XML format, documented), so MyPlay could ship a style file the owner imports, with no new app. **Organic Maps / CoMaps** build their styles into the app, so a custom style means building our own copy of that app (GPL allows it) and keeping it updated | OsmAnd style: 2 to 3 chunks, mostly design. Own Organic Maps / CoMaps build: large, and ongoing work at every one of their releases | OsmAnd: low, styles survive updates fairly well. Own build: high upkeep. None of these has Waze's live traffic and reports |
-| **3. Changing Waze from inside, via the owner's LSPosed module** | In theory anything. In practice Waze draws its map in its own native code (C++, OpenGL), not in Java. Hooks can reach Java-side settings, such as forcing day or night, but recolouring the map would mean changing its native drawing or its packed style data | Very large, research first | Very high: obfuscated, breaks with Waze updates (often weekly), and modifying the Waze app is against its terms of use. **Not recommended** beyond W1's host check |
+1. **Racing HUD scope:** a navigation style inside ORBIT and DECK (their colours, racing
+   shapes for turn, speed and frame), or a third complete language "RACE" for the whole screen?
+2. **Speed:** if the car does not send its speed to MyPlay, may MyPlay use the phone's GPS
+   (one more permission on the phone)?
+3. **Order:** ORBIT first and DECK second, as planned, unless you want DECK first.
 
-**Recommendation:** the colour filter (way 1) once W1 has Waze running, as part of the chosen
-language's looks (F3/F7 decide the colours). Way 2 with OsmAnd if the owner wants a map that is
-designed, not just tinted. Not way 3.
-
-Open question for the owner (through the dispatcher): besides the home screen and bar, which
-screens or details do you dislike most? That sets the order of N2 to N6.
+Answered questions go to the table in `docs/HANDOFF.md`.
 
 ## Standing rules for every task
 
