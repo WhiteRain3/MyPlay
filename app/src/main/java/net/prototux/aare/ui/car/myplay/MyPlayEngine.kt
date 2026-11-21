@@ -65,7 +65,6 @@ import net.prototux.aare.ui.car.CarFocusVisibility
 import net.prototux.aare.ui.car.CarScreen
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.LocalMapTapIsKnobStop
-import net.prototux.aare.ui.car.SpecShell
 import net.prototux.aare.ui.car.GestureLineOverlay
 import net.prototux.aare.ui.car.Wallpaper
 import kotlinx.coroutines.Dispatchers
@@ -102,7 +101,8 @@ internal fun MyPlayEngineShell(
     sources: EngineSources = LocalEngineSources.current ?: LocalContext.current.let { c -> remember(state, actions) { EngineSources.of(state, actions, c) } },
 ) {
     if (state.screen != CarScreen.Dashboard) {
-        SpecShell(state, actions, appContent, navMap, overlay, modifier)
+        // F1: a full-screen app (or the app grid) in MyPlay's own frame, not the old layout's.
+        MyPlayAppFrame(state, actions, appContent, navMap, overlay, modifier, skin, sources)
         return
     }
     // N13: a new language starts afresh (a hand has no dial to be in).

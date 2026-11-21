@@ -218,6 +218,12 @@ interface MyPlaySkin {
     /** N13: the trip under the turn read-out (a skin with a [hand]; ORBIT's hub shows it instead). */
     @Composable fun Trip(trip: TripSlot, modifier: Modifier) = Unit
 
+    /**
+     * F1: the narrow rail beside a full-screen app, on the driver's side, with the way home
+     * ([home]). Its width is the skin's; the app takes the rest of the screen.
+     */
+    @Composable fun AppRail(home: () -> Unit, modifier: Modifier) = DefaultAppRail(home, modifier)
+
     /** The hub: always there (the knob's way into the worlds), with the trip when there is a route. */
     @Composable fun Hub(trip: TripSlot?, modifier: Modifier)
     @Composable fun Song(song: SongSlot, modifier: Modifier)
