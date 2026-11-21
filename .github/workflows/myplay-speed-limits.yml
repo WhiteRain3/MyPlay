@@ -13,8 +13,9 @@ on:
     - cron: "17 3 4 * *" # 03:17 UTC on the 4th of each month
   # By hand from the Actions page.
   workflow_dispatch:
-  # When the builder or this file changes on the MyPlay branch (this also makes GitHub know the
-  # workflow, so it can be run by hand).
+  # When the builder or this file changes on the MyPlay branch: builds and tests only, never
+  # publishes (WF-1: what drivers get is built from a reviewed tip, by hand or on schedule). This
+  # trigger also makes GitHub know the workflow, so it can be run by hand.
   push:
     branches: [claude/myplay]
     paths:
@@ -66,6 +67,8 @@ jobs:
           size=$(stat -c %s "out/speed-limits-$REGION.bin")
           if [ "$size" -lt 200000 ]; then echo "The file is only $size bytes: not publishing it." >&2; exit 1; fi
       - name: Publish
+        # WF-1: never from a push (unreviewed); only by hand or on schedule.
+        if: github.event_name != 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
