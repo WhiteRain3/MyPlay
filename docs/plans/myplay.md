@@ -604,6 +604,9 @@ possible at all.
   the same engine. Order: **ORBIT, then DECK, then RACE.** Speed: from Waze if its feed has it,
   else the car's speed if the box sends it, else the phone's location (approved 2026-11-21, with
   the battery rules in N3).
+- 2026-11-21: the **speed limit is very important** and is part of the speed read-out in all
+  three languages, RACE especially. Over the limit: a clear but calm warning (a colour change,
+  no sound by default). Same battery rules as the speed.
 
 **Why the screen still looks like AARE today.** The "map behind" layout replaced only the
 home screen and the bar. Apps, the app grid, notifications, calls, car settings and the music
@@ -658,7 +661,7 @@ by default, so every release before it is safe and the owner can try each piece 
 |---|---|---|
 | N1 | **Engine skeleton.** New package `ui/car/myplay/`: the screen model, the skin interface (tokens plus one composable per slot), a plain test skin, and a hidden layout choice "MyPlay" that draws it. Tests: the screen model's moves; a screenshot of the test skin at 1280x720 and 1200x723 | — |
 | N2 | **Engine focus and test seams.** Focus graph for knob, pad and buttons over the slots; fake sources for music, phone, calls, notifications and mirror; the pad-walk harness (`PadWalkTest` style) running on the engine with the test skin | N1 |
-| N3 | **Engine map layer.** The hosted maps app (Waze, Organic Maps) full screen behind; each slot declares whether it covers the map, and the free area goes to the app; wallpaper when no maps app; map colour filter hooked in per skin. **Speed source** for the skins: the car's speed when the box sends it (`car/CarData.kt`); otherwise the phone's location, under the owner's condition of **no extra battery drain**: listen only while a speed is on the screen; prefer the fixes Waze already asks for (the passive provider, or the fused provider at a low interval and low-power priority) over asking for GPS; no location at all while no maps app is running; no background location permission (foreground only, while connected to the car); stop listening the moment the speed leaves the screen or the car disconnects. Tests: the listener starts and stops with the speed slot and the maps app; a fake location feed gives the shown speed. **Waze bench check** (once W1 works), with pictures: does Waze show police and hazard reports as car library alerts; does it keep its icons out of the covered area; does it draw its own speed sign; does any of its text (trip text, messages) carry the current speed. Tests: free-area numbers per slot set; bench `maps` and `map-move` | N1 |
+| N3 | **Engine map layer.** The hosted maps app (Waze, Organic Maps) full screen behind; each slot declares whether it covers the map, and the free area goes to the app; wallpaper when no maps app; map colour filter hooked in per skin. **Speed source** for the skins: the car's speed when the box sends it (`car/CarData.kt`); otherwise the phone's location, under the owner's condition of **no extra battery drain**: listen only while a speed is on the screen; prefer the fixes Waze already asks for (the passive provider, or the fused provider at a low interval and low-power priority) over asking for GPS; no location at all while no maps app is running; no background location permission (foreground only, while connected to the car); stop listening the moment the speed leaves the screen or the car disconnects. Tests: the listener starts and stops with the speed slot and the maps app; a fake location feed gives the shown speed. **Waze bench check** (once W1 works), with pictures: does Waze show police and hazard reports as car library alerts; does it keep its icons out of the covered area; does it draw its own speed sign; does any of its text (trip text, messages) carry the current speed; **does Waze draw its own speed limit sign, where, and does any limit reach MyPlay** (free text or alerts). Tests: free-area numbers per slot set; bench `maps` and `map-move` | N1 |
 | N4 | **ORBIT tokens and parts.** Circles, rings and arcs; the type scale (62 px distance, 36 to 38 px names, 25 to 28 px secondary); near-black glass with one accent per world; ripple and detent motion; the focus ring in ORBIT's form. Screenshot per part, day and night | N1 |
 | N5 | **ORBIT home.** Turn bubble and distance (top left), trip ring hub with arrival time (bottom left), song disc (bottom right), clock and status (top right), all over the map and declared as covering it. Turn data from the hosted app's template (`host/templates/NavigationUi.kt`) or the phone's guidance. Bench `home`, `maps`, `night-day` | N3, N4 |
 | N6 | **ORBIT dial and apps.** Push the hub: the six worlds (Navigate, Music, Calls, Apps, Car, Settings) around the map; turn to choose, push to enter, hold to go back. Apps world is the app list. Pad right = next song on home. Bench `grid-end`, `open-back`, `back-out`, `pad`, `gestures` | N2, N5 |
@@ -673,9 +676,12 @@ by default, so every release before it is safe and the owner can try each piece 
 | N15 | **Choosing the language** (phone worker, plus a car setting): ORBIT or DECK in the phone app's layout page and in F7's whole looks; switching takes effect without reconnecting | N13 |
 | N16 | **RACE tokens, parts and home.** The Design reviewer draws RACE first, on the engine's slots, inside the limits of the next section: a big turn read-out, speed, a trip "lap" strip, a bold game-like frame at the edges; nothing in the middle of the map. Then its parts and home screen | N15; RACE's drawing sheet |
 | N17 | **RACE worlds.** Reaching apps, music, calls and phone, apps, car and settings in RACE's parts; RACE added to the language choice. Bench: every walk, with RACE chosen | N16 |
+| N19 | **Speed limit file builder** (car Worker, CI only). A GitHub Actions job turns an OpenStreetMap extract of the owner's region (Geofabrik) into a small MyPlay file: road pieces with their `maxspeed`, plus the country's default limits where a road has no `maxspeed` tag but has a zone or road type that implies one; tiled so the phone reads only the tiles near the car. Published as a release file with OpenStreetMap's licence notice (ODbL). Rebuilt monthly. Tests: a tiny extract gives the expected pieces and defaults | N3 |
+| N20 | **Speed limit lookup and warning** (car side). Match the car's position and direction to the nearest road piece in the file (heading and the previous match break ties between parallel roads); show "no limit known" rather than a guess when the match is unsure. Sources in order: a limit from Waze, if N3's check finds one; the car's feed, if the box ever sends one; the file. The over-limit warning is a colour change of the read-out, no sound unless switched on; its margin is a setting. Same battery rules as the speed: only while the read-out is on screen, from the same location fixes, no extra requests. Tests: matching on a fixture with parallel roads and a junction; the warning margin | N19 |
+| N21 | **Speed limit file on the phone** (phone worker). Choose the region, download once on Wi-Fi (and again monthly on Wi-Fi), show its size and date, delete it; the OpenStreetMap notice on the phone's About page | N19 |
 | N18 | **Map colour filter presets per language** (ORBIT, DECK, RACE), using the filter that exists; only colour, see below | N5 |
 
-About **18 chunks**, plus the Design reviewer's RACE sheet before N16. Every chunk has: a
+About **21 chunks**, plus the Design reviewer's RACE sheet before N16. The speed read-out in N5 (ORBIT), N13 (DECK) and N16 (RACE) always has a place for the limit; N20 fills it. Every chunk has: a
 Robolectric screenshot of each new screen, day and night, at 1280x720 and 1200x723; a pad walk
 of each screen (every stop reachable, one ring, Back returns, no trap); unit tests for placement
 and stored settings; and the bench walks named in its row, with the Audi profile.
@@ -723,7 +729,7 @@ darken and tint only, and the bench must show a report icon still readable.
 |---|---|---|
 | Big turn read-out (arrow, distance, street) | **Yes** | From Waze's template data, drawn by MyPlay in any style, in a corner |
 | Speed | **Yes, if there is a source** | Not from Waze's data: the car library's navigation data (version 1.8.0-rc01, which MyPlay builds with) has no field for the current speed or the speed limit. `Trip`, `TravelEstimate`, `RoutingInfo` and `NavigationTemplate` carry steps, distances, times, arrival, the current road and free trip text only; checked in the library's classes, 2026-11-21. Waze could put a speed into its free text, which N3's bench check looks for. Otherwise the car's speed from the box (`car/CarData.kt` reads it when the car sends it; the connection log (R8) shows whether it does), else the phone's location, with the battery rules in N3 (approved 2026-11-21) |
-| Speed limit | **No field for it** in the car library's navigation data | Only if Waze puts it into free text or an alert; N3's bench check |
+| Speed limit | **Yes, from three sources, none of them Waze's data** | The car library's navigation data has **no field** for it. Sources, in order (N20): a limit in Waze's free text or alerts if N3 finds one; the car's feed (MyPlay's car data has no speed limit field today, and none is known in the protocol it reads, so only if the box turns out to send one); an offline OpenStreetMap file (N19 to N21). If Waze draws **its own limit sign** on the map, MyPlay's read-out must not cover it; whether to show MyPlay's own as well is the owner's choice once the bench pictures exist |
 | Arrival, time left, distance left | **Yes** | Template data, e.g. a racing "lap" strip |
 | A game-like frame (edges, corner brackets, a dark vignette, angled panels) | **Yes, at the edges** | Drawn over the outer strip of the screen, declared as covering the map, so the free area (and Waze's icons, if it honours it) stays in the middle |
 | Gear, rev-style bar, boost meter | **Only as decoration** | The box does not send revs or gear as far as known; a bar could show speed or turn distance instead |
@@ -731,6 +737,15 @@ darken and tint only, and the bench must show a report icon still readable.
 | Chevron / car arrow | **No, not MyPlay's** | It is Waze's own arrow on its map. Waze's own setting for its car icon, if the owner's version has it |
 | Anything in the middle of the map | **No** | That is where Waze draws the route, the car and the reports |
 | Alerts in a racing style | **Only if** Waze uses car library alerts (not known) | MyPlay draws those itself |
+
+**About the speed limit from OpenStreetMap.** Offline is the plan: the file is downloaded once
+on Wi-Fi from MyPlay's own release page, so nobody learns where the car is. An online lookup
+(for example the public Overpass servers, run by volunteers) would send the car's position every
+few hundred metres to that server; the plan does **not** need it and does not use it. Limits of
+the data, to be said in the app: OpenStreetMap does not know every limit; it misses temporary
+limits (road works), variable motorway signs and some time- or weather-dependent limits; and
+the match to the road can be wrong at junctions and on roads next to each other. It is a hint;
+the signs on the road win.
 
 So RACE's racing look is real for **MyPlay's own parts** (turn, speed, trip, frame, menus) and for
 the **colour of Waze's picture**, and stops at Waze's map content.
@@ -740,7 +755,15 @@ the **colour of Waze's picture**, and stops at Waze's map content.
 Answered 2026-11-21 (see the decisions at the top of this phase): RACE as a third language; speed
 from Waze, else the car, else the phone's GPS (GPS waits for approval); ORBIT, DECK, RACE.
 The phone's location as the speed fallback was approved the same day, on condition of no extra
-battery drain (the rules are in N3). No question is open for this phase now.
+battery drain (the rules are in N3).
+
+Open:
+1. **Region** for the speed limit file: which country or countries (sizes differ a lot; one
+   country is the default).
+2. **Warning margin:** how far over the limit before the read-out changes colour (for example
+   at the limit, +3 km/h, or +10 %).
+3. After N3's bench pictures: if Waze shows its own limit sign, show MyPlay's as well, or
+   only Waze's?
 
 ## Standing rules for every task
 
