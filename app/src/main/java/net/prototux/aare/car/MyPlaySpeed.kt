@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import net.prototux.aare.Settings
+import net.prototux.aare.speedlimit.Matcher
 import kotlin.math.roundToInt
 
 /**
@@ -99,6 +100,13 @@ object SpeedRules {
      */
     fun phoneWanted(mode: SpeedSourceMode, shown: Boolean, connected: Boolean, mapsRunning: Boolean, carFresh: Boolean, limitsOn: Boolean = false): Boolean =
         mode == SpeedSourceMode.AUTO && shown && connected && mapsRunning && (!carFresh || limitsOn)
+
+    /**
+     * N20 (SL-8): a fix worth a limit lookup: accurate enough for the matcher, and a GPS fix (with
+     * a speed or a heading), not another app's network fix.
+     */
+    fun goodForLimit(fix: PhoneFix): Boolean =
+        fix.accuracyM != null && fix.accuracyM <= Matcher.MAX_ACCURACY_M && (fix.metersPerSecond != null || fix.bearingDeg != null)
 
     /** N20: over the limit by more than [margin] (never with [MARGIN_OFF] or no limit known). */
     fun over(kmh: Int, limit: LimitShown?, margin: Int): Boolean =
@@ -232,10 +240,16 @@ class SpeedFeed(
     }
 
     private fun onFix(fix: PhoneFix) {
-        phoneMps = fix.metersPerSecond
-        phoneAt = fix.atMillis
+        // SL-7: the passive provider also passes on other apps' network fixes, which have no speed:
+        // they leave the last speed alone (it goes stale on its own).
+        if (fix.metersPerSecond != null) {
+            phoneMps = fix.metersPerSecond
+            phoneAt = fix.atMillis
+        }
         val l = limits
-        if (l != null && last?.limitsOn == true) {
+        // SL-8: only a fix good enough to match asks for a limit; any other leaves the last answer
+        // until it goes stale.
+        if (l != null && last?.limitsOn == true && SpeedRules.goodForLimit(fix)) {
             val n = ++lookups
             l.lookup(fix) { r ->
                 if (n == lookups && listening) {

@@ -384,7 +384,7 @@ object OrbitSkin : MyPlaySkin {
     @Composable
     private fun SpeedLimit(limit: LimitShown, night: Boolean) {
         val g = Orbit.glass(night)
-        Column(Modifier.padding(top = 8.dp).widthIn(max = 150.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.padding(top = 8.dp).widthIn(max = 170.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             OrbitDisc(60.dp, night, Modifier.border(3.dp, g.secondary, CircleShape)) {
                 Text(
                     (limit as? LimitShown.Known)?.kmh?.toString() ?: "–",
@@ -393,7 +393,8 @@ object OrbitSkin : MyPlaySkin {
             }
             Text(
                 stringResource(if (limit is LimitShown.Known) R.string.myplay_speed_limit_map_data else R.string.myplay_speed_limit_unknown),
-                style = TextStyle(fontSize = 15.sp, lineHeight = 17.sp, textAlign = TextAlign.Center).floating(g.secondary),
+                // SL-10: as large as the speed's unit, the smallest text ORBIT draws there.
+                style = TextStyle(fontSize = 18.sp, lineHeight = 20.sp, textAlign = TextAlign.Center).floating(g.secondary),
                 maxLines = 2, modifier = Modifier.padding(top = 4.dp),
             )
         }
