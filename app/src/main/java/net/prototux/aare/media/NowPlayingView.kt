@@ -173,6 +173,13 @@ internal const val SEEK_STEP_MS = 10_000L
 /** MyPlay (R5-4): how long a pad seek counts as the position before the app confirms it. */
 internal const val SEEK_PENDING_MS = 2_000L
 
+/** MyPlay (R5-9): how near the target a reported position must be to confirm a pad seek. */
+internal const val SEEK_CONFIRM_MS = 3_000L
+
+/** MyPlay (R5-9): whether a reported position confirms the pending seek (or there is none). */
+internal fun seekConfirmed(pendingMs: Long?, reportedMs: Long): Boolean =
+    pendingMs == null || kotlin.math.abs(reportedMs - pendingMs) <= SEEK_CONFIRM_MS
+
 /** MyPlay (R5-4): the next pad seek, from the last one still unconfirmed ([pendingMs]) or else from [positionMs]. */
 internal fun nextSeek(pendingMs: Long?, positionMs: Long, durationMs: Long, stepMs: Long): Long =
     seekTarget(pendingMs ?: positionMs, durationMs, stepMs)
@@ -199,7 +206,8 @@ private fun Progress(info: PlaybackInfo, canSeek: Boolean, seekTo: (Long) -> Uni
     // R5-4: where the last pad seek went, until the app reports a new position (or 2 s pass), so
     // quick presses add up instead of each starting from the same old position.
     var pendingSeek by remember { mutableStateOf<Long?>(null) }
-    LaunchedEffect(info.sampledAtMs) { pendingSeek = null }
+    // R5-9: only a report near the target confirms it; a periodic one still at the old place does not.
+    LaunchedEffect(info.sampledAtMs) { if (seekConfirmed(pendingSeek, info.positionMs)) pendingSeek = null }
     LaunchedEffect(pendingSeek) { if (pendingSeek != null) { delay(SEEK_PENDING_MS); pendingSeek = null } }
     if (info.durationMs > 0) {
         val fraction = pos.toFloat() / info.durationMs

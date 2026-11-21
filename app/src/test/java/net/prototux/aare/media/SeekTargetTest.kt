@@ -27,4 +27,12 @@ class SeekTargetTest {
         assertEquals(80_000L, second)
         assertEquals(70_000L, nextSeek(first, 60_000, 240_000, -SEEK_STEP_MS).let { nextSeek(it, 60_000, 240_000, SEEK_STEP_MS) })
     }
+
+    /** R5-9: a report still at the old place does not clear the pending seek; one near the target does. */
+    @Test fun onlyANearReportConfirms() {
+        assertEquals(true, seekConfirmed(null, 60_000))
+        assertEquals(false, seekConfirmed(80_000, 60_500))
+        assertEquals(true, seekConfirmed(80_000, 79_200))
+        assertEquals(true, seekConfirmed(80_000, 82_900))
+    }
 }
