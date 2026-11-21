@@ -71,18 +71,13 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
     // The keyboard for the page's focused text field, or null (#148).
     var pageField by remember { mutableStateOf<KeyboardMode?>(null) }
     // MyPlay (the owner: "I can't full screen the video"): a page's fullscreen view (a video), shown
-    // over the whole car screen, and how to tell the page it was closed.
-    var fullView by remember { mutableStateOf<android.view.View?>(null) }
-    var fullClosed by remember { mutableStateOf<WebChromeClient.CustomViewCallback?>(null) }
-    fun leaveFullscreen() {
-        fullClosed?.onCustomViewHidden()
-        fullView = null
-        fullClosed = null
-    }
-    DisposableEffect(fullView) {
-        runtime.ui.appFullscreen = fullView != null
-        onDispose { runtime.ui.appFullscreen = false }
-    }
+    // over the whole car screen ([BrowserFullscreen]).
+    val full = remember { BrowserFullscreen { on -> runtime.ui.appFullscreen = on } }
+    val fullView = full.view
+    fun leaveFullscreen() = full.leave()
+    // FS-1: driving pauses the browser (its WebView goes): no fullscreen left behind.
+    androidx.compose.runtime.LaunchedEffect(driving) { if (driving) full.leave() }
+    DisposableEffect(Unit) { onDispose { full.leave() } }
 
     fun go(query: String) {
         web?.loadUrl(toUrl(query))
@@ -151,15 +146,9 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
                         // A video's fullscreen button asks the browser for a fullscreen view: shown
                         // over everything; Back (or the page) closes it.
                         webChromeClient = object : WebChromeClient() {
-                            override fun onShowCustomView(view: android.view.View, callback: CustomViewCallback) {
-                                if (fullView != null) { callback.onCustomViewHidden(); return }
-                                fullView = view
-                                fullClosed = callback
-                            }
-                            override fun onHideCustomView() {
-                                fullView = null
-                                fullClosed = null
-                            }
+                            override fun onShowCustomView(view: android.view.View, callback: CustomViewCallback) =
+                                full.show(view) { callback.onCustomViewHidden() }
+                            override fun onHideCustomView() = full.hidden()
                         }
                         // Videos start on a push of their play button, as on a phone.
                         settings.mediaPlaybackRequiresUserGesture = true
@@ -189,7 +178,8 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
                         web = this
                     }
                 },
-                onRelease = { it.destroy() },
+                // FS-1: the page's fullscreen view goes with its WebView.
+                onRelease = { full.leave(); it.destroy() },
                 modifier = Modifier.fillMaxWidth().weight(1f),
             )
             // Car keyboard for the address field or the page (the phone IME can't show on the car display).
@@ -227,6 +217,43 @@ internal fun BrowserScreen(runtime: CarRuntime, driving: Boolean, startUrl: Stri
                 modifier = Modifier.fillMaxSize().testTag(BROWSER_FULLSCREEN_TAG),
             )
         }
+    }
+}
+
+/**
+ * MyPlay: a page's fullscreen view (a video) and how to tell the page it was closed. [onChange]
+ * says whether one shows (the frame hides its rail meanwhile). [leave] closes it from our side
+ * (Back, driving, the WebView going); [hidden] is the page closing it itself.
+ */
+internal class BrowserFullscreen(private val onChange: (Boolean) -> Unit) {
+    var view by mutableStateOf<android.view.View?>(null)
+        private set
+    private var closed: (() -> Unit)? = null
+
+    /** The page asks for fullscreen; a second ask while one shows is refused. */
+    fun show(v: android.view.View, onClosed: () -> Unit) {
+        if (view != null) { runCatching(onClosed); return }
+        view = v
+        closed = onClosed
+        onChange(true)
+    }
+
+    /** We close it: the page is told (if its WebView is still there to hear it; FS-1). */
+    fun leave() {
+        if (view == null) return
+        val c = closed
+        view = null
+        closed = null
+        onChange(false)
+        c?.let { runCatching(it) }
+    }
+
+    /** The page closed it. */
+    fun hidden() {
+        if (view == null) return
+        view = null
+        closed = null
+        onChange(false)
     }
 }
 
