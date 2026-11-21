@@ -196,6 +196,12 @@ class MyPlayHandTest {
         show()
         rule.onNodeWithTag("card_${World.CAR.id}").performClick()
         front(World.CAR)
+        // A second tap on the card now in front opens it.
+        rule.onNodeWithTag("card_${World.CAR.id}").performClick()
+        rule.onNodeWithTag(SLOT_CAR).assertExists()
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
+        front(World.CAR)
         rule.onNodeWithText("FRONT ${World.CAR.id}", substring = true).performClick()
         rule.onNodeWithTag(SLOT_CAR).assertExists()
     }

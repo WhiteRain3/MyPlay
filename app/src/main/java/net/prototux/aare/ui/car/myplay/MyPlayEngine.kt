@@ -538,7 +538,7 @@ internal fun MyPlayEngineShell(
                 if (home && hand != null) {
                     // N13: the hand, bottom right; it is the hub's stop (a push opens the front card).
                     ringed(STOP_HUB) {
-                        skin.Hand(model.front, slots.song, LocalStopRinged.current, { w -> chosen = STOP_HUB; model.front = w },
+                        skin.Hand(model.front, slots.song, LocalStopRinged.current, { w -> chosen = STOP_HUB; if (w == model.front) openFront() else model.front = w },
                             edge.align(Alignment.BottomEnd).slot(Slot.HUB).stop(STOP_HUB))
                     }
                 } else if (home) ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }

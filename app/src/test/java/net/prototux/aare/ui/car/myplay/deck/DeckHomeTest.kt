@@ -22,6 +22,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
@@ -185,6 +186,14 @@ class DeckHomeTest {
         val hand = rule.onNodeWithTag(STOP_HUB).fetchSemanticsNode().boundsInRoot
         org.junit.Assert.assertTrue("hand from ${hand.left} on a screen ${screen.width} wide", hand.left > screen.center.x)
         org.junit.Assert.assertTrue(hand.right <= screen.right && hand.bottom <= screen.bottom)
+    }
+
+    /** The Reviewer's note on N13: a tap on the front card opens it, never a card behind it. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aTapOnTheFrontCardOpensIt() {
+        show()
+        rule.onNodeWithTag(deckCardTag(World.MUSIC)).performClick()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_MUSIC).assertExists()
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun theHandStaysRightOfTheMiddle1280() { show(); handRightOfTheMiddle() }
