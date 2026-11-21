@@ -185,6 +185,34 @@ class DeckHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun musicPageNight() = musicPage(true, "deck-music-1280x720-night")
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun musicPage901Day() = musicPage(false, "deck-music-901x543-day")
 
+    private fun allowCalls() = org.robolectric.Shadows.shadowOf(rule.activity.application).grantPermissions(android.Manifest.permission.ANSWER_PHONE_CALLS)
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun ringingNight() {
+        net.prototux.aare.ui.car.CarFocusVisibility.keyInput = true
+        allowCalls(); val st = show(); rule.runOnIdle { st.call = net.prototux.aare.ui.car.CarCall(true, "Anna K.", 1L) }; picture("deck-call-ringing-1280x720-night")
+    }
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun ringing901Day() {
+        allowCalls(); val st = show(night = false); rule.runOnIdle { st.call = net.prototux.aare.ui.car.CarCall(true, "+370 612 34567", 1L) }; picture("deck-call-ringing-901x543-day")
+    }
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun inCallNight() {
+        allowCalls(); val st = show(); rule.runOnIdle { st.call = net.prototux.aare.ui.car.CarCall(false, "Anna K.", System.currentTimeMillis() - 133_000) }
+        picture("deck-call-in-call-1280x720-night")
+    }
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun noticeAndBellNight() {
+        val st = show()
+        rule.runOnIdle {
+            st.history.add(net.prototux.aare.ui.car.CarNotice("h1", "Calendar", "Dentist at 15:00", null))
+            st.unseen = 2
+            st.notices.add(0, net.prototux.aare.ui.car.CarNotice("n1", "Anna K.", "Running late, see you at 6", null, listOf("Reply" to {}, "Mark read" to {}), message = true))
+        }
+        picture("deck-notice-bell-1280x720-night")
+    }
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun noticeDay() {
+        val st = show(night = false)
+        rule.runOnIdle { st.notices.add(0, net.prototux.aare.ui.car.CarNotice("n1", "Anna K.", "Running late, see you at 6", null, listOf("Reply" to {}), message = true)) }
+        picture("deck-notice-1280x720-day")
+    }
+
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun settingsPageNight() { show(); page(2); picture("deck-settings-1280x720-night") }
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun settingsPage901Day() { show(night = false); page(2); picture("deck-settings-901x543-day") }
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun carPageNight() { show(); page(3); picture("deck-car-1280x720-night") }

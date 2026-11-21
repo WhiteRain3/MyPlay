@@ -57,6 +57,20 @@ import net.prototux.aare.ui.car.myplay.MUSIC_PREV
 import net.prototux.aare.ui.car.myplay.MusicPage
 import net.prototux.aare.ui.car.myplay.upNextStop
 import net.prototux.aare.ui.car.myplay.orbit.orbitFocus
+import androidx.compose.material.icons.rounded.CallEnd
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxHeight
+import net.prototux.aare.ui.car.CarCall
+import net.prototux.aare.ui.car.CarNotice
+import net.prototux.aare.ui.car.carFocusHighlight
+import net.prototux.aare.ui.car.myplay.CALL_ANSWER
+import net.prototux.aare.ui.car.myplay.CALL_DECLINE
+import net.prototux.aare.ui.car.myplay.NOTICE_DISMISS
+import net.prototux.aare.ui.car.myplay.STOP_CALL
+import net.prototux.aare.ui.car.myplay.STOP_HANG_UP
+import net.prototux.aare.ui.car.myplay.noticeActionStop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -367,6 +381,170 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
             }
         }
     }
+    // N14: DECK's call, notice, bell and the rail beside an app.
+
+    @Composable
+    override fun Ringing(call: CarCall, canEnd: Boolean, ringed: String, stop: (String) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val p = Deck.paper(night)
+        val green = Deck.hue(World.CALLS, night)
+        val shape = RoundedCornerShape(Deck.CORNER)
+        // The sheet: "Incoming call: the Phone card takes over".
+        Box(modifier.background(p.halo.copy(alpha = 0.7f)), contentAlignment = Alignment.Center) {
+            DeckScaled {
+                Box(Modifier.width(620.dp).shadow(18.dp, shape).clip(shape).background(Deck.cardColour(World.CALLS, night))) {
+                    Box(Modifier.fillMaxWidth().height(Deck.EDGE).background(green))
+                    Column(Modifier.padding(start = 34.dp, end = 34.dp, top = 34.dp, bottom = 30.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Rounded.Phone, null, Modifier.size(28.dp), tint = green)
+                            Spacer(Modifier.width(10.dp))
+                            Text(stringResource(R.string.phone_incoming_call).uppercase(), style = Deck.Type.label.copy(color = green, fontSize = 22.sp), maxLines = 1)
+                        }
+                        Text(call.name, style = TextStyle(fontSize = 60.sp, fontWeight = FontWeight.Bold, color = p.text), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 8.dp))
+                        Spacer(Modifier.height(26.dp))
+                        CallKey(CALL_ANSWER, Icons.Rounded.Phone, stringResource(R.string.phone_action_answer), green, filled = true, ringed, night, stop)
+                        if (canEnd) {
+                            Spacer(Modifier.height(14.dp))
+                            CallKey(CALL_DECLINE, Icons.Rounded.Close, stringResource(R.string.phone_action_decline), Orbit.warning(night), filled = false, ringed, night, stop)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** A full-width call button: Accept filled in green, Decline outlined in red (the sheet's). */
+    @Composable
+    private fun CallKey(id: String, icon: ImageVector, label: String, colour: Color, filled: Boolean, ringed: String, night: Boolean, stop: (String) -> Modifier) {
+        val shape = RoundedCornerShape(10.dp)
+        val text = if (filled) (if (night) Color(0xFF052E16) else Color.White) else colour
+        Row(
+            stop(id).fillMaxWidth().height(84.dp).deckFocus(ringed == id).clip(shape)
+                .then(if (filled) Modifier.background(colour) else Modifier.border(3.dp, colour, shape)),
+            horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(icon, null, Modifier.size(34.dp), tint = text)
+            Spacer(Modifier.width(12.dp))
+            Text(label, style = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Bold, color = text), maxLines = 1)
+        }
+    }
+
+    @Composable
+    override fun InCall(call: CarCall, canEnd: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val p = Deck.paper(night)
+        val green = Deck.hue(World.CALLS, night)
+        val elapsed by produceState(0L, call.sinceMs) {
+            while (true) { value = ((System.currentTimeMillis() - call.sinceMs) / 1000).coerceAtLeast(0); delay(1_000) }
+        }
+        Box(modifier) {
+            DeckScaled {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    val shape = RoundedCornerShape(Deck.CORNER)
+                    Box(stop(STOP_CALL).height(76.dp).deckFocus(ringed == STOP_CALL).shadow(10.dp, shape).clip(shape).background(Deck.cardColour(World.CALLS, night))) {
+                        // The edge is drawn over the strip's own width (matchParentSize), so it never widens it.
+                        Box(Modifier.matchParentSize()) { Box(Modifier.fillMaxWidth().height(5.dp).background(green)) }
+                        Row(Modifier.fillMaxHeight().padding(start = 18.dp, end = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Icon(Icons.Rounded.Phone, null, Modifier.size(30.dp), tint = green)
+                            Text(stringResource(R.string.phone_in_call_elapsed, call.name, "${elapsed / 60}:${"%02d".format(elapsed % 60)}"),
+                                style = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.Bold, color = p.text),
+                                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 460.dp))
+                        }
+                    }
+                    if (canEnd) {
+                        val red = Orbit.warning(night)
+                        Box(stop(STOP_HANG_UP).size(76.dp).deckFocus(ringed == STOP_HANG_UP).clip(shape).background(red), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Rounded.CallEnd, stringResource(R.string.phone_action_hang_up), Modifier.size(36.dp), tint = Color.White)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    override fun Notice(notice: CarNotice, hideText: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val p = Deck.paper(night)
+        val hue = Deck.hue(World.NAVIGATE, night)
+        val shape = RoundedCornerShape(Deck.CORNER)
+        Box(modifier) {
+            DeckScaled {
+                // At most 480 wide (as ORBIT's): it fits between the turn read-out and the clock.
+                Box(Modifier.widthIn(max = 480.dp).shadow(12.dp, shape).clip(shape).background(Deck.cardColour(World.NAVIGATE, night))) {
+                    Box(Modifier.matchParentSize()) { Box(Modifier.fillMaxWidth().height(5.dp).background(hue)) }
+                    Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                            Box(Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(hue.copy(alpha = 0.18f)), contentAlignment = Alignment.Center) {
+                                val icon = notice.icon
+                                if (icon != null) {
+                                    val image = remember(icon) { icon.asImageBitmap() }
+                                    Image(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                                } else Icon(Icons.Rounded.Notifications, null, Modifier.size(28.dp), tint = hue)
+                            }
+                            Column(Modifier.weight(1f, fill = false)) {
+                                Text(notice.title, style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold, color = p.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                // While driving a message shows who wrote, not what (as everywhere in the car).
+                                Text(if (hideText) stringResource(R.string.notif_new_message_placeholder) else notice.text,
+                                    style = TextStyle(fontSize = 22.sp, color = p.secondary), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                        Row(Modifier.align(Alignment.End), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            val key = RoundedCornerShape(8.dp)
+                            notice.actions.take(2).forEachIndexed { i, (label, _) ->
+                                val id = noticeActionStop(i)
+                                Text(label, style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold, color = p.text), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                    modifier = stop(id).widthIn(max = 180.dp).deckFocus(ringed == id).clip(key).border(2.dp, hue, key).padding(horizontal = 16.dp, vertical = 9.dp))
+                            }
+                            Box(stop(NOTICE_DISMISS).size(46.dp).deckFocus(ringed == NOTICE_DISMISS).clip(key).background(p.card), contentAlignment = Alignment.Center) {
+                                Icon(Icons.Rounded.Close, stringResource(R.string.common_dismiss), Modifier.size(26.dp), tint = p.text)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    override fun Bell(count: Int, ringed: Boolean, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val p = Deck.paper(night)
+        val shape = RoundedCornerShape(Deck.CORNER)
+        Box(modifier) {
+            DeckScaled {
+                Box(Modifier.padding(top = 12.dp)) {
+                    Box(Modifier.size(68.dp).deckFocus(ringed).shadow(8.dp, shape).clip(shape).background(Deck.cardColour(World.NAVIGATE, night)), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Rounded.Notifications, stringResource(R.string.notif_title), Modifier.size(36.dp), tint = p.text)
+                    }
+                    Box(Modifier.align(Alignment.TopEnd).padding(top = 0.dp).size(28.dp).clip(RoundedCornerShape(6.dp)).background(Orbit.warning(night)), contentAlignment = Alignment.Center) {
+                        Text(if (count > 9) "9+" else "$count", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White))
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    override fun AppRail(home: () -> Unit, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val p = Deck.paper(night)
+        val hue = Deck.hue(World.NAVIGATE, night)
+        Column(modifier.width(net.prototux.aare.ui.car.myplay.APP_RAIL_WIDTH).background(Deck.cardColour(World.NAVIGATE, night)), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(Modifier.fillMaxWidth().height(5.dp).background(hue))
+            Box(
+                Modifier.padding(top = 18.dp).size(58.dp).clip(RoundedCornerShape(10.dp)).background(hue)
+                    .carFocusHighlight(RoundedCornerShape(10.dp))
+                    .clickable(onClickLabel = stringResource(R.string.myplay_frame_home)) { home() }
+                    .testTag(net.prototux.aare.ui.car.myplay.FRAME_HOME_TAG),
+                contentAlignment = Alignment.Center,
+            ) { Icon(Icons.Rounded.Home, stringResource(R.string.myplay_frame_home), Modifier.size(32.dp), tint = if (night) Color(0xFF04221D) else Color.White) }
+            Spacer(Modifier.weight(1f))
+            Box(Modifier.padding(bottom = 18.dp).size(10.dp).clip(RoundedCornerShape(2.dp)).background(p.secondary.copy(alpha = 0.4f)))
+        }
+    }
+
     // N14: DECK's pages (DeckPages.kt). Each world's card opened to fill the screen.
 
     /** The sheet's app list: five tiles a row, two rows a page. */
