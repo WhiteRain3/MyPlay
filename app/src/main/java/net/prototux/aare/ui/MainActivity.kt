@@ -174,6 +174,9 @@ import net.prototux.aare.ui.phone.SizePage
 import net.prototux.aare.ui.phone.StatusIconsPage
 import net.prototux.aare.ui.phone.ColoursPage
 import net.prototux.aare.ui.phone.LooksPage
+import net.prototux.aare.ui.phone.SpeedLimitPage
+import net.prototux.aare.ui.phone.SpeedLimitDownload
+import net.prototux.aare.ui.phone.HintLine
 import net.prototux.aare.ui.phone.MapAreasSwitch
 import net.prototux.aare.ui.phone.CarCheckPage
 import net.prototux.aare.ui.phone.toCheckInput
@@ -252,6 +255,7 @@ private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: Image
     COLOURS(R.string.phone_part_colours, R.string.phone_part_colours, Icons.Rounded.Dashboard),
     LOOKS(R.string.phone_part_looks, R.string.phone_part_looks, Icons.Rounded.Dashboard),
     CAR_CHECK(R.string.phone_tile_car_check, R.string.phone_tile_car_check, Icons.Rounded.Dashboard),
+    SPEED_LIMITS(R.string.phone_tile_speed_limits, R.string.phone_tile_speed_limits, Icons.Rounded.Dashboard),
     LAYOUT(R.string.phone_part_layout, R.string.phone_part_layout, Icons.Rounded.Dashboard),
     SIZE(R.string.phone_part_size, R.string.phone_part_size, Icons.Rounded.Dashboard),
     CLOCK(R.string.phone_part_clock, R.string.phone_part_clock, Icons.Rounded.Dashboard),
@@ -283,7 +287,7 @@ private fun Home() {
         mutableStateOf(ReleaseNotes.showOnOpen(version, settings.myplayWhatsNewSeen, notes != null, fresh))
     }
     if (whatsNew && notes != null) WhatsNewDialog(version, notes) { whatsNew = false; settings.myplayWhatsNewSeen = version }
-    LaunchedEffect(Unit) { ProjectionService.startIdleIfEnabled(ctx); ProjectionService.probeUsb(ctx); ProjectionService.probeWireless(ctx); UpdateChecker.refresh(ctx); CertificateUpdates.refresh(ctx) }
+    LaunchedEffect(Unit) { ProjectionService.startIdleIfEnabled(ctx); ProjectionService.probeUsb(ctx); ProjectionService.probeWireless(ctx); UpdateChecker.refresh(ctx); CertificateUpdates.refresh(ctx); SpeedLimitDownload.checkIfDue(ctx) }
     // Re-check permissions and capture methods whenever the user comes back to the app.
     val lifecycle = androidx.compose.ui.platform.LocalLifecycleOwner.current
     DisposableEffect(lifecycle) {
@@ -342,6 +346,7 @@ private fun Home() {
                         Page.CARDS -> item { CardsPage { page = Page.LAYOUT } }
                         Page.COLOURS -> item { ColoursPage() }
                         Page.LOOKS -> item { LooksPage() }
+                        Page.SPEED_LIMITS -> item { SpeedLimitPage() }
                         Page.CAR_CHECK -> item {
                             val report by CarInputEvents.report.collectAsState()
                             val inputs = remember { CarInputEvents.events.map { it.toCheckInput() } }
@@ -356,6 +361,8 @@ private fun Home() {
                         Page.BACKUP -> item { BackupPage { settingsGeneration++ } }
                         Page.CERTIFICATES -> item { CertificatesCard(certs, state) }
                         Page.ABOUT -> {
+                            // N21: the speed limit data's licence notice.
+                            item { HintLine(Icons.Rounded.Info, stringResource(R.string.phone_osm_notice)) }
                             if (notes != null) item {
                                 RowGroup(rows = listOf {
                                     SimpleRow(Icons.Rounded.Info, stringResource(R.string.phone_whats_new_title, version), TileTone.VIOLET,
@@ -396,6 +403,7 @@ private fun pageOf(tile: BehindTile): Page = when (tile) {
     BehindTile.ADVANCED -> Page.ADVANCED
     BehindTile.CAR_DATA -> Page.CAR_DATA
     BehindTile.CAR_CHECK -> Page.CAR_CHECK
+    BehindTile.SPEED_LIMITS -> Page.SPEED_LIMITS
 }
 
 @Composable

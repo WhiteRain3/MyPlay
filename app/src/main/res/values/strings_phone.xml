@@ -364,4 +364,25 @@
     <string name="phone_map_with_look" translatable="false">The filter is part of the look: saving a look keeps it, and choosing a look brings its own (or none).</string>
     <string name="phone_buttons_line_title" translatable="false">Show what a button did</string>
     <string name="phone_buttons_line_hint" translatable="false">A short line at the top of the car screen after a button changes the song, plays or pauses, or starts the assistant.</string>
+    <string name="phone_tile_speed_limits" translatable="false">Speed limits</string>
+    <string name="phone_speed_region" translatable="false">Region</string>
+    <string name="phone_speed_region_none" translatable="false">None</string>
+    <string name="phone_speed_file" translatable="false">Speed limit file</string>
+    <string name="phone_speed_not_downloaded" translatable="false">Not downloaded yet</string>
+    <string name="phone_speed_kept" translatable="false">%1$s, from %2$s</string>
+    <string name="phone_speed_checking" translatable="false">Looking for a newer file…</string>
+    <string name="phone_speed_downloading" translatable="false">Downloading…</string>
+    <string name="phone_speed_up_to_date" translatable="false">The file is up to date.</string>
+    <string name="phone_speed_done" translatable="false">Downloaded.</string>
+    <string name="phone_speed_needs_wifi" translatable="false">Connect to Wi-Fi to download it.</string>
+    <string name="phone_speed_failed" translatable="false">The file could not be downloaded. Try again later.</string>
+    <string name="phone_speed_download" translatable="false">Download</string>
+    <string name="phone_speed_look_now" translatable="false">Look for a newer one</string>
+    <string name="phone_speed_delete" translatable="false">Delete</string>
+    <string name="phone_speed_wifi_only" translatable="false">Downloaded on Wi-Fi only, from MyPlay\'s own release page. Looked for again once a month, when MyPlay is opened.</string>
+    <string name="phone_speed_hint_only" translatable="false">The limit is a hint; the signs on the road win. OpenStreetMap does not know every limit: it misses road works, variable motorway signs and some limits by time or weather, and a match can be wrong at junctions or on roads side by side.</string>
+    <string name="phone_speed_offline" translatable="false">The file is used offline on the phone: the car\'s position is never sent anywhere to find a limit.</string>
+    <string name="phone_osm_notice" translatable="false">Speed limit data © OpenStreetMap contributors, available under the Open Database Licence (ODbL) 1.0: openstreetmap.org/copyright</string>
+    <string name="phone_speed_region_which" translatable="false">Which region\'s speed limits the car screen shows</string>
+    <string name="phone_speed_not_published" translatable="false">No speed limit file for this region has been published yet.</string>
 </resources>
