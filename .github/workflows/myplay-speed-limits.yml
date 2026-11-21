@@ -8,10 +8,18 @@
 name: MyPlay speed limits
 
 on:
+  # Scheduled runs happen only from the default branch: this one fires once the file is there.
   schedule:
     - cron: "17 3 4 * *" # 03:17 UTC on the 4th of each month
   # By hand from the Actions page.
   workflow_dispatch:
+  # When the builder or this file changes on the MyPlay branch (this also makes GitHub know the
+  # workflow, so it can be run by hand).
+  push:
+    branches: [claude/myplay]
+    paths:
+      - "speedlimit/**"
+      - ".github/workflows/myplay-speed-limits.yml"
 
 permissions:
   contents: write
