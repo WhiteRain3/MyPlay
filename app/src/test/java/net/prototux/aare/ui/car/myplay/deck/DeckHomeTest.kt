@@ -119,7 +119,10 @@ class DeckHomeTest {
                 CompositionLocalProvider(LocalEngineSources provides remember(state) {
                     EngineSources.of(state, actions, context).let { s ->
                         if (speed == null) s else s.copy(speed = SpeedSource(MutableStateFlow(CarData.State()), { NoPhoneFixes }, speed))
-                    }
+                    }.copy(phone = PicturePhone, settings = PictureSettings, carLines = {
+                        listOf("Car" to "Audi A4 2016", "Driving" to "Moving", "Speed" to "48 km/h", "Fuel" to "62% · 480 km",
+                            "Outside" to "7.5 °C · 101 kPa", "Tyres" to "230 · 230 · 240 · 240 kPa", "Doors" to "Closed")
+                    })
                 }) {
                     CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
                         navMap = { _, m -> Box(m.background(if (night) Color(0xFF10151B) else Color(0xFFDCE3E8))) })
@@ -134,6 +137,40 @@ class DeckHomeTest {
     private fun turn(steps: Int) = repeat(kotlin.math.abs(steps)) {
         if (steps > 0) engine.performKeyInput { pressKey(Key.Tab) } else engine.performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } }
     }
+
+    private object PicturePhone : net.prototux.aare.ui.car.myplay.PhoneSource {
+        override val permitted = true
+        override suspend fun recents() = listOf(
+            net.prototux.aare.ui.car.myplay.PhoneEntry("Anna K.", "111", "2 min ago", missed = true),
+            net.prototux.aare.ui.car.myplay.PhoneEntry("Ben Ford", "222", "Today, 08:14"),
+            net.prototux.aare.ui.car.myplay.PhoneEntry("", "+370 612 34567", "Yesterday"),
+        )
+        override suspend fun favourites() = listOf(net.prototux.aare.ui.car.myplay.PhoneEntry("Carla", "333", "Mobile · 333"))
+        override fun call(entry: net.prototux.aare.ui.car.myplay.PhoneEntry) = Unit
+        override fun open() = Unit
+    }
+
+    private object PictureSettings : net.prototux.aare.ui.car.myplay.SettingsSource {
+        override fun items() = listOf(
+            net.prototux.aare.ui.car.myplay.SettingItem.Choice("colors", "Colours", listOf("auto" to "Automatic", "dark" to "Dark"), "auto") {},
+            net.prototux.aare.ui.car.myplay.SettingItem.Choice("speed_limit_margin", "Speed colour over the limit", listOf("9" to "over by 9 km/h"), "9") {},
+            net.prototux.aare.ui.car.myplay.SettingItem.Toggle("banners", "Message notifications", true) {},
+            net.prototux.aare.ui.car.myplay.SettingItem.Toggle("passenger", "Passenger mode", false, canTurnOn = false, note = "Can be turned on only while the car is stopped") {},
+        )
+    }
+
+    /** DECK's page of the card [back] turns behind Music: Apps 1, Settings 2, Car 3, Calls 4. */
+    private fun page(back: Int) {
+        turn(-back)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.mainClock.advanceTimeBy(800)
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun settingsPageNight() { show(); page(2); picture("deck-settings-1280x720-night") }
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun settingsPage901Day() { show(night = false); page(2); picture("deck-settings-901x543-day") }
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun carPageNight() { show(); page(3); picture("deck-car-1280x720-night") }
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun callsPageDay() { show(night = false); page(4); picture("deck-calls-1280x720-day") }
+    @Test @Config(qualifiers = "w1200dp-h723dp-land-mdpi") fun callsPage1200Night() { show(); page(4); picture("deck-calls-1200x723-night") }
 
     private fun picture(name: String) {
         rule.mainClock.advanceTimeBy(600)

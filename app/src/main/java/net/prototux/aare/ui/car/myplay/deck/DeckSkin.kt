@@ -21,6 +21,25 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ClearAll
+import androidx.compose.material.icons.rounded.Dialpad
+import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.Phone
+import androidx.compose.material.icons.rounded.PhoneMissed
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.ToggleOff
+import androidx.compose.material.icons.rounded.ToggleOn
+import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.runtime.produceState
+import net.prototux.aare.media.LibraryRow
+import net.prototux.aare.ui.car.myplay.LibraryPage
+import net.prototux.aare.ui.car.myplay.NoticeListPage
+import net.prototux.aare.ui.car.myplay.PhonePage
+import net.prototux.aare.ui.car.myplay.PhoneRow
+import net.prototux.aare.ui.car.myplay.SettingsPage
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -78,9 +97,9 @@ import net.prototux.aare.ui.car.rememberPhoneStatus
  * MyPlay (plan phase N, N13): DECK, the second design language: a hand of colour-coded cards
  * fanned in the bottom-right corner, and a large heads-up turn read-out top left.
  *
- * This chunk draws DECK's home: the turn and trip, the clock and battery, the speed with its
- * limit, and the hand. The worlds, a call and notices are still drawn by ORBIT until N14 gives
- * them DECK's cards (the engine and the knob are the same either way).
+ * DECK draws its home (the turn and trip, the clock and battery, the speed with its limit, the
+ * hand) and, since N14, its pages: each world's card opened full screen (DeckPages.kt). What is
+ * not drawn yet is still ORBIT's (the engine and the knob are the same either way).
  */
 object DeckSkin : MyPlaySkin by OrbitSkin {
     override val id = "deck"
@@ -331,7 +350,96 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
             }
         }
     }
+    // N14: DECK's pages (DeckPages.kt). Each world's card opened to fill the screen.
+
+    @Composable
+    override fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val hue = Deck.hue(World.SETTINGS, night)
+        DeckPage(World.SETTINGS, OrbitSkin.worldName(World.SETTINGS), stringResource(R.string.myplay_settings_hint), night, modifier) {
+            DeckList(ringed, page.rows.size) { i ->
+                val r = page.rows[i]
+                DeckRow(
+                    r.title, r.note.orEmpty(), if (r.switch) (if (r.on) Icons.Rounded.ToggleOn else Icons.Rounded.ToggleOff) else Icons.Rounded.Tune,
+                    hue, night, i == ringed, row(i), trailing = r.value,
+                )
+            }
+        }
+    }
+
+    @Composable
+    override fun CarWorld(lines: List<Pair<String, String>>, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val hue = Deck.hue(World.CAR, night)
+        DeckPage(World.CAR, OrbitSkin.worldName(World.CAR), stringResource(R.string.myplay_car_hint).takeIf { lines.isNotEmpty() }, night, modifier) {
+            if (lines.isEmpty()) DeckNote(stringResource(R.string.car_data_not_connected), night)
+            else DeckList(ringed, lines.size) { i ->
+                val (label, value) = lines[i]
+                DeckRow(label, "", Deck.icon(World.CAR), hue, night, i == ringed, row(i), trailing = value)
+            }
+        }
+    }
+
+    @Composable
+    override fun PhoneWorld(page: PhonePage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val hue = Deck.hue(World.CALLS, night)
+        DeckPage(World.CALLS, OrbitSkin.worldName(World.CALLS), stringResource(R.string.myplay_phone_hint), night, modifier) {
+            val note = when {
+                !page.permitted -> stringResource(R.string.myplay_phone_permissions)
+                page.loading -> stringResource(R.string.myplay_library_loading)
+                page.rows.size == 1 -> stringResource(R.string.myplay_phone_none)
+                else -> null
+            }
+            note?.let { DeckNote(it, night) }
+            DeckList(ringed, page.rows.size) { i ->
+                val r = page.rows[i]
+                val (icon, tint) = when (r.kind) {
+                    PhoneRow.Kind.RECENT -> Icons.Rounded.Phone to null
+                    PhoneRow.Kind.MISSED -> Icons.Rounded.PhoneMissed to Orbit.warning(night)
+                    PhoneRow.Kind.FAVOURITE -> Icons.Rounded.Star to null
+                    PhoneRow.Kind.PHONE_APP -> Icons.Rounded.Dialpad to null
+                }
+                DeckRow(r.title, r.subtitle, icon, hue, night, i == ringed, row(i), iconTint = tint, leadsOn = r.kind == PhoneRow.Kind.PHONE_APP)
+            }
+        }
+    }
+
+    @Composable
+    override fun NoticeList(page: NoticeListPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val hue = Deck.hue(World.NAVIGATE, night)
+        DeckPage(World.NAVIGATE, stringResource(R.string.notif_title), stringResource(R.string.myplay_notices_hint), night, modifier) {
+            DeckList(ringed, page.rows.size) { i ->
+                val r = page.rows[i]
+                val n = r.notice
+                if (n == null) DeckRow(stringResource(R.string.notif_clear_all), "", Icons.Rounded.ClearAll, hue, night, i == ringed, row(i))
+                else DeckRow("${n.title} · ${r.time}", r.text, Icons.Rounded.Notifications, hue, night, i == ringed, row(i), bitmap = n.icon, trailing = r.action)
+            }
+        }
+    }
+
+    @Composable
+    override fun Library(page: LibraryPage, ringed: Int, art: suspend (LibraryRow, Int) -> android.graphics.Bitmap?, row: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val hue = Deck.hue(World.MUSIC, night)
+        DeckPage(World.MUSIC, page.title, stringResource(R.string.myplay_library_hint), night, modifier) {
+            if (page.rows.isEmpty()) {
+                DeckNote(if (page.loading) stringResource(R.string.myplay_library_loading) else page.error ?: stringResource(R.string.myplay_library_empty), night)
+                return@DeckPage
+            }
+            // L-1: apps repeat ids; the key stays unique (as ORBIT's).
+            DeckList(ringed, page.rows.size, keyOf = { "${it}_${page.rows[it].id}" }) { i ->
+                val r = page.rows[i]
+                val px = with(LocalDensity.current) { 60.dp.roundToPx() }
+                val bitmap by produceState<android.graphics.Bitmap?>(null, r.id) { value = runCatching { art(r, px) }.getOrNull() }
+                DeckRow(r.title, r.subtitle, if (r.browsable) Icons.Rounded.Folder else Icons.Rounded.MusicNote, hue, night, i == ringed, row(i),
+                    bitmap = bitmap, leadsOn = r.browsable)
+            }
+        }
+    }
 }
+
 
 /** A card of the hand (tests). */
 internal fun deckCardTag(w: World) = "deck_card_${w.id}"
