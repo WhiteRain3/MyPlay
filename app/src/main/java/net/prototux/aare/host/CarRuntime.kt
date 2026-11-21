@@ -929,7 +929,7 @@ class CarRuntime(
          * [SETTINGS_ID] is deliberately not here: hiding it would lock the user out of the car-side
          * settings from the car itself, with no way back in short of reconnecting and using the phone.
          */
-        val HIDEABLE_BUILTIN_IDS = setOf(PHONE_ID, NOTIFICATIONS_ID)
+        val HIDEABLE_BUILTIN_IDS = setOf(PHONE_ID, NOTIFICATIONS_ID, YOUTUBE_ID) // MyPlay (FS-2): YouTube too
 
         /** The built-ins of [hidden] (Settings.hiddenApps) the app grid leaves out; never Settings. */
         fun launcherHiddenIds(hidden: Set<String>): Set<String> = HIDEABLE_BUILTIN_IDS intersect hidden

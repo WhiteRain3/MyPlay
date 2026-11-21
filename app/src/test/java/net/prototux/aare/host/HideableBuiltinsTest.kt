@@ -35,4 +35,10 @@ class HideableBuiltinsTest {
     fun nothingHiddenKeepsTheWholeGrid() {
         assertEquals(apps, apps.withoutLauncherHidden(CarRuntime.launcherHiddenIds(emptySet())))
     }
+
+    /** MyPlay (FS-2): the YouTube entry can be hidden from the phone, as the browser's other built-ins. */
+    @org.junit.Test
+    fun youtubeCanBeHidden() {
+        assertEquals(setOf(CarRuntime.YOUTUBE_ID), CarRuntime.launcherHiddenIds(setOf(CarRuntime.YOUTUBE_ID, CarRuntime.SETTINGS_ID)))
+    }
 }
