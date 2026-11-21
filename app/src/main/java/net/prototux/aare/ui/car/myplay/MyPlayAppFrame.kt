@@ -181,27 +181,27 @@ internal fun MyPlayAppFrame(
             // A notice for a few seconds at the top: its buttons by touch, and (F1-5) by the knob.
             // F1-3 (R6, R6-3): the notice and, under it, the gesture line (what a button just did), never on top of each other.
             Column(Modifier.align(Alignment.TopCenter).padding(top = tokens.edge), horizontalAlignment = Alignment.CenterHorizontally) {
-            if (notice != null && !ringing) {
-                val currentNotice by rememberUpdatedState(notice)
-                skin.Notice(
-                    notice, hideText = state.drivingRestricted && notice.message, ringed = noticeRing.takeIf { noticeKnob },
-                    stop = { id ->
-                        Modifier.pointerInput(id) {
-                            detectTapGestures {
-                                val n = currentNotice
-                                // Dismiss only dismisses; an action runs, then the notice goes (as on the home).
-                                (0 until 2).firstOrNull { noticeActionStop(it) == id }?.let { i -> n.actions.getOrNull(i)?.second?.invoke() }
-                                sources.notifications.dismiss(n)
+                if (notice != null && !ringing) {
+                    val currentNotice by rememberUpdatedState(notice)
+                    skin.Notice(
+                        notice, hideText = state.drivingRestricted && notice.message, ringed = noticeRing.takeIf { noticeKnob },
+                        stop = { id ->
+                            Modifier.pointerInput(id) {
+                                detectTapGestures {
+                                    val n = currentNotice
+                                    // Dismiss only dismisses; an action runs, then the notice goes (as on the home).
+                                    (0 until 2).firstOrNull { noticeActionStop(it) == id }?.let { i -> n.actions.getOrNull(i)?.second?.invoke() }
+                                    sources.notifications.dismiss(n)
+                                }
                             }
-                        }
-                            .onGloballyPositioned { c -> c.boundsInRoot().let { noticeBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
-                            .semantics { selected = noticeKnob && id == noticeRing }
-                            .testTag(id)
-                    },
-                    Modifier,
-                )
-            }
-            GestureLineOverlay(state, Modifier)
+                                .onGloballyPositioned { c -> c.boundsInRoot().let { noticeBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                                .semantics { selected = noticeKnob && id == noticeRing }
+                                .testTag(id)
+                        },
+                        Modifier,
+                    )
+                }
+                GestureLineOverlay(state, Modifier)
             }
             // A ringing call: the skin's, over everything, with the knob, as on the home (C-1: touches stop here).
             if (ringing) {
