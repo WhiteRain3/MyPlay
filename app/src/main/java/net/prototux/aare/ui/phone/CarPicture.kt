@@ -297,7 +297,10 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
                     override val lifecycle get() = lifecycleOwner.lifecycle
                 }
             }
+            // ORBIT's sources for the picture: a fixed speed, no location, no car data, no focus taken.
+            val pictureSources = remember(ui) { net.prototux.aare.ui.car.myplay.EngineSources.picture(ui, NoCarActions) }
             CompositionLocalProvider(
+                net.prototux.aare.ui.car.myplay.LocalEngineSources provides pictureSources,
                 androidx.activity.compose.LocalOnBackPressedDispatcherOwner provides pictureBack,
                 LocalCarParts provides registry,
                 LocalCarControlScale provides ui.controlScale,

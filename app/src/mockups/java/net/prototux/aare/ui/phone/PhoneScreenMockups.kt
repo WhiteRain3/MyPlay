@@ -94,6 +94,16 @@ class PhoneScreenMockups {
         } } }
     }
 
+    @Test fun orbitPicture() = paparazzi.snapshot {
+        MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Column(Modifier.padding(20.dp)) {
+            val ui = androidx.compose.runtime.remember { sampleCarState().apply { enginePreview = true } }
+            CarPictureFrame(ui, "ORBIT", onPart = { })
+            androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
+            val day = androidx.compose.runtime.remember { sampleCarState().apply { enginePreview = true; night = false } }
+            CarPictureFrame(day, "ORBIT day", onPart = null)
+        } } }
+    }
+
     @Test fun speedLimits() = paparazzi.snapshot {
         MyPlayPhoneTheme { Surface(Modifier.fillMaxSize()) { androidx.compose.foundation.layout.Box(Modifier.padding(20.dp)) { SpeedLimitPage() } } }
     }
