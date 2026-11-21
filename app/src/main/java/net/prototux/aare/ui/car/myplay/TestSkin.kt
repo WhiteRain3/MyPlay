@@ -46,11 +46,11 @@ object TestSkin : MyPlaySkin {
     }
 
     @Composable
-    override fun Trip(trip: TripSlot, modifier: Modifier) = Box(modifier) {
+    override fun Hub(trip: TripSlot?, modifier: Modifier) = Box(modifier) {
         val t = LocalSkinTokens.current
-        val context = LocalContext.current
-        trip.arrival?.let { Text(DateFormat.getTimeFormat(context).format(it), color = t.accent, fontSize = 24.sp) }
-        trip.distanceLeft?.let { Text(it, color = t.dim, fontSize = 16.sp) }
+        Text("MENU", color = t.onSurface, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+        trip?.arrival?.let { Text(it, color = t.accent, fontSize = 24.sp) }
+        trip?.distanceLeft?.let { Text(it, color = t.dim, fontSize = 16.sp) }
     }
 
     @Composable

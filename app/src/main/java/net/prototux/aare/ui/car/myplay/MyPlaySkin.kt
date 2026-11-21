@@ -31,15 +31,16 @@ data class SkinTokens(
 /** The next turn: the distance, then the road or instruction. Null fields are not known. */
 data class TurnSlot(val distance: String?, val road: String?)
 
-/** The trip: arrival time (already formatted by the engine) and the distance left. */
-data class TripSlot(val arrival: Long?, val distanceLeft: String?)
+/** The trip: the arrival time, formatted by the engine in the phone's 12 or 24 hour style (N1-2), and the distance left. */
+data class TripSlot(val arrival: String?, val distanceLeft: String?)
 
 data class SongSlot(val title: String, val subtitle: String, val playing: Boolean, val art: Bitmap?)
 
 /** What the home screen's slots show; null where there is nothing (no route, no song). */
 data class HomeSlots(val turn: TurnSlot?, val trip: TripSlot?, val song: SongSlot?) {
     companion object {
-        fun from(state: CarUiState): HomeSlots {
+        /** [time] formats an epoch time as the phone shows times (12 or 24 hours). */
+        fun from(state: CarUiState, time: (Long) -> String): HomeSlots {
             val trip = state.trip
             val turn = if (trip != null) {
                 val step = trip.steps.firstOrNull()
@@ -51,7 +52,7 @@ data class HomeSlots(val turn: TurnSlot?, val trip: TripSlot?, val song: SongSlo
             }
             val est = trip?.destinationTravelEstimates?.firstOrNull()
             val tripSlot = est?.let { e ->
-                TripSlot(e.arrivalTimeAtDestination?.timeSinceEpochMillis,
+                TripSlot(e.arrivalTimeAtDestination?.timeSinceEpochMillis?.let(time),
                     e.remainingDistance?.let { CarFormat.distance(it.displayDistance, it.displayUnit) })
             }
             val song = state.nowPlaying?.let { SongSlot(it.title, it.subtitle, it.playing, it.art) }
@@ -67,7 +68,8 @@ interface MyPlaySkin {
     fun tokens(night: Boolean): SkinTokens
 
     @Composable fun Turn(turn: TurnSlot, modifier: Modifier)
-    @Composable fun Trip(trip: TripSlot, modifier: Modifier)
+    /** The hub: always there (the knob's way into the worlds), with the trip when there is a route. */
+    @Composable fun Hub(trip: TripSlot?, modifier: Modifier)
     @Composable fun Song(song: SongSlot, modifier: Modifier)
     @Composable fun Status(modifier: Modifier)
     /** The six worlds, [selected] ringed. */
