@@ -627,7 +627,7 @@ browser are still AARE's screens (`ContentArea`, `Launcher`, `NoticeOverlay`, `C
 - **Skin (one per language):** colours, type, shapes and motion, plus the drawing of each slot
   the engine offers. Here a slot is a place a skin draws: the main control, the turn read-out,
   the trip, the song, the app chooser, a list row, a call. ORBIT, DECK and RACE are three skins.
-- The engine never decides how something looks; a skin never decides what a push does. Then
+- The engine never decides how something looks; a skin never decides what a push does. In every language holding the knob is "next song" (the owner's own gesture) and Back goes back or to the map (2026-11-21). Then
   DECK costs drawing work only, and the knob paths stay tested once.
 
 **ORBIT first.** It is the language the owner named first. It has the fewest knob stops
@@ -674,7 +674,7 @@ by default, so every release before it is safe and the owner can try each piece 
 | N10 | **The switch to ORBIT.** "MyPlay" becomes the only layout; stored layouts (taskbar, dock, classic, map behind) move to ORBIT, keeping wallpaper, bar items, map filter and card order where they still mean something; car styles stop choosing a shell. Tests: migration from each old id and a 0.1.x backup (F6) | N5 to N9, N11 |
 | N11 | **Phone side for the new screen** (phone worker). Layout page shows the language (ORBIT now, DECK when it exists) and its options; bar and cards pages and the setup wizard follow; the phone picture draws the new screen | N5 |
 | N12 | **Delete the old car UI.** Taskbar, dock, classic and map-behind shells, `SpecShell`, AARE's launcher, notification, call, phone, music browser and settings screens that the engine replaced. Shared bits still used move into `ui/car/myplay/` first. `PadWalkTest`, `CarStylesTest`, `BarPageTest`, `MyPlayWeatherTest` cases for old shells go. Only after the owner has driven with N10 | N10 |
-| N13 | **DECK tokens, parts and home.** Tall index cards with a thick coloured edge, one flat hue per world, 92 px turn read-out, caps labels; the fanned hand bottom right (Navigate, Phone, Car, Apps, Music), turn to swing, push to open, hold for the map; the hand declared as covering the map | N12 |
+| N13 | **DECK tokens, parts and home.** Tall index cards with a thick coloured edge, one flat hue per world, 92 px turn read-out, caps labels; the fanned hand bottom right (Navigate, Phone, Car, Apps, Music), turn to swing, push to open, Back for the map (holding the knob is "next song" in every language); the hand declared as covering the map | N12 |
 | N14 | **DECK worlds.** Music, calls and phone, apps, car and settings drawn with DECK's parts on the same engine screens. Bench: every walk, with DECK chosen | N13 |
 | N15 | **Choosing the language** (phone worker, plus a car setting): ORBIT or DECK in the phone app's layout page and in F7's whole looks; switching takes effect without reconnecting | N13 |
 | N16 | **RACE tokens, parts and home.** The Design reviewer draws RACE first, on the engine's slots, inside the limits of the next section: a big turn read-out, speed, a trip "lap" strip, a bold game-like frame at the edges; nothing in the middle of the map. Then its parts and home screen | N15; RACE's drawing sheet |
