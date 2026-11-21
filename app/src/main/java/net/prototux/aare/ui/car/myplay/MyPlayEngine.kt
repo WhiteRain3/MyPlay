@@ -356,6 +356,7 @@ internal fun MyPlayEngineShell(
     val openWorld = state.engineOpenWorld
     LaunchedEffect(openWorld) {
         val w = World.entries.firstOrNull { it.id == openWorld } ?: return@LaunchedEffect
+        fromApps = false // F3-1: not opened from an Apps tile, whatever was on screen before
         model.enter(w)
         freshWorld(w)
         state.engineOpenWorld = null

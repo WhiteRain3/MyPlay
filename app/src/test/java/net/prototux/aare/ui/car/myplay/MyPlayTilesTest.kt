@@ -108,6 +108,20 @@ class MyPlayTilesTest {
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
     }
 
+    /** F3-1: a world the car runtime opens (a call placed) was not opened from a tile: Back goes to the dial. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aCallPlacedFromATilesPageForgetsTheTile() {
+        val state = show()
+        toApps(); tap("car-settings")
+        rule.onNodeWithTag(SLOT_SETTINGS).assertExists()
+        rule.runOnIdle { state.engineOpenWorld = World.CALLS.id }
+        rule.waitForIdle()
+        rule.onNodeWithTag(SLOT_PHONE).assertExists()
+        back()
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+        rule.onNodeWithTag(SLOT_APPS).assertDoesNotExist()
+    }
+
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun otherAppsOpenFullScreen() {
         show()
