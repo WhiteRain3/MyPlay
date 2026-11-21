@@ -86,8 +86,7 @@ internal fun DockShell(
                 }
             }
             overlay(Modifier.align(Alignment.BottomCenter))
-            NoticeOverlay(state, actions, Modifier.align(Alignment.TopCenter))
-            GestureLineOverlay(state, Modifier.align(Alignment.TopCenter)) // MyPlay (R6)
+            TopLines(state, actions, Modifier.align(Alignment.TopCenter)) // MyPlay (R6-3): notice and gesture line stacked
             CallOverlay(state, actions, Modifier.align(Alignment.TopCenter))
         }
     }

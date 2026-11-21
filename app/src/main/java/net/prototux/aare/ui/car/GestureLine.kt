@@ -6,10 +6,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
@@ -28,7 +24,14 @@ import net.prototux.aare.car.ButtonAction
  * The song's title is read as the line is drawn, so after "Next song" it shows the new song once
  * the music app reports it.
  */
-data class GestureLine(val action: ButtonAction, val forward: Boolean, val atMs: Long)
+data class GestureLine(
+    val action: ButtonAction,
+    val forward: Boolean,
+    val atMs: Long,
+    /** R6-1: the song and whether it played when the gesture came, to tell a report of its effect from an old one. */
+    val titleBefore: String? = null,
+    val playingBefore: Boolean? = null,
+)
 
 internal object GestureLines {
     /** How long the line stays. */
@@ -43,11 +46,26 @@ internal object GestureLines {
     /** Which words go first: next or previous song, playing or paused, or the assistant. */
     enum class Words { NEXT, PREVIOUS, PLAYING, PAUSED, ASSISTANT }
 
+    /**
+     * R6-1: playing or not as the line should say it: the app's report once it differs from before
+     * the gesture, until then what the toggle will do.
+     */
+    fun playingNow(line: GestureLine, reported: Boolean?): Boolean? =
+        if (line.playingBefore != null && reported == line.playingBefore) !line.playingBefore else reported
+
+    /** R6-1: the title to show: for a song change only once the app reports a different song. */
+    fun title(line: GestureLine, reported: String?): String? = reported?.takeIf { it.isNotBlank() }?.takeIf {
+        when (line.action) {
+            ButtonAction.NEXT, ButtonAction.PREVIOUS, ButtonAction.SKIP_SONGS -> it != line.titleBefore
+            else -> true
+        }
+    }
+
     fun words(line: GestureLine, playing: Boolean?): Words? = when (line.action) {
         ButtonAction.NEXT -> Words.NEXT
         ButtonAction.PREVIOUS -> Words.PREVIOUS
         ButtonAction.SKIP_SONGS -> if (line.forward) Words.NEXT else Words.PREVIOUS
-        ButtonAction.PLAY_PAUSE -> if (playing == false) Words.PAUSED else Words.PLAYING
+        ButtonAction.PLAY_PAUSE -> if (playingNow(line, playing) == false) Words.PAUSED else Words.PLAYING
         ButtonAction.ASSISTANT -> Words.ASSISTANT
         else -> null
     }
@@ -62,12 +80,13 @@ internal const val GESTURE_LINE_TAG = "gesture_line"
 @Composable
 internal fun GestureLineOverlay(state: CarUiState, modifier: Modifier) {
     val line = state.gestureLine ?: return
-    var shown by remember(line) { mutableStateOf(true) }
+    // R6-2: the line is cleared when its time is up, so a screen drawn again later never shows an old one.
     LaunchedEffect(line) {
         delay(GestureLines.SHOW_MS)
-        shown = false
+        if (state.gestureLine === line) state.gestureLine = null
     }
-    if (!shown) return
+    // R6-3: a ringing call's card takes the top of the screen; the line waits.
+    if (state.call?.ringing == true) return
     val np = state.nowPlaying
     val words = GestureLines.words(line, np?.playing) ?: return
     val first = stringResource(when (words) {
@@ -77,11 +96,21 @@ internal fun GestureLineOverlay(state: CarUiState, modifier: Modifier) {
         GestureLines.Words.PAUSED -> R.string.myplay_gesture_line_paused
         GestureLines.Words.ASSISTANT -> R.string.myplay_gesture_line_assistant
     })
-    val text = if (GestureLines.withTitle(words) && !np?.title.isNullOrBlank()) "$first: ${np!!.title}" else first
+    val title = GestureLines.title(line, np?.title)
+    val text = if (GestureLines.withTitle(words) && title != null) "$first: $title" else first
     Text(
         text, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
         modifier = modifier.padding(16.dp).clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest).padding(horizontal = 20.dp, vertical = 10.dp)
             .testTag(GESTURE_LINE_TAG),
     )
+}
+
+/** R6-3: the notice and the gesture line at the top, one under the other, never on top of each other. */
+@Composable
+internal fun TopLines(state: CarUiState, actions: CarActions, modifier: Modifier) {
+    androidx.compose.foundation.layout.Column(modifier, horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+        NoticeOverlay(state, actions, Modifier)
+        GestureLineOverlay(state, Modifier)
+    }
 }

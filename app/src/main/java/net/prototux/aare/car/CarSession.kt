@@ -735,8 +735,10 @@ class CarSession(
         DiagLog.add("button ${KeyEvent.keyCodeToString(g.code)} ${gesture.id}: ${action.id}")
         // MyPlay (R6): a short line on the car screen for what happens away from the ring.
         if (settings.myplayGestureLine && net.prototux.aare.ui.car.GestureLines.shows(action)) {
+            val np = runtime.ui.nowPlaying
             runtime.ui.gestureLine = net.prototux.aare.ui.car.GestureLine(action,
-                forward = ((g as? GestureEngine.Gesture.HoldTurn)?.steps ?: 1) > 0, atMs = SystemClock.uptimeMillis())
+                forward = ((g as? GestureEngine.Gesture.HoldTurn)?.steps ?: 1) > 0, atMs = SystemClock.uptimeMillis(),
+                titleBefore = np?.title, playingBefore = np?.playing)
         }
         when (action) {
             ButtonAction.SELECT -> {

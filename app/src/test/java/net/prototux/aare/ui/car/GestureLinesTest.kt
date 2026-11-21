@@ -67,5 +67,37 @@ class GestureLinesTest {
         assertEquals("Next song: ${PadWalkStates.SONG_TITLE}", text)
         rule.mainClock.advanceTimeBy(GestureLines.SHOW_MS + 200)
         assertTrue(rule.onAllNodes(hasTestTag(GESTURE_LINE_TAG)).fetchSemanticsNodes().isEmpty())
+        // R6-2: cleared, so a screen drawn again later shows nothing old.
+        assertEquals(null, state.gestureLine)
+    }
+
+    /** R6-1: no old title after "Next song", and play/pause says what the toggle will do until the app reports. */
+    @Test fun noStaleTitleOrState() {
+        val next = GestureLine(ButtonAction.NEXT, true, 0, titleBefore = "Old song", playingBefore = true)
+        assertEquals(null, GestureLines.title(next, "Old song"))
+        assertEquals("New song", GestureLines.title(next, "New song"))
+        val pause = GestureLine(ButtonAction.PLAY_PAUSE, true, 0, titleBefore = "A", playingBefore = true)
+        assertEquals(Words.PAUSED, GestureLines.words(pause, playing = true)) // not reported yet: what the toggle does
+        assertEquals(Words.PAUSED, GestureLines.words(pause, playing = false)) // reported
+        assertEquals("A", GestureLines.title(pause, "A"))
+        val play = GestureLine(ButtonAction.PLAY_PAUSE, true, 0, playingBefore = false)
+        assertEquals(Words.PLAYING, GestureLines.words(play, playing = false))
+    }
+
+    /** R6-3: while a call rings, its card has the top of the screen: no line. */
+    @Test fun noLineWhileACallRings() {
+        val state = PadWalkStates.state(CarLayout.TASKBAR, CarScreen.Dashboard)
+        state.call = CarCall(ringing = true, name = "Alex", sinceMs = 1)
+        rule.mainClock.autoAdvance = false
+        rule.setContent {
+            CarTheme(night = state.night, theme = state.theme) {
+                CarShell(state, PadWalkStates.NoActions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
+                    navMap = { _, m -> Box(m.background(Color.DarkGray)) })
+            }
+        }
+        rule.mainClock.advanceTimeBy(100)
+        rule.runOnIdle { state.gestureLine = GestureLine(ButtonAction.NEXT, forward = true, atMs = 1) }
+        rule.mainClock.advanceTimeBy(100)
+        assertTrue(rule.onAllNodes(hasTestTag(GESTURE_LINE_TAG)).fetchSemanticsNodes().isEmpty())
     }
 }
