@@ -1,0 +1,75 @@
+package net.prototux.aare.ui.car.myplay
+
+import android.content.Context
+import net.prototux.aare.R
+import net.prototux.aare.Settings
+import net.prototux.aare.car.SpeedSourceMode
+import net.prototux.aare.car.myplayGestureLine
+import net.prototux.aare.car.myplaySpeedSource
+import net.prototux.aare.ui.car.CarAppKind
+import net.prototux.aare.ui.car.CarUiState
+import net.prototux.aare.ui.car.HomeMaps
+import net.prototux.aare.ui.car.myplayHomeMaps
+
+/**
+ * MyPlay (plan phase N, N9): the settings the Settings world offers in the car, as plain data, so
+ * the skin draws them and tests walk them with a fake. Only what a driver changes from the car;
+ * the rest stays in the phone app. A setting is a switch or a choice ([SettingItem]).
+ */
+sealed interface SettingItem {
+    /** Stable: the ring stays on it across changes. */
+    val id: String
+    val title: String
+
+    data class Toggle(override val id: String, override val title: String, val on: Boolean, val set: (Boolean) -> Unit) : SettingItem
+
+    /** [options]: value to label; a push steps to the next one, round. */
+    data class Choice(
+        override val id: String, override val title: String, val options: List<Pair<String, String>>, val selected: String,
+        val select: (String) -> Unit,
+    ) : SettingItem {
+        val label: String get() = options.firstOrNull { it.first == selected }?.second ?: options.firstOrNull()?.second.orEmpty()
+        val next: String get() {
+            val i = options.indexOfFirst { it.first == selected }
+            return options[(i + 1).mod(options.size)].first
+        }
+    }
+}
+
+interface SettingsSource {
+    /** The settings as they are now (read again after each change). */
+    fun items(): List<SettingItem>
+}
+
+/** The car's real settings (the phone's stored ones, applied at once by the car runtime's listener). */
+internal class CarSettingsSource(private val context: Context, private val state: CarUiState) : SettingsSource {
+    private val settings = Settings(context)
+    private fun s(id: Int) = context.getString(id)
+
+    override fun items(): List<SettingItem> = listOf(
+        SettingItem.Choice(
+            "colors", s(R.string.setup_choice_colors),
+            listOf(Settings.THEME_AUTO to s(R.string.setup_choice_colors_auto), Settings.THEME_DARK to s(R.string.setup_choice_dark),
+                Settings.THEME_LIGHT to s(R.string.setup_choice_light)),
+            settings.carTheme,
+        ) { settings.carTheme = it },
+        SettingItem.Choice(
+            "home_maps", s(R.string.myplay_home_maps_title),
+            listOf(HomeMaps.LAST to s(R.string.myplay_home_maps_last)) +
+                state.apps.filter { it.kind == CarAppKind.NAVIGATION }.map { HomeMaps.chosen(it.packageName) to it.label } +
+                listOf(HomeMaps.ASK to s(R.string.myplay_home_maps_ask)),
+            settings.myplayHomeMaps,
+        ) { settings.myplayHomeMaps = it },
+        SettingItem.Choice(
+            "speed_source", s(R.string.myplay_setting_speed),
+            listOf(SpeedSourceMode.AUTO.id to s(R.string.myplay_setting_speed_auto), SpeedSourceMode.CAR.id to s(R.string.myplay_setting_speed_car),
+                SpeedSourceMode.OFF.id to s(R.string.myplay_off)),
+            settings.myplaySpeedSource.id,
+        ) { settings.myplaySpeedSource = SpeedSourceMode.byId(it) },
+        SettingItem.Toggle("gesture_line", s(R.string.myplay_setting_gesture_line), settings.myplayGestureLine) { settings.myplayGestureLine = it },
+        SettingItem.Toggle("banners", s(R.string.setup_switch_message_notifications), settings.messageBanners) { settings.messageBanners = it },
+        SettingItem.Toggle("read_aloud", s(R.string.msg_toggle_read_aloud_title), settings.readMessagesAloud) { settings.readMessagesAloud = it },
+        SettingItem.Toggle("car_audio", s(R.string.setup_switch_audio_next_connection), settings.carAudio) { settings.carAudio = it },
+        SettingItem.Toggle("passenger", s(R.string.setup_switch_passenger), settings.ignoreDriving) { settings.ignoreDriving = it },
+    )
+}

@@ -39,6 +39,9 @@ import androidx.compose.material.icons.rounded.Dialpad
 import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material.icons.rounded.PhoneMissed
 import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.ToggleOff
+import androidx.compose.material.icons.rounded.ToggleOn
+import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MusicNote
@@ -108,6 +111,7 @@ import net.prototux.aare.ui.car.myplay.MUSIC_NEXT
 import net.prototux.aare.ui.car.myplay.MUSIC_PLAY
 import net.prototux.aare.ui.car.myplay.MUSIC_PREV
 import net.prototux.aare.ui.car.myplay.MusicPage
+import net.prototux.aare.ui.car.myplay.SettingsPage
 import net.prototux.aare.ui.car.myplay.NoticeListPage
 import net.prototux.aare.ui.car.myplay.PhonePage
 import net.prototux.aare.ui.car.myplay.PhoneRow
@@ -725,6 +729,34 @@ object OrbitSkin : MyPlaySkin {
             }
             trailing?.let { Text(it, style = TextStyle(fontSize = 24.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = accent), maxLines = 1) }
             if (leadsOn) Icon(Icons.Rounded.ChevronRight, null, Modifier.size(36.dp), tint = g.secondary)
+        }
+    }
+
+    @Composable
+    override fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        val accent = Orbit.accent(World.SETTINGS, night)
+        val list = androidx.compose.foundation.lazy.rememberLazyListState()
+        LaunchedEffect(ringed, page.rows.size) { if (page.rows.isNotEmpty()) list.animateScrollToItem((ringed - 1).coerceAtLeast(0)) }
+        Box(modifier.background(g.halo.copy(alpha = 0.7f)).orbitRipple(0.5f, 0.5f)) {
+            Scaled {
+                Column(Modifier.fillMaxSize().padding(start = 60.dp, top = 40.dp)) {
+                    Text(worldName(World.SETTINGS), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
+                    Text(stringResource(R.string.myplay_settings_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        state = list, modifier = Modifier.padding(start = 80.dp, top = 24.dp).width(880.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
+                    ) {
+                        items(page.rows.size) { i ->
+                            val r = page.rows[i]
+                            Pill(r.title, "", if (r.switch) (if (r.on) Icons.Rounded.ToggleOn else Icons.Rounded.ToggleOff) else Icons.Rounded.Tune,
+                                if (r.switch && r.on) accent else null, null, false, i == ringed, accent, night, row(i), trailing = r.value)
+                        }
+                    }
+                }
+            }
         }
     }
 

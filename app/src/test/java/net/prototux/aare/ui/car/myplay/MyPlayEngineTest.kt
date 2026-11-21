@@ -111,7 +111,7 @@ class MyPlayEngineTest {
     }
 
     /** [otherStop]: a focusable in the overlay, as a notice's buttons would be (N2-1). */
-    private fun show(night: Boolean = true, guidance: Boolean = false, otherStop: Boolean = false, phone: PhoneSource? = null): CarUiState {
+    private fun show(night: Boolean = true, guidance: Boolean = false, otherStop: Boolean = false, phone: PhoneSource? = null, settings: SettingsSource? = null): CarUiState {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
             enginePreview = true
             this.night = night
@@ -123,7 +123,8 @@ class MyPlayEngineTest {
                 MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
                     navMap = { _, m -> covers = LocalMapCovers.current; Box(m.background(Color(0xFF2E4A3A))) },
                     overlay = { m -> if (otherStop) Box(m.size(40.dp).focusable().testTag("other_stop")) }, skin = TestSkin,
-                    sources = EngineSources.of(state, actions, LocalContext.current).let { if (phone != null) it.copy(phone = phone) else it })
+                    sources = EngineSources.of(state, actions, LocalContext.current).let { if (phone != null) it.copy(phone = phone) else it }
+                        .let { if (settings != null) it.copy(settings = settings) else it })
             }
         }
         rule.waitForIdle()
@@ -144,11 +145,10 @@ class MyPlayEngineTest {
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
-        // Car: a world not drawn yet (Music, Calls and Apps draw their own).
-        repeat(4) { engine.performKeyInput { pressKey(Key.Tab) } }
+        // Navigate: a world not drawn yet (the others draw their own).
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_WORLD).assertExists()
-        rule.onNodeWithText(World.CAR.name, useUnmergedTree = true).assertExists()
+        rule.onNodeWithText(World.NAVIGATE.name, useUnmergedTree = true).assertExists()
 
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
@@ -207,9 +207,8 @@ class MyPlayEngineTest {
         rule.onNodeWithTag("other_stop").assertIsNotFocused()
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
-        repeat(4) { engine.performKeyInput { pressKey(Key.Tab) } }
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        rule.onNodeWithText(World.CAR.name, useUnmergedTree = true).assertExists()
+        rule.onNodeWithText(World.NAVIGATE.name, useUnmergedTree = true).assertExists()
     }
 
     /** N6: the Apps world lists the apps; knob, pad, push and tap; Back returns to the dial. */
@@ -697,6 +696,56 @@ class MyPlayEngineTest {
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         assertTrue(rule.onAllNodes(hasTestTag(SLOT_NOTICES)).fetchSemanticsNodes().isEmpty())
         assertEquals(2, state.history.size)
+    }
+
+    /** Two settings: a switch and a choice of three. */
+    private class FakeSettings : SettingsSource {
+        var on = false
+        var colour = "auto"
+        override fun items() = listOf(
+            SettingItem.Toggle("banners", "Message notifications", on) { on = it },
+            SettingItem.Choice("colors", "Colors", listOf("auto" to "Auto", "dark" to "Dark", "light" to "Light"), colour) { colour = it },
+        )
+    }
+
+    /** N9: the Settings world: a push flips a switch or steps a choice; the ring stays on the setting. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theSettingsWorldChangesSettings() {
+        val fake = FakeSettings()
+        show(otherStop = true, settings = fake)
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        repeat(5) { engine.performKeyInput { pressKey(Key.Tab) } } // ... CAR, SETTINGS
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_SETTINGS).assertExists()
+        rule.onNodeWithTag(settingRowTag("banners")).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertTrue(fake.on)
+        rule.onNodeWithText("Message notifications: On").assertExists()
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        repeat(3) { engine.performKeyInput { pressKey(Key.DirectionCenter) } }
+        assertEquals("auto", fake.colour) // dark, light, and round to auto
+        rule.onNodeWithTag(settingRowTag("colors")).assertIsSelected()
+        engine.assertIsFocused()
+        rule.onNodeWithTag(settingRowTag("banners")).performClick()
+        assertTrue(!fake.on)
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    /** The real settings: a change is stored where the car runtime reads it. */
+    @Test fun theCarsSettingsAreStored() {
+        val context = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val source = CarSettingsSource(context, PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard))
+        val passenger = source.items().filterIsInstance<SettingItem.Toggle>().single { it.id == "passenger" }
+        passenger.set(!passenger.on)
+        assertEquals(!passenger.on, net.prototux.aare.Settings(context).ignoreDriving)
+        val speed = source.items().filterIsInstance<SettingItem.Choice>().single { it.id == "speed_source" }
+        speed.select(speed.next)
+        assertEquals(speed.next, source.items().filterIsInstance<SettingItem.Choice>().single { it.id == "speed_source" }.selected)
+        // The home maps choice offers the maps apps of the car.
+        val maps = source.items().filterIsInstance<SettingItem.Choice>().single { it.id == "home_maps" }
+        assertTrue(maps.options.any { it.second == "Maps" })
     }
 
     @Test fun appsPagesWrapAndPage() {

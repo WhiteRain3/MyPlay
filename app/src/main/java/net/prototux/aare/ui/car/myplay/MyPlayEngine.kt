@@ -253,6 +253,22 @@ internal fun MyPlayEngineShell(
         if (key == PHONE_APP_KEY) { phone.open(); return }
         currentPhoneEntries.firstOrNull { "tel:${it.number}" == key }?.let(phone::call)
     }
+    // N9: the Settings world: read again after each change; the ring stays on a setting (its id).
+    var settingsVersion by remember { mutableStateOf(0) }
+    val inSettings = model.place == Place.InWorld(World.SETTINGS)
+    val settingItems = remember(inSettings, settingsVersion, sources.settings) { if (inSettings) sources.settings.items() else emptyList() }
+    var settingChosen by remember { mutableStateOf<String?>(null) }
+    val settingIndex = settingItems.indexOfFirst { it.id == settingChosen }.takeIf { it >= 0 } ?: 0
+    val currentSettings by rememberUpdatedState(settingItems)
+    fun changeSetting(id: String) {
+        settingChosen = id
+        when (val item = currentSettings.firstOrNull { it.id == id }) {
+            is SettingItem.Toggle -> item.set(!item.on)
+            is SettingItem.Choice -> if (item.options.isNotEmpty()) item.select(item.next)
+            null -> return
+        }
+        settingsVersion++
+    }
     // N6: the Apps world: which app holds the ring (over all pages), and where this page's discs are.
     val apps = sources.apps.apps
     val perPage = skin.appsPerPage
@@ -343,6 +359,7 @@ internal fun MyPlayEngineShell(
                 if (p.selected == World.APPS) appRing = 0
                 if (p.selected == World.MUSIC) musicChosen = MUSIC_PLAY
                 if (p.selected == World.CALLS) phoneChosen = null
+                if (p.selected == World.SETTINGS) settingChosen = null
                 true
             }
             else -> false
@@ -367,6 +384,16 @@ internal fun MyPlayEngineShell(
                 Key.DirectionLeft -> padMusic(FocusGraph.Direction.LEFT)
                 Key.DirectionRight -> padMusic(FocusGraph.Direction.RIGHT)
                 Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> musicActions[musicRing]?.invoke()
+                else -> Unit
+            }
+            key in WORLD_KEYS
+        } else if (p.world == World.SETTINGS) {
+            val n = settingItems.size
+            if (n > 0) when (key) {
+                Key.Tab -> settingChosen = settingItems[(settingIndex + if (shift) -1 else 1).coerceIn(0, n - 1)].id
+                Key.DirectionUp -> settingChosen = settingItems[(settingIndex - 1).coerceAtLeast(0)].id
+                Key.DirectionDown -> settingChosen = settingItems[(settingIndex + 1).coerceAtMost(n - 1)].id
+                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> changeSetting(settingItems[settingIndex].id)
                 else -> Unit
             }
             key in WORLD_KEYS
@@ -481,6 +508,22 @@ internal fun MyPlayEngineShell(
                             },
                             Modifier.fillMaxSize().testTag(SLOT_MUSIC),
                         )
+                    } else if (p.world == World.SETTINGS) {
+                        val on = stringResource(R.string.myplay_on)
+                        val off = stringResource(R.string.myplay_off)
+                        val rows = settingItems.map {
+                            when (it) {
+                                is SettingItem.Toggle -> SettingRow(it.title, if (it.on) on else off, switch = true, on = it.on)
+                                is SettingItem.Choice -> SettingRow(it.title, it.label, switch = false, on = false)
+                            }
+                        }
+                        skin.SettingsWorld(SettingsPage(rows), settingIndex, { i ->
+                            val id = settingItems[i].id
+                            Modifier
+                                .pointerInput(id) { detectTapGestures { changeSetting(id) } }
+                                .semantics { selected = i == settingIndex }
+                                .testTag(settingRowTag(id))
+                        }, Modifier.fillMaxSize().testTag(SLOT_SETTINGS))
                     } else if (p.world == World.CALLS) {
                         skin.PhoneWorld(
                             PhonePage(phoneRows, loading = phoneData == null && phone.permitted, permitted = phone.permitted),
@@ -612,6 +655,10 @@ internal const val SLOT_MUSIC = "slot_music"
 internal const val SLOT_CALL = "slot_call"
 internal const val SLOT_PHONE = "slot_phone"
 internal const val SLOT_NOTICES = "slot_notices"
+internal const val SLOT_SETTINGS = "slot_settings"
+
+/** A setting's row (its test tag). */
+internal fun settingRowTag(id: String) = "setting_$id"
 private const val CLEAR_ALL_KEY = "clear_all"
 
 /** A row of the notifications list (its test tag). */

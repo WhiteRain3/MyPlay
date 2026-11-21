@@ -117,6 +117,8 @@ data class EngineSources(
     val openMaps: () -> Unit,
     val speed: SpeedSource,
     val apps: AppsSource,
+    /** N9: the settings of the Settings world. */
+    val settings: SettingsSource = object : SettingsSource { override fun items() = emptyList<SettingItem>() },
     /** The phone's picture of the car screen: the engine takes no focus and reads no speed. */
     val picture: Boolean = false,
 ) {
@@ -169,6 +171,7 @@ data class EngineSources(
             },
             openMaps = { state.app(state.homeNavAppId ?: state.activeNavAppId)?.let(actions::openApp) ?: actions.openLauncher() },
             speed = SpeedSource(CarData.state, { context?.let(::PassiveFixes) ?: NoFixes }),
+            settings = context?.let { CarSettingsSource(it, state) } ?: object : SettingsSource { override fun items() = emptyList<SettingItem>() },
             apps = object : AppsSource {
                 // Already in the owner's order, as the app grid shows them (CarRuntime.applyApps).
                 override val apps get() = state.launcherApps

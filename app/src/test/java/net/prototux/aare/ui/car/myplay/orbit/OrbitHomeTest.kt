@@ -371,11 +371,21 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun bellNight() = picture("orbit-bell-1280x720-night", night = true, bell = 1)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun noticeListNight() = picture("orbit-notice-list-1280x720-night", night = true, bell = 2)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun noticeList901x543Day() = picture("orbit-notice-list-901x543-day", night = false, bell = 2)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun settingsNight() = picture("orbit-settings-1280x720-night", night = true, world = 5)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun settings901x543Day() = picture("orbit-settings-901x543-day", night = false, world = 5)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null, calls: Boolean = false, notice: Boolean = false, bell: Int = 0) {
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false, call: CarCall? = null, calls: Boolean = false, notice: Boolean = false, bell: Int = 0, world: Int = -1) {
         val state = show(night, trip, withArt)
+        if (world >= 0) {
+            val engine = rule.onNodeWithTag(ENGINE_TAG)
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            repeat(world) { engine.performKeyInput { pressKey(Key.Tab) } }
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            engine.performKeyInput { pressKey(Key.DirectionDown) }
+            rule.mainClock.advanceTimeBy(1_000)
+        }
         if (bell > 0) {
             rule.runOnIdle {
                 state.history.add(net.prototux.aare.ui.car.CarNotice("h1", "Anna K.", "Running late, see you at 6", null, listOf("Reply" to {}), System.currentTimeMillis() - 120_000))

@@ -50,4 +50,11 @@
     <string name="myplay_phone_permissions" translatable="false">To call from here, allow MyPlay the phone permissions on the phone (calls and contacts).</string>
     <string name="myplay_phone_none" translatable="false">No recent calls or favourites yet.</string>
     <string name="myplay_notices_hint" translatable="false">turn: choose · push: the action shown · Back: close</string>
+    <string name="myplay_setting_speed" translatable="false">Speed on the car screen</string>
+    <string name="myplay_setting_speed_auto" translatable="false">Car, else phone</string>
+    <string name="myplay_setting_speed_car" translatable="false">Car only</string>
+    <string name="myplay_setting_gesture_line" translatable="false">A line after button gestures</string>
+    <string name="myplay_on" translatable="false">On</string>
+    <string name="myplay_off" translatable="false">Off</string>
+    <string name="myplay_settings_hint" translatable="false">turn: choose · push: change · Back: back</string>
 </resources>

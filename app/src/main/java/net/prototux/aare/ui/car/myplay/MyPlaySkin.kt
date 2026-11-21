@@ -137,6 +137,11 @@ data class NoticeRow(val notice: CarNotice?, val text: String, val time: String,
 /** N8: what the notifications list shows. */
 data class NoticeListPage(val rows: List<NoticeRow>)
 
+/** N9: one row of the Settings world: its title, the value shown ("On", "Dark"), and whether it is a switch that is on. */
+data class SettingRow(val title: String, val value: String, val switch: Boolean, val on: Boolean)
+
+data class SettingsPage(val rows: List<SettingRow>)
+
 /** N8: a notice's stops (also their test tags). */
 const val NOTICE_DISMISS = "notice_dismiss"
 fun noticeActionStop(i: Int) = "notice_action_$i"
@@ -267,6 +272,9 @@ interface MyPlaySkin {
      * Each row takes `row(i)`; the ring is on [ringed]; the skin keeps it in view.
      */
     @Composable fun NoticeList(page: NoticeListPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier)
+
+    /** N9: the Settings world: one row per setting, its value shown; each row takes `row(i)`; the ring is on [ringed]. */
+    @Composable fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier)
 
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)
