@@ -88,6 +88,9 @@ interface MediaHub {
     /** MyPlay (N7): play a song of the queue ([UpNextItem.queueId]). */
     fun skipTo(queueId: Long) = Unit
 
+    /** MyPlay (N7): the library of the media app [packageName], for MyPlay's own car screen; null when it has none. */
+    fun library(packageName: String): MediaLibrary? = null
+
     /** Disconnects everything. */
     fun release()
 }

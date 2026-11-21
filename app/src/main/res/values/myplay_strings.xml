@@ -42,4 +42,7 @@
     <string name="myplay_apps_none" translatable="false">No apps to show.</string>
     <string name="myplay_music_nothing" translatable="false">Nothing playing</string>
     <string name="myplay_music_up_next" translatable="false">Up next</string>
+    <string name="myplay_library_hint" translatable="false">turn: choose · push: open or play · Back: up</string>
+    <string name="myplay_library_loading" translatable="false">Loading…</string>
+    <string name="myplay_library_empty" translatable="false">Nothing here.</string>
 </resources>

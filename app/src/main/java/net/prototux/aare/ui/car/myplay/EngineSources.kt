@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import net.prototux.aare.car.SpeedReading
 import kotlinx.coroutines.flow.StateFlow
 import net.prototux.aare.car.CarData
+import net.prototux.aare.media.MediaLibrary
 import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.car.PassiveFixes
 import net.prototux.aare.car.PhoneFixes
@@ -35,6 +36,8 @@ interface MusicSource {
     fun skipTo(queueId: Long)
     /** The music app's own screen: its library, search and queue (the browser). */
     fun open()
+    /** N7: the music app's library for the engine to draw, or null (then [open] is the way). */
+    fun library(): MediaLibrary? = null
 }
 
 interface CallSource {
@@ -104,6 +107,7 @@ data class EngineSources(
                 override val transport get() = state.transport
                 override fun seekTo(positionMs: Long) = actions.mediaSeekTo(positionMs)
                 override fun skipTo(queueId: Long) = actions.mediaSkipTo(queueId)
+                override fun library() = actions.mediaLibrary()
                 override fun playPause() = actions.mediaPlayPause()
                 override fun next() = actions.mediaNext()
                 override fun previous() = actions.mediaPrevious()

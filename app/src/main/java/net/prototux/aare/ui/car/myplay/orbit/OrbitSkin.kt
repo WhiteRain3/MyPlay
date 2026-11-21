@@ -5,6 +5,7 @@ import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,8 @@ import androidx.compose.material.icons.rounded.Battery6Bar
 import androidx.compose.material.icons.rounded.BatteryChargingFull
 import androidx.compose.material.icons.rounded.BatteryFull
 import androidx.compose.material.icons.rounded.DonutLarge
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pause
@@ -97,6 +100,8 @@ import net.prototux.aare.ui.car.myplay.MUSIC_NEXT
 import net.prototux.aare.ui.car.myplay.MUSIC_PLAY
 import net.prototux.aare.ui.car.myplay.MUSIC_PREV
 import net.prototux.aare.ui.car.myplay.MusicPage
+import net.prototux.aare.ui.car.myplay.LibraryPage
+import net.prototux.aare.media.LibraryRow
 import net.prototux.aare.ui.car.myplay.MyPlaySkin
 import net.prototux.aare.ui.car.myplay.upNextStop
 import net.prototux.aare.ui.car.myplay.SkinTokens
@@ -480,6 +485,70 @@ object OrbitSkin : MyPlaySkin {
     }
 
     const val MUSIC_PROGRESS_TAG = "orbit_music_progress"
+
+    @Composable
+    override fun Library(page: LibraryPage, ringed: Int, art: suspend (LibraryRow, Int) -> android.graphics.Bitmap?, row: (Int) -> Modifier, modifier: Modifier) {
+        val night = LocalSkinTokens.current.night
+        val g = Orbit.glass(night)
+        val accent = Orbit.accent(World.MUSIC, night)
+        val list = androidx.compose.foundation.lazy.rememberLazyListState()
+        // The ringed row stays in view, one row of context above it.
+        LaunchedEffect(ringed, page.rows.size) { if (page.rows.isNotEmpty()) list.animateScrollToItem((ringed - 1).coerceAtLeast(0)) }
+        Box(modifier.background(g.halo.copy(alpha = 0.7f))) {
+            Scaled {
+                Column(Modifier.fillMaxSize().padding(start = 60.dp, top = 40.dp)) {
+                    Text(page.title, style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.myplay_library_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
+                    if (page.rows.isEmpty()) {
+                        Text(
+                            if (page.loading) stringResource(R.string.myplay_library_loading) else page.error ?: stringResource(R.string.myplay_library_empty),
+                            style = Orbit.Type.secondary.floating(g.secondary), modifier = Modifier.padding(start = 80.dp, top = 60.dp),
+                        )
+                        return@Column
+                    }
+                    androidx.compose.foundation.lazy.LazyColumn(
+                        state = list, modifier = Modifier.padding(start = 80.dp, top = 24.dp).width(640.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
+                    ) {
+                        items(page.rows.size, key = { page.rows[it].id }) { i ->
+                            LibraryPill(page.rows[i], i == ringed, accent, night, art, row(i))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** One row of the library: a glass pill with a round artwork disc, the title and subtitle; the ringed one in the Music colour. */
+    @Composable
+    private fun LibraryPill(r: LibraryRow, on: Boolean, accent: Color, night: Boolean, art: suspend (LibraryRow, Int) -> android.graphics.Bitmap?, modifier: Modifier) {
+        val g = Orbit.glass(night)
+        val px = with(LocalDensity.current) { 76.dp.roundToPx() }
+        val bitmap by androidx.compose.runtime.produceState<android.graphics.Bitmap?>(null, r.id) { value = runCatching { art(r, px) }.getOrNull() }
+        val shape = androidx.compose.foundation.shape.RoundedCornerShape(52.dp)
+        Row(
+            modifier.fillMaxWidth().height(104.dp).orbitFocusRounded(on, accent, g.halo, 52.dp).clip(shape).background(g.glass)
+                .border(3.dp, if (on) accent else g.edge, shape).padding(start = 14.dp, end = 24.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(22.dp),
+        ) {
+            Box(Modifier.size(76.dp).clip(CircleShape).background(if (on) accent else g.track), contentAlignment = Alignment.Center) {
+                val b = bitmap
+                if (b != null) {
+                    val image = remember(b) { b.asImageBitmap() }
+                    Image(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                } else {
+                    Icon(if (r.browsable) Icons.Rounded.Folder else Icons.Rounded.MusicNote, null, Modifier.size(40.dp),
+                        tint = if (on) Orbit.onAccent(night) else g.text)
+                }
+            }
+            Column(Modifier.weight(1f)) {
+                Text(r.title, style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (r.subtitle.isNotBlank()) Text(r.subtitle, style = TextStyle(fontSize = 24.sp, color = g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            if (r.browsable) Icon(Icons.Rounded.ChevronRight, null, Modifier.size(36.dp), tint = g.secondary)
+        }
+    }
 
     /** The honeycomb's rows (the sheet: 3, 4, 3), for [appsPerPage] apps. */
     private val ROWS = listOf(3, 4, 3)

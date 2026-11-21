@@ -11,6 +11,7 @@ import net.prototux.aare.car.SpeedReading
 import androidx.car.app.model.Distance
 import androidx.car.app.navigation.model.Maneuver
 import net.prototux.aare.host.templates.CarFormat
+import net.prototux.aare.media.LibraryRow
 import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarUiState
@@ -117,6 +118,9 @@ object TripProgress {
 /** N7: what the Music world shows. */
 data class MusicPage(val song: SongSlot?, val transport: MediaTransport)
 
+/** N7: one level of a music app's library, as the skin draws it. */
+data class LibraryPage(val title: String, val rows: List<LibraryRow>, val loading: Boolean, val error: String?)
+
 /** N7: the Music world's stops (also their test tags). */
 const val MUSIC_ART = "music_art"
 const val MUSIC_PREV = "music_prev"
@@ -199,6 +203,12 @@ interface MyPlaySkin {
      * the ring on [ringed]. The artwork carries the progress bar: left and right seek there (R5-5).
      */
     @Composable fun MusicWorld(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier)
+
+    /**
+     * N7: a music app's library: one level's rows ([LibraryPage]); [ringed] holds the ring. Each row
+     * takes `row(i)`; [art] loads a row's artwork. The skin keeps the ringed row in view.
+     */
+    @Composable fun Library(page: LibraryPage, ringed: Int, art: suspend (LibraryRow, Int) -> Bitmap?, row: (Int) -> Modifier, modifier: Modifier)
 
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)

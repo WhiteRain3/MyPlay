@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import net.prototux.aare.car.SpeedReading
 import net.prototux.aare.ui.car.CarAppEntry
+import net.prototux.aare.media.LibraryRow
+import android.graphics.Bitmap
 
 /**
  * MyPlay (N1): a plain skin for the engine's tests and the hidden preview: grey boxes with text,
@@ -114,6 +116,19 @@ object TestSkin : MyPlaySkin {
                 item(MUSIC_LIBRARY, "LIBRARY")
             }
             for (u in page.transport.upNext) item(upNextStop(u.queueId), u.title)
+        }
+    }
+
+    @Composable
+    override fun Library(page: LibraryPage, ringed: Int, art: suspend (LibraryRow, Int) -> Bitmap?, row: (Int) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        Column(modifier.background(t.background.copy(alpha = 0.8f)).padding(24.dp)) {
+            Text(page.title, color = t.onSurface, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            if (page.rows.isEmpty()) Text(if (page.loading) "LOADING" else page.error ?: "EMPTY", color = t.dim, fontSize = 18.sp)
+            page.rows.forEachIndexed { i, r ->
+                Text(r.title + if (r.browsable) " >" else "", color = if (i == ringed) t.accent else t.onSurface, fontSize = 18.sp,
+                    modifier = row(i).padding(8.dp))
+            }
         }
     }
 

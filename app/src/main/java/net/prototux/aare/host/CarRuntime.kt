@@ -708,6 +708,7 @@ class CarRuntime(
         override fun mediaPrevious() = media.previous()
         override fun mediaSeekTo(positionMs: Long) = media.seekTo(positionMs) // MyPlay (N7)
         override fun mediaSkipTo(queueId: Long) = media.skipTo(queueId) // MyPlay (N7)
+        override fun mediaLibrary() = ui.app(ui.nowPlaying?.appId ?: ui.activeMediaAppId)?.packageName?.let(media::library) // MyPlay (N7)
         override fun dismissNotice(notice: CarNotice) { ui.notices.remove(notice) }
         override fun answerCall() = Calls.answer(context)
         override fun endCall() = Calls.end(context)

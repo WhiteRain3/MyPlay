@@ -34,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import net.prototux.aare.car.CarData
+import net.prototux.aare.media.LibraryRow
+import net.prototux.aare.media.MediaLibrary
 import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.media.UpNextItem
 import net.prototux.aare.ui.car.NowPlaying
@@ -84,6 +86,7 @@ class MyPlayEngineTest {
         override fun mediaPlayPause() { asked += "playPause" }
         override fun mediaSeekTo(positionMs: Long) { asked += "seek:$positionMs" }
         override fun mediaSkipTo(queueId: Long) { asked += "skip:$queueId" }
+        override fun mediaLibrary(): MediaLibrary? = library
     }
 
     /** What the engine tells the maps app covers its map, as the map sees it. */
@@ -324,6 +327,95 @@ class MyPlayEngineTest {
         val first = state.launcherApps.first()
         rule.onNodeWithTag(appTag(first)).performClick()
         assertEquals(listOf("app:${first.id}"), asked)
+    }
+
+    /** The library the engine is given (R4-2's test seam): null means "the app has none". */
+    private var library: FakeLibrary? = null
+
+    /** A music app's library: a root with a folder and a song; the folder holds [inFolder] songs, paged by ten. */
+    private class FakeLibrary(val inFolder: Int = 2) : MediaLibrary {
+        var started = 0
+        var stopped = 0
+        val played = mutableListOf<String>()
+        var loadMores = 0
+        private var inside by mutableStateOf(false)
+        private var shown by mutableStateOf(10)
+        override val title get() = if (inside) "Albums" else "Music app"
+        override val key get() = if (inside) "albums" else "root"
+        override val rows get() = if (inside) (1..minOf(inFolder, shown)).map { LibraryRow("song$it", "Song $it", "Artist", browsable = false, playable = true) }
+            else listOf(LibraryRow("albums", "Albums", "", browsable = true, playable = false), LibraryRow("top", "Top song", "Artist", browsable = false, playable = true))
+        override val loading = false
+        override val end get() = !inside || shown >= inFolder
+        override val error: String? = null
+        override val canGoBack get() = inside
+        override fun open(row: LibraryRow): Boolean {
+            if (row.browsable) { inside = true; return false }
+            played += row.id
+            return true
+        }
+        override fun back() { inside = false }
+        override fun loadMore() { loadMores++; shown += 10 }
+        override fun start() { started++ }
+        override fun stop() { stopped++ }
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theLibraryWalksOpensPlaysAndGoesBack() {
+        val lib = FakeLibrary().also { library = it }
+        openMusic()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        rule.onNodeWithTag(MUSIC_LIBRARY).performClick()
+        rule.onNodeWithTag(SLOT_LIBRARY).assertExists()
+        assertEquals(1, lib.started)
+        rule.onNodeWithTag(libraryRowTag(0)).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNodeWithTag(libraryRowTag(1)).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
+        // Into the folder: the ring starts at its top.
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithText("Song 1", substring = true).assertExists()
+        rule.onNodeWithTag(libraryRowTag(0)).assertIsSelected()
+        // Back goes up the library, then out of it to now playing, then to the dial.
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithText("Albums", substring = true).assertExists()
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag(SLOT_MUSIC).assertExists()
+        assertEquals(1, lib.stopped)
+        // A song plays: back to now playing.
+        rule.onNodeWithTag(MUSIC_LIBRARY).performClick()
+        engine.performKeyInput { pressKey(Key.Tab) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("top"), lib.played)
+        rule.onNodeWithTag(SLOT_MUSIC).assertExists()
+        engine.assertIsFocused()
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    /** The next page loads as the ring nears the end of what is loaded. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theLibraryLoadsMoreNearTheEnd() {
+        val lib = FakeLibrary(inFolder = 25).also { library = it }
+        openMusic()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        rule.onNodeWithTag(MUSIC_LIBRARY).performClick()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(0, lib.loadMores)
+        repeat(7) { engine.performKeyInput { pressKey(Key.DirectionDown) } }
+        rule.waitForIdle()
+        assertEquals(1, lib.loadMores)
+        repeat(5) { engine.performKeyInput { pressKey(Key.DirectionDown) } }
+        rule.onNodeWithTag(libraryRowTag(12)).assertIsSelected()
+    }
+
+    /** Without a library (no media app known), the button opens the app as before. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun noLibraryOpensTheApp() {
+        library = null
+        openMusic()
+        rule.onNodeWithTag(MUSIC_LIBRARY).performClick()
+        assertEquals("app:music", asked.last())
+        assertTrue(rule.onAllNodes(hasTestTag(SLOT_LIBRARY)).fetchSemanticsNodes().isEmpty())
     }
 
     @Test fun appsPagesWrapAndPage() {

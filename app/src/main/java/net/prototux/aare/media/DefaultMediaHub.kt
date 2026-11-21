@@ -130,6 +130,13 @@ class DefaultMediaHub(context: Context, scope: CoroutineScope) : MediaHub {
         if (currentState?.canSeek == true) target()?.seekTo(positionMs.coerceAtLeast(0))
     }
 
+    private val libraries = HashMap<String, MediaUiLibrary>()
+
+    override fun library(packageName: String): MediaLibrary? {
+        val app = apps.value.firstOrNull { it.packageName == packageName } ?: return null
+        return libraries.getOrPut(app.service.flattenToString()) { MediaUiLibrary(this, app, scope) }
+    }
+
     override fun skipTo(queueId: Long) {
         val entry = currentState?.queue?.firstOrNull { it.id == queueId } ?: return
         target()?.skipTo(entry)

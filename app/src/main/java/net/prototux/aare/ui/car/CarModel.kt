@@ -199,6 +199,8 @@ interface CarActions {
     fun mediaSeekTo(positionMs: Long) = Unit
     /** MyPlay (N7): play a song of the queue. */
     fun mediaSkipTo(queueId: Long) = Unit
+    /** MyPlay (N7): the playing (or last) music app's library, for MyPlay's own screen; null when there is none. */
+    fun mediaLibrary(): net.prototux.aare.media.MediaLibrary? = null
     fun dismissNotice(notice: CarNotice)
     fun answerCall()
     fun endCall()

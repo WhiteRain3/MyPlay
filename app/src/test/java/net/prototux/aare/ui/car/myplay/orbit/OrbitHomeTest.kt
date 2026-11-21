@@ -37,6 +37,9 @@ import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.NowPlaying
 import net.prototux.aare.ui.car.PadWalkStates
 import net.prototux.aare.ui.car.myplay.ENGINE_TAG
+import androidx.compose.ui.test.performClick
+import net.prototux.aare.media.LibraryRow
+import net.prototux.aare.media.MediaLibrary
 import net.prototux.aare.media.MediaTransport
 import net.prototux.aare.media.UpNextItem
 import net.prototux.aare.ui.car.myplay.SLOT_APPS
@@ -78,10 +81,33 @@ class OrbitHomeTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     private val asked = mutableListOf<String>()
+
+    /** A library for the pictures: a few folders and songs, the first with artwork. */
+    private object PictureLibrary : MediaLibrary {
+        override val title = "Recently played"
+        override val key = "root"
+        override val rows = listOf(
+            LibraryRow("a", "Night Drive", "Blue Harbor", browsable = false, playable = true),
+            LibraryRow("b", "Road Trip Mix", "Playlist · 42 songs", browsable = true, playable = false),
+            LibraryRow("c", "Glass Roads", "Kite & Co.", browsable = false, playable = true),
+            LibraryRow("d", "Podcasts", "", browsable = true, playable = false),
+            LibraryRow("e", "Slow Harbour", "Lumen", browsable = false, playable = true),
+        )
+        override val loading = false
+        override val end = true
+        override val error: String? = null
+        override val canGoBack = false
+        override fun open(row: LibraryRow) = false
+        override fun back() = Unit
+        override fun loadMore() = Unit
+        override suspend fun art(row: LibraryRow, sizePx: Int): Bitmap? =
+            if (row.id == "a") Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888).apply { eraseColor(0xFFFF8A3D.toInt()) } else null
+    }
     private var state: CarUiState? = null
     private val actions = object : CarActions by PadWalkStates.NoActions {
         override fun openLauncher() { asked += "launcher" }
         override fun openApp(app: CarAppEntry) { asked += "app:${app.id}" }
+        override fun mediaLibrary(): MediaLibrary = PictureLibrary
     }
 
     private fun estimate(meters: Double, seconds: Long) = TravelEstimate.Builder(
@@ -291,10 +317,12 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun dial901x543Day() = picture("orbit-dial-901x543-day", night = false, dial = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun musicNight() = picture("orbit-music-1280x720-night", night = true, music = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun music901x543Day() = picture("orbit-music-901x543-day", night = false, music = true)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun libraryNight() = picture("orbit-library-1280x720-night", night = true, music = true, library = true)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun library901x543Day() = picture("orbit-library-901x543-day", night = false, music = true, library = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false) {
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true, apps: Boolean = false, music: Boolean = false, library: Boolean = false) {
         val state = show(night, trip, withArt)
         if (music) {
             rule.runOnIdle {
@@ -305,6 +333,10 @@ class OrbitHomeTest {
             engine.performKeyInput { pressKey(Key.DirectionCenter) }
             engine.performKeyInput { pressKey(Key.Tab) }
             engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            if (library) {
+                rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.MUSIC_LIBRARY).performClick()
+                engine.performKeyInput { pressKey(Key.DirectionDown) }
+            }
             rule.mainClock.advanceTimeBy(1_000)
         }
         if (apps) {

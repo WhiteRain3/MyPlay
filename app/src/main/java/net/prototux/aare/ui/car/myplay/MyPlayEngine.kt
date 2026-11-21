@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.unit.dp
 import android.os.SystemClock
 import kotlinx.coroutines.delay
+import net.prototux.aare.media.MediaLibrary
 import net.prototux.aare.media.SEEK_PENDING_MS
 import net.prototux.aare.media.SEEK_STEP_MS
 import net.prototux.aare.media.nextSeek
@@ -126,7 +127,34 @@ internal fun MyPlayEngineShell(
     // N7: the Music world: its stops, which holds the ring, and a pad seek not yet confirmed.
     val music = sources.music
     val musicPage = MusicPage(slots.song, music.transport)
-    val musicBoxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
+    // N7: the music app's library, while it is open inside the Music world.
+    var library by remember { mutableStateOf<MediaLibrary?>(null) }
+    var libraryRing by remember { mutableStateOf(0) }
+    val lib = library
+    val libraryKey = lib?.key
+    LaunchedEffect(libraryKey) { libraryRing = 0 }
+    // Leaving the Music world closes the library.
+    LaunchedEffect(model.place) { if (model.place != Place.InWorld(World.MUSIC)) library = null }
+    if (lib != null) {
+        DisposableEffect(lib) {
+            lib.start()
+            onDispose { lib.stop() }
+        }
+        val rowCount = lib.rows.size
+        // Near the end of what is loaded: the next page.
+        LaunchedEffect(libraryKey, rowCount, libraryRing, lib.loading, lib.end) {
+            if (!lib.end && !lib.loading && lib.error == null && libraryRing >= rowCount - 3) lib.loadMore()
+        }
+    }
+    fun openRow(i: Int) {
+        val l = library ?: return
+        val row = l.rows.getOrNull(i) ?: return
+        libraryRing = i
+        // A song starts playing: back to now playing, as the app's own screen does.
+        if (l.open(row)) library = null
+    }
+    // N7-1: keyed on the next songs, so boxes of songs that left the queue do not pile up.
+    val musicBoxes = remember(music.transport.upNext) { mutableStateMapOf<String, FocusGraph.Box>() }
     var musicChosen by remember { mutableStateOf(MUSIC_PLAY) }
     val musicActions: Map<String, () -> Unit> = buildMap {
         if (musicPage.song != null) {
@@ -135,7 +163,8 @@ internal fun MyPlayEngineShell(
             put(MUSIC_PLAY, music::playPause)
             put(MUSIC_NEXT, music::next)
         }
-        put(MUSIC_LIBRARY, music::open)
+        // N7: the library drawn by the skin when the app offers one, else the app's own screen.
+        put(MUSIC_LIBRARY) { music.library()?.let { library = it } ?: music.open() }
         for (u in musicPage.transport.upNext) put(upNextStop(u.queueId)) { music.skipTo(u.queueId) }
     }
     val musicRing = musicChosen.takeIf { it in musicActions } ?: if (musicPage.song != null) MUSIC_PLAY else MUSIC_LIBRARY
@@ -187,6 +216,8 @@ internal fun MyPlayEngineShell(
     // Not in the phone's picture of the car screen: it must not pull focus into the phone's own UI.
     LaunchedEffect(Unit) { if (!sources.picture) runCatching { focus.requestFocus() } }
     BackHandler(enabled = model.place != Place.Home) { model.back() }
+    // Declared later, so it comes first: Back goes up the library, then out of it.
+    BackHandler(enabled = lib != null) { if (lib?.canGoBack == true) lib.back() else library = null }
 
     fun onKey(key: Key, shift: Boolean): Boolean = when (val p = model.place) {
         Place.Home -> when (key) {
@@ -219,7 +250,17 @@ internal fun MyPlayEngineShell(
         }
         // N2-1: until the worlds draw their own stops, a world keeps the knob and pad (only Back,
         // through the BackHandler, leaves), so a turn cannot carry focus off the engine.
-        is Place.InWorld -> if (p.world == World.MUSIC) {
+        is Place.InWorld -> if (p.world == World.MUSIC && lib != null) {
+            val n = lib.rows.size
+            when (key) {
+                Key.Tab -> if (n > 0) libraryRing = (libraryRing + if (shift) -1 else 1).coerceIn(0, n - 1)
+                Key.DirectionUp -> libraryRing = (libraryRing - 1).coerceAtLeast(0)
+                Key.DirectionDown -> if (n > 0) libraryRing = (libraryRing + 1).coerceAtMost(n - 1)
+                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> openRow(libraryRing)
+                else -> Unit
+            }
+            key in WORLD_KEYS
+        } else if (p.world == World.MUSIC) {
             when (key) {
                 Key.Tab -> FocusGraph.knob(musicBoxes.filterKeys { it in musicActions }, musicRing, if (shift) -1 else 1)?.let { musicChosen = it }
                 Key.DirectionUp -> padMusic(FocusGraph.Direction.UP)
@@ -289,7 +330,21 @@ internal fun MyPlayEngineShell(
                 if (home) slots.song?.let { ringed(STOP_SONG) { skin.Song(it, edge.align(Alignment.BottomEnd).slot(Slot.SONG).stop(STOP_SONG)) } }
                 when (val p = model.place) {
                     is Place.Chooser -> skin.Chooser(p.selected, Modifier.align(Alignment.Center).slot(Slot.CHOOSER).testTag(SLOT_CHOOSER))
-                    is Place.InWorld -> if (p.world == World.MUSIC) {
+                    is Place.InWorld -> if (p.world == World.MUSIC && lib != null) {
+                        val currentLib by rememberUpdatedState(lib)
+                        skin.Library(
+                            LibraryPage(lib.title, lib.rows, lib.loading, lib.error),
+                            libraryRing.coerceIn(0, (lib.rows.size - 1).coerceAtLeast(0)),
+                            { row, px -> currentLib.art(row, px) },
+                            { i ->
+                                Modifier
+                                    .pointerInput(lib.key, i) { detectTapGestures { openRow(i) } }
+                                    .semantics { selected = i == libraryRing }
+                                    .testTag(libraryRowTag(i))
+                            },
+                            Modifier.fillMaxSize().testTag(SLOT_LIBRARY),
+                        )
+                    } else if (p.world == World.MUSIC) {
                         skin.MusicWorld(
                             musicPage, musicRing,
                             { id ->
@@ -309,8 +364,11 @@ internal fun MyPlayEngineShell(
                                 val global = first + i
                                 Modifier
                                     // N6-2: keyed on the app, and opening the app shown now, should the list change.
-                                    .pointerInput(apps[global].id) {
-                                        detectTapGestures { currentApps.indexOfFirst { it.id == apps[global].id }.takeIf { it >= 0 }?.let { appRing = it; sources.apps.open(currentApps[it]) } }
+                                    .let { m ->
+                                        val id = apps[global].id
+                                        m.pointerInput(id) {
+                                            detectTapGestures { currentApps.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { appRing = it; sources.apps.open(currentApps[it]) } }
+                                        }
                                     }
                                     .onGloballyPositioned { c -> c.boundsInRoot().let { appBoxes[global.toString()] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
                                     .semantics { selected = global == appIndex }
@@ -372,6 +430,10 @@ internal const val SLOT_CHOOSER = "slot_chooser"
 internal const val SLOT_WORLD = "slot_world"
 internal const val SLOT_APPS = "slot_apps"
 internal const val SLOT_MUSIC = "slot_music"
+internal const val SLOT_LIBRARY = "slot_library"
+
+/** A row of the library (its test tag). */
+internal fun libraryRowTag(i: Int) = "library_row_$i"
 
 /** An app's disc in the Apps world (its test tag). */
 internal fun appTag(app: CarAppEntry) = "app_${app.id}"
