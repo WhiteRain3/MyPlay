@@ -206,4 +206,35 @@ class MyPlaySpeedTest {
         assertEquals(0, phone.starts)
         assertEquals(SpeedReading(36, SpeedReading.From.CAR), feed.reading)
     }
+
+    @Test fun aFixWithoutASpeedLeavesTheSpeedAlone() {
+        val phone = FakeFixes()
+        val feed = SpeedFeed(phone) { now }
+        feed.update(SpeedFeed.Inputs(SpeedSourceMode.AUTO, shown = true, mapsRunning = true, car = connected))
+        phone.onFix!!(fix(25f, now))
+        now += 300
+        phone.onFix!!(PhoneFix(null, 54.68, 25.27, null, 40f, now)) // another app's network fix
+        assertEquals(SpeedReading(90, SpeedReading.From.PHONE), feed.reading)
+    }
+
+    @Test fun aPoorFixAsksForNoLimitAndKeepsTheLastOne() {
+        val phone = FakeFixes()
+        val limits = FakeLimits()
+        val feed = SpeedFeed(phone, limits) { now }
+        val inputs = SpeedFeed.Inputs(SpeedSourceMode.AUTO, shown = true, mapsRunning = true, car = carAt(10f, now), limitsOn = true)
+        feed.update(inputs)
+        phone.onFix!!(fix(10f, now))
+        limits.answer(LimitShown.Known(50))
+        now += 500
+        phone.onFix!!(PhoneFix(10f, 54.68, 25.27, 90f, 100f, now)) // 100 m
+        phone.onFix!!(PhoneFix(null, 54.68, 25.27, null, 20f, now)) // network: no speed, no heading
+        phone.onFix!!(PhoneFix(10f, 54.68, 25.27, 90f, null, now)) // accuracy not known
+        assertEquals(1, limits.asked.size)
+        feed.update(inputs.copy(car = carAt(10f, now)))
+        assertEquals(LimitShown.Known(50), feed.reading!!.limit)
+        // Only good fixes for longer than the freshness window: no limit known.
+        now += SpeedRules.PHONE_FRESH_MS
+        feed.update(inputs.copy(car = carAt(10f, now)))
+        assertEquals(LimitShown.Unknown, feed.reading!!.limit)
+    }
 }
