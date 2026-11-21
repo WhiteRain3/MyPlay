@@ -158,8 +158,9 @@ $Walks = [ordered]@{
     # The Waze check (plan N3; give the place of Waze as -Tile and a long -Seconds, such as 600,
     # while driving a route or with Waze's own demo drive): opens Waze and leaves it, so the head
     # unit saves a picture every 3 seconds. With MyPlay's "maps app text" check switched on
-    # (setting myplay_debug_nav_text), phone-log.txt gets every text Waze sends ("nav text" lines,
-    # marked "[looks like a speed]" when one does). Look in the pictures for: police and hazard
+    # (setting myplay_debug_nav_text), phone-log.txt gets one "nav text" line per text Waze sends:
+    # where it came from and its length only, never the words (no roads or addresses), plus the
+    # part that looks like a speed, such as "50 km/h", when it has one. Look in the pictures for: police and hazard
     # reports (as alerts at the top, or only on Waze's own map), Waze's own speed read-out and
     # speed limit sign (and where), and whether Waze keeps its icons out of MyPlay's corners.
     'waze-check' = "$OpenGrid $ToTile"

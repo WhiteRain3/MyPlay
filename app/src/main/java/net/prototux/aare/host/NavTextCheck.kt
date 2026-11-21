@@ -16,10 +16,12 @@ import net.prototux.aare.Settings
  * app? The car library has no field for either (checked 2026-11-21), but an app could put one in
  * its free text: an alert, the trip, the turn or a message.
  *
- * With the hidden setting [myplayDebugNavText] on, every distinct text a hosted maps app sends in
- * those places goes into the connection log once ([lines]), marked when it looks like a speed
- * ([looksLikeSpeed]). Only for the check: it reads what the app already sends, changes nothing,
- * and is off by default.
+ * With the hidden setting [myplayDebugNavText] on, each distinct text a hosted maps app sends in
+ * those places gives one line in the connection log ([lines]): where it came from and how long it
+ * is, never the text itself, so no road, place or address reaches the log (NT-1). Only a part
+ * that looks like a speed ([looksLikeSpeed]) is written out, e.g. "50 km/h". Destinations are not
+ * read at all: a speed limit is never in one. Only for the check: it reads what the app already
+ * sends, changes nothing, and is off by default.
  */
 internal object NavTextCheck {
     /** Set from the setting by the car runtime. */
@@ -34,20 +36,24 @@ internal object NavTextCheck {
 
     fun looksLikeSpeed(text: String): Boolean = SPEED.containsMatchIn(text)
 
-    /** One line per text, "nav text <app> <where>: <text>", marked when it looks like a speed. */
+    /**
+     * One line per text: "nav text <app> <where>: a text of N characters", plus "; looks like a
+     * speed: <the speed-like parts>" when it has any. The text itself is never written.
+     */
     fun lines(app: String, where: String, texts: List<String>): List<String> =
         texts.map { it.trim() }.filter { it.isNotEmpty() }.distinct().map { t ->
-            "nav text $app $where: $t" + if (looksLikeSpeed(t)) "  [looks like a speed]" else ""
+            val speeds = SPEED.findAll(t).map { it.value }.toList()
+            "nav text $app $where: a text of ${t.length} characters" +
+                if (speeds.isEmpty()) "" else "; looks like a speed: ${speeds.joinToString(", ")}"
         }
 
     /** The texts of an alert. */
     fun alertTexts(a: Alert): List<String> = listOfNotNull(text(a.title), text(a.subtitle))
 
-    /** The texts of a trip: the current road, each step's cue and road, each destination. */
+    /** The texts of a trip that could carry a speed: the current road and each step's cue and road. Never the destinations. */
     fun tripTexts(t: Trip): List<String> = buildList {
         text(t.currentRoad)?.let(::add)
         for (s in t.steps) { text(s.cue)?.let(::add); s.road?.let { text(it) }?.let(::add) }
-        for (d in t.destinations) { text(d.name)?.let(::add); text(d.address)?.let(::add) }
     }
 
     /** The texts of a navigation template's turn card or message. */

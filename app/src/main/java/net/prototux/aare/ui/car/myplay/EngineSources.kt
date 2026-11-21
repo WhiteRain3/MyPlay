@@ -1,6 +1,9 @@
 package net.prototux.aare.ui.car.myplay
 
 import android.content.Context
+import androidx.compose.runtime.staticCompositionLocalOf
+import kotlinx.coroutines.flow.MutableStateFlow
+import net.prototux.aare.car.SpeedReading
 import kotlinx.coroutines.flow.StateFlow
 import net.prototux.aare.car.CarData
 import net.prototux.aare.car.PassiveFixes
@@ -51,8 +54,18 @@ interface MirrorSource {
     fun key(action: Int, keyCode: Int)
 }
 
-/** N3: the speed's inputs: the car's data, and the phone's fixes when the rules allow them (car/MyPlaySpeed.kt). */
-class SpeedSource(val car: StateFlow<CarData.State>, val fixes: () -> PhoneFixes)
+/**
+ * N3: the speed's inputs: the car's data, and the phone's fixes when the rules allow them
+ * (car/MyPlaySpeed.kt). With [fixed], that speed is shown and nothing is read or listened to
+ * (the phone's picture of the car screen).
+ */
+class SpeedSource(val car: StateFlow<CarData.State>, val fixes: () -> PhoneFixes, val fixed: SpeedReading? = null)
+
+/**
+ * The sources a caller gives the engine instead of the car's own: the phone's picture of the car
+ * screen provides [EngineSources.picture] here (N11).
+ */
+val LocalEngineSources = staticCompositionLocalOf<EngineSources?> { null }
 
 /** Everything the engine reads and does, in one place. */
 data class EngineSources(
@@ -66,10 +79,12 @@ data class EngineSources(
     /** The app grid, until the Apps world draws its own (N6). */
     val openApps: () -> Unit,
     val speed: SpeedSource,
+    /** The phone's picture of the car screen: the engine takes no focus and reads no speed. */
+    val picture: Boolean = false,
 ) {
     companion object {
         /** The car's sources: the car state and actions; no phone list or mirror yet (N8, N9). */
-        fun of(state: CarUiState, actions: CarActions, context: Context) = EngineSources(
+        fun of(state: CarUiState, actions: CarActions, context: Context?) = EngineSources(
             music = object : MusicSource {
                 override val nowPlaying get() = state.nowPlaying
                 override fun playPause() = actions.mediaPlayPause()
@@ -99,7 +114,20 @@ data class EngineSources(
             },
             openMaps = { state.app(state.homeNavAppId ?: state.activeNavAppId)?.let(actions::openApp) ?: actions.openLauncher() },
             openApps = { actions.openLauncher() },
-            speed = SpeedSource(CarData.state) { PassiveFixes(context) },
+            speed = SpeedSource(CarData.state, { context?.let(::PassiveFixes) ?: NoFixes }),
         )
+
+        /**
+         * For the phone's picture of the car screen (N11): [state]'s sample data, the caller's
+         * actions (no-ops there), a fixed [speed], no location and no focus taken.
+         */
+        fun picture(state: CarUiState, actions: CarActions, speed: SpeedReading = SpeedReading(48, SpeedReading.From.CAR)): EngineSources =
+            of(state, actions, null).copy(speed = SpeedSource(MutableStateFlow(CarData.State()), { NoFixes }, speed), picture = true)
     }
+}
+
+/** No phone fixes at all. */
+private object NoFixes : PhoneFixes {
+    override fun start(onFix: (Float, Long) -> Unit) = false
+    override fun stop() = Unit
 }

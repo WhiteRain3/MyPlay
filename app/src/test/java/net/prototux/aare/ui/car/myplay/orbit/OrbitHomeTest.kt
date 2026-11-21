@@ -30,6 +30,7 @@ import net.prototux.aare.ui.car.CarLayout
 import net.prototux.aare.ui.car.CarScreen
 import net.prototux.aare.ui.car.CarShell
 import net.prototux.aare.ui.car.CarUiState
+import net.prototux.aare.ui.car.NowPlaying
 import net.prototux.aare.ui.car.PadWalkStates
 import net.prototux.aare.ui.car.myplay.ENGINE_TAG
 import net.prototux.aare.ui.car.myplay.SLOT_CHOOSER
@@ -40,7 +41,16 @@ import net.prototux.aare.ui.car.myplay.TripProgress
 import net.prototux.aare.ui.car.myplay.TurnDirection
 import net.prototux.aare.ui.theme.CarTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Battery0Bar
+import androidx.compose.material.icons.rounded.Battery3Bar
+import androidx.compose.material.icons.rounded.BatteryChargingFull
+import androidx.compose.material.icons.rounded.BatteryFull
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.hasTestTag
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,6 +69,7 @@ class OrbitHomeTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     private val asked = mutableListOf<String>()
+    private var state: CarUiState? = null
     private val actions = object : CarActions by PadWalkStates.NoActions {
         override fun openLauncher() { asked += "launcher" }
         override fun openApp(app: CarAppEntry) { asked += "app:${app.id}" }
@@ -69,21 +80,33 @@ class OrbitHomeTest {
         DateTimeWithZone.create(1_700_000_000_000L + seconds * 1000, TimeZone.getTimeZone("UTC")),
     ).setRemainingTimeSeconds(seconds).build()
 
-    private fun route(): Trip {
+    private fun route(destination: String = "Home", left: Double = 9_400.0): Trip {
         val step = Step.Builder("Turn right").setRoad("Hauptstraße")
             .setManeuver(Maneuver.Builder(Maneuver.TYPE_TURN_NORMAL_RIGHT).build()).build()
         return Trip.Builder()
             .addStep(step, estimate(350.0, 40))
-            .addDestination(Destination.Builder().setName("Home").build(), estimate(9_400.0, 1_080))
+            .addDestination(Destination.Builder().setName(destination).build(), estimate(left, 1_080))
             .build()
     }
 
-    private fun show(night: Boolean = true, trip: Boolean = true): CarUiState {
+    /** The fixture's song, its position told now, so the ring shows the real look. */
+    private fun song(art: Bitmap?) = NowPlaying("music", PadWalkStates.SONG_TITLE, "The Synthwaves", art, playing = true,
+        positionMs = 95_000, durationMs = 240_000, updatedAtMs = System.currentTimeMillis())
+
+    /** Artwork a player could send: a two-colour square. */
+    private fun art() = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888).apply {
+        for (x in 0 until 64) for (y in 0 until 64) setPixel(x, y, if (x < y) 0xFFFF8A3D.toInt() else 0xFF3D7BFF.toInt())
+    }
+
+    private fun show(night: Boolean = true, trip: Boolean = true, withArt: Boolean = true): CarUiState {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
             enginePreview = true
             this.night = night
             if (trip) this.trip = route()
+            // N5-2: the position as a player tells it now, so the ring shows the real look.
+            nowPlaying = song(if (withArt) art() else null)
         }
+        this.state = state
         rule.setContent {
             CarTheme(night = state.night, theme = state.theme) {
                 CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
@@ -141,16 +164,60 @@ class OrbitHomeTest {
         assertEquals(listOf("launcher"), asked)
     }
 
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theSongShowsItsArtOrTheFallback() {
+        show(withArt = true)
+        rule.onNodeWithTag(OrbitSkin.SONG_ART_TAG, useUnmergedTree = true).assertExists()
+        rule.runOnIdle { state!!.nowPlaying = song(null) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(OrbitSkin.SONG_ART_FALLBACK_TAG, useUnmergedTree = true).assertExists()
+    }
+
+    /** N5-3: Robolectric's phone tells no battery level, so none is shown (never "0%"). */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun anUnknownBatteryIsNotShown() {
+        show()
+        rule.waitForIdle()
+        assertTrue(rule.onAllNodes(hasTestTag(OrbitSkin.BATTERY_TAG), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        assertTrue(rule.onAllNodesWithText("0%").fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test fun batteryIconsAndLow() {
+        assertTrue(OrbitSkin.batteryLow(20, charging = false))
+        assertFalse(OrbitSkin.batteryLow(20, charging = true))
+        assertFalse(OrbitSkin.batteryLow(21, charging = false))
+        assertEquals(Icons.Rounded.BatteryFull, OrbitSkin.batteryIcon(100, false))
+        assertEquals(Icons.Rounded.Battery0Bar, OrbitSkin.batteryIcon(5, false))
+        assertEquals(Icons.Rounded.Battery3Bar, OrbitSkin.batteryIcon(50, false))
+        assertEquals(Icons.Rounded.BatteryChargingFull, OrbitSkin.batteryIcon(5, true))
+    }
+
+    /** N5-4: a new destination is a new route, even when navigation never ended. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theTripRingStartsAgainForANewDestination() {
+        show()
+        fun progress() = rule.onNodeWithTag(OrbitSkin.TRIP_RING_TAG, useUnmergedTree = true).fetchSemanticsNode()
+            .config[SemanticsProperties.ProgressBarRangeInfo].current
+        assertEquals(0f, progress(), 0.01f)
+        rule.runOnIdle { state!!.trip = route(left = 4_700.0) }
+        rule.waitForIdle()
+        assertEquals(0.5f, progress(), 0.01f)
+        rule.runOnIdle { state!!.trip = route(destination = "Work", left = 3_000.0) }
+        rule.waitForIdle()
+        assertEquals(0f, progress(), 0.01f)
+    }
+
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun home1280x720Night() = picture("orbit-home-1280x720-night", night = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun home1280x720Day() = picture("orbit-home-1280x720-day", night = false)
     @Test @Config(qualifiers = "w1200dp-h723dp-land-mdpi") fun home1200x723Night() = picture("orbit-home-1200x723-night", night = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun home901x543Night() = picture("orbit-home-901x543-night", night = true)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNoRoute() = picture("orbit-home-no-route-night", night = true, trip = false)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNoArtDay() = picture("orbit-home-no-art-day", night = false, withArt = false)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun dialNight() = picture("orbit-dial-1280x720-night", night = true, dial = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun dial901x543Day() = picture("orbit-dial-901x543-day", night = false, dial = true)
 
-    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false) {
-        show(night, trip)
+    private fun picture(name: String, night: Boolean, trip: Boolean = true, dial: Boolean = false, withArt: Boolean = true) {
+        show(night, trip, withArt)
         if (dial) {
             val engine = rule.onNodeWithTag(ENGINE_TAG)
             engine.performKeyInput { pressKey(Key.DirectionCenter) }

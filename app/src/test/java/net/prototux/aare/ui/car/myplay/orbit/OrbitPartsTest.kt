@@ -17,6 +17,8 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
@@ -42,8 +44,29 @@ class OrbitPartsTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     @Test fun everyWorldHasItsOwnAccentAndIcon() {
-        assertEquals(World.entries.size, World.entries.map(Orbit::accent).toSet().size)
+        for (night in listOf(true, false)) assertEquals(World.entries.size, World.entries.map { Orbit.accent(it, night) }.toSet().size)
         assertEquals(World.entries.size, World.entries.map(Orbit::icon).toSet().size)
+    }
+
+    /** WCAG contrast of two colours. */
+    private fun contrast(a: Color, b: Color): Double {
+        val la = a.luminance() + 0.05
+        val lb = b.luminance() + 0.05
+        return maxOf(la, lb) / minOf(la, lb)
+    }
+
+    @Test fun accentsReadOnTheirGlassDayAndNight() {
+        for (night in listOf(true, false)) {
+            val g = Orbit.glass(night)
+            for (w in World.entries) {
+                val a = Orbit.accent(w, night)
+                assertTrue("$w night=$night on glass", contrast(a, g.glass.copy(alpha = 1f)) >= 3.0)
+                assertTrue("$w night=$night on the background", contrast(a, g.background) >= 3.0)
+                // The focus ring against its halo.
+                assertTrue("$w night=$night ring on halo", contrast(a, g.halo) >= 3.0)
+                assertTrue("$w night=$night text on a filled disc", contrast(Orbit.onAccent(night), a) >= 4.5)
+            }
+        }
     }
 
     @Test fun aSectorStaysInsideItsRing() {
@@ -57,13 +80,14 @@ class OrbitPartsTest {
 
     private fun board(night: Boolean, name: String) {
         val g = Orbit.glass(night)
-        val nav = Orbit.accent(World.NAVIGATE)
+        val nav = Orbit.accent(World.NAVIGATE, night)
+        val song = Orbit.accent(World.MUSIC, night)
         rule.setContent {
             Column(Modifier.testTag("board").background(g.background).padding(40.dp), verticalArrangement = Arrangement.spacedBy(40.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(48.dp), verticalAlignment = Alignment.CenterVertically) {
                     // The turn bubble.
                     OrbitDisc(132.dp, night, fill = nav, edge = nav) {
-                        Icon(Icons.Rounded.TurnRight, null, Modifier.size(78.dp), tint = Orbit.ON_ACCENT)
+                        Icon(Icons.Rounded.TurnRight, null, Modifier.size(78.dp), tint = Orbit.onAccent(night))
                     }
                     Column {
                         Text("350 m", style = Orbit.Type.hero, color = g.text)
@@ -79,15 +103,15 @@ class OrbitPartsTest {
                         }
                     }
                     // The song disc.
-                    OrbitRing(0.38f, 152.dp, 7.dp, Orbit.SONG, g.track) {
-                        OrbitDisc(124.dp, night, fill = Orbit.SONG) { Icon(Icons.Rounded.MusicNote, null, Modifier.size(56.dp), tint = g.text) }
+                    OrbitRing(0.38f, 152.dp, 7.dp, song, g.track) {
+                        OrbitDisc(124.dp, night, fill = song) { Icon(Icons.Rounded.MusicNote, null, Modifier.size(56.dp), tint = g.text) }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(48.dp), verticalAlignment = Alignment.CenterVertically) {
                     // The dial, Apps lit.
                     Box(Modifier.size(300.dp)) {
                         World.entries.forEachIndexed { i, w ->
-                            OrbitSector(i, World.entries.size, w == World.APPS, Orbit.accent(w), night, 300.dp, 90.dp)
+                            OrbitSector(i, World.entries.size, w == World.APPS, Orbit.accent(w, night), night, 300.dp, 90.dp)
                         }
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -95,7 +119,7 @@ class OrbitPartsTest {
                         Text("Blue Harbor", style = Orbit.Type.secondary, color = g.secondary)
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             World.entries.forEach { w ->
-                                OrbitDisc(64.dp, night, edge = Orbit.accent(w)) { Icon(Orbit.icon(w), null, tint = Orbit.accent(w)) }
+                                OrbitDisc(64.dp, night, edge = Orbit.accent(w, night)) { Icon(Orbit.icon(w), null, tint = Orbit.accent(w, night)) }
                             }
                         }
                         Text("Navigate  Music  Calls", style = Orbit.Type.dial, color = g.secondary)

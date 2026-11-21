@@ -11,6 +11,10 @@ import androidx.car.app.navigation.model.Step
 import androidx.car.app.navigation.model.Trip
 import androidx.car.app.model.ActionStrip
 import androidx.car.app.model.Action
+import androidx.car.app.model.DateTimeWithZone
+import androidx.car.app.navigation.model.Destination
+import androidx.car.app.navigation.model.TravelEstimate
+import java.util.TimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -31,11 +35,29 @@ class NavTextCheckTest {
         assertFalse(NavTextCheck.looksLikeSpeed("Main Street 50"))
     }
 
-    @Test fun linesAreDistinctAndMarked() {
+    @Test fun linesGiveOnlyTheLengthAndTheSpeed() {
         assertEquals(
-            listOf("nav text waze alert: Police reported", "nav text waze alert: Limit 50 km/h  [looks like a speed]"),
+            listOf("nav text waze alert: a text of 15 characters", "nav text waze alert: a text of 13 characters; looks like a speed: 50 km/h"),
             NavTextCheck.lines("waze", "alert", listOf("Police reported", " ", "Limit 50 km/h", "Police reported")),
         )
+    }
+
+    /** NT-1: no road, place or address ever reaches the log. */
+    @Test fun noRoadOrAddressIsLogged() {
+        val trip = Trip.Builder()
+            .addDestination(
+                Destination.Builder().setName("Home").setAddress("Gedimino pr. 9, Vilnius").build(),
+                TravelEstimate.Builder(Distance.create(9_400.0, Distance.UNIT_METERS), DateTimeWithZone.create(0L, TimeZone.getTimeZone("UTC"))).build(),
+            )
+            .setCurrentRoad("Konstitucijos pr.")
+            .build()
+        val texts = NavTextCheck.tripTexts(trip)
+        assertFalse("destinations are not read", texts.any { "Gedimino" in it || it == "Home" })
+        val lines = NavTextCheck.lines("waze", "trip", texts + "Savanorių pr. 50 km/h")
+        for (word in listOf("Konstitucijos", "Savanorių", "Gedimino", "Home", "Vilnius")) {
+            assertFalse("$word in $lines", lines.any { word in it })
+        }
+        assertTrue(lines.any { it.endsWith("looks like a speed: 50 km/h") })
     }
 
     @Test fun textsAreReadFromAlertsTripsAndTheTurnCard() {

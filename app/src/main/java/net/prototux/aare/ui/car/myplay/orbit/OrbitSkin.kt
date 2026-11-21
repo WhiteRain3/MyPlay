@@ -16,6 +16,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Battery0Bar
+import androidx.compose.material.icons.rounded.Battery1Bar
+import androidx.compose.material.icons.rounded.Battery2Bar
+import androidx.compose.material.icons.rounded.Battery3Bar
+import androidx.compose.material.icons.rounded.Battery4Bar
+import androidx.compose.material.icons.rounded.Battery5Bar
+import androidx.compose.material.icons.rounded.Battery6Bar
 import androidx.compose.material.icons.rounded.BatteryChargingFull
 import androidx.compose.material.icons.rounded.BatteryFull
 import androidx.compose.material.icons.rounded.DonutLarge
@@ -52,7 +59,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -135,7 +146,7 @@ object OrbitSkin : MyPlaySkin {
     override fun Turn(turn: TurnSlot, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            val nav = Orbit.accent(World.NAVIGATE)
+            val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OrbitDisc(132.dp, LocalSkinTokens.current.night, Modifier.orbitFocus(LocalStopRinged.current, nav, g.halo), fill = nav, edge = nav) {
                     val arrow = turn.arrow
@@ -143,7 +154,7 @@ object OrbitSkin : MyPlaySkin {
                         val image = remember(arrow) { arrow.asImageBitmap() }
                         Image(image, null, Modifier.size(84.dp), contentScale = ContentScale.Fit)
                     } else {
-                        Icon(arrowIcon(turn.direction), null, Modifier.size(78.dp), tint = Orbit.ON_ACCENT)
+                        Icon(arrowIcon(turn.direction), null, Modifier.size(78.dp), tint = Orbit.onAccent(LocalSkinTokens.current.night))
                     }
                 }
                 Spacer(Modifier.width(22.dp))
@@ -173,9 +184,9 @@ object OrbitSkin : MyPlaySkin {
     override fun Hub(trip: TripSlot?, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            val nav = Orbit.accent(World.NAVIGATE)
+            val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
             OrbitDisc(192.dp, LocalSkinTokens.current.night, Modifier.orbitFocus(LocalStopRinged.current, nav, g.halo)) {
-                OrbitRing(trip?.progress, 184.dp, 9.dp, nav, g.track) {
+                OrbitRing(trip?.progress, 184.dp, 9.dp, nav, g.track, Modifier.testTag(TRIP_RING_TAG).progressSemantics(trip?.progress)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         val arrival = trip?.arrival
                         if (arrival != null) {
@@ -210,13 +221,15 @@ object OrbitSkin : MyPlaySkin {
                     Text(song.subtitle, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
                 }
                 Spacer(Modifier.width(10.dp))
-                OrbitRing(progress, 152.dp, 7.dp, Orbit.SONG, g.track, Modifier.orbitFocus(LocalStopRinged.current, Orbit.SONG, g.halo)) {
+                val musicColour = Orbit.accent(World.MUSIC, LocalSkinTokens.current.night)
+                OrbitRing(progress, 152.dp, 7.dp, musicColour, g.track, Modifier.orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
                     val art = song.art
                     if (art != null) {
                         val image = remember(art) { art.asImageBitmap() }
-                        Image(image, null, Modifier.size(126.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+                        Image(image, null, Modifier.size(126.dp).clip(CircleShape).testTag(SONG_ART_TAG), contentScale = ContentScale.Crop)
                     } else {
-                        Box(Modifier.size(126.dp).clip(CircleShape).background(ART), contentAlignment = Alignment.Center) {
+                        // No artwork from the player: the sheet's gradient with a note.
+                        Box(Modifier.size(126.dp).clip(CircleShape).background(ART).testTag(SONG_ART_FALLBACK_TAG), contentAlignment = Alignment.Center) {
                             Icon(Icons.Rounded.MusicNote, null, Modifier.size(56.dp), tint = Color.White)
                         }
                     }
@@ -242,7 +255,7 @@ object OrbitSkin : MyPlaySkin {
     override fun Status(modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            val nav = Orbit.accent(World.NAVIGATE)
+            val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
             val context = LocalContext.current
             var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
             LaunchedEffect(Unit) {
@@ -254,15 +267,39 @@ object OrbitSkin : MyPlaySkin {
             val time = DateFormat.format(if (DateFormat.is24HourFormat(context)) "H:mm" else "h:mm", now).toString()
             Column(horizontalAlignment = Alignment.End) {
                 Text(time, style = Orbit.Type.clock.floating(g.text), maxLines = 1)
-                rememberPhoneStatus()?.let { s ->
-                    Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(if (s.charging) Icons.Rounded.BatteryChargingFull else Icons.Rounded.BatteryFull, null, Modifier.size(30.dp), tint = nav)
-                        // By day the pale accent reads poorly on light glass: the text colour then.
-                        val colour = if (LocalSkinTokens.current.night) nav else g.text
+                // N5-3: no level shown when the phone does not tell it, never "0%".
+                rememberPhoneStatus()?.takeIf { it.batteryKnown }?.let { s ->
+                    val night = LocalSkinTokens.current.night
+                    val colour = if (batteryLow(s.battery, s.charging)) Orbit.warning(night) else nav
+                    Row(
+                        Modifier.padding(top = 8.dp).testTag(BATTERY_TAG),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(batteryIcon(s.battery, s.charging), null, Modifier.size(30.dp), tint = colour)
                         Text("${s.battery}%", style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold).floating(colour))
                     }
                 }
             }
+        }
+    }
+
+    /** A battery this low (and not charging) shows in the warning colour. */
+    const val BATTERY_LOW = 20
+
+    fun batteryLow(level: Int, charging: Boolean) = !charging && level <= BATTERY_LOW
+
+    /** The battery icon with as many bars as the level (0 to 6, full at 95 % and up). */
+    fun batteryIcon(level: Int, charging: Boolean): ImageVector = when {
+        charging -> Icons.Rounded.BatteryChargingFull
+        level >= 95 -> Icons.Rounded.BatteryFull
+        else -> when ((level.coerceIn(0, 100) * 7) / 100) {
+            0 -> Icons.Rounded.Battery0Bar
+            1 -> Icons.Rounded.Battery1Bar
+            2 -> Icons.Rounded.Battery2Bar
+            3 -> Icons.Rounded.Battery3Bar
+            4 -> Icons.Rounded.Battery4Bar
+            5 -> Icons.Rounded.Battery5Bar
+            else -> Icons.Rounded.Battery6Bar
         }
     }
 
@@ -288,14 +325,14 @@ object OrbitSkin : MyPlaySkin {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.size(DIAL), contentAlignment = Alignment.Center) {
                     worlds.forEachIndexed { i, w ->
-                        OrbitSector(i, worlds.size, w == selected, Orbit.accent(w), night, DIAL, 132.dp)
+                        OrbitSector(i, worlds.size, w == selected, Orbit.accent(w, night), night, DIAL, 132.dp)
                         val a = Math.toRadians(-90.0 + 360.0 / worlds.size * i)
                         val on = w == selected
                         Column(
                             Modifier.offset((205 * cos(a)).dp, (205 * sin(a)).dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Icon(Orbit.icon(w), null, Modifier.size(if (on) 52.dp else 44.dp), tint = if (on) Orbit.accent(w) else g.secondary)
+                            Icon(Orbit.icon(w), null, Modifier.size(if (on) 52.dp else 44.dp), tint = if (on) Orbit.accent(w, night) else g.secondary)
                             Text(worldName(w), style = Orbit.Type.dial.copy(color = if (on) g.text else g.secondary), maxLines = 1)
                         }
                     }
@@ -308,10 +345,20 @@ object OrbitSkin : MyPlaySkin {
 
     private val DIAL = 552.dp
 
+    /** Test tags. */
+    const val BATTERY_TAG = "orbit_battery"
+    const val SONG_ART_TAG = "orbit_song_art"
+    const val SONG_ART_FALLBACK_TAG = "orbit_song_art_fallback"
+    const val TRIP_RING_TAG = "orbit_trip_ring"
+
+    /** A ring's progress for accessibility (and the tests); nothing when it is not known. */
+    private fun Modifier.progressSemantics(p: Float?): Modifier =
+        if (p == null) this else semantics { progressBarRangeInfo = ProgressBarRangeInfo(p, 0f..1f) }
+
     @Composable
     private fun WorldDisc(world: World, night: Boolean, line: String? = null) {
         val g = Orbit.glass(night)
-        val accent = Orbit.accent(world)
+        val accent = Orbit.accent(world, night)
         OrbitDisc(240.dp, night, fill = g.glass.copy(alpha = 0.95f), edge = accent, edgeWidth = 3.dp) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(Orbit.icon(world), null, Modifier.size(76.dp), tint = accent)

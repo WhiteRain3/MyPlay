@@ -27,15 +27,32 @@ import net.prototux.aare.ui.car.myplay.World
  * the same accents, darker text) until the owner sees them on the car.
  */
 object Orbit {
-    /** Each world's accent and icon (the sheet's dial). */
-    fun accent(world: World): Color = when (world) {
+    /**
+     * Each world's accent (the sheet's dial). By night the sheet's colours, each at least 7:1 on
+     * the night glass. By day (O-1) the same hues darkened, each at least 4.9:1 on the day glass
+     * (the sheet's pale ones were 1.4 to 2.5:1, under the 3:1 needed for icons and rings).
+     */
+    fun accent(world: World, night: Boolean): Color = if (night) when (world) {
         World.NAVIGATE -> Color(0xFF6EE7A8)
         World.MUSIC -> Color(0xFFA78BFA)
         World.CALLS -> Color(0xFF5FD39A)
         World.APPS -> Color(0xFFFF8FB1)
         World.CAR -> Color(0xFFFFC24A)
         World.SETTINGS -> Color(0xFF9DB4E8)
+    } else when (world) {
+        World.NAVIGATE -> Color(0xFF0E7A4C)
+        World.MUSIC -> Color(0xFF6A3FD1)
+        World.CALLS -> Color(0xFF17734A)
+        World.APPS -> Color(0xFFC2185B)
+        World.CAR -> Color(0xFF8A5A00)
+        World.SETTINGS -> Color(0xFF3A5AA6)
     }
+
+    /** A low battery and other warnings: the sheet's decline red by night, a darker red by day (5.6:1 on the day glass). */
+    fun warning(night: Boolean): Color = if (night) Color(0xFFFF6B6B) else Color(0xFFC62828)
+
+    /** Text and icons on a filled accent disc: dark on the pale night accents, white on the dark day ones. */
+    fun onAccent(night: Boolean): Color = if (night) Color(0xFF06251A) else Color.White
 
     fun icon(world: World): ImageVector = when (world) {
         World.NAVIGATE -> Icons.Rounded.Navigation
@@ -46,10 +63,6 @@ object Orbit {
         World.SETTINGS -> Icons.Rounded.Settings
     }
 
-    /** Dark text on a filled accent disc (the turn bubble, the big buttons). */
-    val ON_ACCENT = Color(0xFF06251A)
-    /** The song's ring and its track. */
-    val SONG = Color(0xFFA78BFA)
 
     /** The type scale (system fonts only). */
     object Type {
@@ -96,7 +109,7 @@ object Orbit {
     fun tokens(night: Boolean): SkinTokens = glass(night).let { g ->
         SkinTokens(
             background = g.background, surface = g.glass, onSurface = g.text, dim = g.secondary,
-            accent = accent(World.NAVIGATE), onAccent = ON_ACCENT,
+            accent = accent(World.NAVIGATE, night), onAccent = onAccent(night),
             // ORBIT is round: a corner larger than any part makes every shape a circle or a pill.
             corner = 999.dp, edge = 44.dp, night = night,
         )
