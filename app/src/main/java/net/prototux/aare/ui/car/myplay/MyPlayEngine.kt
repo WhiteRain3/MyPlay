@@ -114,7 +114,6 @@ internal fun MyPlayEngineShell(
     // button, Back held) is the plain home; a new language, or a skin with a rail, starts afresh.
     val keeps = !skin.appRail
     remember(skin.id) { if (memory.skinId != skin.id || state.engineHomeAsked || !keeps) memory.reset(skin.id); true }
-    LaunchedEffect(Unit) { state.engineHomeAsked = false }
     // N13: a new language starts afresh (a hand has no dial to be in).
     val hand = skin.hand
     val model = remember(skin.id) { memory.model(hand) }
@@ -449,6 +448,18 @@ internal fun MyPlayEngineShell(
         }
     }
 
+    // O3-2: Home asked for, here or already on MyPlay's screen (the Menu button at home): the plain
+    // home now, and the flag cleared at once, so a later Back from an app is not taken for Home.
+    LaunchedEffect(state.engineHomeAsked) {
+        if (!state.engineHomeAsked) return@LaunchedEffect
+        state.engineHomeAsked = false
+        if (!keeps) return@LaunchedEffect
+        model.place = Place.Home
+        chosen = STOP_HUB
+        panelOpen = false
+        listOpen = false
+        fromApps = false
+    }
     // N6-2: taps run what the screen shows now, not what it showed when the tap handler started.
     val currentActions by rememberUpdatedState(actionsOf)
     val currentApps by rememberUpdatedState(apps)

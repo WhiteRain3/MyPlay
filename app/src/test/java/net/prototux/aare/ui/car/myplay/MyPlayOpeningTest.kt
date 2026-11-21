@@ -126,6 +126,28 @@ class MyPlayOpeningTest {
         rule.onNodeWithTag(STOP_TURN).assertIsSelected()
     }
 
+    /** O3-2: Home pressed while already on MyPlay's screen: the plain home, and the next app's Back still comes back. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun homeOnTheHomeLeavesNoStaleFlag() {
+        show()
+        toApps()
+        rule.runOnIdle { actions.goHome() }
+        rule.waitForIdle()
+        assertTrue(!state.engineHomeAsked)
+        rule.onNodeWithTag(SLOT_APPS).assertDoesNotExist()
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+        // The dial opens on the world last entered: Apps.
+        key(Key.DirectionCenter)
+        key(Key.DirectionCenter)
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        key(Key.Tab)
+        key(Key.DirectionCenter)
+        rule.onNodeWithTag(FRAME_TAG).assertExists()
+        backFromApp()
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        rule.onNodeWithTag(appTag(state.launcherApps[1])).assertIsSelected()
+    }
+
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theMusicPanelsAppComesBackToTheSong() {
         show()
