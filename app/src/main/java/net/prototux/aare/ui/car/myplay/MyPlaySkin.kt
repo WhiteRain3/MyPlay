@@ -81,7 +81,10 @@ enum class TurnDirection { STRAIGHT, SLIGHT_LEFT, LEFT, SHARP_LEFT, SLIGHT_RIGHT
  */
 data class TripSlot(val arrival: String?, val distanceLeft: String?, val timeLeft: String? = null, val progress: Float? = null)
 
-/** The song; its position as the player last told it ([positionMs] at [updatedAtMs], moving while [playing]). */
+/**
+ * The song; its position as the player last told it ([positionMs] at [updatedAtMs], moving while
+ * [playing]). [updatedAtMs] is on SystemClock.elapsedRealtime(), as the player samples it.
+ */
 data class SongSlot(
     val title: String, val subtitle: String, val playing: Boolean, val art: Bitmap?,
     val positionMs: Long = 0, val durationMs: Long = 0, val updatedAtMs: Long = 0,
