@@ -125,6 +125,10 @@ class CarUiState {
     var engineLanguage by mutableStateOf("orbit")
     /** MyPlay (O2): seconds before a panel over the map closes by itself; 0 never (PanelTimeout). */
     var panelTimeoutS by mutableStateOf(net.prototux.aare.ui.car.myplay.PanelTimeout.DEFAULT)
+    /** MyPlay (O3): Home was asked for (not Back): the new screen comes back to its plain home, not where it was. */
+    var engineHomeAsked by mutableStateOf(false)
+    /** MyPlay (O3): how often this drive has shown the way home over an app (the first few times only). */
+    var homeHints by mutableStateOf(0)
     /**
      * MyPlay (F4): a world for the new screen to open, once (its id, as World.id: "calls"); the
      * engine opens it and clears this. Set by the car runtime (a call placed from an app).

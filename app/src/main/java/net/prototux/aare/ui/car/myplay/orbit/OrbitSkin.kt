@@ -163,6 +163,9 @@ object OrbitSkin : MyPlaySkin {
     override val drawsFocus get() = true
     override val showsSpeed get() = true
 
+    /** O3: an app takes the whole screen, grown out of its stop; no rail. */
+    override val appRail get() = false
+
     /** The sheet's screen; sizes scale from it. */
     private const val SHEET_W = 1280f
     private const val SHEET_H = 720f

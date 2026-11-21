@@ -20,6 +20,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.key
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -75,7 +80,17 @@ internal fun MyPlayAppFrame(
     modifier: Modifier,
     skin: MyPlaySkin,
     sources: EngineSources,
+    memory: EngineMemory = remember { EngineMemory() },
 ) {
+    // O3: without the rail, the app grows out of the stop it was opened from, and the first few
+    // times in a drive the way home shows for a moment.
+    val grows = !skin.appRail
+    val appKey = (state.screen as? net.prototux.aare.ui.car.CarScreen.App)?.appId ?: "launcher"
+    val grow = remember(appKey) { Animatable(if (grows && !sources.picture) 0f else 1f) }
+    LaunchedEffect(appKey) { grow.animateTo(1f, tween(APP_OPEN_MS, easing = FastOutSlowInEasing)) }
+    if (grows) SideEffect { memory.returning = true }
+    val hint = remember(appKey) { grows && !sources.picture && state.homeHints < HOME_HINT_TIMES }
+    LaunchedEffect(appKey) { if (hint) state.homeHints++ }
     val tokens = skin.tokens(state.night)
     val call = sources.calls.call
     val ringing = call?.ringing == true
@@ -173,12 +188,16 @@ internal fun MyPlayAppFrame(
         ) {
             Row(Modifier.fillMaxSize()) {
                 // An app's fullscreen video takes the whole screen: no rail meanwhile (Back leaves fullscreen).
-                val rail = @Composable { if (!state.appFullscreen) skin.AppRail(actions::goHome, Modifier.fillMaxHeight().testTag(FRAME_RAIL_TAG)) }
+                val rail = @Composable { if (!state.appFullscreen && skin.appRail) skin.AppRail(actions::goHome, Modifier.fillMaxHeight().testTag(FRAME_RAIL_TAG)) }
                 if (!state.railOnRight) rail()
-                ContentArea(state, actions, appContent, navMap, Modifier.weight(1f).fillMaxHeight().testTag(FRAME_APP_TAG))
+                val origin = memory.origin
+                ContentArea(state, actions, appContent, navMap,
+                    Modifier.weight(1f).fillMaxHeight().let { if (grows) it.grownFrom(origin) { grow.value } else it }.testTag(FRAME_APP_TAG))
                 if (state.railOnRight) rail()
             }
             overlay(Modifier.align(Alignment.BottomCenter))
+            // O3: the way home, the first few times in a drive (there is no rail to show it).
+            if (hint) key(appKey) { HomeHint(true, Modifier.align(Alignment.BottomCenter).padding(bottom = 28.dp)) }
             // A notice for a few seconds at the top: its buttons by touch, and (F1-5) by the knob.
             // F1-3 (R6, R6-3): the notice and, under it, the gesture line (what a button just did), never on top of each other.
             Column(Modifier.align(Alignment.TopCenter).padding(top = tokens.edge), horizontalAlignment = Alignment.CenterHorizontally) {

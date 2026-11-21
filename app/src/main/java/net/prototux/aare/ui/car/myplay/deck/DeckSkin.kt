@@ -133,6 +133,9 @@ import net.prototux.aare.ui.car.rememberPhoneStatus
  * not drawn yet is still ORBIT's (the engine and the knob are the same either way).
  */
 object DeckSkin : MyPlaySkin by OrbitSkin {
+    /** O3 is ORBIT's: DECK (frozen) keeps the rail beside an app. */
+    override val appRail get() = true
+
     override val id = "deck"
 
     override fun tokens(night: Boolean): SkinTokens = Deck.tokens(night)

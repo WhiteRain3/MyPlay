@@ -56,6 +56,8 @@
     <string name="myplay_setting_gesture_line" translatable="false">A line after button gestures</string>
     <string name="myplay_on" translatable="false">On</string>
     <string name="myplay_off" translatable="false">Off</string>
+    <!-- O3: shown over a full-screen app the first few times in a drive (there is no Home button beside it) -->
+    <string name="myplay_frame_home_hint" translatable="false">Hold Back to come home</string>
     <!-- O2: the Settings world's row for how long a panel over the map stays open untouched -->
     <string name="myplay_setting_panel_timeout" translatable="false">Close panels by themselves</string>
     <string name="myplay_setting_panel_timeout_after" translatable="false">After %1$d s</string>

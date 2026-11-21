@@ -92,8 +92,8 @@ class MyPlayRoutesTest {
         rule.onNodeWithTag("app_maps").assertExists()
         rule.onNodeWithTag(FRAME_TAG).assertExists()
         inMyPlay("turn read-out")
-        // The frame's way home.
-        rule.onNodeWithTag(FRAME_HOME_TAG).performClick()
+        // The frame's way home (DECK's rail; ORBIT has none (O3): the car's Home).
+        if (language == "deck") rule.onNodeWithTag(FRAME_HOME_TAG).performClick() else { rule.runOnIdle { actions.goHome() }; rule.waitForIdle() }
         rule.onNodeWithTag(ENGINE_TAG).assertExists()
         // A call placed from an app: the car runtime asks for the Calls world.
         rule.runOnIdle { state.engineOpenWorld = World.CALLS.id }

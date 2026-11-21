@@ -103,14 +103,21 @@ internal fun MyPlayEngineShell(
     skin: MyPlaySkin = net.prototux.aare.ui.car.myplay.orbit.OrbitSkin,
     sources: EngineSources = LocalEngineSources.current ?: LocalContext.current.let { c -> remember(state, actions) { EngineSources.of(state, actions, c) } },
 ) {
+    // O3: kept while an app has the screen (the rest of the engine is not), so Back comes back to it.
+    val memory = remember { EngineMemory() }
     if (state.screen != CarScreen.Dashboard) {
         // F1: a full-screen app (or the app grid) in MyPlay's own frame, not the old layout's.
-        MyPlayAppFrame(state, actions, appContent, navMap, overlay, modifier, skin, sources)
+        MyPlayAppFrame(state, actions, appContent, navMap, overlay, modifier, skin, sources, memory)
         return
     }
+    // O3: a skin without a rail comes back from an app to where it was; Home asked for (the Menu
+    // button, Back held) is the plain home; a new language, or a skin with a rail, starts afresh.
+    val keeps = !skin.appRail
+    remember(skin.id) { if (memory.skinId != skin.id || state.engineHomeAsked || !keeps) memory.reset(skin.id); true }
+    LaunchedEffect(Unit) { state.engineHomeAsked = false }
     // N13: a new language starts afresh (a hand has no dial to be in).
     val hand = skin.hand
-    val model = remember(skin.id) { MyPlayScreenModel(hand) }
+    val model = remember(skin.id) { memory.model(hand) }
     val tokens = skin.tokens(state.night)
     val context = LocalContext.current
     val timeFormat = remember(context) { DateFormat.getTimeFormat(context) }
@@ -126,7 +133,7 @@ internal fun MyPlayEngineShell(
     val slots = plain.copy(trip = plain.trip?.copy(progress = progress))
     // The home's stops and where they are, as the slots report them.
     val boxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
-    var chosen by remember { mutableStateOf(STOP_HUB) }
+    var chosen by memory.chosen
     // N8: a call. While it rings it takes the knob and the pad; in a call its strip is on the home.
     val call = sources.calls.call
     val canEnd = rememberCanEnd()
@@ -176,7 +183,7 @@ internal fun MyPlayEngineShell(
             put(STOP_CALL) { openCalls() }
             if (canEnd) put(STOP_HANG_UP, sources.calls::end)
         }
-        if (slots.turn != null) put(STOP_TURN) { openMaps() }
+        if (slots.turn != null) put(STOP_TURN) { memory.origin = boxes[STOP_TURN]; openMaps() }
         if (hand != null) put(STOP_HUB) { openFront() } else put(STOP_HUB) { model.push() }
         if (slots.song != null && hand == null) put(STOP_SONG) { panelOpen = true; panelChosen = PANEL_PLAY }
     }
@@ -236,7 +243,7 @@ internal fun MyPlayEngineShell(
             put(MUSIC_NEXT, music::next)
         }
         // N7: the library drawn by the skin when the app offers one, else the app's own screen.
-        put(MUSIC_LIBRARY) { music.library()?.let { library = it } ?: openMusic() }
+        put(MUSIC_LIBRARY) { music.library()?.let { library = it } ?: run { memory.origin = musicBoxes[MUSIC_LIBRARY]; openMusic() } }
         for (u in musicPage.transport.upNext) put(upNextStop(u.queueId)) { music.skipTo(u.queueId) }
     }
     val musicRing = musicChosen.takeIf { it in musicActions } ?: if (musicPage.song != null) MUSIC_PLAY else MUSIC_LIBRARY
@@ -257,7 +264,7 @@ internal fun MyPlayEngineShell(
     val panelBoxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
     val panelActions: Map<String, () -> Unit> = buildMap {
         if (musicPage.transport.canSeek) put(PANEL_SEEK, music::playPause)
-        put(PANEL_APP) { panelOpen = false; openMusic() }
+        put(PANEL_APP) { panelOpen = false; memory.origin = panelBoxes[PANEL_APP]; openMusic() }
         put(PANEL_PREV, music::previous)
         put(PANEL_PLAY, music::playPause)
         put(PANEL_NEXT, music::next)
@@ -339,9 +346,9 @@ internal fun MyPlayEngineShell(
     // N6: the Apps world: which app holds the ring (over all pages), and where this page's discs are.
     // F2-1: the page on screen was opened from an Apps tile (Back returns to the Apps world). Any
     // other way out of it forgets that: home, the dial, another world.
-    var fromApps by remember { mutableStateOf(false) }
+    var fromApps by memory.fromApps
     // F3: the Apps world opened as a fallback shows only the kinds asked for (maps apps, music apps).
-    var appsKinds by remember { mutableStateOf<Set<CarAppKind>?>(null) }
+    var appsKinds by memory.appsKinds
     LaunchedEffect(model.place) { if (model.place != Place.InWorld(World.APPS)) appsKinds = null }
     LaunchedEffect(model.place, listOpen) {
         val p = model.place
@@ -350,7 +357,7 @@ internal fun MyPlayEngineShell(
     }
     val apps = sources.apps.apps.let { all -> appsKinds?.let { k -> all.filter { it.kind in k }.ifEmpty { null } } ?: all }
     val perPage = skin.appsPerPage
-    var appRing by remember { mutableStateOf(0) }
+    var appRing by memory.appRing
     val appIndex = appRing.coerceIn(0, (apps.size - 1).coerceAtLeast(0))
     val page = AppsPages.pageOf(appIndex, perPage)
     val pageApps = apps.drop(page * perPage).take(perPage)
@@ -434,9 +441,13 @@ internal fun MyPlayEngineShell(
                 listChosen = null
                 notes.markSeen()
             }
-            else -> sources.apps.open(app)
+            else -> {
+                memory.origin = appBoxes[apps.indexOfFirst { it.id == app.id }.toString()]
+                sources.apps.open(app)
+            }
         }
     }
+
     // N6-2: taps run what the screen shows now, not what it showed when the tap handler started.
     val currentActions by rememberUpdatedState(actionsOf)
     val currentApps by rememberUpdatedState(apps)
@@ -531,6 +542,7 @@ internal fun MyPlayEngineShell(
                     // N9, the dispatcher: Navigate is the maps app itself, full screen with its own search
                     // and destinations (the last used one); Back from it comes home. The dial closes.
                     model.back()
+                    memory.origin = null
                     openMaps()
                 } else {
                     model.push()
@@ -790,6 +802,8 @@ internal fun MyPlayEngineShell(
                 }
             }
             overlay(Modifier.align(Alignment.BottomCenter))
+            // O3: the app shrinking back into the stop it came from.
+            if (keeps) ShrinkBack(memory, Modifier)
             // The gesture line (R6) over a world's page or the dial (at home it is under the notice, above).
             if (model.place != Place.Home) GestureLineOverlay(state, Modifier.align(Alignment.TopCenter))
             // N8: the notifications list, over the home.

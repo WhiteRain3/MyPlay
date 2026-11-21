@@ -719,7 +719,7 @@ class CarRuntime(
             while (ui.recentAppIds.size > 6) ui.recentAppIds.removeAt(ui.recentAppIds.lastIndex)
         }
 
-        override fun goHome() { ui.screen = CarScreen.Dashboard }
+        override fun goHome() { ui.engineHomeAsked = true; ui.screen = CarScreen.Dashboard } // MyPlay (O3): the plain home
         override fun openLauncher() { ui.launcherKinds = null; ui.screen = CarScreen.Launcher }
         override fun openMusicApps() { ui.launcherKinds = setOf(CarAppKind.MEDIA); ui.screen = CarScreen.Launcher }
         override fun assistant() { this@CarRuntime.assistant() }
@@ -774,15 +774,25 @@ class CarRuntime(
 
     private val backEscape = BackEscape()
 
+    /** MyPlay (O3): Back three times quickly leaves any full-screen app, whatever the app does with Back. */
+    private val quickBacks = net.prototux.aare.car.QuickBacks()
+
     /** MyPlay: Back held on the car: close the assistant's bar if it is open, and show the home screen. */
     fun assistantClosedThenHome() {
         ui.assistantAppId = null
+        ui.engineHomeAsked = true // MyPlay (O3): the plain home, not back where the app was opened
         ui.screen = CarScreen.Dashboard
     }
 
     /** Back key from the car. */
     fun back() {
         if (ui.assistantAppId != null) { ui.assistantAppId = null; return }
+        if (ui.screen is CarScreen.App && quickBacks.press(android.os.SystemClock.uptimeMillis())) {
+            DiagLog.add("Back three times quickly: leaving ${(ui.screen as? CarScreen.App)?.let { ui.app(it.appId)?.label ?: it.appId }}")
+            ui.engineHomeAsked = true
+            ui.screen = CarScreen.Dashboard
+            return
+        }
         if (screenBack?.invoke() == true) return
         when (val s = ui.screen) {
             is CarScreen.App -> {

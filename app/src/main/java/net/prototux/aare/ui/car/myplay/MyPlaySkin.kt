@@ -231,6 +231,13 @@ interface MyPlaySkin {
      */
     @Composable fun AppRail(home: () -> Unit, modifier: Modifier) = DefaultAppRail(home, modifier)
 
+    /**
+     * O3: whether an app has the rail beside it. Without it ([false], ORBIT) the app takes the
+     * whole screen, grows out of the stop it was opened from, and Back shrinks it back there
+     * ([EngineMemory]); the way home is Back, the car's Home (Menu) and holding Back.
+     */
+    val appRail: Boolean get() = true
+
     /** The hub: always there (the knob's way into the worlds), with the trip when there is a route. */
     @Composable fun Hub(trip: TripSlot?, modifier: Modifier)
     @Composable fun Song(song: SongSlot, modifier: Modifier)

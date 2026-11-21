@@ -85,36 +85,33 @@ class MyPlayAppFrameTest {
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun anAppIsInMyPlaysFrameWithTheWayHome() {
-        for (language in listOf("orbit", "deck")) {
-            asked.clear()
-            show(language)
-            rule.onNodeWithTag(FRAME_TAG).assertExists()
-            rule.onNodeWithTag("app_music").assertExists()
-            rule.onNodeWithTag(FRAME_RAIL_TAG).assertExists()
-            // The rail is on the driver's side (left here), the app takes the rest.
-            val rail = rule.onNodeWithTag(FRAME_RAIL_TAG).fetchSemanticsNode().boundsInRoot
-            val app = rule.onNodeWithTag("app_music").fetchSemanticsNode().boundsInRoot
-            assertTrue("rail ${rail.left}..${rail.right}, app ${app.left}", rail.left == 0f && app.left >= rail.right)
-            rule.onNodeWithTag(FRAME_HOME_TAG).performClick()
-            assertEquals(listOf("home"), asked)
-            // Home is MyPlay's own home again.
-            rule.onNodeWithTag(ENGINE_TAG).assertExists()
-            rule.onNodeWithTag(FRAME_TAG).assertDoesNotExist()
-            if (language == "orbit") break // one setContent per test: DECK below
-        }
+        // O3: ORBIT has no rail: the app takes the whole screen; Home (here the car's) is MyPlay's home.
+        show("orbit")
+        rule.onNodeWithTag(FRAME_TAG).assertExists()
+        rule.onNodeWithTag(FRAME_RAIL_TAG).assertDoesNotExist()
+        val app = rule.onNodeWithTag("app_music").fetchSemanticsNode().boundsInRoot
+        assertTrue("the app takes the whole width: $app", app.left == 0f && app.right == 1280f)
+        rule.runOnIdle { actions.goHome() }
+        rule.waitForIdle()
+        rule.onNodeWithTag(ENGINE_TAG).assertExists()
+        rule.onNodeWithTag(FRAME_TAG).assertDoesNotExist()
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun deckToo() {
         show("deck")
         rule.onNodeWithTag(FRAME_TAG).assertExists()
+        // DECK (frozen) keeps the rail on the driver's side (left here), the app takes the rest.
+        val rail = rule.onNodeWithTag(FRAME_RAIL_TAG).fetchSemanticsNode().boundsInRoot
+        val app = rule.onNodeWithTag("app_music").fetchSemanticsNode().boundsInRoot
+        assertTrue("rail ${rail.left}..${rail.right}, app ${app.left}", rail.left == 0f && app.left >= rail.right)
         rule.onNodeWithTag(FRAME_HOME_TAG).performClick()
         assertEquals(listOf("home"), asked)
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theRailFollowsTheDriversSide() {
-        show(railRight = true)
+        show("deck", railRight = true)
         val rail = rule.onNodeWithTag(FRAME_RAIL_TAG).fetchSemanticsNode().boundsInRoot
         val app = rule.onNodeWithTag("app_music").fetchSemanticsNode().boundsInRoot
         assertTrue(rail.left >= app.right)
@@ -122,7 +119,7 @@ class MyPlayAppFrameTest {
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theAppGridIsFramedToo() {
-        show(screen = CarScreen.Launcher)
+        show("deck", screen = CarScreen.Launcher)
         rule.onNodeWithTag(FRAME_TAG).assertExists()
         rule.onNodeWithTag(FRAME_HOME_TAG).assertExists()
     }
@@ -334,7 +331,7 @@ class MyPlayAppFrameTest {
     /** The owner: a browser video in fullscreen takes the whole screen (no rail); after it, the rail again. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun anAppsFullscreenHidesTheRail() {
-        val s = show()
+        val s = show("deck")
         rule.onNodeWithTag(FRAME_RAIL_TAG).assertExists()
         rule.runOnIdle { s.appFullscreen = true }
         rule.waitForIdle()
