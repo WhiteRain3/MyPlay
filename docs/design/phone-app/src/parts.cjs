@@ -43,26 +43,27 @@ function ring(size, o = {}) {
 }
 
 // ---------- Rows ----------
-function sw(on) { return `<div class="sw${on ? ' on' : ''}"></div>`; }
+function sw(on, dis) { return `<div class="sw${on ? ' on' : ''}${dis ? ' dis' : ''}"></div>`; }
 function row(o) {
   const ic = o.ic ? `<div class="ic ${o.icCls ?? ''}">${o.icHtml ?? I(o.ic, 20)}</div>` : (o.lead ?? '');
-  const help = (o.help ? `<div class="h">${H(o.help)}</div>` : '') + (o.under ? `<div style="margin-top:5px">${o.under}</div>` : '');
+  const help = (o.help ? `<div class="h">${H(o.help)}</div>` : '') + (o.warn ? `<div class="wline">${I('triangle-alert', 14, 2.2)}${H(o.warn)}</div>` : '') + (o.under ? `<div style="margin-top:5px">${o.under}</div>` : '');
+  const info = o.info ? `<span style="color:var(--text3);display:inline-flex">${I('info', 16)}</span>` : '';
   const tag = o.tag ? ` ${o.tag}` : '';
   let right = '';
-  if (o.value !== undefined) right += `<div class="val">${o.changed ? '<i class="changed"></i>' : ''}${o.value}</div>`;
+  if (o.value !== undefined) right += `<div class="val${o.changed ? ' ch' : ''}">${o.changed ? '<i class="changed" title="Changed"></i>' : ''}${o.value}</div>`;
   else if (o.changed) right += '<i class="changed"></i>';
   if (o.right) right += o.right;
-  if (o.sw !== undefined) right += sw(o.sw);
+  if (o.sw !== undefined) right += sw(o.sw, o.off);
   if (o.ext) right += `<span class="chev">${I('external-link', 18)}</span>`;
   else if (o.chev !== false && o.sw === undefined && !o.right && !o.nochev) right += `<span class="chev">${I('chevron-right', 20)}</span>`;
-  const cls = ['row', o.ic || o.lead ? '' : 'noicon', o.help || o.under ? 'tall' : '', o.dim ? 'dim' : '', o.cls ?? ''].join(' ');
-  return `<div class="${cls}" ${o.style ? `style="${o.style}"` : ''}>${ic}<div class="lbl"><div class="l">${L(o.label)}${tag}</div>${help}</div>${right}</div>`;
+  const cls = ['row', o.ic || o.lead ? '' : 'noicon', o.help || o.under || o.warn ? 'tall' : '', o.off ? 'off' : '', o.cls ?? ''].join(' ');
+  return `<div class="${cls}" ${o.style ? `style="${o.style}"` : ''}>${ic}<div class="lbl"><div class="l">${L(o.label)}${info}${tag}</div>${help}</div>${right}</div>`;
 }
 const card = (inner, cls = '', style = '') => `<div class="card ${cls}" ${style ? `style="${style}"` : ''}>${inner}</div>`;
 const sec = (t, extra = '', first = false) => `<div class="sec${first ? ' first' : ''}" style="display:flex;align-items:center;gap:8px">${L(t)}${extra}</div>`;
 const note = (t, icon) => `<div class="note">${icon ? I(icon, 16) : ''}<span>${H(t)}</span></div>`;
 const tag = (t, cls = '') => `<span class="tag ${cls}">${t}</span>`;
-const NEXT = tag('Next connection');
+const NEXT = `<span class="tag next">${I('refresh-cw', 12, 2.4)}Next connection</span>`;
 const ALSO = tag('Also on the car', 'mute');
 const btn = (t, cls = 'primary', icon) => `<div class="btn ${cls}">${icon ? I(icon, 20) : ''}${L(t)}</div>`;
 const seg = (opts, on) => `<div class="seg">${opts.map((x, i) => `<div class="${i === on ? 'on' : ''}">${L(x)}</div>`).join('')}</div>`;
@@ -85,12 +86,13 @@ const TABS = [
 ];
 function tabBar(active, o = {}) {
   const icon = (k) => ({
-    home: carGlyph(24, o.connected), screen: I('monitor', 22), car: I('circle-gauge', 22), apps: I('layout-grid', 22), more: I('ellipsis', 22),
+    home: I('house', 22), screen: I('monitor', 22), car: I('car', 22), apps: I('layout-grid', 22), more: I('ellipsis', 22),
   })[k];
   return `<nav class="tabbar">${TABS.map(([k, n]) => `<div class="tb ${k}-tab${k === active ? ' on' : ''}"><div class="ring">${icon(k)}${k === 'more' && o.badgeMore ? '<i class="badge"></i>' : ''}</div><span>${n}</span></div>`).join('')}</nav>`;
 }
+const TAB_ICON = { Home: 'house', Screen: 'monitor', Car: 'car', Apps: 'layout-grid', More: 'ellipsis' };
 function topRoot(title, right = '') {
-  return `<div class="top"><h1>${L(title)}</h1>${right}<div class="iconbtn">${I('search', 22)}</div></div>`;
+  return `<div class="top"><div class="tglyph">${I(TAB_ICON[title], 18, 2.2)}</div><h1 style="margin-left:6px">${L(title)}</h1>${right}<div class="iconbtn" aria-label="Search">${I('search', 22)}</div></div>`;
 }
 function topSub(title, right) {
   return `<div class="top sub"><div class="iconbtn">${I('arrow-left', 22)}</div><h1>${L(title)}</h1>${right ?? `<div class="iconbtn">${I('search', 22)}</div>`}</div>`;
@@ -176,6 +178,28 @@ function carPic(w, o = {}) {
 </svg>`;
 }
 
+/** An app screen inside ORBIT (now playing), drawn in a car theme: what Colours actually changes. */
+function appPic(w, t = {}) {
+  const h = Math.round((w * 720) / 1280);
+  const bg = t.bg ?? '#101418', sf = t.surface ?? '#1C2228', ac = t.accent ?? '#8AB4F8', tx = t.text ?? '#E8EAED', t2 = t.text2 ?? '#9AA0A6', on = t.onAccent ?? '#0A1015';
+  const rows = [0, 1, 2].map((i) => `<rect x="780" y="${150 + i * 130}" width="440" height="110" rx="24" fill="${sf}"/><rect x="800" y="${170 + i * 130}" width="70" height="70" rx="14" fill="${['#8F5BFF', '#4CC9F0', '#FF8A4C'][i]}"/>
+    <rect x="890" y="${182 + i * 130}" width="${220 - i * 30}" height="18" rx="9" fill="${tx}" opacity=".85"/><rect x="890" y="${212 + i * 130}" width="${150 - i * 20}" height="14" rx="7" fill="${t2}"/>`).join('');
+  return `<svg class="pic" width="${w}" height="${h}" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="${bg}"/>
+  <text x="60" y="90" font-size="40" font-weight="650" fill="${tx}">Now playing</text>
+  <rect x="60" y="140" width="300" height="300" rx="36" fill="url(#appart)"/>
+  <defs><linearGradient id="appart" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4CC9F0"/><stop offset=".55" stop-color="#8F5BFF"/><stop offset="1" stop-color="#FF5A8A"/></linearGradient></defs>
+  <rect x="400" y="170" width="300" height="34" rx="17" fill="${tx}"/><rect x="400" y="226" width="200" height="24" rx="12" fill="${t2}"/>
+  <rect x="400" y="320" width="320" height="10" rx="5" fill="${sf}"/><rect x="400" y="320" width="130" height="10" rx="5" fill="${ac}"/><circle cx="530" cy="325" r="16" fill="${ac}"/>
+  <circle cx="440" cy="400" r="40" fill="${sf}"/><path d="M430 382 v36 M454 382 l-20 18 20 18z" stroke="${tx}" fill="${tx}" stroke-width="6" stroke-linejoin="round"/>
+  <circle cx="560" cy="400" r="52" fill="${ac}"/><path d="M548 378 l30 22 -30 22z" fill="${on}" stroke="${on}" stroke-width="6" stroke-linejoin="round"/>
+  <circle cx="680" cy="400" r="40" fill="${sf}"/><path d="M690 382 v36 M666 382 l20 18 -20 18z" stroke="${tx}" fill="${tx}" stroke-width="6" stroke-linejoin="round"/>
+  <text x="780" y="110" font-size="30" font-weight="600" fill="${t2}">Up next</text>${rows}
+  <rect x="60" y="520" width="660" height="140" rx="28" fill="${sf}"/><rect x="100" y="565" width="260" height="22" rx="11" fill="${tx}" opacity=".85"/><rect x="100" y="605" width="180" height="16" rx="8" fill="${t2}"/>
+  <rect x="560" y="560" width="120" height="60" rx="30" fill="${ac}"/>
+  </svg>`;
+}
+
 /** DECK, the archived design: a rail and tiles (simple drawing). */
 function deckPic(w) {
   const h = Math.round((w * 720) / 1280);
@@ -190,4 +214,4 @@ function deckPic(w) {
   </svg>`;
 }
 
-module.exports = { I, L, H, carGlyph, mark, ring, sw, row, card, sec, note, tag, NEXT, ALSO, btn, seg, slider, appdot, statusBar, tabBar, topRoot, topSub, phone, doc, carPic, deckPic, CSS };
+module.exports = { appPic, I, L, H, carGlyph, mark, ring, sw, row, card, sec, note, tag, NEXT, ALSO, btn, seg, slider, appdot, statusBar, tabBar, topRoot, topSub, phone, doc, carPic, deckPic, CSS };

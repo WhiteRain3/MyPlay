@@ -14,11 +14,15 @@ const BG = '#0A1015', SURF = '#121A21', SURF2 = '#1A242D', ON = '#0A1015';
 const surfaces = [['bg', BG, 'Page'], ['surface', SURF, 'Cards'], ['surface2', SURF2, 'Discs, segmented'], ['sheet', '#151E26', 'Bottom sheet'], ['track', '#2A3540', 'Off track, dividers']];
 const texts = [['text', '#EEF1F7', 'Labels, titles'], ['text2', '#AAB3C8', 'Values, section heads'], ['text3', '#8A95A8', 'Help lines, chevrons']];
 const accents = [['Home', '#6EE7A8', 'ORBIT Navigate'], ['Screen', '#A78BFA', 'ORBIT Music'], ['Car', '#FFC24A', 'ORBIT Car'], ['Apps', '#FF8FB1', 'ORBIT Apps'], ['More', '#9DB4E8', 'ORBIT Settings']];
-const signals = [['ok', '#6EE7A8', 'Connected, done'], ['caution', '#FFC857', 'Badge, "Next connection"'], ['warn', '#FF7A7A', 'Errors, risky']];
+const signals = [['ok', '#6EE7A8', 'Connected, done'], ['caution', '#FF9A57', 'Needs attention: badge, card dot'], ['warn', '#FF7A7A', 'Errors, risky switches']];
+const INT = '#DCE3EF';
+// Non-text parts that show state (WCAG 1.4.11): >= 3:1 against every surface they sit on.
+const nontext = [['Switch outline (off)', '#8A95A8'], ['Slider rail', '#67748A'], ['Dashed ring (not connected)', '#7A8698'], ['Focus ring', INT], ['Changed mark', '#AAB3C8']];
 
 // Fail the build if any text colour drops under 4.5:1 where it is used.
 for (const [, c] of texts) for (const s of [BG, SURF, SURF2]) if (cr(c, s) < 4.5) throw new Error(`contrast ${c} on ${s} = ${cr(c, s)}`);
-for (const [, c] of [...accents, ...signals]) { if (cr(c, BG) < 4.5 || cr(c, SURF) < 4.5) throw new Error('accent contrast ' + c); if (cr(ON, c) < 4.5) throw new Error('on-accent ' + c); }
+for (const [, c] of [...accents, ...signals, ['', INT]]) { if (cr(c, BG) < 4.5 || cr(c, SURF) < 4.5) throw new Error('accent contrast ' + c); if (cr(ON, c) < 4.5) throw new Error('on-accent ' + c); }
+for (const [n, c] of nontext) for (const s of [BG, SURF, SURF2]) if (cr(c, s) < 3) throw new Error(`non-text contrast ${n} ${c} on ${s} = ${cr(c, s)}`);
 
 const sw = (c, name, use, extra) => `<div class="swatch"><div class="chip" style="background:${c}"></div><div><b>${name}</b> <code>${c}</code><div class="use">${use}</div>${extra ?? ''}</div></div>`;
 
@@ -27,12 +31,14 @@ module.exports = function styleSheet() {
     <div><h3>Surfaces</h3>${surfaces.map(([n, c, u]) => sw(c, n, u)).join('')}<div class="use" style="margin-top:8px">Edges: white 7 % (cards), 14 % (sheet, ghost button)</div></div>
     <div><h3>Text</h3>${texts.map(([n, c, u]) => sw(c, n, u, `<div class="cr">${f(cr(c, BG))} on bg · ${f(cr(c, SURF))} on surface · ${f(cr(c, SURF2))} on surface2</div>`)).join('')}
       <h3 style="margin-top:22px">Signals</h3>${signals.map(([n, c, u]) => sw(c, n, u, `<div class="cr">${f(cr(c, BG))} on bg · ${f(cr(c, SURF))} on surface</div>`)).join('')}</div>
-    <div><h3>Accent per tab (ORBIT's world colours)</h3>${accents.map(([n, c, u]) => sw(c, n, u, `<div class="cr">${f(cr(c, SURF))} on surface · text on fill ${f(cr(ON, c))}</div>`)).join('')}
-      <div class="use" style="margin-top:8px">One accent per tab, like ORBIT tints the rings of the world you are in. Accent = selection, primary action, switches, rings. Never body text.</div></div></div>`;
+    <div><h3>Interaction (one colour, every tab)</h3>${sw(INT, 'int', 'Switches, sliders, primary buttons, selection, focus', `<div class="cr">${f(cr(INT, SURF))} on surface · text on fill ${f(cr(ON, INT))}</div>`)}
+      <h3 style="margin-top:22px">World colour per tab: identity only</h3>${accents.map(([n, c, u]) => sw(c, n, u, `<div class="cr">${f(cr(c, SURF))} on surface</div>`)).join('')}
+      <div class="use" style="margin-top:8px">Only the selected tab's ring, the root title glyph and the hero ring use it, as ORBIT tints the world you are in. Never a control, never text.</div>
+      <h3 style="margin-top:22px">Non-text contrast (≥ 3:1, checked)</h3>${nontext.map(([n, c]) => `<div class="cr" style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><i style="width:28px;height:4px;border-radius:2px;background:${c}"></i>${n} · ${f(cr(c, BG))} bg · ${f(cr(c, SURF))} surface · ${f(cr(c, SURF2))} surface2</div>`).join('')}</div></div>`;
 
   const types = [['Root title', 30, 650, -0.6, 'Screen'], ['Hero', 24, 650, -0.4, 'Connected'], ['Page title / sheet', 22, 620, -0.3, 'Pad shortcuts'], ['Button', 16, 620, -0.1, 'Install 2.4'], ['Label', 16, 520, 0, 'Follow the car’s lights'], ['Value', 14, 400, 0, 'Last used'], ['Help', 13, 400, 0, 'Once a day, from GitHub'], ['Section', 13, 600, 0.2, 'Knob push'], ['Tab label', 12, 520, 0, 'Apps'], ['Tag', 11.5, 600, 0.1, 'Next connection']];
   const typeHtml = `<table class="type">${types.map(([n, s, w, ls, ex]) => `<tr><td class="use">${n}<br><code>${s} / ${w}${ls ? ' / ' + ls : ''}</code></td><td style="font-size:${s}px;font-weight:${w};letter-spacing:${ls}px">${ex}</td></tr>`).join('')}</table>
-    <div class="use" style="margin-top:12px">Inter (OFL). Sentence case. Labels ≤ 30 characters, help ≤ 60 (checked by the build). Text scales to 200 %; rows grow, never clip.</div>`;
+    <div class="use" style="margin-top:12px">Roboto Flex (OFL), the platform's own font, so the phone matches these pictures. Sentence case. Labels ≤ 30 characters, help ≤ 60 (checked by the build). Text scales to 200 %; rows grow, never clip.</div>`;
 
   const spaceHtml = `<div style="display:flex;gap:18px;align-items:flex-end;margin-bottom:18px">${[4, 8, 12, 16, 20, 24, 32, 48].map((n) => `<div style="text-align:center"><div style="width:${n}px;height:${n}px;background:var(--acc);border-radius:3px;margin:0 auto"></div><code>${n}</code></div>`).join('')}</div>
     <ul class="notes">

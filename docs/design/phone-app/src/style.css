@@ -1,5 +1,10 @@
 /* MyPlay phone app: design tokens and components (dark only).
-   A sibling of ORBIT: rounds, rings, calm glass, one accent per tab (ORBIT's world colours). */
+   A sibling of ORBIT: rounds, rings, calm glass. World colours mark identity; one neutral colour marks interaction. */
+
+@font-face {
+  font-family: "Roboto Flex"; font-weight: 100 1000; font-style: normal;
+  src: url("../src/fonts/RobotoFlex-wght.woff2") format("woff2");
+}
 
 :root {
   /* Surfaces */
@@ -9,17 +14,20 @@
   --sheet: #151E26;       /* bottom sheet */
   --edge: rgba(255, 255, 255, 0.07);
   --edge2: rgba(255, 255, 255, 0.14);
-  --track: #2A3540;
+  --track: #2A3540;       /* fills only; never the only edge of a control */
+  --outline: #8A95A8;     /* off switch, slider rail: >= 3:1 on every surface */
+  --int: #DCE3EF;         /* the one interaction colour: switches, sliders, primary buttons, selection */
   /* Text */
   --text: #EEF1F7;        /* 16.6:1 on bg */
   --text2: #AAB3C8;       /* 8.9:1 on bg */
   --text3: #8A95A8;       /* 5.9:1 on bg, 5.5:1 on surface */
   /* Signals */
   --warn: #FF7A7A;
-  --caution: #FFC857;
+  --caution: #FF9A57;     /* attention only: a hue no tab uses */
   --ok: #6EE7A8;
   --on: #0A1015;          /* text on any accent fill */
-  /* Accent per tab: ORBIT's night world colours */
+  /* World colour per tab (ORBIT's night world colours): identity only.
+     Selected tab ring, the root title glyph, the hero ring. Never a control. */
   --a-home: #6EE7A8;      /* Navigate */
   --a-screen: #A78BFA;    /* Music */
   --a-car: #FFC24A;       /* Car */
@@ -42,10 +50,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { background: var(--bg); }
 body {
-  font-family: Inter, system-ui, sans-serif;
+  font-family: "Roboto Flex", system-ui, sans-serif;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "cv11", "ss03";
 }
 svg.i { display: block; flex: none; }
 
@@ -88,16 +95,18 @@ svg.i { display: block; flex: none; }
 /* ---------- Card and row ---------- */
 .card { background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-card); overflow: hidden; }
 .card.glass { background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(12px); }
-.card.acc { border-color: var(--acc-line); background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 9%, var(--surface)), var(--surface)); }
+.card.acc { border-color: rgba(220,227,239,.28); background: linear-gradient(180deg, #18212A, var(--surface)); }
+.card.warn { border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
 .row { min-height: 64px; padding: 10px 16px; display: flex; align-items: center; gap: 14px; position: relative; }
 .row + .row::before { content: ""; position: absolute; top: 0; left: 70px; right: 0; height: 1px; background: var(--edge); }
 .row.noicon + .row.noicon::before, .row.noicon + .row::before { left: 16px; }
 .row.tall { min-height: 72px; }
-.row.dim { opacity: 0.42; }
+.row.off .lbl .l { color: var(--text2); }
 .ic {
   width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none;
-  background: var(--acc-soft); color: var(--acc);
+  background: var(--surface2); color: var(--text2);
 }
+.ic.world { background: var(--acc-soft); color: var(--acc); }
 .ic.plain { background: var(--surface2); color: var(--text2); }
 .ic.warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
 .ic.app { color: var(--on); font-weight: 700; font-size: 15px; }
@@ -106,8 +115,9 @@ svg.i { display: block; flex: none; }
 .lbl .h { font-size: 13px; color: var(--text3); line-height: 18px; margin-top: 2px; }
 .val { font-size: 14px; color: var(--text2); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .chev { color: var(--text3); }
-.changed { width: 6px; height: 6px; border-radius: 50%; background: var(--acc); display: inline-block; flex: none; }
-.link { color: var(--acc); }
+.changed { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--text2); display: inline-block; flex: none; }
+.val.ch { color: var(--text); font-weight: 560; }
+.link { color: var(--int); }
 
 /* Tags */
 .tag {
@@ -117,22 +127,25 @@ svg.i { display: block; flex: none; }
 }
 .tag.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
 .tag.mute { background: var(--surface2); color: var(--text2); }
-.tag.acc { background: var(--acc-soft); color: var(--acc); }
+.tag.acc { background: color-mix(in srgb, var(--int) 14%, transparent); color: var(--int); }
+.tag.next { background: var(--surface2); color: var(--text2); gap: 4px; padding-left: 6px; }
 .tag.warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
 
 /* ---------- Controls ---------- */
-.sw { width: 52px; height: 32px; border-radius: 16px; position: relative; flex: none; background: var(--track); border: 2px solid #4A5666; }
-.sw::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--text3); top: 6px; left: 6px; }
-.sw.on { background: var(--acc); border-color: var(--acc); }
+.sw { width: 52px; height: 32px; border-radius: 16px; position: relative; flex: none; background: var(--surface2); border: 2px solid var(--outline); }
+.sw::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--text2); top: 6px; left: 6px; }
+.sw.on { background: var(--int); border-color: var(--int); }
+.sw.dis { border: 2px dashed #5A6676; background: transparent; }
+.sw.dis::after { background: #5A6676; }
 .sw.on::after { width: 24px; height: 24px; top: 2px; left: 22px; background: var(--on); }
 
 .btn {
   height: 52px; border-radius: var(--r-pill); padding: 0 24px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   font-size: 16px; font-weight: 620; letter-spacing: -0.1px; white-space: nowrap;
 }
-.btn.primary { background: var(--acc); color: var(--on); }
+.btn.primary { background: var(--int); color: var(--on); }
 .btn.ghost { border: 1.5px solid var(--edge2); color: var(--text); }
-.btn.text { color: var(--acc); padding: 0 12px; }
+.btn.text { color: var(--int); padding: 0 12px; }
 .btn.small { height: 40px; padding: 0 16px; font-size: 14px; }
 .btn.wide { width: 100%; }
 .btn.danger { color: var(--warn); }
@@ -142,23 +155,23 @@ svg.i { display: block; flex: none; }
 
 .seg { display: flex; background: var(--surface2); border-radius: var(--r-pill); padding: 4px; height: 48px; }
 .seg > div { flex: 1; border-radius: var(--r-pill); display: grid; place-items: center; font-size: 14px; font-weight: 560; color: var(--text2); }
-.seg > div.on { background: var(--acc); color: var(--on); font-weight: 650; }
+.seg > div.on { background: var(--int); color: var(--on); font-weight: 650; }
 
 .slider { padding: 6px 16px 14px; }
 .slider .head { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0 14px; }
 .slider .head .l { font-size: 16px; font-weight: 520; display: flex; gap: 8px; align-items: center; }
-.slider .head .v { font-size: 14px; color: var(--acc); font-weight: 600; }
-.slider .track { position: relative; height: 4px; border-radius: 2px; background: var(--track); margin: 0 12px; }
-.slider .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--acc); }
-.slider .thumb { position: absolute; top: -12px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; border: 3px solid var(--acc); background: var(--bg); box-shadow: 0 0 0 6px var(--acc-soft); }
+.slider .head .v { font-size: 14px; color: var(--text); font-weight: 600; }
+.slider .track { position: relative; height: 4px; border-radius: 2px; background: #67748A; margin: 0 12px; }
+.slider .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--int); }
+.slider .thumb { position: absolute; top: -12px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; border: 3px solid var(--int); background: var(--bg); box-shadow: 0 0 0 6px rgba(220,227,239,.12); }
 .slider .ticks { position: absolute; left: 0; right: 0; top: -1px; display: flex; justify-content: space-between; }
-.slider .ticks i { width: 6px; height: 6px; border-radius: 50%; background: #3A4652; margin-top: 0; }
+.slider .ticks i { width: 6px; height: 6px; border-radius: 50%; background: #8A95A8; margin-top: -1px; }
 .slider .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--text3); padding: 14px 0 0; }
 
 /* Discs (swatches, choices) */
 .discs { display: flex; gap: 14px; padding: 8px 16px 16px; flex-wrap: wrap; }
 .disc { width: 48px; height: 48px; border-radius: 50%; position: relative; flex: none; }
-.disc.sel { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--text); }
+.disc.sel { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--int); }
 .disc-l { font-size: 12px; color: var(--text2); text-align: center; margin-top: 8px; }
 
 /* ---------- Tab bar ---------- */
@@ -207,3 +220,16 @@ svg.i { display: block; flex: none; }
 
 /* Lists of apps */
 .appdot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--on); flex: none; }
+
+/* Warning line for risky switches (plan rule 6) */
+.wline { display: flex; gap: 6px; align-items: center; color: var(--warn); font-size: 13px; margin-top: 3px; line-height: 18px; }
+/* Root title glyph: the tab's world colour in a ring */
+.tglyph { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--acc); color: var(--acc); display: grid; place-items: center; flex: none; background: var(--acc-soft); }
+/* Focus ring (keyboard / D-pad) */
+.focus { outline: 2px solid var(--int); outline-offset: 3px; }
+/* Dialog */
+.dialog { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-50%); background: var(--sheet); border: 1px solid var(--edge2); border-radius: 28px; padding: 24px; }
+.dialog h2 { font-size: 21px; font-weight: 640; letter-spacing: -0.3px; }
+.dialog .sub { font-size: 14px; color: var(--text2); margin-top: 8px; line-height: 20px; }
+.field { height: 56px; border-radius: 14px; border: 1.5px solid var(--outline); display: flex; align-items: center; padding: 0 16px; font-size: 16px; color: var(--text); margin-top: 16px; }
+.field.focus { border-color: var(--int); outline: none; }
