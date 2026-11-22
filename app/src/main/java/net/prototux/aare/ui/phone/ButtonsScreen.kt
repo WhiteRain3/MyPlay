@@ -53,6 +53,7 @@ import net.prototux.aare.Settings
 import net.prototux.aare.car.myplayGestureLine
 import net.prototux.aare.ui.car.myplay.HomePad
 import net.prototux.aare.ui.car.myplay.myplayHomePad
+import net.prototux.aare.ui.car.myplay.myplayInfoHome
 import net.prototux.aare.car.ButtonAction
 import net.prototux.aare.car.ButtonTable
 import net.prototux.aare.car.ButtonTable.Control
@@ -160,6 +161,7 @@ fun ButtonsScreen() {
     var doubleMs by remember { mutableFloatStateOf(settings.myplayGestureDoubleMs.toFloat()) }
     var line by remember { mutableStateOf(settings.myplayGestureLine) }
     var homePad by remember { mutableStateOf(settings.myplayHomePad) }
+    var infoHome by remember { mutableStateOf(settings.myplayInfoHome) }
     var part by rememberSaveable { mutableStateOf("knob_push") }
     var open by rememberSaveable { mutableStateOf<String?>(null) }
     val selected: Part = Control.byId(part)?.let { Part.Of(it) } ?: Part.Pad
@@ -233,7 +235,7 @@ fun ButtonsScreen() {
         }
         HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_codes_unknown))
         Spacer(Modifier.height(8.dp))
-        HomePadSection(homePad) { homePad = it; settings.myplayHomePad = it }
+        HomePadSection(homePad, { homePad = it; settings.myplayHomePad = it }, infoHome) { infoHome = it; settings.myplayInfoHome = it }
         TeachButtonSection(settings)
         Spacer(Modifier.height(8.dp))
         RowGroup(rows = listOf {
@@ -246,6 +248,7 @@ fun ButtonsScreen() {
             holdMs = GestureEngine.HOLD_MS.toFloat(); settings.myplayGestureHoldMs = GestureEngine.HOLD_MS
             doubleMs = GestureEngine.DOUBLE_MS.toFloat(); settings.myplayGestureDoubleMs = GestureEngine.DOUBLE_MS
             homePad = HomePad.DEFAULT; settings.myplayHomePad = HomePad.DEFAULT
+            infoHome = false; settings.myplayInfoHome = false
             open = null
         }
     }

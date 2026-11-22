@@ -39,7 +39,10 @@ fun withHomePad(mapping: Map<HomePadKey, HomePadAction>, key: HomePadKey, action
  * (myplay_home_pad, the car side's setting, applied live).
  */
 @Composable
-fun HomePadSection(mapping: Map<HomePadKey, HomePadAction>, onChange: (Map<HomePadKey, HomePadAction>) -> Unit) {
+fun HomePadSection(
+    mapping: Map<HomePadKey, HomePadAction>, onChange: (Map<HomePadKey, HomePadAction>) -> Unit,
+    infoHome: Boolean = false, onInfoHome: (Boolean) -> Unit = {},
+) {
     SectionHeading(stringResource(R.string.phone_home_pad_title))
     PartCard(padding = 16.dp) {
         Column {
@@ -54,4 +57,9 @@ fun HomePadSection(mapping: Map<HomePadKey, HomePadAction>, onChange: (Map<HomeP
         }
     }
     HintLine(Icons.Rounded.Info, stringResource(R.string.phone_home_pad_hint))
+    // O6: with the shortcuts on, the home can drop the knob's ring altogether.
+    RowGroup(rows = listOf {
+        SwitchRow(Icons.Rounded.Info, stringResource(R.string.myplay_setting_info_home), infoHome, TileTone.VIOLET,
+            stringResource(R.string.phone_info_home_hint), onInfoHome)
+    })
 }

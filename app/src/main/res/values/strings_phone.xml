@@ -428,4 +428,5 @@
     <string name="phone_teach_learned" translatable="false">Buttons taught</string>
     <string name="phone_teach_forget" translatable="false">Forget %1$s</string>
     <string name="phone_teach_seconds" translatable="false">Waiting %1$d more seconds.</string>
+    <string name="phone_info_home_hint" translatable="false">With the pad shortcuts on, the home never shows the knob\'s ring: the pad and the taught buttons do everything.</string>
 </resources>
