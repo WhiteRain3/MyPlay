@@ -37,3 +37,28 @@ fun mapColoursKind(filter: MapColourFilter): String {
 
 /** The fixed densities the Size page offers (dpi); 0 is Auto. Same list as today's. */
 val FIXED_DENSITIES: List<Int> = net.prototux.aare.ui.phone.DENSITY_CHOICES.filter { it != 0 }
+
+/** What applying a look changes, in the owner's words (plan §6.1). */
+enum class LookPart { DESIGN, COLOURS, WALLPAPER, MAP_COLOURS, OLDER_LAYOUTS }
+
+private fun lookPartOf(key: String): LookPart = when (key) {
+    "myplay_engine_language", "myplay_orbit_shade" -> LookPart.DESIGN
+    "style_theme", "style_accent", "myplay_look_colours", "car_style" -> LookPart.COLOURS
+    "wallpaper" -> LookPart.WALLPAPER
+    "myplay_map_filter" -> LookPart.MAP_COLOURS
+    else -> LookPart.OLDER_LAYOUTS
+}
+
+/** The parts of the car screen that [look] would change from the settings now set ([all]), in order. */
+fun lookChanges(all: Map<String, *>, look: Look): List<LookPart> {
+    val now = MyPlayLooks.current(all, "").values
+    val then = MyPlayLooks.current(look.values, "").values
+    return MyPlayLooks.KEYS.filter { now[it] != then[it] }.map(::lookPartOf).distinct().sorted()
+}
+
+/** The design [look] would set ("orbit" or "deck"), and whether that is a switch from [all]'s. */
+fun lookSwitchesDesign(all: Map<String, *>, look: Look): String? {
+    val now = all["myplay_engine_language"] as? String ?: "orbit"
+    val then = look.values["myplay_engine_language"] as? String ?: "orbit"
+    return then.takeIf { it != now }
+}

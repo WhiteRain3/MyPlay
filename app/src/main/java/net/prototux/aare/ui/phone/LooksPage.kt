@@ -89,7 +89,7 @@ fun lookHardToRead(look: Look, ctx: Context): Boolean {
 }
 
 /** Three night colours of [look] as the car would paint them: background, card, accent. */
-private fun lookDots(look: Look, ctx: Context): List<Color> {
+internal fun lookDots(look: Look, ctx: Context): List<Color> {
     val v = look.values
     val scheme = CarThemes.byId(v["style_theme"] as? String ?: "aare").forPhone(ctx)
         .withAccent(v["style_accent"] as? String ?: "theme", ctx)

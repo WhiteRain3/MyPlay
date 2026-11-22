@@ -152,4 +152,8 @@ class NextShellMockups {
     @Test fun screenWallpaper() = paparazzi.snapshot { Page("screen/wallpaper") { NextWallpaperPage() } }
     @Test fun screenMapColours() = paparazzi.snapshot { Page("screen/map-colours") { NextMapColoursPage() } }
     @Test fun screenEditor() = paparazzi.snapshot { Page("screen/wallpaper/edit") { NextPhotoEditorPage() } }
+
+    @Test fun screenLooks() = paparazzi.snapshot { Page("screen/looks") { NextLooksPage() } }
+    @Test fun screenColours() = paparazzi.snapshot { Page("screen/colours") { NextColoursPage() } }
+    @Test fun screenOwnColours() = paparazzi.snapshot { Page("screen/colours/own") { NextOwnColoursPage() } }
 }

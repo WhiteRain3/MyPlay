@@ -202,6 +202,56 @@
     <string name="next_scr_tint_colour_label" translatable="false">Tint colour</string>
     <string name="next_scr_night_label" translatable="false">Darker at night</string>
 
+    <!-- Screen › Colours -->
+    <string name="next_col_theme_label" translatable="false">Theme</string>
+    <string name="next_col_accent_label" translatable="false">Accent</string>
+    <string name="next_col_themes_label" translatable="false">Theme\'s</string>
+    <string name="next_col_phone_label" translatable="false">Use the phone\'s colours</string>
+    <string name="next_col_none_set_label" translatable="false">None set</string>
+    <string name="next_col_night_set_label" translatable="false">Night: %1$d set</string>
+    <string name="next_col_day_set_label" translatable="false">Day: %1$d set</string>
+    <string name="next_col_day_night_label" translatable="false">Day and night</string>
+    <string name="next_col_dark_label" translatable="false">Dark</string>
+    <string name="next_col_cars_label" translatable="false">Car\'s</string>
+    <string name="next_col_light_label" translatable="false">Light</string>
+    <string name="next_col_now_playing_label" translatable="false">Now playing</string>
+    <string name="next_col_up_next_label" translatable="false">Up next</string>
+    <string name="next_col_live_label" translatable="false">App screens · live</string>
+    <string name="next_col_night_label" translatable="false">Night</string>
+    <string name="next_col_day_label" translatable="false">Day</string>
+    <string name="next_col_hard_label" translatable="false">Hard to read</string>
+    <string name="next_col_hard_help" translatable="false">%1$s on %2$s: %3$s to 1, aim for 4.5</string>
+    <string name="next_col_yours_help" translatable="false">Yours · %1$s</string>
+    <string name="next_col_looks_own_help" translatable="false">The look\'s own · %1$s</string>
+    <string name="next_col_back_to_look_label" translatable="false">%1$s: back to the look\'s</string>
+    <string name="next_col_clear_all_label" translatable="false">Clear all my colours</string>
+    <string name="next_col_cleared_label" translatable="false">Your colours cleared</string>
+
+    <!-- Screen › Looks -->
+    <string name="next_looks_unsaved_help" translatable="false">The look now set is changed and not saved</string>
+    <string name="next_looks_built_in_label" translatable="false">Built in</string>
+    <string name="next_looks_yours_label" translatable="false">Yours</string>
+    <string name="next_looks_open_label" translatable="false">Open a look file</string>
+    <string name="next_looks_save_label" translatable="false">Save this look</string>
+    <string name="next_looks_save_button_label" translatable="false">Save</string>
+    <string name="next_looks_rename_label" translatable="false">Rename</string>
+    <string name="next_looks_share_label" translatable="false">Share as a file</string>
+    <string name="next_looks_delete_label" translatable="false">Delete</string>
+    <string name="next_looks_deleted_label" translatable="false">Look deleted</string>
+    <string name="next_looks_add_label" translatable="false">Add this look</string>
+    <string name="next_looks_name_label" translatable="false">Name</string>
+    <string name="next_looks_name_built_in_help" translatable="false">A built-in look has this name</string>
+    <string name="next_looks_name_taken_help" translatable="false">You have a look with this name</string>
+    <string name="next_looks_hard_help" translatable="false">Some of its colours are hard to read</string>
+    <string name="next_looks_menu_label" translatable="false">%1$s: more</string>
+    <string name="next_looks_use_label" translatable="false">Use %1$s?</string>
+    <string name="next_looks_changes_help" translatable="false">This look changes:</string>
+    <string name="next_looks_no_change_help" translatable="false">It is the look now set</string>
+    <string name="next_looks_uses_label" translatable="false">This look uses %1$s</string>
+    <string name="next_looks_switches_help" translatable="false">The car screen switches from %1$s</string>
+    <string name="next_looks_older_label" translatable="false">Older-layout settings</string>
+    <string name="next_looks_use_it_label" translatable="false">Use it</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_switch_on_label" translatable="false">New phone app on</string>

@@ -217,6 +217,8 @@ fun NextRow(
     enabled: Boolean = true,
     onClick: (() -> Unit)? = null,
     role: Role? = null,
+    /** In the icon disc's place, when the row starts with something else (a colour, an app's icon). */
+    lead: (@Composable () -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val tall = note != null
@@ -227,7 +229,7 @@ fun NextRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        if (icon != null) NextIconDisc(icon, disc)
+        if (lead != null) lead() else if (icon != null) NextIconDisc(icon, disc)
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 // Disabled rows stay readable (review finding 8): only the control shows it.
@@ -726,5 +728,57 @@ fun NextChip(text: String, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(text, style = NextType.Value.copy(fontWeight = androidx.compose.ui.text.font.FontWeight(560)),
             color = if (selected) NextColors.On else NextColors.Text2)
+    }
+}
+
+/**
+ * The text dialog (design frame 66): a title, one field, Cancel and a confirm. The draft survives
+ * rotation. [error] says why [confirm] can't be tapped yet (null when it can).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NextTextDialog(
+    title: String,
+    initial: String,
+    label: String,
+    confirm: String,
+    onDismiss: () -> Unit,
+    sub: String? = null,
+    maxLength: Int = 200,
+    password: Boolean = false,
+    error: (String) -> String? = { null },
+    onConfirm: (String) -> Unit,
+) {
+    var text by rememberSaveable { mutableStateOf(initial) }
+    val problem = error(text)
+    BasicAlertDialog(onDismissRequest = onDismiss) {
+        Column(
+            Modifier.clip(RoundedCornerShape(NextSpace.SheetRadius)).background(NextColors.Sheet)
+                .border(1.dp, NextColors.Edge2, RoundedCornerShape(NextSpace.SheetRadius)).padding(24.dp),
+        ) {
+            Text(title, style = NextType.SheetTitle.copy(fontSize = NextType.Hero.fontSize.times(0.875f)), color = NextColors.Text,
+                modifier = Modifier.semantics { heading() })
+            if (sub != null) Text(sub, style = NextType.Value, color = NextColors.Text2, modifier = Modifier.padding(top = 8.dp))
+            Spacer(Modifier.height(16.dp))
+            androidx.compose.material3.OutlinedTextField(
+                text, { text = it.take(maxLength) }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                label = { Text(label) }, isError = problem != null && text.isNotEmpty(),
+                supportingText = if (problem != null && text.isNotEmpty()) ({ Text(problem) }) else null,
+                visualTransformation = if (password) androidx.compose.ui.text.input.PasswordVisualTransformation()
+                    else androidx.compose.ui.text.input.VisualTransformation.None,
+                shape = RoundedCornerShape(14.dp),
+                colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = NextColors.Int, unfocusedBorderColor = NextColors.Outline,
+                    focusedTextColor = NextColors.Text, unfocusedTextColor = NextColors.Text,
+                    focusedLabelColor = NextColors.Int, unfocusedLabelColor = NextColors.Text2, cursorColor = NextColors.Int,
+                    errorBorderColor = NextColors.Warn, errorLabelColor = NextColors.Warn, errorSupportingTextColor = NextColors.Warn,
+                ),
+            )
+            Spacer(Modifier.height(20.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                NextButton(stringResource(android.R.string.cancel), onDismiss, Modifier.weight(1f), ButtonKind.GHOST)
+                NextButton(confirm, { onConfirm(text) }, Modifier.weight(1f), enabled = problem == null && text.isNotBlank())
+            }
+        }
     }
 }
