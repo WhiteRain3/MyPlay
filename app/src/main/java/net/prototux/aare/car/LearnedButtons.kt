@@ -25,7 +25,19 @@ object LearnedButtons {
      * Keys never learned: Back must stay a way out, and the knob's turns and pushes are the ring's
      * (they are in the button table already).
      */
-    val NEVER: Set<Int> = setOf(KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_TAB, KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER)
+    val NEVER: Set<Int> = setOf(
+        KeyEvent.KEYCODE_BACK, KeyEvent.KEYCODE_TAB, KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER,
+        // O11-1: the pad (the ring and the home pad need it) and the call keys (answering and hanging
+        // up must always work) are never taught either.
+        KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
+        KeyEvent.KEYCODE_CALL, KeyEvent.KEYCODE_ENDCALL,
+    )
+
+    /** O11-1: an armed action waits this long for its key, then is forgotten. */
+    const val ARM_MS = 30_000L
+
+    /** Whether an action armed at [armedAtMs] still waits at [nowMs]. */
+    fun stillArmed(armedAtMs: Long, nowMs: Long): Boolean = nowMs - armedAtMs in 0..ARM_MS
 
     /** The binding after learning [code] for [action] (an action of NOTHING forgets the code). */
     fun learn(current: Map<Int, ButtonAction>, code: Int, action: ButtonAction): Map<Int, ButtonAction> =
@@ -42,7 +54,15 @@ var Settings.myplayLearnedButtons: Map<Int, ButtonAction>
  * key is learned). Not backed up: it is a moment's state.
  */
 var Settings.myplayLearnButton: ButtonAction?
+    // O11-1: an arm expires after LearnedButtons.ARM_MS (its time is kept with it).
     get() = prefs.getString("myplay_learn_button", null)?.let(ButtonAction::byId)
-    set(v) = prefs.edit { if (v == null) remove("myplay_learn_button") else putString("myplay_learn_button", v.id) }
+        ?.takeIf { LearnedButtons.stillArmed(myplayLearnButtonAtMs, System.currentTimeMillis()) }
+    set(v) = prefs.edit {
+        if (v == null) { remove("myplay_learn_button"); remove("myplay_learn_button_at") }
+        else { putString("myplay_learn_button", v.id); putLong("myplay_learn_button_at", System.currentTimeMillis()) }
+    }
+
+/** O11-1: when the action was armed (wall clock), for its expiry. Not backed up. */
+val Settings.myplayLearnButtonAtMs: Long get() = prefs.getLong("myplay_learn_button_at", 0L)
 
 internal fun isLearnKey(key: String?) = key == "myplay_learned_buttons" || key == "myplay_learn_button"

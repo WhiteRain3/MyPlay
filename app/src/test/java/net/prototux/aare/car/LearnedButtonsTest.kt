@@ -26,4 +26,16 @@ class LearnedButtonsTest {
             assertTrue(code in LearnedButtons.NEVER)
         }
     }
+
+    /** O11-1: the pad and the call keys are never taught; an arm lasts 30 s. */
+    @Test fun thePadAndTheCallKeysAreNeverTaughtAndTheArmExpires() {
+        for (code in listOf(KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
+                KeyEvent.KEYCODE_CALL, KeyEvent.KEYCODE_ENDCALL, KeyEvent.KEYCODE_NUMPAD_ENTER)) {
+            assertTrue(code in LearnedButtons.NEVER)
+        }
+        assertTrue(LearnedButtons.stillArmed(1_000, 1_000 + 29_000))
+        assertTrue(!LearnedButtons.stillArmed(1_000, 1_000 + 31_000))
+        // A clock that went back does not keep an arm forever.
+        assertTrue(!LearnedButtons.stillArmed(50_000, 1_000))
+    }
 }
