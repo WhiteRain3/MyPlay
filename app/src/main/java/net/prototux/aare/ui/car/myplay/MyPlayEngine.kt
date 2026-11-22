@@ -680,7 +680,9 @@ internal fun MyPlayEngineShell(
             // skin's colour filter while the look sets none.
             CompositionLocalProvider(LocalMapCovers provides covers) {
                 val nav = state.app(state.homeNavAppId)
-                CompositionLocalProvider(LocalMapTapIsKnobStop provides false, LocalSkinMapFilter provides tokens.mapFilter) {
+                // O9: the skin shows the next turn itself, so the maps app's turn card is left out on the home.
+                CompositionLocalProvider(LocalMapTapIsKnobStop provides false, LocalSkinMapFilter provides tokens.mapFilter,
+                    net.prototux.aare.host.templates.LocalOwnTurnShown provides true) {
                     if (nav != null) navMap(nav, Modifier.fillMaxSize()) else Wallpaper(state, Modifier.fillMaxSize())
                 }
                 val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)

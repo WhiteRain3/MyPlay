@@ -75,6 +75,13 @@ import java.util.TimeZone
  * NavigationTemplate: the app's map, the turn card (maneuver, distance, cue, lanes, next step)
  * or a message card top start, the trip estimate bottom start, and the action strips.
  */
+/**
+ * MyPlay (O9): true where MyPlay's own screen already shows the next turn over this map (ORBIT's
+ * and DECK's home): the turn card drawn from the app's routing info is then left out, so the map
+ * is not covered twice. Messages (rerouting, arrived) still show.
+ */
+internal val LocalOwnTurnShown = androidx.compose.runtime.staticCompositionLocalOf { false }
+
 @Composable
 internal fun NavigationTemplateView(t: NavigationTemplate) {
     val compact = LocalCompactMap.current
@@ -85,7 +92,8 @@ internal fun NavigationTemplateView(t: NavigationTemplate) {
         val width = if (narrow) maxWidth else panelWidth()
         val top = Modifier.align(Alignment.TopStart).width(width)
         when (info) {
-            is RoutingInfo -> if (compact) CompactRoutingCard(info, t.backgroundColor, top.obstructsMap()) else RoutingCard(info, t.backgroundColor, top.obstructsMap())
+            is RoutingInfo -> if (LocalOwnTurnShown.current) Unit
+                else if (compact) CompactRoutingCard(info, t.backgroundColor, top.obstructsMap()) else RoutingCard(info, t.backgroundColor, top.obstructsMap())
             is MessageInfo -> MessageInfoCard(info, t.backgroundColor, top.obstructsMap())
         }
         if (estimate != null) {
