@@ -38,3 +38,14 @@ var Settings.myplayCarSendsHolds: Boolean?
     set(v) = prefs.edit { if (v == null) remove(KEY_CAR_SENDS_HOLDS) else putBoolean(KEY_CAR_SENDS_HOLDS, v) }
 
 internal const val KEY_CAR_SENDS_HOLDS = "myplay_car_sends_holds"
+
+/**
+ * The hidden switch to the rebuilt phone app (plan §16). Off by default; turned on by 7 taps on the old
+ * About page's version line, or in debug builds by the adb extra `new_phone_app`. Not in backups: it
+ * belongs to this install while the new app is a preview.
+ */
+var Settings.myplayNewPhoneApp: Boolean
+    get() = prefs.getBoolean(KEY_NEW_PHONE_APP, false)
+    set(v) = prefs.edit { putBoolean(KEY_NEW_PHONE_APP, v) }
+
+internal const val KEY_NEW_PHONE_APP = "myplay_new_phone_app"
