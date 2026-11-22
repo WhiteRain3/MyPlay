@@ -596,21 +596,21 @@ fun NextMapColoursPage() {
             NextCard {
                 fun drag(f: MapColourFilter) { dragging = f }
                 NextSlider(stringResource(R.string.next_scr_hue_label), "${filter.hueShift}°", filter.hueShift.toFloat(), -180f..180f,
-                    { drag(filter.copy(hueShift = Math.round(it))) }, { save(filter) }, ends = "-180°" to "180°", changed = filter.hueShift != default.hueShift)
+                    { drag(filter.copy(hueShift = Math.round(it))) }, { dragging?.let { save(it) } }, ends = "-180°" to "180°", changed = filter.hueShift != default.hueShift)
                 NextDivider(16.dp)
                 NextSlider(stringResource(R.string.next_scr_colourful_label), "${filter.saturation} %", filter.saturation.toFloat(), 0f..200f,
-                    { drag(filter.copy(saturation = Math.round(it))) }, { save(filter) }, ends = "0 %" to "200 %", changed = filter.saturation != default.saturation)
+                    { drag(filter.copy(saturation = Math.round(it))) }, { dragging?.let { save(it) } }, ends = "0 %" to "200 %", changed = filter.saturation != default.saturation)
                 NextDivider(16.dp)
                 NextSlider(stringResource(R.string.next_scr_brightness_label), "${filter.brightness}", filter.brightness.toFloat(), -100f..100f,
-                    { drag(filter.copy(brightness = Math.round(it))) }, { save(filter) }, ends = "-100" to "100", changed = filter.brightness != default.brightness)
+                    { drag(filter.copy(brightness = Math.round(it))) }, { dragging?.let { save(it) } }, ends = "-100" to "100", changed = filter.brightness != default.brightness)
                 NextDivider(16.dp)
                 NextSlider(stringResource(R.string.next_scr_contrast_label), "${filter.contrast} %", filter.contrast.toFloat(), 0f..200f,
-                    { drag(filter.copy(contrast = Math.round(it))) }, { save(filter) }, ends = "0 %" to "200 %", changed = filter.contrast != default.contrast)
+                    { drag(filter.copy(contrast = Math.round(it))) }, { dragging?.let { save(it) } }, ends = "0 %" to "200 %", changed = filter.contrast != default.contrast)
                 NextDivider(16.dp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.weight(1f)) {
                         NextSlider(stringResource(R.string.next_scr_tint_label), "${filter.tintStrength} %", filter.tintStrength.toFloat(), 0f..100f,
-                            { drag(filter.copy(tintStrength = Math.round(it))) }, { save(filter) }, ends = "0 %" to "100 %",
+                            { drag(filter.copy(tintStrength = Math.round(it))) }, { dragging?.let { save(it) } }, ends = "0 %" to "100 %",
                             changed = filter.tintStrength != default.tintStrength)
                     }
                     val tintWord = stringResource(R.string.next_scr_tint_colour_label)
@@ -622,7 +622,7 @@ fun NextMapColoursPage() {
                 }
                 NextDivider(16.dp)
                 NextSlider(stringResource(R.string.next_scr_night_label), "${filter.nightDarker} %", filter.nightDarker.toFloat(), 0f..90f,
-                    { drag(filter.copy(nightDarker = Math.round(it))) }, { save(filter) }, ends = "0 %" to "90 %", changed = filter.nightDarker != default.nightDarker)
+                    { drag(filter.copy(nightDarker = Math.round(it))) }, { dragging?.let { save(it) } }, ends = "0 %" to "90 %", changed = filter.nightDarker != default.nightDarker)
             }
         }
         item {
