@@ -17,6 +17,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
+import net.prototux.aare.car.myplayLearnButtonAtMs
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,6 +60,15 @@ fun TeachButtonSection(settings: Settings) {
     var armed by remember { mutableStateOf(settings.myplayLearnButton) }
     var learned by remember { mutableStateOf(settings.myplayLearnedButtons) }
     // The car clears the armed action and adds the key while this page is open.
+    // O11-1: an arm lapses after LearnedButtons.ARM_MS; read it again each second so the page clears by itself.
+    var secondsLeft by remember { mutableStateOf(0L) }
+    LaunchedEffect(armed) {
+        while (armed != null) {
+            armed = settings.myplayLearnButton
+            secondsLeft = ((LearnedButtons.ARM_MS - (System.currentTimeMillis() - settings.myplayLearnButtonAtMs)) / 1000).coerceAtLeast(0)
+            delay(1_000)
+        }
+    }
     DisposableEffect(settings) {
         val prefs = ctx.getSharedPreferences("settings", Context.MODE_PRIVATE)
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
@@ -82,6 +94,7 @@ fun TeachButtonSection(settings: Settings) {
                 PillButton(stringResource(R.string.phone_teach_start)) { settings.myplayLearnButton = chosen; armed = chosen }
             } else {
                 Text(stringResource(R.string.phone_teach_waiting, stringResource(actionName(waiting))), color = PhoneColors.Text, fontSize = 16.sp)
+                Text(stringResource(R.string.phone_teach_seconds, secondsLeft), color = PhoneColors.Muted, fontSize = 13.sp)
                 Spacer(Modifier.height(12.dp))
                 PillButton(stringResource(R.string.common_cancel), main = false) { settings.myplayLearnButton = null; armed = null }
             }
