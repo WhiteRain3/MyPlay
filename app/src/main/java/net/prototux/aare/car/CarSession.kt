@@ -177,6 +177,7 @@ class CarSession(
     fun start() {
         // The head unit is waiting for our version answer: start the protocol before the UI work.
         aap.start()
+        DriveSummary.begin(System.currentTimeMillis()) // MyPlay: this drive's line in the log, at the end
         runtime.microphone = { sink, stopped -> micRouter.open(sink, stopped) }
         runtime.projection = projection
         runtime.exitToCar = ::exitToCar
@@ -1297,6 +1298,7 @@ class CarSession(
 
     private fun teardown() {
         closed = true
+        DriveSummary.end(System.currentTimeMillis())?.let(DiagLog::add) // MyPlay: how the speed and its limit did
         settings.unregisterListener(carKeyPrefsListener)
         settings.unregisterListener(buttonPrefsListener) // MyPlay (R3)
         // Session ending while music fed the car: pause it, so it doesn't jump to the phone speaker.

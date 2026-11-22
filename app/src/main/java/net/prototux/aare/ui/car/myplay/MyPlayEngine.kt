@@ -1024,10 +1024,11 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
     LaunchedEffect(feed, inputs) {
         while (true) {
             feed.update(inputs.copy(margin = source.margin()))
+            net.prototux.aare.car.DriveSummary.sample(feed.reading, System.currentTimeMillis()) // MyPlay: the drive's summary line
             delay(SPEED_TICK_MS)
         }
     }
-    DisposableEffect(feed) { onDispose { feed.release(); limits?.close(); SpeedLimitDiag.why = null } }
+    DisposableEffect(feed) { onDispose { feed.release(); limits?.close(); SpeedLimitDiag.why = null; net.prototux.aare.car.DriveSummary.pause() } }
     content(feed.reading)
 }
 
