@@ -21,6 +21,7 @@ internal object MyPlayBackupKeys {
         "myplay_mirror_turns" to Type.STRING, // what a knob turn means in each mirrored app (G1)
         "myplay_gesture_line" to Type.BOOLEAN, // the line after a button gesture (R6)
         "myplay_speed_source" to Type.STRING, // where the car screen's speed comes from (N3)
+        "myplay_engine_preview" to Type.BOOLEAN, // MyPlay's own car screen (ORBIT) rather than an older layout (N10: on by default)
         "myplay_engine_language" to Type.STRING, // the new car screen's design language, ORBIT or DECK (N13)
         "myplay_maps_idle_home" to Type.INT, // minutes before a full-screen maps app goes home, 0 never (O2b)
         "myplay_learned_buttons" to Type.STRING, // car buttons taught an action in the car, code to action (O11)

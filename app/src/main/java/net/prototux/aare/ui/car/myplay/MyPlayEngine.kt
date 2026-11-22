@@ -90,7 +90,7 @@ import net.prototux.aare.car.LimitFile
  * A slot that is not drawn (no route yet) covers nothing until it appears.
  *
  * Every other screen is still the "map behind" layout's until the chunks after N2 replace them.
- * Shown only with the hidden setting myplay_engine_preview.
+ * Shown while myplay_engine_preview is on: N10 made it the default (ORBIT), older layouts still choosable.
  */
 @Composable
 internal fun MyPlayEngineShell(

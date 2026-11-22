@@ -54,7 +54,7 @@ class MyPlayBackupKeysTest {
             "myplay_debug_nav_text", // the N3 bench check's log of maps apps' text: a check, should not travel to a new phone
             "myplay_learn_button", // the action the next car key will be taught (O11): a moment's state
             "myplay_learn_button_at", // when that action was armed (O11-1): a moment's state
-            "myplay_engine_preview", // the hidden preview of phase N's car screen (N1): a test switch, not a choice to keep
+            "myplay_orbit_default_done", // N10: this install was moved to ORBIT once: belongs to the install
         )
 
         /** "myplay_" strings that are not settings keys. */
