@@ -196,6 +196,7 @@ import net.prototux.aare.ui.phone.PhonePartsSample
 import net.prototux.aare.ui.phone.KEY_NEW_PHONE_APP
 import net.prototux.aare.ui.phone.myplayNewPhoneApp
 import net.prototux.aare.ui.phone.next.NextAppHost
+import net.prototux.aare.ui.phone.next.NextPages
 import net.prototux.aare.ui.phone.next.NextDeepLink
 import net.prototux.aare.ui.phone.next.rememberSetting
 import rikka.shizuku.Shizuku
@@ -1644,13 +1645,26 @@ private fun LicenceLine() {
     val ctx = LocalContext.current
     // Seven taps on the version line turn on the rebuilt phone app (plan §16); no ripple, it is hidden.
     var taps by remember { mutableIntStateOf(0) }
+    var tapToast by remember { mutableStateOf<android.widget.Toast?>(null) }
     Column(Modifier.fillMaxWidth().padding(8.dp)) {
         HorizontalDivider()
         Spacer(Modifier.height(8.dp))
         Text(stringResource(R.string.setup_about_text, net.prototux.aare.BuildConfig.VERSION_NAME),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.clickable(interactionSource = null, indication = null) {
-                if (++taps >= 7) { taps = 0; Settings(ctx).myplayNewPhoneApp = true }
+                taps++
+                // From the third tap a short countdown, so it is clear the taps count; the seventh switches
+                // to the new app at once (MainActivity follows the setting).
+                val text = when (val left = NextPages.tapsLeft(taps)) {
+                    null -> null
+                    0 -> ctx.getString(R.string.next_switch_on_label)
+                    else -> ctx.resources.getQuantityString(R.plurals.next_taps_left_label, left, left)
+                }
+                if (text != null) {
+                    tapToast?.cancel()
+                    tapToast = android.widget.Toast.makeText(ctx, text, android.widget.Toast.LENGTH_SHORT).also { it.show() }
+                }
+                if (NextPages.tapsLeft(taps) == 0) { taps = 0; Settings(ctx).myplayNewPhoneApp = true }
             })
     }
 }

@@ -122,6 +122,11 @@
 
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
+    <string name="next_switch_on_label" translatable="false">New phone app on</string>
+    <plurals name="next_taps_left_label" translatable="false">
+        <item quantity="one">%1$d more tap</item>
+        <item quantity="other">%1$d more taps</item>
+    </plurals>
     <string name="next_old_app_label" translatable="false">Back to the old app</string>
     <string name="next_old_app_help" translatable="false">The new app is a preview. Its pages come one by one.</string>
 </resources>

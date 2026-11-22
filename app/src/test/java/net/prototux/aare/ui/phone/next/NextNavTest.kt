@@ -87,3 +87,9 @@ class NextNavTest {
         assertEquals(listOf("car", "car/speed"), odd.stack().map { it.route })
     }
 }
+
+class NextTapsTest {
+    @Test fun theCountdownStartsAtTheThirdTap() {
+        org.junit.Assert.assertEquals(listOf(null, null, 4, 3, 2, 1, 0), (1..7).map { NextPages.tapsLeft(it) })
+    }
+}
