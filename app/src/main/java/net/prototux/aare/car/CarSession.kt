@@ -707,12 +707,30 @@ class CarSession(
     private val buttonPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (isButtonTableKey(key)) main.post { buttonTable = settings.buttonTable; buttonCodes = buttonTable.allCodes }
         // MyPlay (O11): the phone arms a button to teach, or changes the learned ones.
-        if (isLearnKey(key)) main.post { learned = settings.myplayLearnedButtons; learnArmed = settings.myplayLearnButton }
+        if (isLearnKey(key)) main.post {
+            learned = settings.myplayLearnedButtons
+            val was = learnArmed
+            learnArmed = settings.myplayLearnButton
+            learnArmedAt = settings.myplayLearnButtonAtMs
+            // O11-1: say on the car screen that the next button is being taught.
+            learnArmed?.takeIf { it != was }?.let { a ->
+                runtime.notice(context.getString(R.string.myplay_teach_title), context.getString(R.string.myplay_teach_text, a.id.replace('_', ' ')),
+                    durationMs = LearnedButtons.ARM_MS)
+            }
+        }
     }
 
     /** MyPlay (O11): the learned buttons, and the action the next key will be taught (main thread). */
     private var learned: Map<Int, ButtonAction> = settings.myplayLearnedButtons
     private var learnArmed: ButtonAction? = settings.myplayLearnButton
+    private var learnArmedAt: Long = settings.myplayLearnButtonAtMs
+
+    /** O11-1: the arm is over ([why]: not taught, for the log; null: a key was learned). */
+    private fun disarm(why: String?) {
+        if (why != null) DiagLog.add("teaching a button stopped: $why")
+        learnArmed = null
+        settings.myplayLearnButton = null
+    }
 
     private val gestures = GestureEngine(
         timings = { settings.gestureTimings },
@@ -809,20 +827,24 @@ class CarSession(
         }
         // MyPlay (O11): a button being taught: the next key that is not Back (or the knob's) is
         // bound to the armed action, whatever its code, and does nothing else this time.
-        val teaching = learnArmed
+        // O11-1: the arm lasts LearnedButtons.ARM_MS, and only for one key: a key that may not be
+        // taught (Back, the knob, the pad, the call keys) cancels it and then does its usual thing.
+        val teaching = learnArmed?.takeIf { LearnedButtons.stillArmed(learnArmedAt, System.currentTimeMillis()) }
+        if (learnArmed != null && teaching == null) disarm("too late")
         val knobOrBack = buttonTable.control(code).let { it == ButtonTable.Control.KNOB_PUSH || it == ButtonTable.Control.BACK }
-        if (teaching != null && code !in LearnedButtons.NEVER && !knobOrBack) {
-            if (!down) {
+        if (teaching != null && !down) {
+            if (code !in LearnedButtons.NEVER && !knobOrBack) {
                 learned = LearnedButtons.learn(learned, code, teaching)
                 settings.myplayLearnedButtons = learned
-                learnArmed = null
-                settings.myplayLearnButton = null
+                disarm(null)
                 DiagLog.add("learned button ${KeyEvent.keyCodeToString(code)} ($code): ${teaching.id}")
+                return
             }
-            return
-        }
-        // O11: a learned button does its action on release, and nothing else.
-        learned[code]?.let { action ->
+            disarm("${KeyEvent.keyCodeToString(code)} cannot be taught")
+        } else if (teaching != null && code !in LearnedButtons.NEVER && !knobOrBack) return
+        // O11: a learned button does its action on release, and nothing else (never a call key or
+        // the pad, even from an old backup).
+        learned[code]?.takeIf { code !in LearnedButtons.NEVER && !knobOrBack }?.let { action ->
             if (!down) {
                 DiagLog.add("learned button ${KeyEvent.keyCodeToString(code)}: ${action.id}")
                 perform(action, code)
