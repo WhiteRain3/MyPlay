@@ -63,6 +63,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -260,6 +261,22 @@ fun NextValue(value: String, changed: Boolean = false) {
     }
 }
 
+/**
+ * At large font sizes (200 %, design frame 21) a row's value goes under its label, so neither is
+ * cut: the label keeps the row's width.
+ */
+@Composable
+internal fun valueUnderLabel(): Boolean = LocalDensity.current.fontScale >= 1.5f
+
+private fun withValueUnder(under: Boolean, value: String?, changed: Boolean, tag: (@Composable () -> Unit)?): (@Composable () -> Unit)? =
+    if (!under || value == null) tag
+    else ({
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            NextValue(value, changed)
+            tag?.invoke()
+        }
+    })
+
 /** A row that opens a page of its own tab: value and chevron. */
 @Composable
 fun NextValueRow(
@@ -273,11 +290,12 @@ fun NextValueRow(
     onClick: () -> Unit,
 ) {
     val changedWord = stringResource(R.string.next_changed_label)
+    val under = valueUnderLabel()
     NextRow(
-        label, icon = icon, note = note, info = info, tag = tag, onClick = onClick, role = Role.Button,
+        label, icon = icon, note = note, info = info, tag = withValueUnder(under, value, changed, tag), onClick = onClick, role = Role.Button,
         modifier = if (changed) Modifier.semantics { stateDescription = changedWord } else Modifier,
     ) {
-        if (value != null) NextValue(value, changed) else if (changed) NextChangedMark()
+        if (value != null && !under) NextValue(value, changed) else if (changed && value == null) NextChangedMark()
         Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = NextColors.Text3, modifier = Modifier.size(20.dp))
     }
 }
@@ -377,11 +395,13 @@ fun <T> NextPickerRow(
     val current = choices.firstOrNull { it.value == selected }?.label ?: selected.toString()
     val changed = default != null && selected != default
     val changedWord = stringResource(R.string.next_changed_label)
+    val under = valueUnderLabel()
     NextRow(
-        label, icon = icon, note = note, info = info, tag = tag, enabled = enabled, onClick = { open = true }, role = Role.Button,
+        label, icon = icon, note = note, info = info, tag = withValueUnder(under, current, changed, tag), enabled = enabled,
+        onClick = { open = true }, role = Role.Button,
         modifier = if (changed) Modifier.semantics { stateDescription = changedWord } else Modifier,
     ) {
-        NextValue(current, changed)
+        if (!under) NextValue(current, changed)
         Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = NextColors.Text3, modifier = Modifier.size(20.dp))
     }
     if (open) NextSheet(title = label, onDismiss = { open = false }) {

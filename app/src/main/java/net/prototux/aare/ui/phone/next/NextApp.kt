@@ -11,6 +11,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -170,7 +172,17 @@ fun NextApp(
     }
 
     val world = nav.tab.world
-    Column(
+    val onTab: (NextTab) -> Unit = { tab ->
+        if (searching) {
+            searching = false
+            go(nav.selectTab(tab))
+        } else if (tab == nav.tab && nav.atRoot) {
+            scrollTop = scrollTop.copyOf().also { it[tab.ordinal]++ }
+        } else {
+            go(nav.selectTab(tab))
+        }
+    }
+    BoxWithConstraints(
         Modifier.fillMaxSize().background(NextColors.Bg).drawBehind {
             drawRect(
                 Brush.radialGradient(
@@ -181,45 +193,116 @@ fun NextApp(
             )
         },
     ) {
+        // Large screens (design frame 76): a rail from 600 dp; from 840 dp the tab's root list stays
+        // on the left while a page of it is open on the right.
+        val full = nav.route in NextRoutes.FULL_SCREEN
+        val rail = maxWidth >= 600.dp && !full
+        val split = maxWidth >= 840.dp && !full && !searching && !nav.atRoot
         val navigator = NextNavigator(open = { go(nav.open(it)) }, scrollTop = scrollTop[nav.tab.ordinal], back = { nav.back()?.let { go(it) } })
+        // From the list on the left, a page replaces the one on the right instead of stacking on it.
+        val listNavigator = NextNavigator(open = { go(nav.selectTab(nav.tab).open(it)) }, scrollTop = scrollTop[nav.tab.ordinal], back = navigator.back)
         val shift = with(LocalDensity.current) { 48.dp.toPx() }
-        Box(
-            Modifier.weight(1f).fillMaxWidth().graphicsLayer {
-                translationX = backProgress * shift
-                alpha = 1f - backProgress * 0.25f
-            },
-        ) {
-            CompositionLocalProvider(
-                LocalNextNavigator provides navigator,
-                LocalNextUndo provides undo,
-                LocalTextStyle provides NextType.Label.copy(color = NextColors.Text),
-            ) {
-                if (searching) NextSearch(onOpen = { searching = false; go(nav.open(it)) }, onClose = { searching = false })
-                else AnimatedContent(
-                    targetState = nav.top,
-                    transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(100)) },
-                    label = "route",
-                ) { entry ->
-                    pages.SaveableStateProvider(entry.route) {
-                        Column(Modifier.fillMaxSize()) {
-                            if (entry.route !in NextRoutes.FULL_SCREEN) NextTopBar(entry.route, onBack = { nav.back()?.let { go(it) } }, onSearch = { searching = true })
-                            Box(Modifier.weight(1f)) { page(entry.route) }
+        Row(Modifier.fillMaxSize()) {
+            if (rail) NextRail(nav.tab, badges, onTab)
+            Column(Modifier.weight(1f).fillMaxSize()) {
+                Box(
+                    Modifier.weight(1f).fillMaxWidth().graphicsLayer {
+                        translationX = backProgress * shift
+                        alpha = 1f - backProgress * 0.25f
+                    },
+                ) {
+                    CompositionLocalProvider(
+                        LocalNextUndo provides undo,
+                        LocalTextStyle provides NextType.Label.copy(color = NextColors.Text),
+                    ) {
+                        Row(Modifier.fillMaxSize()) {
+                            if (split) {
+                                val root = nav.tab.root
+                                Box(Modifier.fillMaxHeight().fillMaxWidth(0.42f).testTag("next-list-pane")) {
+                                    CompositionLocalProvider(LocalNextNavigator provides listNavigator) {
+                                        // Its own key: during the fade the full-width root may still be drawn.
+                                        pages.SaveableStateProvider("$root#list") {
+                                            Column(Modifier.fillMaxSize()) {
+                                                NextTopBar(root, onBack = {}, onSearch = { searching = true })
+                                                Box(Modifier.weight(1f)) { page(root) }
+                                            }
+                                        }
+                                    }
+                                }
+                                Box(Modifier.fillMaxHeight().width(1.dp).background(NextColors.Edge))
+                            }
+                            Box(Modifier.weight(1f).fillMaxHeight()) {
+                                CompositionLocalProvider(LocalNextNavigator provides navigator) {
+                                    if (searching) NextSearch(onOpen = { searching = false; go(nav.open(it)) }, onClose = { searching = false })
+                                    else AnimatedContent(
+                                        targetState = nav.top,
+                                        transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(100)) },
+                                        label = "route",
+                                    ) { entry ->
+                                        pages.SaveableStateProvider(entry.route) {
+                                            Column(Modifier.fillMaxSize()) {
+                                                if (entry.route !in NextRoutes.FULL_SCREEN) NextTopBar(entry.route, onBack = { nav.back()?.let { go(it) } }, onSearch = { searching = true })
+                                                Box(Modifier.weight(1f)) { page(entry.route) }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
+                    NextSnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp))
                 }
-            }
-            NextSnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp))
-        }
-        if (nav.route !in NextRoutes.FULL_SCREEN) NextTabBar(nav.tab, badges) { tab ->
-            if (searching) {
-                searching = false
-                go(nav.selectTab(tab))
-            } else if (tab == nav.tab && nav.atRoot) {
-                scrollTop = scrollTop.copyOf().also { it[tab.ordinal]++ }
-            } else {
-                go(nav.selectTab(tab))
+                if (!rail && !full) NextTabBar(nav.tab, badges, onTab)
             }
         }
+    }
+}
+
+/** The tabs as a rail on large screens (design frame 76): the mark on top, the same five tabs. */
+@Composable
+fun NextRail(selected: NextTab, badge: Set<NextTab> = emptySet(), onSelect: (NextTab) -> Unit) {
+    Row(Modifier.fillMaxHeight()) {
+        Column(
+            Modifier.fillMaxHeight().width(96.dp).background(NextColors.TabBar).statusBarsPadding().navigationBarsPadding().padding(top = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            NextMark(36.dp)
+            Spacer(Modifier.height(16.dp))
+            for (tab in NextTab.entries) TabItem(tab, tab == selected, tab in badge, Modifier.fillMaxWidth().height(80.dp), onSelect)
+        }
+        Box(Modifier.fillMaxHeight().width(1.dp).background(NextColors.Edge))
+    }
+}
+
+@Composable
+private fun TabItem(tab: NextTab, on: Boolean, badged: Boolean, modifier: Modifier, onSelect: (NextTab) -> Unit) {
+    val label = stringResource(NextPages.tabLabel(tab))
+    Column(
+        modifier.clickable(role = Role.Tab) { onSelect(tab) }
+            .semantics { this.selected = on }
+            .testTag("next-tab-${tab.root}"),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Box(
+            Modifier.size(40.dp).clip(CircleShape)
+                .then(if (on) Modifier.background(tab.world.soft()).border(2.dp, tab.world, CircleShape) else Modifier),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(tab.icon, null, tint = if (on) tab.world else NextColors.Text2, modifier = Modifier.size(22.dp))
+            if (badged) {
+                Box(
+                    Modifier.align(Alignment.TopEnd).padding(2.dp).size(10.dp).clip(CircleShape)
+                        .background(NextColors.Caution),
+                )
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            label, style = NextType.TabLabel.copy(fontWeight = if (on) FontWeight(650) else FontWeight(520)),
+            color = if (on) NextColors.Text else NextColors.Text3,
+        )
     }
 }
 
@@ -272,37 +355,7 @@ fun NextTabBar(selected: NextTab, badge: Set<NextTab> = emptySet(), onSelect: (N
     Column(Modifier.fillMaxWidth().background(NextColors.TabBar)) {
         Box(Modifier.fillMaxWidth().height(1.dp).background(NextColors.Edge))
         Row(Modifier.fillMaxWidth().navigationBarsPadding().height(NextSpace.TabBar)) {
-            for (tab in NextTab.entries) {
-                val on = tab == selected
-                val label = stringResource(NextPages.tabLabel(tab))
-                Column(
-                    Modifier.weight(1f).fillMaxSize()
-                        .clickable(role = Role.Tab) { onSelect(tab) }
-                        .semantics { this.selected = on }
-                        .testTag("next-tab-${tab.root}"),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Box(
-                        Modifier.size(40.dp).clip(CircleShape)
-                            .then(if (on) Modifier.background(tab.world.soft()).border(2.dp, tab.world, CircleShape) else Modifier),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(tab.icon, null, tint = if (on) tab.world else NextColors.Text2, modifier = Modifier.size(22.dp))
-                        if (tab in badge) {
-                            Box(
-                                Modifier.align(Alignment.TopEnd).padding(2.dp).size(10.dp).clip(CircleShape)
-                                    .background(NextColors.Caution),
-                            )
-                        }
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        label, style = NextType.TabLabel.copy(fontWeight = if (on) FontWeight(650) else FontWeight(520)),
-                        color = if (on) NextColors.Text else NextColors.Text3,
-                    )
-                }
-            }
+            for (tab in NextTab.entries) TabItem(tab, tab == selected, tab in badge, Modifier.weight(1f).fillMaxSize(), onSelect)
         }
     }
 }
