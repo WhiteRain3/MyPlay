@@ -407,4 +407,16 @@
     <string name="phone_engine_deck_preview" translatable="false">DECK: its home is new; its worlds still use ORBIT\'s look for now.</string>
     <string name="phone_youtube_row_subtitle" translatable="false">YouTube\'s website in the car browser, parked only</string>
     <string name="phone_panel_timeout_hint" translatable="false">The music panel and the dial close after this long with no knob, pad or touch.</string>
+    <string name="phone_home_pad_title" translatable="false">ORBIT home: pad shortcuts</string>
+    <string name="phone_home_pad_center" translatable="false">Knob push</string>
+    <string name="phone_home_pad_up" translatable="false">Pad up</string>
+    <string name="phone_home_pad_side" translatable="false">Pad left or right</string>
+    <string name="phone_home_pad_down" translatable="false">Pad down</string>
+    <string name="phone_home_pad_music" translatable="false">Music</string>
+    <string name="phone_home_pad_maps" translatable="false">Maps</string>
+    <string name="phone_home_pad_dial" translatable="false">The dial</string>
+    <string name="phone_home_pad_apps" translatable="false">Apps</string>
+    <string name="phone_home_pad_calls" translatable="false">Calls</string>
+    <string name="phone_home_pad_nothing" translatable="false">Nothing</string>
+    <string name="phone_home_pad_hint" translatable="false">On ORBIT\'s home, while the knob\'s ring is hidden. Turning the knob shows the ring, and then these keys move it as before. Nothing: the key moves the ring.</string>
 </resources>
