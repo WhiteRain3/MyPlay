@@ -353,6 +353,7 @@ class CarSession(
             if (settings.resumeMedia) runtime.resumeMedia()
             startPlaybackStatus()
             phoneBridge = PhoneStatusBridge(context, aap, phoneStatus).also { it.start() }
+            heatWatch = PhoneHeatWatch(context, ::onPhoneHeat).also { it.start() } // MyPlay (drive warnings)
             if (settings.callsOnPhoneSpeaker) callSpeaker = CallSpeaker(context).also { it.start() }
         }
     }
@@ -1015,6 +1016,19 @@ class CarSession(
         }
     }
 
+    /** MyPlay (drive warnings): the phone's heat, in the log on each change and once on the car screen when hot. */
+    private var heatWatch: PhoneHeatWatch? = null
+    private val heat = PhoneHeatTracker()
+
+    private fun onPhoneHeat(status: Int) {
+        if (closed) return
+        val (changed, announce) = heat.update(status)
+        if (changed) DiagLog.add("phone heat: ${PhoneHeatRule.name(status)}")
+        if (announce && settings.myplayDriveWarnings) {
+            runtime.ui.gestureLine = net.prototux.aare.ui.car.GestureLine.info(context.getString(R.string.myplay_warning_phone_hot), SystemClock.uptimeMillis())
+        }
+    }
+
     /** MyPlay (drive warnings): this drive's ice sign and whether its line was shown (main thread). */
     private val ice = IceTracker()
 
@@ -1309,6 +1323,7 @@ class CarSession(
         net.prototux.aare.notify.CarNotificationListener.sink = null
         audioOuts.values.forEach { it.stop() }; audioOuts.clear()
         phoneBridge?.stop(); phoneBridge = null
+        heatWatch?.stop(); heatWatch = null
         callSpeaker?.stop(); callSpeaker = null
         locationFeed.stop()
         drivingMode.stop()
