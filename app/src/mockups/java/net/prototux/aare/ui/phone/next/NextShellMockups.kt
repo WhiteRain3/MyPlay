@@ -168,4 +168,7 @@ class NextShellMockups {
     @Test fun car2Sound() = paparazzi.snapshot { Page("car/sound") { NextSoundPage() } }
     @Test fun car2Messages() = paparazzi.snapshot { Page("car/messages") { NextMessagesPage() } }
     @Test fun car2Voice() = paparazzi.snapshot { Page("car/voice") { NextVoicePage() } }
+
+    @Test fun appsRoot() = paparazzi.snapshot { Page("apps") { NextAppsRoot() } }
+    @Test fun appsPhoneApps() = paparazzi.snapshot { Page("apps/phone-apps") { NextPhoneAppsPage() } }
 }

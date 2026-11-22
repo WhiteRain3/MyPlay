@@ -337,11 +337,12 @@ fun NextSwitchRow(
     tag: (@Composable () -> Unit)? = null,
     enabled: Boolean = true,
     changed: Boolean = false,
+    lead: (@Composable () -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
     val changedWord = stringResource(R.string.next_changed_label)
     NextRow(
-        label, icon = icon, note = note, info = info, tag = tag, enabled = enabled,
+        label, icon = icon, note = note, info = info, tag = tag, enabled = enabled, lead = lead,
         modifier = Modifier.toggleable(checked, enabled = enabled, role = Role.Switch) {
             haptic.performHapticFeedback(if (it) HapticFeedbackType.ToggleOn else HapticFeedbackType.ToggleOff)
             onChange(it)

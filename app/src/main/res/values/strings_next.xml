@@ -384,6 +384,50 @@
     <string name="next_voice_car_help" translatable="false">On the car screen, with the car mic</string>
     <string name="next_voice_phone_help" translatable="false">Opens on the phone</string>
 
+    <!-- Apps -->
+    <string name="next_apps_reorder_label" translatable="false">Reorder</string>
+    <string name="next_apps_phone_apps_help" translatable="false">Your phone\'s apps on the car</string>
+    <string name="next_apps_count_label" translatable="false">%1$d apps</string>
+    <string name="next_apps_loading_help" translatable="false">Reading the apps…</string>
+    <string name="next_apps_car_apps_label" translatable="false">Maps and car apps</string>
+    <string name="next_apps_media_label" translatable="false">Media</string>
+    <string name="next_apps_messaging_label" translatable="false">Messaging</string>
+    <string name="next_apps_myplay_label" translatable="false">MyPlay</string>
+    <string name="next_apps_phone_screen_help" translatable="false">The phone\'s own screen, for apps MyPlay can\'t host</string>
+    <string name="next_apps_youtube_web_label" translatable="false">YouTube (web)</string>
+    <string name="next_apps_youtube_web_help" translatable="false">Shown while Browser is on</string>
+    <string name="next_apps_cant_show_label" translatable="false">Apps MyPlay can\'t show</string>
+    <string name="next_apps_gear_label" translatable="false">%1$s settings</string>
+    <string name="next_apps_order_label" translatable="false">Order in the car</string>
+    <string name="next_apps_done_label" translatable="false">Done</string>
+    <string name="next_apps_drag_help" translatable="false">Use the arrows to move an app</string>
+    <string name="next_apps_hidden_help" translatable="false">Hidden</string>
+    <string name="next_apps_up_label" translatable="false">Move %1$s up</string>
+    <string name="next_apps_down_label" translatable="false">Move %1$s down</string>
+    <string name="next_apps_needs_root_label" translatable="false">Needs root or Shizuku</string>
+    <string name="next_apps_needs_root_help" translatable="false">Set one up in Car › Sound, then come back</string>
+    <string name="next_apps_open_sound_label" translatable="false">Open Sound</string>
+    <string name="next_apps_launch_label" translatable="false">Launch phone apps on the car</string>
+    <string name="next_apps_parked_warn_help" translatable="false">Use them only when parked</string>
+    <string name="next_apps_launch_info" translatable="false">Ordinary phone apps were not made for a car screen. Open them only when the car is parked.</string>
+    <string name="next_apps_allowed_label" translatable="false">Allowed</string>
+    <string name="next_apps_add_label" translatable="false">Add apps</string>
+    <string name="next_apps_while_open_label" translatable="false">While they are open</string>
+    <string name="next_apps_no_sleep_label" translatable="false">No-sleep mode</string>
+    <string name="next_apps_youtube_app_section_label" translatable="false">YouTube app</string>
+    <string name="next_apps_youtube_app_label" translatable="false">YouTube app on the car</string>
+    <string name="next_apps_youtube_parked_help" translatable="false">Plays only when parked</string>
+    <string name="next_apps_put_on_label" translatable="false">Put it on</string>
+    <string name="next_apps_take_off_label" translatable="false">Take it off</string>
+    <string name="next_apps_youtube_confirm_info" translatable="false">This turns on phone apps on the car and allows YouTube. Use it only when parked.</string>
+    <string name="next_apps_turn_help" translatable="false">What turning the knob does in this app</string>
+    <string name="next_apps_up_down_label" translatable="false">Up and down</string>
+    <string name="next_apps_left_right_label" translatable="false">Left and right</string>
+    <string name="next_apps_touch_label" translatable="false">Allow touch on phone screen</string>
+    <string name="next_apps_touch_help" translatable="false">Turn on MyPlay in Accessibility</string>
+    <string name="next_apps_browser_parked_help" translatable="false">Pages show only when parked</string>
+    <string name="next_apps_start_page_label" translatable="false">Start page</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_switch_on_label" translatable="false">New phone app on</string>
