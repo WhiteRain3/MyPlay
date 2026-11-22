@@ -23,7 +23,12 @@ internal object MyPlayWeather {
         dashboardCards: List<DashCard>,
         spec: CarLayoutSpec,
         carHasTemperature: Boolean,
+        /** MyPlay's own car screen (ORBIT, DECK) is shown instead of [layout]: it shows no weather. */
+        engine: Boolean = false,
     ): Boolean {
+        // The owner's privacy (the dispatcher): MyPlay's own screen draws no weather, so with it the
+        // phone's position is never sent for one, whatever the older layout's choices were.
+        if (engine) return false
         val barUsesIt = showWeather &&
             (RailWidget.WEATHER in railWidgets || (RailWidget.TEMPERATURE in railWidgets && !carHasTemperature))
         return when (layout) {

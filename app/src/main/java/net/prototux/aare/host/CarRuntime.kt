@@ -568,7 +568,7 @@ class CarRuntime(
             val now = System.currentTimeMillis()
             // MyPlay (R1): only when something shown in the layout in use shows the weather.
             val carHasTemperature = net.prototux.aare.car.CarData.state.value.environment?.value?.temperatureC != null
-            if (!MyPlayWeather.wanted(ui.layout, settings.showWeather, ui.railWidgets, ui.dashboardCards, ui.layoutSpec, carHasTemperature)) {
+            if (!MyPlayWeather.wanted(ui.layout, settings.showWeather, ui.railWidgets, ui.dashboardCards, ui.layoutSpec, carHasTemperature, engine = ui.enginePreview)) {
                 ui.weather = null
                 lastWeather = 0L // R1-1: wanted again later, fetched at once, not after the old 30 minutes
             }
