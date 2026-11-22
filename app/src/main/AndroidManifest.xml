@@ -94,6 +94,13 @@
             </intent-filter>
         </activity>
 
+        <!-- The only door for the "route" extra (plan §3.5): not exported, so only MyPlay's own
+             PendingIntents can open a page by route; MainActivity ignores the extra otherwise. -->
+        <activity-alias
+            android:name=".ui.OpenPage"
+            android:exported="false"
+            android:targetActivity=".ui.MainActivity" />
+
         <activity
             android:name=".ui.CarPreviewActivity"
             android:exported="false"

@@ -224,6 +224,10 @@ More
   (`singleTask` stays). It switches to the owning tab and pushes the route. An unknown route
   opens Home. The existing `phone_parts` extra and the debug-only adb extra `hu_server` (used by
   `./headunit.sh`) keep working unchanged.
+- **Only MyPlay may open a page by route** (review NA-1). `MainActivity` is exported (it is the
+  launcher), so the `route` extra counts only when the intent came through the non-exported
+  activity-alias `ui.OpenPage`, which only MyPlay's own PendingIntents can target
+  (`NextDeepLink.intent`). **No page acts by being opened**: every change needs a tap.
 - Each notification gets its own `PendingIntent` **request code** so they don't collapse into one:
   connection status → `home`; Trust → `home` (status card shows Trust); certificate expiring or
   expired, Download certificate → `more/advanced/certificates`; a future update notification →

@@ -196,6 +196,7 @@ import net.prototux.aare.ui.phone.PhonePartsSample
 import net.prototux.aare.ui.phone.KEY_NEW_PHONE_APP
 import net.prototux.aare.ui.phone.myplayNewPhoneApp
 import net.prototux.aare.ui.phone.next.NextApp
+import net.prototux.aare.ui.phone.next.NextDeepLink
 import net.prototux.aare.ui.phone.next.rememberSetting
 import rikka.shizuku.Shizuku
 import java.text.DateFormat
@@ -210,7 +211,7 @@ class MainActivity : ComponentActivity() {
         applyDebugExtras(intent)
         showParts = intent?.getBooleanExtra(EXTRA_PHONE_PARTS, false) == true
         // Only a fresh start follows the extra: after rotation or process death the saved place wins.
-        if (savedInstanceState == null) route = intent?.getStringExtra(EXTRA_ROUTE)
+        if (savedInstanceState == null) route = NextDeepLink.routeOf(intent)
         setContent {
             MyPlayPhoneTheme {
                 Surface(Modifier.fillMaxSize()) {
@@ -227,7 +228,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** A page to open, from the [EXTRA_ROUTE] extra (plan §3.5); the new app clears it once shown. */
+    /** A page to open, from MyPlay's own PendingIntents only ([NextDeepLink]); the new app clears it once shown. */
     private var route by mutableStateOf<String?>(null)
 
     /** The sample page of every shared phone part, for screenshots ([EXTRA_PHONE_PARTS]). */
@@ -238,7 +239,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         if (intent.getBooleanExtra(EXTRA_PHONE_PARTS, false)) showParts = true
-        intent.getStringExtra(EXTRA_ROUTE)?.let { route = it }
+        NextDeepLink.routeOf(intent)?.let { route = it }
         if (applyDebugExtras(intent)) {
             ProjectionService.startIdleIfEnabled(this)
             recreate() // the settings screen shows the new state
@@ -258,9 +259,6 @@ class MainActivity : ComponentActivity() {
 
 /** Intent extra (true) that opens the sample page of every shared phone part; it changes no setting. */
 private const val EXTRA_PHONE_PARTS = "phone_parts"
-
-/** Intent extra: a route of the new phone app (plan §3.5) to open, e.g. "more/advanced/certificates". */
-const val EXTRA_ROUTE = "route"
 
 /** Debug builds only: adb extra (true/false) that turns the hidden switch to the new phone app on or off. */
 private const val EXTRA_NEW_PHONE_APP = "new_phone_app"

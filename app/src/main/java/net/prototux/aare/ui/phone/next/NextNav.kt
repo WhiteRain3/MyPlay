@@ -1,5 +1,9 @@
 package net.prototux.aare.ui.phone.next
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+
 /**
  * Every page of the rebuilt phone app, by route (plan §3.3). A route belongs to exactly one tab: the
  * part before the first '/'. The design renamed `car/buttons/home-shortcuts` to `car/buttons/pad-shortcuts`.
@@ -140,5 +144,28 @@ data class NavState(
             }
             return NavState(tab, fixed)
         }
+    }
+}
+
+/**
+ * Opening a page from outside the app (plan §3.5). MainActivity is exported (it is the launcher), so any
+ * app could send it a `route`; the extra counts only when the intent came through the non-exported
+ * alias [ALIAS], which only MyPlay's own PendingIntents can target. Opening a page never changes
+ * anything by itself: every change needs a tap.
+ */
+object NextDeepLink {
+    const val EXTRA_ROUTE = "route"
+    const val ALIAS = "net.prototux.aare.ui.OpenPage"
+
+    /** An intent that opens [route], for a notification's PendingIntent. */
+    fun intent(context: Context, route: String): Intent =
+        Intent().setComponent(ComponentName(context.packageName, ALIAS))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            .putExtra(EXTRA_ROUTE, route)
+
+    /** The route [intent] asks for, or null when it has none or did not come through [ALIAS]. */
+    fun routeOf(intent: Intent?): String? {
+        if (intent?.component?.className != ALIAS) return null
+        return intent.getStringExtra(EXTRA_ROUTE)
     }
 }
