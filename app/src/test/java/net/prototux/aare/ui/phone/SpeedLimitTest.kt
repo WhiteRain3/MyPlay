@@ -117,6 +117,15 @@ class SpeedLimitRegionSettingTest {
     }
 }
 
+class SpeedLimitChoiceTest {
+    @Test
+    fun noneKeepsTheFileAndAnotherRegionDropsTheOld() {
+        assertEquals(emptyList<String>(), SpeedLimitDownload.filesToDropOnChoice(""))
+        assertEquals(emptyList<String>(), SpeedLimitDownload.filesToDropOnChoice("lithuania"))
+        assertEquals(listOf("lithuania"), SpeedLimitDownload.filesToDropOnChoice("latvia"))
+    }
+}
+
 class SpeedLimitNetworkRuleTest {
     @Test
     fun wifiAlwaysMobileOnlyWhenAllowedAndNeverRoaming() {

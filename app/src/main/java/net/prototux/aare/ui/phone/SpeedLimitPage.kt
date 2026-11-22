@@ -73,8 +73,8 @@ fun SpeedLimitPage() {
             region,
         ) { id ->
             region = id; settings.myplaySpeedLimitRegion = id
-            // Another region's file is of no use any more: it goes (SL-3).
-            SpeedLimitDownload.deleteOthers(ctx, id)
+            // Another region's file goes (SL-3); None keeps it (#5).
+            SpeedLimitDownload.regionChosen(ctx, id)
             if (id.isNotEmpty()) scope.launch { SpeedLimitDownload.update(ctx, force = true) }
         }
         if (region.isNotEmpty()) {
@@ -97,7 +97,7 @@ fun SpeedLimitPage() {
                     scope.launch { SpeedLimitDownload.update(ctx, force = true) }
                 }
                 if (kept != null) PillButton(stringResource(R.string.phone_speed_delete), main = false) {
-                    SpeedLimitDownload.delete(ctx, region); changes++
+                    SpeedLimitDownload.delete(ctx, region, "the Delete button"); changes++
                 }
             }
             // The owner may let it download on mobile data too: asked once, with the file's size.

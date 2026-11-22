@@ -102,15 +102,27 @@ object SpeedLimitDownload {
         } finally { busy.set(false) }
     }
 
-    /** Removes the file and description of every region but [keep] ("" = all). */
-    fun deleteOthers(context: Context, keep: String) {
-        SpeedLimitFiles.REGIONS.filter { it.id != keep }.forEach { delete(context, it.id) }
+    /**
+     * When the region changes to [chosen]: another region's file is of no use any more and goes.
+     * Choosing none keeps the files (#5: a moment on None must not lose a file only Wi-Fi brings
+     * back); the Delete button removes one.
+     */
+    fun regionChosen(context: Context, chosen: String) {
+        if (chosen.isEmpty()) return
+        for (r in filesToDropOnChoice(chosen)) delete(context, r, "another region chosen")
     }
 
-    /** Removes the region's file and its description. */
-    fun delete(context: Context, region: String) {
-        SpeedLimitFiles.file(context.filesDir, region).delete()
+    /** The regions whose files go when [chosen] is picked ("" keeps them all). */
+    fun filesToDropOnChoice(chosen: String): List<String> =
+        if (chosen.isEmpty()) emptyList() else SpeedLimitFiles.REGIONS.map { it.id }.filter { it != chosen }
+
+    /** Removes the region's file and its description, saying why in the connection log. */
+    fun delete(context: Context, region: String, reason: String) {
+        val file = SpeedLimitFiles.file(context.filesDir, region)
+        val had = file.isFile
+        file.delete()
         SpeedLimitFiles.manifestFile(context.filesDir, region).delete()
+        if (had) DiagLog.add("speed limits: $region file deleted ($reason)")
         _state.value = State.Idle
     }
 
