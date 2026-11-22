@@ -103,18 +103,11 @@ object SpeedLimitDownload {
     }
 
     /**
-     * When the region changes to [chosen]: another region's file is of no use any more and goes.
-     * Choosing none keeps the files (#5: a moment on None must not lose a file only Wi-Fi brings
-     * back); the Delete button removes one.
+     * The regions whose files go once [downloaded]'s file is kept: a file is only ever removed after
+     * a new region's file is safely in place, or by the Delete button (#5). Choosing a region, or
+     * none, deletes nothing.
      */
-    fun regionChosen(context: Context, chosen: String) {
-        if (chosen.isEmpty()) return
-        for (r in filesToDropOnChoice(chosen)) delete(context, r, "another region chosen")
-    }
-
-    /** The regions whose files go when [chosen] is picked ("" keeps them all). */
-    fun filesToDropOnChoice(chosen: String): List<String> =
-        if (chosen.isEmpty()) emptyList() else SpeedLimitFiles.REGIONS.map { it.id }.filter { it != chosen }
+    fun filesToDropAfter(downloaded: String): List<String> = SpeedLimitFiles.REGIONS.map { it.id }.filter { it != downloaded }
 
     /** Removes the region's file and its description, saying why in the connection log. */
     fun delete(context: Context, region: String, reason: String) {
@@ -153,6 +146,7 @@ object SpeedLimitDownload {
                 .put("bytes", remote.bytes).put("sha256", remote.sha256).put("source", remote.source).put("url_licence", remote.licenceUrl).toString())
             manifest.renameTo(SpeedLimitFiles.manifestFile(context.filesDir, region))
             DiagLog.add("speed limits: $region file of ${remote.built} kept (${remote.bytes} bytes)")
+            for (other in filesToDropAfter(region)) delete(context, other, "replaced by the $region file")
             return State.Done
         } catch (e: Exception) {
             DiagLog.add("speed limits: download failed (${e.javaClass.simpleName})")

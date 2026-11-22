@@ -73,8 +73,7 @@ fun SpeedLimitPage() {
             region,
         ) { id ->
             region = id; settings.myplaySpeedLimitRegion = id
-            // Another region's file goes (SL-3); None keeps it (#5).
-            SpeedLimitDownload.regionChosen(ctx, id)
+            // Nothing is deleted here (#5): another region's file goes only once the new one is kept.
             if (id.isNotEmpty()) scope.launch { SpeedLimitDownload.update(ctx, force = true) }
         }
         if (region.isNotEmpty()) {

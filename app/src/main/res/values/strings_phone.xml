@@ -379,7 +379,7 @@
     <string name="phone_speed_download" translatable="false">Download</string>
     <string name="phone_speed_look_now" translatable="false">Look for a newer one</string>
     <string name="phone_speed_delete" translatable="false">Delete</string>
-    <string name="phone_speed_wifi_only" translatable="false">Downloaded on Wi-Fi only unless allowed above, from MyPlay\'s own release page. Looked for again once a month, when MyPlay is opened. Choosing another region deletes the old file; None keeps it (Delete removes it).</string>
+    <string name="phone_speed_wifi_only" translatable="false">Downloaded on Wi-Fi only unless allowed above, from MyPlay\'s own release page. Looked for again once a month, when MyPlay is opened. Choosing a region, or None, deletes nothing: an old region\'s file goes only once the new one is downloaded, and Delete removes it.</string>
     <string name="phone_speed_hint_only" translatable="false">The limit is a hint; the signs on the road win. OpenStreetMap does not know every limit: it misses road works, variable motorway signs and some limits by time or weather, and a match can be wrong at junctions or on roads side by side.</string>
     <string name="phone_speed_offline" translatable="false">The file is used offline on the phone: the car\'s position is never sent anywhere to find a limit.</string>
     <string name="phone_osm_notice" translatable="false">Speed limit data © OpenStreetMap contributors, available under the Open Database Licence (ODbL) 1.0: openstreetmap.org/copyright</string>

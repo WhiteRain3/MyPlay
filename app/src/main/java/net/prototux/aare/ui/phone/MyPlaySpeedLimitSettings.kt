@@ -15,7 +15,12 @@ import java.io.File
  */
 var Settings.myplaySpeedLimitRegion: String
     get() = SpeedLimitFiles.known(prefs.getString(KEY_SPEED_LIMIT_REGION, "") ?: "")
-    set(v) = prefs.edit { putString(KEY_SPEED_LIMIT_REGION, SpeedLimitFiles.known(v)) }
+    set(v) {
+        val next = SpeedLimitFiles.known(v)
+        // #5: every change of region is in the connection log, to tell later what changed it.
+        if (next != myplaySpeedLimitRegion) net.prototux.aare.DiagLog.add("speed limits: region set to ${next.ifEmpty { "none" }}")
+        prefs.edit { putString(KEY_SPEED_LIMIT_REGION, next) }
+    }
 
 /** When the phone last looked for a newer file (ms since 1970), 0 never. Not backed up: it belongs to this phone. */
 var Settings.myplaySpeedLimitChecked: Long
