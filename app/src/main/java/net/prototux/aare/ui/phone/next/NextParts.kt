@@ -235,13 +235,14 @@ fun NextRow(
                 // Disabled rows stay readable (review finding 8): only the control shows it.
                 Text(label, style = NextType.Label, color = NextColors.Text, modifier = Modifier.weight(1f, fill = false))
                 if (info != null) Box(Modifier.offset(x = (-4).dp)) { NextInfoButton(label, info) }
-                tag?.invoke()
             }
             when (note) {
                 is RowNote.Help -> Text(note.text, style = NextType.Help, color = NextColors.Text3, modifier = Modifier.padding(top = 2.dp))
                 is RowNote.Warn -> NextWarnLine(note.text)
                 null -> Unit
             }
+            // Under the label (design frames 29, 36), so a tag never squeezes the label at 412 dp.
+            if (tag != null) Box(Modifier.padding(top = 6.dp)) { tag() }
         }
         trailing?.invoke(this)
     }

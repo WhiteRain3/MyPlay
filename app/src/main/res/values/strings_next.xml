@@ -301,6 +301,89 @@
     <string name="next_car_forget_label" translatable="false">Forget %1$s</string>
     <string name="next_car_forgotten_label" translatable="false">Button forgotten</string>
 
+    <!-- Car › Maps -->
+    <string name="next_maps_on_home_label" translatable="false">Map on home</string>
+    <string name="next_maps_unavailable_help" translatable="false">That app is hidden or gone: the car asks</string>
+    <string name="next_maps_idle_label" translatable="false">Home when maps untouched</string>
+    <string name="next_maps_minutes_label" translatable="false">%1$d min</string>
+    <string name="next_maps_follow_label" translatable="false">Follow the car\'s lights</string>
+    <string name="next_maps_car_gps_label" translatable="false">Use the car\'s GPS</string>
+    <string name="next_maps_car_gps_help" translatable="false">Needs mock location on the phone</string>
+    <string name="next_maps_mock_label" translatable="false">Allow mock location</string>
+    <string name="next_maps_mock_help" translatable="false">In Developer options, choose MyPlay</string>
+
+    <!-- Car › Speed -->
+    <string name="next_speed_source_label" translatable="false">Speed source</string>
+    <string name="next_speed_auto_help" translatable="false">Car first, else the phone\'s location</string>
+    <string name="next_speed_car_help" translatable="false">The car\'s speed only, never the phone\'s location</string>
+    <string name="next_speed_off_help" translatable="false">No speed on the car screen</string>
+    <string name="next_speed_warn_label" translatable="false">Warn when over by</string>
+    <string name="next_speed_kmh_label" translatable="false">%1$d km/h</string>
+    <string name="next_speed_region_label" translatable="false">Region</string>
+    <string name="next_speed_file_label" translatable="false">Limits file</string>
+    <string name="next_speed_not_downloaded_help" translatable="false">Download %1$s limits</string>
+    <string name="next_speed_kept_help" translatable="false">%1$s, from %2$s</string>
+    <string name="next_speed_downloading_label" translatable="false">Downloading…</string>
+    <string name="next_speed_download_label" translatable="false">Download</string>
+    <string name="next_speed_newer_label" translatable="false">Look for a newer one</string>
+    <string name="next_speed_delete_label" translatable="false">Delete</string>
+    <string name="next_speed_delete_title_label" translatable="false">Delete the limits file?</string>
+    <string name="next_speed_delete_info" translatable="false">The car screen shows no limits until it is downloaded again.</string>
+    <string name="next_speed_mobile_label" translatable="false">Download on mobile data</string>
+    <string name="next_speed_mobile_size_info" translatable="false">The file is %1$s. It is looked for monthly and downloaded only when newer.</string>
+    <string name="next_speed_mobile_unknown_info" translatable="false">The file\'s size isn\'t known yet. It is looked for monthly and downloaded only when newer.</string>
+    <string name="next_speed_offline_help" translatable="false">Works offline. Looks for a newer file monthly.</string>
+    <string name="next_speed_waze_label" translatable="false">Limit from Waze</string>
+    <string name="next_speed_waze_help" translatable="false">Needs the MyPlay module</string>
+
+    <!-- Car › Sound -->
+    <string name="next_sound_switch_label" translatable="false">Sound to the car</string>
+    <string name="next_sound_ready_label" translatable="false">Sound reaches the car</string>
+    <string name="next_sound_ready_help" translatable="false">Music and navigation, the best way this phone can</string>
+    <string name="next_sound_none_label" translatable="false">No method set up yet</string>
+    <string name="next_sound_none_help" translatable="false">Choose one below</string>
+    <string name="next_sound_methods_label" translatable="false">Methods, best first</string>
+    <string name="next_sound_policy_label" translatable="false">System audio routing</string>
+    <string name="next_sound_capture_label" translatable="false">Screen-capture permission</string>
+    <string name="next_sound_policy_help" translatable="false">Needs root and a system install</string>
+    <string name="next_sound_policy_ready_help" translatable="false">Ready</string>
+    <string name="next_sound_policy_info" translatable="false">The cleanest way: Android sends the sound straight to MyPlay. It needs MyPlay installed as a system app, which needs root.</string>
+    <string name="next_sound_shizuku_label" translatable="false">Shizuku or root</string>
+    <string name="next_sound_shizuku_help" translatable="false">Install Shizuku, or allow root</string>
+    <string name="next_sound_shizuku_ready_help" translatable="false">Ready, through Shizuku</string>
+    <string name="next_sound_root_ready_help" translatable="false">Ready, through root</string>
+    <string name="next_sound_android12_help" translatable="false">Needs Android 12 or newer</string>
+    <string name="next_sound_shizuku_allow_help" translatable="false">Shizuku is running: tap to allow</string>
+    <string name="next_sound_shizuku_info" translatable="false">Shizuku is a free app that lets MyPlay take the phone\'s sound without root. A rooted phone can allow it directly instead.</string>
+    <string name="next_sound_capture_help" translatable="false">Works everywhere, with limits</string>
+    <string name="next_sound_capture_ready_help" translatable="false">Allowed for this connection</string>
+    <string name="next_sound_capture_info" translatable="false">Android asks each time MyPlay starts. Some apps don\'t allow their sound to be taken this way.</string>
+    <string name="next_sound_ready_tag_label" translatable="false">Ready</string>
+    <string name="next_sound_resume_label" translatable="false">Play music when connected</string>
+
+    <!-- Car › Messages and calls -->
+    <string name="next_msg_access_label" translatable="false">Allow notification access</string>
+    <string name="next_msg_access_help" translatable="false">Needed to see messages in the car</string>
+    <string name="next_msg_banners_label" translatable="false">Show message notifications</string>
+    <string name="next_msg_groups_label" translatable="false">Group messages</string>
+    <string name="next_msg_aloud_label" translatable="false">Read messages aloud</string>
+    <string name="next_msg_driving_label" translatable="false">While driving</string>
+    <string name="next_msg_dnd_label" translatable="false">Do Not Disturb</string>
+    <string name="next_msg_dnd_access_label" translatable="false">Allow MyPlay to turn it on</string>
+    <string name="next_msg_dnd_access_help" translatable="false">Opens Do Not Disturb access</string>
+    <string name="next_msg_reply_label" translatable="false">Auto-reply</string>
+    <string name="next_msg_reply_text_label" translatable="false">Reply text</string>
+    <string name="next_msg_calls_label" translatable="false">Calls</string>
+    <string name="next_msg_calls_access_label" translatable="false">Allow calls and contacts</string>
+    <string name="next_msg_calls_access_help" translatable="false">So names show and calls can be answered</string>
+    <string name="next_msg_speaker_label" translatable="false">Calls on phone speaker</string>
+    <string name="next_msg_speaker_help" translatable="false">If the car\'s mic doesn\'t work</string>
+
+    <!-- Car › Voice -->
+    <string name="next_voice_no_default_help" translatable="false">The phone has no assistant set</string>
+    <string name="next_voice_car_help" translatable="false">On the car screen, with the car mic</string>
+    <string name="next_voice_phone_help" translatable="false">Opens on the phone</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_switch_on_label" translatable="false">New phone app on</string>

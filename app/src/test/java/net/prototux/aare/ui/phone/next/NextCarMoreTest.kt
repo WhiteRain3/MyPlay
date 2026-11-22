@@ -1,0 +1,89 @@
+package net.prototux.aare.ui.phone.next
+
+import androidx.activity.ComponentActivity
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isToggleable
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ApplicationProvider
+import net.prototux.aare.Settings
+import net.prototux.aare.car.SpeedSourceMode
+import net.prototux.aare.car.myplaySpeedLimitMargin
+import net.prototux.aare.car.myplaySpeedSource
+import net.prototux.aare.ui.car.myplay.myplayMapsIdleHome
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+/** Car II (plan §16 chunk 7): Maps, Speed, Sound, Messages and calls, Voice. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35], qualifiers = "w412dp-h2400dp-xxhdpi")
+class NextCarMoreTest {
+    @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
+    private val settings get() = Settings(ApplicationProvider.getApplicationContext())
+
+    @Test fun mapsWritesTodaysKeysAndLinksToMapColours() {
+        rule.setContent { NextApp(start = "car/maps") { if (it == "car/maps") NextMapsPage() else NextPlaceholder(it) {} } }
+        rule.onNodeWithText("Home when maps untouched").performClick()
+        rule.onNodeWithText("5 min").performClick()
+        rule.waitForIdle()
+        assertEquals(5, settings.myplayMapsIdleHome)
+        rule.onNode(hasText("Follow the car's lights") and isToggleable()).performClick()
+        assertFalse(settings.mapsFollowCarLights)
+        rule.onNodeWithText("Map colours").performClick()
+        rule.onNodeWithTag("next-page-screen/map-colours").assertExists()
+    }
+
+    @Test fun speedWritesTodaysKeys() {
+        rule.setContent { NextSpeedPage() }
+        rule.onNodeWithText("Car only").performClick()
+        assertEquals(SpeedSourceMode.CAR, settings.myplaySpeedSource)
+        rule.onNodeWithText("Warn when over by").performClick()
+        rule.onNodeWithText("15 km/h").performClick()
+        rule.waitForIdle()
+        assertEquals(15, settings.myplaySpeedLimitMargin)
+        rule.onNodeWithText("Limit from Waze").assertExists()
+    }
+
+    @Test fun soundSaysNoMethodNamesOutsideItsRows() {
+        rule.setContent { NextSoundPage() }
+        // On a phone with nothing set up: the status is words only.
+        rule.onNodeWithText("No method set up yet").assertExists()
+        rule.onNodeWithText("Shizuku or root").assertExists() // the method's own row
+        rule.onAllNodesWithText("Shizuku", substring = true).fetchSemanticsNodes().forEach { node ->
+            val t = node.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.Text)?.joinToString { it.text }.orEmpty()
+            assertFalse("status names a method: $t", t.startsWith("No method") || t.startsWith("Sound reaches"))
+        }
+        val before = settings.carAudio
+        rule.onNode(hasText("Sound to the car") and isToggleable()).performClick()
+        assertEquals(!before, settings.carAudio)
+    }
+
+    @Test fun messagesAskForAccessInContext() {
+        rule.setContent { NextMessagesPage() }
+        rule.onNodeWithText("Allow notification access").assertExists()
+        rule.onNode(hasText("Show message notifications") and isToggleable()).assertIsNotEnabled()
+        rule.onNodeWithText("Allow calls and contacts").assertExists()
+        rule.onNode(hasText("Calls on phone speaker") and isToggleable()).assertIsNotEnabled()
+        // Do Not Disturb needs no permission to switch; its access row appears once it is on.
+        rule.onNode(hasText("Do Not Disturb") and isToggleable()).performClick()
+        assertEquals(true, settings.dndWhileDriving)
+        rule.onNodeWithText("Allow MyPlay to turn it on").assertExists()
+    }
+
+    @Test fun voiceSameAsThePhoneClearsTheChoice() {
+        settings.assistantPackage = "com.example.chat"
+        rule.setContent { NextVoicePage() }
+        rule.onNodeWithText("Same as the phone").performClick()
+        assertEquals(null, settings.assistantPackage)
+    }
+}
