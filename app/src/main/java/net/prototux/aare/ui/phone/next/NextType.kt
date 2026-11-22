@@ -12,7 +12,9 @@ import net.prototux.aare.R
 
 /**
  * Roboto Flex (OFL), the design's font: one variable file, each weight the type scale uses drawn from it.
- * The file is the design's Latin subset; other letters fall back to the phone's own font.
+ * Cut from Google Fonts' Roboto Flex to the weight axis (the others at their defaults) and to Latin,
+ * Latin Extended-A (Lithuanian ą č ę ė į š ų ū ž) and Cyrillic, for car names and song titles; 114 KB.
+ * Other scripts fall back to the phone's own font.
  */
 @OptIn(ExperimentalTextApi::class)
 val NextFont: FontFamily = FontFamily(
