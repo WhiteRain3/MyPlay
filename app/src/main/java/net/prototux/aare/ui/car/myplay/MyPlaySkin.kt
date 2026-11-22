@@ -118,7 +118,16 @@ object TripProgress {
 }
 
 /** O4: which corner parts are on screen, so the backdrop shades only behind them. */
-data class BackdropParts(val turn: Boolean, val song: Boolean)
+data class BackdropParts(
+    val turn: Boolean,
+    val song: Boolean,
+    /** SH-1: where the parts are on screen (null: not shown or not laid out yet), for shades that hug them. */
+    val turnBox: FocusGraph.Box? = null,
+    val songBox: FocusGraph.Box? = null,
+    val statusBox: FocusGraph.Box? = null,
+    /** SH-1: the driver's choice: soft shades behind the parts (true), or none. */
+    val soft: Boolean = true,
+)
 
 /** N7: what the Music world shows. */
 data class MusicPage(val song: SongSlot?, val transport: MediaTransport)

@@ -1,5 +1,11 @@
 package net.prototux.aare.ui.car.myplay.orbit
 
+import androidx.compose.ui.graphics.toArgb
+
+import androidx.compose.ui.graphics.nativeCanvas
+
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+
 import net.prototux.aare.ui.car.myplay.BackdropParts
 
 import androidx.compose.animation.core.tween
@@ -209,17 +215,46 @@ object OrbitSkin : MyPlaySkin {
         val halo = glass().halo
         // O4 (the owner: "the darkening still shows when Waze isn't navigating"): each corner's shade
         // only behind its part, fading in and out with it; the map is clear where nothing is drawn.
+        // SH-1 (the owner: "can definitely be done better"): no wide corner gradients any more, but a
+        // soft plate that hugs each part (the turn, the song, the clock), feathered at its edge;
+        // nothing in the map's free middle. None at all when the driver chose so.
+        if (!parts.soft) return
         val turn by animateFloatAsState(if (parts.turn) 1f else 0f, tween(400), label = "turn shade")
         val song by animateFloatAsState(if (parts.song) 1f else 0f, tween(400), label = "song shade")
+        val night = LocalSkinTokens.current.night
+        val strength = if (night) PLATE_NIGHT else PLATE_DAY
+        // Keep the last place while fading out.
+        val last = remember { arrayOfNulls<net.prototux.aare.ui.car.myplay.FocusGraph.Box>(2) }
+        parts.turnBox?.let { last[0] = it }
+        parts.songBox?.let { last[1] = it }
         Box(modifier) {
-            if (turn > 0f) Canvas(Modifier.fillMaxSize().testTag(SHADE_TURN_TAG)) { shade(halo, turn, 0.12f, 0.08f, 0.46f) }
-            if (song > 0f) Canvas(Modifier.fillMaxSize().testTag(SHADE_SONG_TAG)) { shade(halo, song, 0.92f, 0.94f, 0.44f) }
+            if (turn > 0f) last[0]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_TURN_TAG)) { plate(halo, turn * strength, b) } }
+            if (song > 0f) last[1]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_SONG_TAG)) { plate(halo, song * strength, b) } }
+            parts.statusBox?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_STATUS_TAG)) { plate(halo, strength, b) } }
         }
     }
 
-    private fun androidx.compose.ui.graphics.drawscope.DrawScope.shade(halo: Color, alpha: Float, cx: Float, cy: Float, r: Float) = drawRect(
-        Brush.radialGradient(listOf(halo.copy(alpha = 0.78f * alpha), Color.Transparent), Offset(size.width * cx, size.height * cy), size.width * r),
-    )
+    /** SH-1: how dark (night) or light (day) a plate's middle is, about. */
+    private const val PLATE_NIGHT = 0.5f
+    private const val PLATE_DAY = 0.38f
+
+    /**
+     * SH-1: a soft plate round [b] (screen pixels): a rounded shape a little wider than the part,
+     * its edge blurred away over about 26 dp (a real blur, no bands); [alpha] in the middle.
+     */
+    private fun androidx.compose.ui.graphics.drawscope.DrawScope.plate(halo: Color, alpha: Float, b: net.prototux.aare.ui.car.myplay.FocusGraph.Box) {
+        val pad = 6.dp.toPx()
+        val blur = 26.dp.toPx()
+        val h = (b.bottom - b.top) + 2 * pad
+        val r = minOf(h / 2f, 64.dp.toPx())
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = halo.copy(alpha = alpha.coerceIn(0f, 1f)).toArgb()
+            maskFilter = android.graphics.BlurMaskFilter(blur, android.graphics.BlurMaskFilter.Blur.NORMAL)
+        }
+        drawIntoCanvas { c -> c.nativeCanvas.drawRoundRect(b.left - pad, b.top - pad, b.right + pad, b.bottom + pad, r, r, paint) }
+    }
+
+    const val SHADE_STATUS_TAG = "orbit_shade_status"
 
     const val SHADE_TURN_TAG = "orbit_shade_turn"
     const val SHADE_SONG_TAG = "orbit_shade_song"

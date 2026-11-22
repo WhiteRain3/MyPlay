@@ -65,6 +65,17 @@ var Settings.myplayInfoHome: Boolean
     get() = prefs.getBoolean(KEY_INFO_HOME, false)
     set(v) = prefs.edit { putBoolean(KEY_INFO_HOME, v) }
 
+/**
+ * SH-1: the shade behind ORBIT's parts: soft plates that hug them ("soft", the default) or none.
+ * Backed up.
+ */
+const val KEY_ORBIT_SHADE = "myplay_orbit_shade"
+const val ORBIT_SHADE_SOFT = "soft"
+const val ORBIT_SHADE_NONE = "none"
+var Settings.myplayOrbitShade: String
+    get() = prefs.getString(KEY_ORBIT_SHADE, ORBIT_SHADE_SOFT).takeIf { it == ORBIT_SHADE_NONE } ?: ORBIT_SHADE_SOFT
+    set(v) = prefs.edit { putString(KEY_ORBIT_SHADE, if (v == ORBIT_SHADE_NONE) ORBIT_SHADE_NONE else ORBIT_SHADE_SOFT) }
+
 /** O6: the home pad's mapping. Backed up. */
 const val KEY_HOME_PAD = "myplay_home_pad"
 var Settings.myplayHomePad: Map<HomePadKey, HomePadAction>

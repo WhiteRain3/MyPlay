@@ -157,6 +157,8 @@ internal fun MyPlayEngineShell(
     }
     // AL-1: the maps app's alert on the home, drawn by the skin in its own place (when it draws them).
     var mapAlert by remember { mutableStateOf<MapAlert?>(null) }
+    // SH-1: where the clock and status column is, for the shade that hugs it.
+    var statusBox by remember { mutableStateOf<FocusGraph.Box?>(null) }
     val alertSink: (MapAlert?) -> Unit = remember { { a -> mapAlert = a } }
     val homeAlert = mapAlert.takeIf { skin.drawsMapAlerts && model.place == Place.Home }
     // A new alert with buttons takes the ring onto its last one (usually Close), so a push meant for
@@ -709,8 +711,12 @@ internal fun MyPlayEngineShell(
                 val showRing = model.place == Place.Home && CarFocusVisibility.keyInput && !panelOpen &&
                     (!padHome || ringAwake || notice != null || homeAlert != null || call != null)
                 // O4: shades only behind the parts shown (DECK, frozen, keeps both).
+                val turnShown = slots.turn != null && model.place !is Place.InWorld
+                val songShown = slots.song != null && model.place !is Place.InWorld && !listOpen
                 skin.Backdrop(if (hand != null) BackdropParts(turn = true, song = true)
-                    else BackdropParts(turn = slots.turn != null && model.place !is Place.InWorld, song = slots.song != null && model.place !is Place.InWorld && !listOpen),
+                    else BackdropParts(turn = turnShown, song = songShown,
+                        turnBox = boxes[STOP_TURN].takeIf { turnShown }, songBox = boxes[STOP_SONG].takeIf { songShown },
+                        statusBox = statusBox, soft = state.orbitShadeSoft),
                     Modifier.fillMaxSize())
                 @Composable
                 fun Modifier.slot(slot: Slot): Modifier = if (skin.coversMap(slot)) coversMap() else this
@@ -735,7 +741,8 @@ internal fun MyPlayEngineShell(
                         slots.trip?.let { skin.Trip(it, Modifier.slot(Slot.TURN).testTag(SLOT_TRIP)) }
                     }
                 } else if (home) slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) } }
-                Column(edge.align(Alignment.TopEnd), horizontalAlignment = Alignment.End) {
+                Column(edge.align(Alignment.TopEnd).onGloballyPositioned { c -> c.boundsInRoot().let { statusBox = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } },
+                    horizontalAlignment = Alignment.End) {
                     skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
                     if (STOP_BELL in actionsOf) {
                         ringed(STOP_BELL) { skin.Bell(notes.unseen, LocalStopRinged.current, Modifier.slot(Slot.STATUS).stop(STOP_BELL)) }

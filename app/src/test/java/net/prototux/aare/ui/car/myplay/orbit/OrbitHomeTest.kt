@@ -364,6 +364,17 @@ class OrbitHomeTest {
         assertEquals(net.prototux.aare.ui.car.myplay.Place.Chooser(net.prototux.aare.ui.car.myplay.World.CALLS), m.place)
     }
 
+    /** SH-1: plates hug the parts (the clock's too); "none" draws no shade at all. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theShadesHugThePartsOrAreNone() {
+        val state = show()
+        rule.onNodeWithTag(OrbitSkin.SHADE_STATUS_TAG).assertExists()
+        rule.onNodeWithTag(OrbitSkin.SHADE_TURN_TAG).assertExists()
+        rule.runOnIdle { state.orbitShadeSoft = false }
+        rule.waitForIdle()
+        for (t in listOf(OrbitSkin.SHADE_STATUS_TAG, OrbitSkin.SHADE_TURN_TAG, OrbitSkin.SHADE_SONG_TAG)) rule.onNodeWithTag(t).assertDoesNotExist()
+    }
+
     /** O8: the speed is in the hub with the trip, and the limit is a sign with its number; no separate speed part. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theSpeedAndTheLimitNumberAreInTheHub() {

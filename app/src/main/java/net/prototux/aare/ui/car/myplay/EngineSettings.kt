@@ -96,6 +96,12 @@ internal class CarSettingsSource(private val context: Context, private val state
             },
             settings.myplayMapsIdleHome.toString(),
         ) { settings.myplayMapsIdleHome = it.toInt() },
+        // SH-1: the shade behind ORBIT's parts.
+        SettingItem.Choice(
+            "orbit_shade", s(R.string.myplay_setting_orbit_shade),
+            listOf(ORBIT_SHADE_SOFT to s(R.string.myplay_setting_orbit_shade_soft), ORBIT_SHADE_NONE to s(R.string.myplay_setting_orbit_shade_none)),
+            settings.myplayOrbitShade,
+        ) { settings.myplayOrbitShade = it },
         // O11: the info-only home (ORBIT, with the home pad on).
         SettingItem.Toggle("info_home", s(R.string.myplay_setting_info_home), settings.myplayInfoHome) { settings.myplayInfoHome = it },
         SettingItem.Toggle("gesture_line", s(R.string.myplay_setting_gesture_line), settings.myplayGestureLine) { settings.myplayGestureLine = it },

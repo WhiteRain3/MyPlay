@@ -131,6 +131,8 @@ class CarUiState {
     var mapsIdleHomeMin by mutableStateOf(0)
     /** MyPlay (O11): ORBIT's home shows information only, no knob ring (with the home pad on). */
     var infoHome by mutableStateOf(false)
+    /** MyPlay (SH-1): soft plates behind ORBIT's parts (true), or none. */
+    var orbitShadeSoft by mutableStateOf(true)
     /** MyPlay (O6): what ORBIT's home pad opens while the ring is hidden; empty: the ring always (as in tests). */
     var homePad by mutableStateOf<Map<net.prototux.aare.ui.car.myplay.HomePadKey, net.prototux.aare.ui.car.myplay.HomePadAction>>(emptyMap())
     /** MyPlay (O3): how often this drive has shown the way home over an app (the first few times only). */
