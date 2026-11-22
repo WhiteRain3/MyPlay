@@ -193,7 +193,12 @@ internal fun MyPlayEngineShell(
     var panelChosen by remember(skin.id) { mutableStateOf(PANEL_PLAY) }
     // G-4: the car side takes the knob's push as a plain press while the panel or an alert holds it.
     val knobBusy = panelOpen || homeAlert != null
-    LaunchedEffect(knobBusy) { state.knobBusy = knobBusy }
+    // G-5: cleared when the engine leaves the screen (an app opened over an alert), so the knob's
+    // double and triple work in the app.
+    DisposableEffect(knobBusy) {
+        state.knobBusy = knobBusy
+        onDispose { state.knobBusy = false }
+    }
     // O6: the home pad opens things directly while the knob's ring is hidden; a turn shows the ring.
     val padMap = state.homePad
     val padHome = hand == null && HomePad.active(padMap)

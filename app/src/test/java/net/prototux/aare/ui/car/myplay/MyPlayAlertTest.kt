@@ -101,6 +101,18 @@ class MyPlayAlertTest {
         org.junit.Assert.assertFalse(state.knobBusy)
     }
 
+    /** G-5: an app opened while the panel held the knob: the knob is free again in the app. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun anAppOpenedFromThePanelFreesTheKnob() {
+        val state = show()
+        rule.onNodeWithTag(STOP_SONG).performClick()
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        org.junit.Assert.assertTrue(state.knobBusy)
+        rule.runOnIdle { state.screen = CarScreen.App(state.launcherApps[0].id) }
+        rule.waitForIdle()
+        org.junit.Assert.assertFalse(state.knobBusy)
+    }
+
     /** AL-2: after the alert, the ring is back on the stop it was on. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun afterTheAlertTheRingIsBackWhereItWas() {
