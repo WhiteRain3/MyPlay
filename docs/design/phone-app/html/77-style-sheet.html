@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=1600">
+<title>MyPlay phone app — style sheet</title>
+<style>
+/* MyPlay phone app: design tokens and components (dark only).
+   A sibling of ORBIT: rounds, rings, calm glass. World colours mark identity; one neutral colour marks interaction. */
+
+@font-face {
+  font-family: "Roboto Flex"; font-weight: 100 1000; font-style: normal;
+  src: url("../src/fonts/RobotoFlex-wght.woff2") format("woff2");
+}
+
+:root {
+  /* Surfaces */
+  --bg: #0A1015;          /* page */
+  --surface: #121A21;     /* cards ("glass") */
+  --surface2: #1A242D;    /* raised: icon discs, segmented, sheet rows */
+  --sheet: #151E26;       /* bottom sheet */
+  --edge: rgba(255, 255, 255, 0.07);
+  --edge2: rgba(255, 255, 255, 0.14);
+  --track: #2A3540;       /* fills only; never the only edge of a control */
+  --outline: #8A95A8;     /* off switch, slider rail: >= 3:1 on every surface */
+  --int: #DCE3EF;         /* the one interaction colour: switches, sliders, primary buttons, selection */
+  /* Text */
+  --text: #EEF1F7;        /* 16.6:1 on bg */
+  --text2: #AAB3C8;       /* 8.9:1 on bg */
+  --text3: #8A95A8;       /* 5.9:1 on bg, 5.5:1 on surface */
+  /* Signals */
+  --warn: #FF7A7A;
+  --caution: #FF9A57;     /* attention only: a hue no tab uses */
+  --ok: #6EE7A8;
+  --on: #0A1015;          /* text on any accent fill */
+  /* World colour per tab (ORBIT's night world colours): identity only.
+     Selected tab ring, the root title glyph, the hero ring. Never a control. */
+  --a-home: #6EE7A8;      /* Navigate */
+  --a-screen: #A78BFA;    /* Music */
+  --a-car: #FFC24A;       /* Car */
+  --a-apps: #FF8FB1;      /* Apps */
+  --a-more: #9DB4E8;      /* Settings */
+  --acc: var(--a-home);
+  --acc-soft: color-mix(in srgb, var(--acc) 14%, transparent);
+  --acc-line: color-mix(in srgb, var(--acc) 55%, transparent);
+  /* Shape and space (4 dp grid) */
+  --r-card: 24px;
+  --r-pill: 999px;
+  --gutter: 16px;
+}
+.t-home { --acc: var(--a-home); }
+.t-screen { --acc: var(--a-screen); }
+.t-car { --acc: var(--a-car); }
+.t-apps { --acc: var(--a-apps); }
+.t-more { --acc: var(--a-more); }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); }
+body {
+  font-family: "Roboto Flex", system-ui, sans-serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+svg.i { display: block; flex: none; }
+
+/* ---------- Phone frame (412 x 915 dp) ---------- */
+.phone {
+  position: relative; width: 412px; height: 915px; overflow: hidden;
+  background:
+    radial-gradient(130% 42% at 50% -8%, color-mix(in srgb, var(--acc) 11%, transparent), transparent 70%),
+    var(--bg);
+}
+.status {
+  height: 36px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
+  font-size: 14px; font-weight: 600; color: var(--text);
+}
+.status .sys { display: flex; gap: 6px; align-items: center; color: var(--text); }
+.content { position: absolute; top: 36px; left: 0; right: 0; bottom: 96px; overflow: hidden; }
+.content.full { bottom: 24px; }
+.navhandle { position: absolute; left: 0; right: 0; bottom: 0; height: 24px; display: flex; justify-content: center; align-items: center; }
+.navhandle::after { content: ""; width: 108px; height: 4px; border-radius: 2px; background: rgba(238, 241, 247, 0.55); }
+
+/* ---------- Top bars ---------- */
+.top { height: 72px; padding: 0 8px 0 20px; display: flex; align-items: center; gap: 8px; }
+.top h1 { font-size: 30px; font-weight: 650; letter-spacing: -0.6px; flex: 1; }
+.top.sub { padding-left: 4px; height: 64px; }
+.top.sub h1 { font-size: 22px; font-weight: 620; letter-spacing: -0.3px; }
+.iconbtn {
+  width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; color: var(--text2); flex: none;
+}
+.iconbtn.filled { background: var(--surface); border: 1px solid var(--edge); }
+.wordmark { display: flex; align-items: center; gap: 10px; flex: 1; font-size: 20px; font-weight: 650; letter-spacing: -0.3px; }
+
+/* ---------- Layout helpers ---------- */
+.pad { padding: 0 var(--gutter); }
+.stack > * + * { margin-top: 12px; }
+.sec { font-size: 13px; font-weight: 600; color: var(--text2); letter-spacing: 0.2px; padding: 20px 20px 8px; }
+.sec.first { padding-top: 4px; }
+.note { font-size: 13px; color: var(--text3); padding: 10px 20px 0; line-height: 18px; display: flex; gap: 8px; align-items: center; }
+.center { text-align: center; }
+
+/* ---------- Card and row ---------- */
+.card { background: var(--surface); border: 1px solid var(--edge); border-radius: var(--r-card); overflow: hidden; }
+.card.glass { background: color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter: blur(12px); }
+.card.acc { border-color: rgba(220,227,239,.28); background: linear-gradient(180deg, #18212A, var(--surface)); }
+.card.warn { border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+.row { min-height: 64px; padding: 10px 16px; display: flex; align-items: center; gap: 14px; position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 70px; right: 0; height: 1px; background: var(--edge); }
+.row.noicon + .row.noicon::before, .row.noicon + .row::before { left: 16px; }
+.row.tall { min-height: 72px; }
+.row.off .lbl .l { color: var(--text2); }
+.ic {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: var(--surface2); color: var(--text2);
+}
+.ic.world { background: var(--acc-soft); color: var(--acc); }
+.ic.plain { background: var(--surface2); color: var(--text2); }
+.ic.warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+.ic.app { color: var(--on); font-weight: 700; font-size: 15px; }
+.lbl { flex: 1; min-width: 0; }
+.lbl .l { font-size: 16px; font-weight: 520; line-height: 22px; display: flex; align-items: center; gap: 8px; }
+.lbl .h { font-size: 13px; color: var(--text3); line-height: 18px; margin-top: 2px; }
+.val { font-size: 14px; color: var(--text2); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.chev { color: var(--text3); }
+.changed { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--text2); display: inline-block; flex: none; }
+.val.ch { color: var(--text); font-weight: 560; }
+.link { color: var(--int); }
+
+/* Tags */
+.tag {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: var(--r-pill);
+  font-size: 11.5px; font-weight: 600; letter-spacing: 0.1px; white-space: nowrap;
+  background: color-mix(in srgb, var(--caution) 14%, transparent); color: var(--caution);
+}
+.tag.ok { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+.tag.mute { background: var(--surface2); color: var(--text2); }
+.tag.acc { background: color-mix(in srgb, var(--int) 14%, transparent); color: var(--int); }
+.tag.next { background: var(--surface2); color: var(--text2); gap: 4px; padding-left: 6px; }
+.tag.warn { background: color-mix(in srgb, var(--warn) 15%, transparent); color: var(--warn); }
+
+/* ---------- Controls ---------- */
+.sw { width: 52px; height: 32px; border-radius: 16px; position: relative; flex: none; background: var(--surface2); border: 2px solid var(--outline); }
+.sw::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%; background: var(--text2); top: 6px; left: 6px; }
+.sw.on { background: var(--int); border-color: var(--int); }
+.sw.dis { border: 2px dashed #5A6676; background: transparent; }
+.sw.dis::after { background: #5A6676; }
+.sw.on::after { width: 24px; height: 24px; top: 2px; left: 22px; background: var(--on); }
+
+.btn {
+  height: 52px; border-radius: var(--r-pill); padding: 0 24px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 16px; font-weight: 620; letter-spacing: -0.1px; white-space: nowrap;
+}
+.btn.primary { background: var(--int); color: var(--on); }
+.btn.ghost { border: 1.5px solid var(--edge2); color: var(--text); }
+.btn.text { color: var(--int); padding: 0 12px; }
+.btn.small { height: 40px; padding: 0 16px; font-size: 14px; }
+.btn.wide { width: 100%; }
+.btn.danger { color: var(--warn); }
+.btn.disabled { background: var(--surface2); color: var(--text3); }
+.btns { display: flex; gap: 12px; }
+.btns > .btn { flex: 1; }
+
+.seg { display: flex; background: var(--surface2); border-radius: var(--r-pill); padding: 4px; height: 48px; }
+.seg > div { flex: 1; border-radius: var(--r-pill); display: grid; place-items: center; font-size: 14px; font-weight: 560; color: var(--text2); }
+.seg > div.on { background: var(--int); color: var(--on); font-weight: 650; }
+
+.slider { padding: 6px 16px 14px; }
+.slider .head { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0 14px; }
+.slider .head .l { font-size: 16px; font-weight: 520; display: flex; gap: 8px; align-items: center; }
+.slider .head .v { font-size: 14px; color: var(--text); font-weight: 600; }
+.slider .track { position: relative; height: 4px; border-radius: 2px; background: #67748A; margin: 0 12px; }
+.slider .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: var(--int); }
+.slider .thumb { position: absolute; top: -12px; width: 28px; height: 28px; margin-left: -14px; border-radius: 50%; border: 3px solid var(--int); background: var(--bg); box-shadow: 0 0 0 6px rgba(220,227,239,.12); }
+.slider .ticks { position: absolute; left: 0; right: 0; top: -1px; display: flex; justify-content: space-between; }
+.slider .ticks i { width: 6px; height: 6px; border-radius: 50%; background: #8A95A8; margin-top: -1px; }
+.slider .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--text3); padding: 14px 0 0; }
+
+/* Discs (swatches, choices) */
+.discs { display: flex; gap: 14px; padding: 8px 16px 16px; flex-wrap: wrap; }
+.disc { width: 48px; height: 48px; border-radius: 50%; position: relative; flex: none; }
+.disc.sel { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--int); }
+.disc-l { font-size: 12px; color: var(--text2); text-align: center; margin-top: 8px; }
+
+/* ---------- Tab bar ---------- */
+.tabbar {
+  position: absolute; left: 0; right: 0; bottom: 24px; height: 72px; display: flex;
+  background: rgba(13, 19, 25, 0.94); border-top: 1px solid var(--edge); backdrop-filter: blur(16px);
+}
+.tabbar .tb { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text2); position: relative; }
+.tabbar .tb .ring { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; position: relative; }
+.tabbar .tb.on .ring { border: 2px solid var(--acc); background: var(--acc-soft); color: var(--acc); }
+.tabbar .tb span { font-size: 12px; font-weight: 520; color: var(--text3); }
+.tabbar .tb.on span { color: var(--text); font-weight: 650; }
+.tabbar .tb.home-tab { --acc: var(--a-home); }
+.tabbar .tb.screen-tab { --acc: var(--a-screen); }
+.tabbar .tb.car-tab { --acc: var(--a-car); }
+.tabbar .tb.apps-tab { --acc: var(--a-apps); }
+.tabbar .tb.more-tab { --acc: var(--a-more); }
+.badge { position: absolute; top: 2px; right: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--caution); box-shadow: 0 0 0 2px #0D1319; }
+
+/* ---------- Sheet and scrim ---------- */
+.scrim { position: absolute; inset: 0; background: rgba(3, 6, 9, 0.66); }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; background: var(--sheet);
+  border-radius: 28px 28px 0 0; border-top: 1px solid var(--edge2); padding: 12px 20px 40px;
+}
+.sheet .grab { width: 36px; height: 4px; border-radius: 2px; background: #3A4652; margin: 0 auto 18px; }
+.sheet h2 { font-size: 22px; font-weight: 640; letter-spacing: -0.3px; }
+.sheet .sub { font-size: 14px; color: var(--text2); margin-top: 6px; }
+.sheet .card { background: var(--surface2); }
+
+.snack {
+  position: absolute; left: 16px; right: 16px; bottom: 112px; height: 52px; border-radius: 16px;
+  background: #E6EAF2; color: #0A1015; display: flex; align-items: center; padding: 0 8px 0 18px; font-size: 14px; font-weight: 520;
+}
+.snack b { margin-left: auto; color: #3A2C8A; font-weight: 700; padding: 0 12px; }
+
+/* ---------- Hero ring ---------- */
+.hero { display: flex; flex-direction: column; align-items: center; padding: 8px 0 4px; }
+.hero .t { font-size: 24px; font-weight: 650; letter-spacing: -0.4px; margin-top: 14px; }
+.hero .s { font-size: 15px; color: var(--text2); margin-top: 4px; }
+
+/* Car picture */
+.pic { border-radius: 20px; overflow: hidden; border: 1px solid var(--edge); display: block; }
+.picwrap { position: relative; }
+.piccap { display: flex; align-items: center; justify-content: space-between; padding: 12px 4px 0; }
+
+/* Lists of apps */
+.appdot { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--on); flex: none; }
+
+/* Warning line for risky switches (plan rule 6) */
+.wline { display: flex; gap: 6px; align-items: center; color: var(--warn); font-size: 13px; margin-top: 3px; line-height: 18px; }
+/* Root title glyph: the tab's world colour in a ring */
+.tglyph { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--acc); color: var(--acc); display: grid; place-items: center; flex: none; background: var(--acc-soft); }
+/* Focus ring (keyboard / D-pad) */
+.focus { outline: 2px solid var(--int); outline-offset: 3px; }
+/* Dialog */
+.dialog { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-50%); background: var(--sheet); border: 1px solid var(--edge2); border-radius: 28px; padding: 24px; }
+.dialog h2 { font-size: 21px; font-weight: 640; letter-spacing: -0.3px; }
+.dialog .sub { font-size: 14px; color: var(--text2); margin-top: 8px; line-height: 20px; }
+.field { height: 56px; border-radius: 14px; border: 1.5px solid var(--outline); display: flex; align-items: center; padding: 0 16px; font-size: 16px; color: var(--text); margin-top: 16px; }
+.field.focus { border-color: var(--int); outline: none; }
+
+/* Tall capture: the whole scrolled page, the tab bar at its end */
+.phone.tall { height: auto; min-height: 915px; padding-bottom: 112px; }
+.phone.tall .content { position: relative; top: 0; bottom: auto; }
+
+/* 200 % font size (Android "font size" at its largest): only text grows */
+.f200 .lbl .l { font-size: 32px; line-height: 40px; }
+.f200 .lbl .h { font-size: 26px; line-height: 34px; }
+.f200 .row { flex-wrap: wrap; row-gap: 4px; padding-top: 14px; padding-bottom: 14px; }
+.f200 .lbl { flex: 1 1 60%; }
+.f200 .chev { order: 2; }
+.f200 .val { order: 3; flex-basis: 100%; padding-left: 54px; font-size: 28px; white-space: normal; }
+.f200 .row > .sw { order: 2; }
+.f200 .top h1 { font-size: 44px; }
+.f200 .tabbar .tb span { font-size: 20px; }
+.f200 .tabbar { height: 92px; }
+
+/* Menu (overflow) */
+.menu { position: absolute; background: #1F2932; border: 1px solid var(--edge2); border-radius: 16px; padding: 6px 0; min-width: 200px; box-shadow: 0 16px 40px rgba(0,0,0,.55); }
+.menu > div { height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 15px; }
+.menu > div.danger { color: var(--warn); }
+
+/* Check box */
+.cb { width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--outline); flex: none; display: grid; place-items: center; }
+.cb.on { background: var(--int); border-color: var(--int); color: var(--on); }
+
+/* Progress bar */
+.bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--int); border-radius: 3px; }
+
+/* Chips (presets) */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { height: 40px; padding: 0 16px; border-radius: 20px; border: 1.5px solid var(--outline); display: inline-flex; align-items: center; font-size: 14px; font-weight: 560; color: var(--text2); }
+.chip.on { background: var(--int); border-color: var(--int); color: var(--on); }
+.f200 .wline { font-size: 24px; line-height: 30px; }
+
+body { width: 1600px; }
+
+    .ss{padding:56px 64px 72px} header h1{font-size:42px;font-weight:650;letter-spacing:-1px} header p{color:var(--text2);font-size:19px;margin:12px 0 8px}
+    section{margin-top:44px} h2{font-size:26px;font-weight:640;letter-spacing:-.4px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--edge)}
+    h3{font-size:15px;font-weight:650;color:var(--text2);margin-bottom:14px}
+    .cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:48px} .cols2{display:grid;grid-template-columns:1fr 1fr;gap:64px}
+    .swatch{display:flex;gap:14px;align-items:center;margin-bottom:12px} .chip{width:56px;height:56px;border-radius:50%;border:1px solid var(--edge2);flex:none}
+    .swatch b{font-size:15px} code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:var(--text2)} .use{font-size:13.5px;color:var(--text3);line-height:19px} .use.c{text-align:center;margin-top:8px}
+    .cr{font-size:12.5px;color:var(--text2);margin-top:2px}
+    table.type{border-collapse:collapse;width:100%} table.type td{padding:9px 0;border-bottom:1px solid var(--edge);vertical-align:middle} table.type td:first-child{width:200px}
+    .notes{padding-left:18px;color:var(--text2);font-size:15px;line-height:23px} .notes li{margin-bottom:6px} .notes b{color:var(--text)}
+  
+</style></head><body>
+<div class="ss">
+    <header><div style="display:flex;gap:16px;align-items:center"><svg width="48" height="48" viewBox="0 0 32 32"><circle cx="16" cy="16" r="11" fill="none" stroke="var(--a-home)" stroke-width="3"/><circle cx="16" cy="16" r="4.5" fill="#EEF1F7"/><circle cx="25" cy="9" r="3.6" fill="var(--a-screen)" stroke="#0A1015" stroke-width="2"/></svg><h1>MyPlay phone app · style sheet</h1></div>
+    <p>Dark only. A sibling of ORBIT, not a copy: its rounds, rings, calm glass and world colours, set in plain lists a phone can scan.</p></header>
+    <section><h2>Colour</h2><div class="cols3">
+    <div><h3>Surfaces</h3><div class="swatch"><div class="chip" style="background:#0A1015"></div><div><b>bg</b> <code>#0A1015</code><div class="use">Page</div></div></div><div class="swatch"><div class="chip" style="background:#121A21"></div><div><b>surface</b> <code>#121A21</code><div class="use">Cards</div></div></div><div class="swatch"><div class="chip" style="background:#1A242D"></div><div><b>surface2</b> <code>#1A242D</code><div class="use">Discs, segmented</div></div></div><div class="swatch"><div class="chip" style="background:#151E26"></div><div><b>sheet</b> <code>#151E26</code><div class="use">Bottom sheet</div></div></div><div class="swatch"><div class="chip" style="background:#2A3540"></div><div><b>track</b> <code>#2A3540</code><div class="use">Off track, dividers</div></div></div><div class="use" style="margin-top:8px">Edges: white 7 % (cards), 14 % (sheet, ghost button)</div></div>
+    <div><h3>Text</h3><div class="swatch"><div class="chip" style="background:#EEF1F7"></div><div><b>text</b> <code>#EEF1F7</code><div class="use">Labels, titles</div><div class="cr">16.9:1 on bg · 15.5:1 on surface · 13.9:1 on surface2</div></div></div><div class="swatch"><div class="chip" style="background:#AAB3C8"></div><div><b>text2</b> <code>#AAB3C8</code><div class="use">Values, section heads</div><div class="cr">9.1:1 on bg · 8.4:1 on surface · 7.5:1 on surface2</div></div></div><div class="swatch"><div class="chip" style="background:#8A95A8"></div><div><b>text3</b> <code>#8A95A8</code><div class="use">Help lines, chevrons</div><div class="cr">6.3:1 on bg · 5.8:1 on surface · 5.2:1 on surface2</div></div></div>
+      <h3 style="margin-top:22px">Signals</h3><div class="swatch"><div class="chip" style="background:#6EE7A8"></div><div><b>ok</b> <code>#6EE7A8</code><div class="use">Connected, done</div><div class="cr">12.4:1 on bg · 11.4:1 on surface</div></div></div><div class="swatch"><div class="chip" style="background:#FF9A57"></div><div><b>caution</b> <code>#FF9A57</code><div class="use">Needs attention: badge, card dot</div><div class="cr">9.1:1 on bg · 8.4:1 on surface</div></div></div><div class="swatch"><div class="chip" style="background:#FF7A7A"></div><div><b>warn</b> <code>#FF7A7A</code><div class="use">Errors, risky switches</div><div class="cr">7.6:1 on bg · 7.0:1 on surface</div></div></div></div>
+    <div><h3>Interaction (one colour, every tab)</h3><div class="swatch"><div class="chip" style="background:#DCE3EF"></div><div><b>int</b> <code>#DCE3EF</code><div class="use">Switches, sliders, primary buttons, selection, focus</div><div class="cr">13.6:1 on surface · text on fill 14.8:1</div></div></div>
+      <h3 style="margin-top:22px">World colour per tab: identity only</h3><div class="swatch"><div class="chip" style="background:#6EE7A8"></div><div><b>Home</b> <code>#6EE7A8</code><div class="use">ORBIT Navigate</div><div class="cr">11.4:1 on surface</div></div></div><div class="swatch"><div class="chip" style="background:#A78BFA"></div><div><b>Screen</b> <code>#A78BFA</code><div class="use">ORBIT Music</div><div class="cr">6.5:1 on surface</div></div></div><div class="swatch"><div class="chip" style="background:#FFC24A"></div><div><b>Car</b> <code>#FFC24A</code><div class="use">ORBIT Car</div><div class="cr">10.9:1 on surface</div></div></div><div class="swatch"><div class="chip" style="background:#FF8FB1"></div><div><b>Apps</b> <code>#FF8FB1</code><div class="use">ORBIT Apps</div><div class="cr">8.2:1 on surface</div></div></div><div class="swatch"><div class="chip" style="background:#9DB4E8"></div><div><b>More</b> <code>#9DB4E8</code><div class="use">ORBIT Settings</div><div class="cr">8.5:1 on surface</div></div></div>
+      <div class="use" style="margin-top:8px">Only the selected tab's ring, the root title glyph and the hero ring use it, as ORBIT tints the world you are in. Never a control, never text.</div>
+      <h3 style="margin-top:22px">Non-text contrast (≥ 3:1, checked)</h3><div class="cr" style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><i style="width:28px;height:4px;border-radius:2px;background:#8A95A8"></i>Switch outline (off) · 6.3:1 bg · 5.8:1 surface · 5.2:1 surface2</div><div class="cr" style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><i style="width:28px;height:4px;border-radius:2px;background:#67748A"></i>Slider rail · 4.0:1 bg · 3.7:1 surface · 3.3:1 surface2</div><div class="cr" style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><i style="width:28px;height:4px;border-radius:2px;background:#7A8698"></i>Dashed ring (not connected) · 5.2:1 bg · 4.8:1 surface · 4.3:1 surface2</div><div class="cr" style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><i style="width:28px;height:4px;border-radius:2px;background:#DCE3EF"></i>Focus ring · 14.8:1 bg · 13.6:1 surface · 12.2:1 surface2</div><div class="cr" style="display:flex;gap:10px;align-items:center;margin-bottom:6px"><i style="width:28px;height:4px;border-radius:2px;background:#AAB3C8"></i>Changed mark · 9.1:1 bg · 8.4:1 surface · 7.5:1 surface2</div></div></div></section>
+    <div class="cols2"><section><h2>Type scale</h2><table class="type"><tr><td class="use">Root title<br><code>30 / 650 / -0.6</code></td><td style="font-size:30px;font-weight:650;letter-spacing:-0.6px">Screen</td></tr><tr><td class="use">Hero<br><code>24 / 650 / -0.4</code></td><td style="font-size:24px;font-weight:650;letter-spacing:-0.4px">Connected</td></tr><tr><td class="use">Page title / sheet<br><code>22 / 620 / -0.3</code></td><td style="font-size:22px;font-weight:620;letter-spacing:-0.3px">Pad shortcuts</td></tr><tr><td class="use">Button<br><code>16 / 620 / -0.1</code></td><td style="font-size:16px;font-weight:620;letter-spacing:-0.1px">Install 2.4</td></tr><tr><td class="use">Label<br><code>16 / 520</code></td><td style="font-size:16px;font-weight:520;letter-spacing:0px">Follow the car’s lights</td></tr><tr><td class="use">Value<br><code>14 / 400</code></td><td style="font-size:14px;font-weight:400;letter-spacing:0px">Last used</td></tr><tr><td class="use">Help<br><code>13 / 400</code></td><td style="font-size:13px;font-weight:400;letter-spacing:0px">Once a day, from GitHub</td></tr><tr><td class="use">Section<br><code>13 / 600 / 0.2</code></td><td style="font-size:13px;font-weight:600;letter-spacing:0.2px">Knob push</td></tr><tr><td class="use">Tab label<br><code>12 / 520</code></td><td style="font-size:12px;font-weight:520;letter-spacing:0px">Apps</td></tr><tr><td class="use">Tag<br><code>11.5 / 600 / 0.1</code></td><td style="font-size:11.5px;font-weight:600;letter-spacing:0.1px">Next connection</td></tr></table>
+    <div class="use" style="margin-top:12px">Roboto Flex (OFL), the platform's own font, so the phone matches these pictures. Sentence case. Labels ≤ 30 characters, help ≤ 60 (checked by the build). Text scales to 200 %; rows grow, never clip.</div></section><section><h2>Space and shape</h2><div style="display:flex;gap:18px;align-items:flex-end;margin-bottom:18px"><div style="text-align:center"><div style="width:4px;height:4px;background:var(--acc);border-radius:3px;margin:0 auto"></div><code>4</code></div><div style="text-align:center"><div style="width:8px;height:8px;background:var(--acc);border-radius:3px;margin:0 auto"></div><code>8</code></div><div style="text-align:center"><div style="width:12px;height:12px;background:var(--acc);border-radius:3px;margin:0 auto"></div><code>12</code></div><div style="text-align:center"><div style="width:16px;height:16px;background:var(--acc);border-radius:3px;margin:0 auto"></div><code>16</code></div><div style="text-align:center"><div style="width:20px;height:20px;background:var(--acc);border-radius:3px;margin:0 auto"></div><code>20</code></div><div style="text-align:center"><div style="width:24px;height:24px;background:var(--acc);border-radius:3px;margin:0 auto"></div><code>24</code></div><div style="text-align:center"><div style="width:32px;height:32px;background:var(--acc);border-radius:3px;margin:0 auto"></div><code>32</code></div><div style="text-align:center"><div style="width:48px;height:48px;background:var(--acc);border-radius:3px;margin:0 auto"></div><code>48</code></div></div>
+    <ul class="notes">
+      <li>4 dp grid. Side gutter 16. Gap between cards 12. Section head 20 above, 8 below.</li>
+      <li>Touch target ≥ 48 × 48 everywhere; rows 56–64 (72 with help).</li>
+      <li>Radii: card 24 · picture 20 · sheet 28 · buttons and tags fully round · icon disc 40 circle.</li>
+      <li>Tab bar 72 + gesture area 24. Top bar 72 (root) / 64 (page).</li>
+    </ul><h2 style="margin-top:30px">Motion</h2><ul class="notes">
+    <li><b>Pages</b>: shared axis X, 300 ms, emphasized easing (cubic-bezier(.2,0,0,1)); Back runs it in reverse and follows the predictive-back gesture.</li>
+    <li><b>Tabs</b>: fade through, 200 ms; each tab keeps its stack and scroll.</li>
+    <li><b>Sheets</b>: rise 280 ms, scrim fades to 66 %; drag down or Back closes.</li>
+    <li><b>Rings</b>: progress sweeps clockwise from 12 o'clock; waiting rings breathe (scale 1 → 1.06, opacity .25 → 0, 1.6 s loop); connected ring draws once, 600 ms.</li>
+    <li><b>Switches</b>: thumb 150 ms + light haptic. Reorder lift: 8 dp shadow + accent edge + haptic.</li>
+    <li><b>Changes</b>: the live car picture cross-fades 200 ms on every setting change, so the change is seen, not explained.</li>
+    <li>Respect "Remove animations": every motion falls back to an instant cut or a 100 ms fade.</li>
+  </ul></section></div>
+    <section><h2>Components</h2><div class="cols3 t-screen">
+    <div><h3>Rows</h3><div class="card " ><div class="row    " ><div class="ic "><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" /></svg></div><div class="lbl"><div class="l">Colours</div></div><div class="val ch"><i class="changed" title="Changed"></i>AARE · own colours</div><span class="chev"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></span></div><div class="row    " ><div class="ic "><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.9 4.9 1.4 1.4" /><path d="m17.7 17.7 1.4 1.4" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.3 17.7-1.4 1.4" /><path d="m19.1 4.9-1.4 1.4" /></svg></div><div class="lbl"><div class="l">Follow the car's lights</div></div><div class="sw on"></div></div><div class="row  tall  " ><div class="ic "><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4" /><path d="M3.34 19a10 10 0 1 1 17.32 0" /></svg></div><div class="lbl"><div class="l">Speed source <span class="tag mute">Also on the car</span></div><div class="h">Car first, then phone GPS</div></div><div class="val">Auto</div><span class="chev"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></span></div><div class="row noicon   " ><div class="lbl"><div class="l">Prefer 60 fps <span class="tag next"><svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Next connection</span></div></div><div class="sw"></div></div><div class="row    " ><div class="ic "><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></svg></div><div class="lbl"><div class="l">Project page</div></div><span class="chev"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6" /><path d="M10 14 21 3" /><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg></span></div></div>
+    <div class="use" style="margin-top:10px">Icon disc · label · one help line at most · value or control on the right. The hollow ring = changed from default (a filled dot means only “needs attention”). Chevron opens a page; ↗ leaves to another tab or the web. A risky switch has a warning line in warn, reason in ⓘ. Rows that need a permission stay readable; only their controls are disabled (dashed).</div>
+    <h3 style="margin-top:26px">Switch</h3><div style="display:flex;gap:18px;align-items:center"><div class="sw on"></div><div class="sw"></div><span class="use">52 × 32 in a 48 target. A light haptic on change.</span></div>
+    </div>
+    <div><h3>Slider and segmented</h3><div class="card " ><div class="slider"><div class="head"><div class="l">Text size<i class="changed"></i></div><div class="v">Larger</div></div>
+  <div class="track"><div class="ticks"><i></i><i></i><i></i><i></i></div><div class="fill" style="width:66.6%"></div><div class="thumb" style="left:66.6%"></div></div><div class="ends"><span>Small</span><span>Largest</span></div></div></div><div style="height:14px"></div><div class="seg"><div class="on">Car's</div><div class="">Dark</div><div class="">Light</div></div>
+    <div class="use" style="margin-top:10px">The slider thumb is a ring (ORBIT's highlight). Steps snap; the value shows on the right. Three-step choices are segmented; Int settings with more values open a picker sheet.</div>
+    <h3 style="margin-top:26px">Buttons</h3><div style="display:flex;gap:10px;flex-wrap:wrap"><div class="btn primary">Install</div><div class="btn ghost">Disconnect</div><div class="btn text"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /></svg>Reset this page</div></div>
+    <div class="use" style="margin-top:10px">One primary per screen. Others are ghost or text.</div>
+    <h3 style="margin-top:26px">Tags</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="tag next"><svg class="i" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" /></svg>Next connection</span><span class="tag mute">Also on the car</span><span class="tag acc">In use</span><span class="tag ok">Allowed</span><span class="tag warn">Left: nothing</span></div>
+    </div>
+    <div><h3>Rings (status)</h3><div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
+      <div class="t-home"><div style="position:relative;width:84px;height:84px;flex:none">
+  <svg width="84" height="84" style="position:absolute;inset:0;overflow:visible"><circle cx="42" cy="42" r="40" fill="none" stroke="var(--track)" stroke-width="4"/><circle cx="42" cy="42" r="40" fill="none" stroke="var(--acc)" stroke-width="4" stroke-dasharray="251.32741228718345 251.32741228718345" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+  <div style="position:absolute;inset:0;display:grid;place-items:center;color:var(--acc)"><svg class="i" width="32" height="32" viewBox="0 0 24 24"><path d="M5 11l1.6-4.2A2 2 0 0 1 8.5 5.5h7a2 2 0 0 1 1.9 1.3L19 11h.5a1.5 1.5 0 0 1 1.5 1.5V17a1 1 0 0 1-1 1h-1v1.2a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V18H8v1.2a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V18H4a1 1 0 0 1-1-1v-4.5A1.5 1.5 0 0 1 4.5 11z" fill="currentColor"/><path d="M7.2 11l1.1-3h7.4l1.1 3z" fill="#0A1015" opacity=".75"/><circle cx="7" cy="14.5" r="1.3" fill="#0A1015"/><circle cx="17" cy="14.5" r="1.3" fill="#0A1015"/></svg></div></div><div class="use c">Connected</div></div>
+      <div><div style="position:relative;width:84px;height:84px;flex:none">
+  <svg width="84" height="84" style="position:absolute;inset:0;overflow:visible"><circle cx="42" cy="42" r="40.5" fill="none" stroke="#5A6676" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+  <div style="position:absolute;inset:0;display:grid;place-items:center;color:var(--text3)"><svg class="i" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 11l1.6-4.2A2 2 0 0 1 8.5 5.5h7a2 2 0 0 1 1.9 1.3L19 11h.5a1.5 1.5 0 0 1 1.5 1.5V17a1 1 0 0 1-1 1h-1v1.2a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V18H8v1.2a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V18H4a1 1 0 0 1-1-1v-4.5A1.5 1.5 0 0 1 4.5 11z"/><path d="M7.4 11h9.2"/><circle cx="7" cy="14.5" r="1" fill="currentColor"/><circle cx="17" cy="14.5" r="1" fill="currentColor"/></svg></div></div><div class="use c">Not connected</div></div>
+      <div><div style="position:relative;width:84px;height:84px;flex:none">
+  <svg width="84" height="84" style="position:absolute;inset:0;overflow:visible"><circle cx="42" cy="42" r="40" fill="none" stroke="var(--track)" stroke-width="4"/><circle cx="42" cy="42" r="40" fill="none" stroke="var(--int)" stroke-width="4" stroke-dasharray="160.8495438637974 251.32741228718345" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+  <div style="position:absolute;inset:0;display:grid;place-items:center;color:var(--int)"><b style="font-size:16px;color:var(--text)">64%</b></div></div><div class="use c">Progress</div></div>
+      <div><div style="position:relative;width:84px;height:84px;flex:none">
+  <svg width="84" height="84" style="position:absolute;inset:0;overflow:visible"><circle cx="42" cy="42" r="40" fill="none" stroke="var(--track)" stroke-width="4"/><circle cx="42" cy="42" r="40" fill="none" stroke="var(--warn)" stroke-width="4" stroke-dasharray="75.39822368615503 251.32741228718345" stroke-linecap="round" transform="rotate(-90 42 42)"/></svg>
+  <div style="position:absolute;inset:0;display:grid;place-items:center;color:var(--warn)"><span style="color:var(--warn)"><svg class="i" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12.01" y1="16" y2="16" /></svg></span></div></div><div class="use c">Error</div></div>
+    </div>
+    <h3 style="margin-top:26px">Card and sheet</h3>
+    <div style="position:relative;height:250px;border-radius:24px;overflow:hidden;border:1px solid var(--edge)"><div style="padding:16px"><div class="card acc" ><div class="row    " ><div class="ic "><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg></div><div class="lbl"><div class="l">Version 2.4 is ready</div></div><div class="val"></div><span class="chev"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></span></div></div></div>
+      <div class="scrim"></div><div class="sheet" style="position:absolute;padding-bottom:20px"><div class="grab"></div><h2 style="font-size:19px">Share the log</h2><div class="btns" style="margin-top:16px"><div class="btn ghost small">Cancel</div><div class="btn primary small">Share</div></div></div></div>
+    <h3 style="margin-top:26px">Snackbar (undo)</h3><div style="position:relative;height:56px"><div class="snack" style="position:absolute;inset:0;bottom:auto">Car forgotten<b>Undo</b></div></div>
+    </div></div>
+    <h3 style="margin-top:34px">Tab bar</h3><div style="position:relative;width:412px;height:96px;background:var(--bg);border-radius:0 0 20px 20px;overflow:hidden"><nav class="tabbar"><div class="tb home-tab"><div class="ring"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg></div><span>Home</span></div><div class="tb screen-tab on"><div class="ring"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2" /><line x1="8" x2="16" y1="21" y2="21" /><line x1="12" x2="12" y1="17" y2="21" /></svg></div><span>Screen</span></div><div class="tb car-tab"><div class="ring"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" /></svg></div><span>Car</span></div><div class="tb apps-tab"><div class="ring"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></svg></div><span>Apps</span></div><div class="tb more-tab"><div class="ring"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg><i class="badge"></i></div><span>More</span></div></nav></div>
+    <div class="use" style="margin-top:10px;max-width:760px">Selected tab: its icon in a ring, in that tab's world colour. Home is a house, Car is a car; there is no connected cue on the tab (the Home hero and the system notification carry it). A dot on a tab means “needs attention” only (orange).</div></section>
+  </div>
+</body></html>

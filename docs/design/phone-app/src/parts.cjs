@@ -101,7 +101,7 @@ function topSub(title, right) {
 /** A full phone screen. */
 function phone(o) {
   const tabs = o.tabs === false ? '' : tabBar(o.tab, o);
-  return `<div class="phone t-${o.tab}">${statusBar()}<div class="content${o.tabs === false ? ' full' : ''}">${o.body}</div>${tabs}${o.overlay ?? ''}<div class="navhandle"></div></div>`;
+  return `<div class="phone t-${o.tab}${o.tall ? ' tall' : ''}${o.f200 ? ' f200' : ''}">${statusBar()}<div class="content${o.tabs === false ? ' full' : ''}">${o.body}</div>${tabs}${o.overlay ?? ''}<div class="navhandle"></div></div>`;
 }
 function doc(title, inner, w = 412, extraCss = '') {
   return `<!doctype html>
@@ -122,11 +122,11 @@ let picId = 0;
 function carPic(w, o = {}) {
   const id = 'p' + (picId++);
   const h = Math.round((w * 720) / 1280);
-  const hot = o.hot ? (() => {
-    const lab = (x, y, t) => { const tw = t.length * 19 + 36; return `<g><rect x="${x}" y="${y}" width="${tw}" height="52" rx="26" fill="#A78BFA"/><text x="${x + tw / 2}" y="${y + 35}" font-size="30" font-weight="700" text-anchor="middle" fill="#0A1015">${t}</text></g>`; };
-    return `<g fill="none" stroke="#A78BFA" stroke-width="5" stroke-dasharray="14 12">
-      <circle cx="160" cy="160" r="128"/><circle cx="170" cy="560" r="146"/><circle cx="1110" cy="560" r="146"/><circle cx="300" cy="420" r="62"/></g>
-      ${lab(300, 70, 'Maps')}${lab(330, 590, 'Design')}${lab(372, 380, 'Speed')}${lab(830, 600, 'Sound')}`;
+  const hot = o.pressed ? (() => {
+    const lab = (x, y, t) => { const tw = t.length * 19 + 36; return `<g><rect x="${x}" y="${y}" width="${tw}" height="52" rx="26" fill="#DCE3EF"/><text x="${x + tw / 2}" y="${y + 35}" font-size="30" font-weight="700" text-anchor="middle" fill="#0A1015">${t}</text></g>`; };
+    return `<g fill="none" stroke="#DCE3EF" stroke-width="5" stroke-dasharray="14 12">
+      <circle cx="160" cy="160" r="128"/><circle cx="185" cy="545" r="175"/><circle cx="1110" cy="560" r="146"/></g>
+      ${lab(300, 70, 'Maps')}${lab(380, 600, 'Speed')}${lab(830, 600, 'Sound')}`;
   })() : '';
   const dim = o.dim ? `<rect width="1280" height="720" fill="#0A1015" opacity=".55"/>` : '';
   const acc = o.accent ?? '#6EE7A8';

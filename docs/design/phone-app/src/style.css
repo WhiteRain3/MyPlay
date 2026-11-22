@@ -233,3 +233,38 @@ svg.i { display: block; flex: none; }
 .dialog .sub { font-size: 14px; color: var(--text2); margin-top: 8px; line-height: 20px; }
 .field { height: 56px; border-radius: 14px; border: 1.5px solid var(--outline); display: flex; align-items: center; padding: 0 16px; font-size: 16px; color: var(--text); margin-top: 16px; }
 .field.focus { border-color: var(--int); outline: none; }
+
+/* Tall capture: the whole scrolled page, the tab bar at its end */
+.phone.tall { height: auto; min-height: 915px; padding-bottom: 112px; }
+.phone.tall .content { position: relative; top: 0; bottom: auto; }
+
+/* 200 % font size (Android "font size" at its largest): only text grows */
+.f200 .lbl .l { font-size: 32px; line-height: 40px; }
+.f200 .lbl .h { font-size: 26px; line-height: 34px; }
+.f200 .row { flex-wrap: wrap; row-gap: 4px; padding-top: 14px; padding-bottom: 14px; }
+.f200 .lbl { flex: 1 1 60%; }
+.f200 .chev { order: 2; }
+.f200 .val { order: 3; flex-basis: 100%; padding-left: 54px; font-size: 28px; white-space: normal; }
+.f200 .row > .sw { order: 2; }
+.f200 .top h1 { font-size: 44px; }
+.f200 .tabbar .tb span { font-size: 20px; }
+.f200 .tabbar { height: 92px; }
+
+/* Menu (overflow) */
+.menu { position: absolute; background: #1F2932; border: 1px solid var(--edge2); border-radius: 16px; padding: 6px 0; min-width: 200px; box-shadow: 0 16px 40px rgba(0,0,0,.55); }
+.menu > div { height: 48px; display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 15px; }
+.menu > div.danger { color: var(--warn); }
+
+/* Check box */
+.cb { width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--outline); flex: none; display: grid; place-items: center; }
+.cb.on { background: var(--int); border-color: var(--int); color: var(--on); }
+
+/* Progress bar */
+.bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--int); border-radius: 3px; }
+
+/* Chips (presets) */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { height: 40px; padding: 0 16px; border-radius: 20px; border: 1.5px solid var(--outline); display: inline-flex; align-items: center; font-size: 14px; font-weight: 560; color: var(--text2); }
+.chip.on { background: var(--int); border-color: var(--int); color: var(--on); }
+.f200 .wline { font-size: 24px; line-height: 30px; }

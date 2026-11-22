@@ -50,17 +50,17 @@ module.exports = function styleSheet() {
 
   const comps = `<div class="cols3 t-screen">
     <div><h3>Rows</h3>${card([
-      row({ ic: 'palette', label: 'Colours', value: 'Slate + own', changed: true }),
+      row({ ic: 'palette', label: 'Colours', value: 'AARE · own colours', changed: true }),
       row({ ic: 'sun-moon', label: "Follow the car's lights", sw: true }),
       row({ ic: 'gauge', label: 'Speed source', help: 'Car first, then phone GPS', value: 'Auto', tag: ALSO }),
       row({ label: 'Prefer 60 fps', sw: false, tag: NEXT }),
       row({ ic: 'globe', label: 'Project page', ext: true }),
     ].join(''))}
-    <div class="use" style="margin-top:10px">Icon disc · label · one help line at most · value or control on the right. The dot = changed from default. Chevron opens a page; ↗ leaves to another tab or the web.</div>
+    <div class="use" style="margin-top:10px">Icon disc · label · one help line at most · value or control on the right. The hollow ring = changed from default (a filled dot means only “needs attention”). Chevron opens a page; ↗ leaves to another tab or the web. A risky switch has a warning line in warn, reason in ⓘ. Rows that need a permission stay readable; only their controls are disabled (dashed).</div>
     <h3 style="margin-top:26px">Switch</h3><div style="display:flex;gap:18px;align-items:center"><div class="sw on"></div><div class="sw"></div><span class="use">52 × 32 in a 48 target. A light haptic on change.</span></div>
     </div>
     <div><h3>Slider and segmented</h3>${card(slider('Text size', 'Larger', 66.6, { ticks: 4, ends: ['Small', 'Largest'], changed: true }))}<div style="height:14px"></div>${seg(["Car's", 'Dark', 'Light'], 0)}
-    <div class="use" style="margin-top:10px">The slider thumb is a ring (ORBIT's highlight). Steps snap; the value shows in the accent.</div>
+    <div class="use" style="margin-top:10px">The slider thumb is a ring (ORBIT's highlight). Steps snap; the value shows on the right. Three-step choices are segmented; Int settings with more values open a picker sheet.</div>
     <h3 style="margin-top:26px">Buttons</h3><div style="display:flex;gap:10px;flex-wrap:wrap">${btn('Install', 'primary')}${btn('Disconnect', 'ghost')}${btn('Reset this page', 'text', 'rotate-ccw')}</div>
     <div class="use" style="margin-top:10px">One primary per screen. Others are ghost or text.</div>
     <h3 style="margin-top:26px">Tags</h3><div style="display:flex;gap:8px;flex-wrap:wrap">${NEXT}${ALSO}${tag('In use', 'acc')}${tag('Allowed', 'ok')}${tag('Left: nothing', 'warn')}</div>
@@ -68,7 +68,7 @@ module.exports = function styleSheet() {
     <div><h3>Rings (status)</h3><div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap">
       <div class="t-home">${ring(84, { w: 4, color: 'var(--acc)', inner: carGlyph(32, true) })}<div class="use c">Connected</div></div>
       <div>${ring(84, { w: 3, color: '#5A6676', dashed: '3 9', track: false, inner: carGlyph(30), innerColor: 'var(--text3)' })}<div class="use c">Not connected</div></div>
-      <div>${ring(84, { w: 4, pct: 0.64, color: 'var(--acc)', inner: '<b style="font-size:16px;color:var(--text)">64%</b>' })}<div class="use c">Progress</div></div>
+      <div>${ring(84, { w: 4, pct: 0.64, color: 'var(--int)', inner: '<b style="font-size:16px;color:var(--text)">64%</b>' })}<div class="use c">Progress</div></div>
       <div>${ring(84, { w: 4, color: 'var(--warn)', pct: 0.3, inner: `<span style="color:var(--warn)">${I('circle-alert', 30)}</span>` })}<div class="use c">Error</div></div>
     </div>
     <h3 style="margin-top:26px">Card and sheet</h3>
@@ -77,7 +77,7 @@ module.exports = function styleSheet() {
     <h3 style="margin-top:26px">Snackbar (undo)</h3><div style="position:relative;height:56px"><div class="snack" style="position:absolute;inset:0;bottom:auto">Car forgotten<b>Undo</b></div></div>
     </div></div>
     <h3 style="margin-top:34px">Tab bar</h3><div style="position:relative;width:412px;height:96px;background:var(--bg);border-radius:0 0 20px 20px;overflow:hidden">${tabBar('screen', { connected: true, badgeMore: true })}</div>
-    <div class="use" style="margin-top:10px;max-width:760px">Selected tab: its icon in a ring, in that tab's accent. Home's icon is the car: outline = not connected, filled = connected (no dot). A dot on a tab means "needs attention" only (amber).</div>`;
+    <div class="use" style="margin-top:10px;max-width:760px">Selected tab: its icon in a ring, in that tab's world colour. Home is a house, Car is a car; there is no connected cue on the tab (the Home hero and the system notification carry it). A dot on a tab means “needs attention” only (orange).</div>`;
 
   const motion = `<ul class="notes">
     <li><b>Pages</b>: shared axis X, 300 ms, emphasized easing (cubic-bezier(.2,0,0,1)); Back runs it in reverse and follows the predictive-back gesture.</li>
