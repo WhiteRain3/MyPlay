@@ -27,7 +27,9 @@ internal class ButtonTable(
     }
 
     enum class Gesture(val id: String) {
-        PRESS("press"), HOLD("hold"), DOUBLE("double"), HOLD_TURN("hold_turn");
+        PRESS("press"), HOLD("hold"), DOUBLE("double"), HOLD_TURN("hold_turn"),
+        /** G-2: three quick presses. */
+        TRIPLE("triple");
 
         companion object {
             fun byId(id: String) = entries.firstOrNull { it.id == id }
@@ -49,8 +51,19 @@ internal class ButtonTable(
     /** Whether a double press of [code] does something: if not, its press need not wait. */
     fun doubleCapable(code: Int) = resolve(code, Gesture.DOUBLE).let { it != null && it != ButtonAction.NOTHING }
 
+    /** G-2: whether a triple press of [code] does something: if so, a double press waits for a third. */
+    fun tripleCapable(code: Int) = resolve(code, Gesture.TRIPLE).let { it != null && it != ButtonAction.NOTHING }
+
     /** Whether a knob turn while [code] is held belongs to the hold rather than to the ring. */
     fun turnCapable(code: Int) = resolve(code, Gesture.HOLD_TURN).let { it != null && it != ButtonAction.NOTHING }
+
+    /**
+     * G-3: the table as the car side uses it, one line for the connection log: each control's
+     * codes and its gestures' actions ("knob_push [23,66,160] press=select double=next ...").
+     */
+    fun describe(): String = "buttons: " + Control.entries.joinToString("; ") { c ->
+        "${c.id} ${codes(c).sorted()} " + Gesture.entries.joinToString(" ") { g -> "${g.id}=${action(c, g).id}" }
+    }
 
     /** Every code the table handles, so these keys are measured by the gesture engine alone. */
     val allCodes: Set<Int> get() = Control.entries.flatMap(::codes).toSet()
@@ -66,14 +79,20 @@ internal class ButtonTable(
         )
 
         /**
-         * The defaults the plan proposes, with one change: a double push of the knob does nothing
-         * by default, so a single push (the one used most) never waits the double-press time.
+         * The defaults the plan proposes. G-1 (the owner's car check: the box sends every key as an
+         * instant down and up, so a hold never arrives): a double push of the knob is the next
+         * song by default, which on that box is also what a held knob becomes (one or two quick
+         * presses); a single push then waits the double-press time (250 ms) before it presses.
+         * The holds stay for cars that send them; they cost nothing where none come.
          */
         val DEFAULTS: Map<Pair<Control, Gesture>, ButtonAction> = mapOf(
             (Control.KNOB_PUSH to Gesture.PRESS) to ButtonAction.SELECT,
             (Control.KNOB_PUSH to Gesture.HOLD) to ButtonAction.NEXT,
-            (Control.KNOB_PUSH to Gesture.DOUBLE) to ButtonAction.NOTHING,
+            (Control.KNOB_PUSH to Gesture.DOUBLE) to ButtonAction.NEXT,
             (Control.KNOB_PUSH to Gesture.HOLD_TURN) to ButtonAction.SKIP_SONGS,
+            // G-2 (the owner: the wheel has no next/previous buttons; its click is the knob's code):
+            // three quick pushes, the previous song.
+            (Control.KNOB_PUSH to Gesture.TRIPLE) to ButtonAction.PREVIOUS,
             (Control.WHEEL_CLICK to Gesture.PRESS) to ButtonAction.PLAY_PAUSE,
             (Control.WHEEL_CLICK to Gesture.HOLD) to ButtonAction.NEXT,
             (Control.WHEEL_CLICK to Gesture.DOUBLE) to ButtonAction.PREVIOUS,

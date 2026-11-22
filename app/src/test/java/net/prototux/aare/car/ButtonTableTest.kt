@@ -55,8 +55,18 @@ class ButtonTableTest {
         assertNull(t.resolve(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, Gesture.PRESS))
     }
 
+    /** G-3: the connection log's line names each control's codes and actions, a change included. */
+    @Test fun theTableDescribesItself() {
+        val t = ButtonTable(mapOf((Control.KNOB_PUSH to Gesture.PRESS) to ButtonAction.PLAY_PAUSE))
+        val line = t.describe()
+        assertTrue(line, line.startsWith("buttons: knob_push [23, 66, 160] press=play_pause hold=next double=next"))
+        assertTrue(line, "back [4] press=back hold=home" in line)
+    }
+
     @Test fun onlyKeysWithADoubleActionWaitForASecondPress() {
-        assertFalse(table.doubleCapable(KeyEvent.KEYCODE_DPAD_CENTER))
+        // G-1: the knob's double push is the next song by default (the owner's box sends no holds).
+        assertTrue(table.doubleCapable(KeyEvent.KEYCODE_DPAD_CENTER))
+        assertEquals(ButtonAction.NEXT, table.resolve(KeyEvent.KEYCODE_DPAD_CENTER, Gesture.DOUBLE))
         assertFalse(table.doubleCapable(KeyEvent.KEYCODE_BACK))
         assertTrue(table.doubleCapable(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
         assertFalse(table.doubleCapable(KeyEvent.KEYCODE_DPAD_UP))

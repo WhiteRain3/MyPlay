@@ -81,6 +81,21 @@ class MyPlayAlertTest {
         rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
     }
 
+    /** AL-2: after the alert, the ring is back on the stop it was on. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun afterTheAlertTheRingIsBackWhereItWas() {
+        show()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.onNodeWithTag(STOP_SONG).assertIsSelected()
+        rule.runOnIdle { appAlert = alert() }
+        rule.waitForIdle()
+        rule.onNodeWithTag(mapAlertStop(0)).assertIsSelected()
+        rule.runOnIdle { appAlert = null }
+        rule.waitForIdle()
+        rule.onNodeWithTag(STOP_SONG).assertIsSelected()
+    }
+
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theAlertNeverCoversTheTurnTheHubOrTheSong() = neverCovers(TestSkin)
 
