@@ -173,7 +173,7 @@
     <string name="phone_action_open_media" translatable="false">Open the music app</string>
     <string name="phone_action_open_phone" translatable="false">Open the phone</string>
     <string name="phone_action_nothing" translatable="false">Nothing</string>
-    <string name="phone_buttons_double_wait" translatable="false">With a double press set to do something, every single press of this button waits the double-press time to see if a second one follows. With a triple press set too, a double press waits once more for a third.</string>
+    <string name="phone_buttons_double_wait" translatable="false">With a double or a triple press set to do something, every single press of this button waits the double-press time to see if another follows. With a triple press set, a double press waits once more for a third.</string>
     <string name="phone_buttons_hold_turn_unknown" translatable="false">Hold and turn works only if the car sends knob turns while the knob is held down. Not known yet for this car.</string>
     <string name="phone_buttons_back_double" translatable="false">Two quick presses of Back always leave an app that ignores Back, so a double press is not offered here.</string>
     <string name="phone_buttons_way_out" translatable="false">Choices that would leave no way out are not offered: Back pressed or held always goes back or home, and one button always goes home.</string>
