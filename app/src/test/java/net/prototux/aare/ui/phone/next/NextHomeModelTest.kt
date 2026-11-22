@@ -59,7 +59,7 @@ class NextHomeModelTest {
         val all = Attention.entries.toSet()
         val c = attentionCards(all)
         assertEquals(listOf(Attention.CERT_EXPIRED, Attention.FINISH_SETUP, Attention.UPDATE), c.shown)
-        assertEquals(listOf(Attention.CERT_EXPIRING, Attention.ARCHIVED), c.more)
+        assertEquals(listOf(Attention.CERT_EXPIRING, Attention.CAR_CHECK, Attention.ARCHIVED), c.more)
         assertEquals(Attention.entries, attentionCards(all, expanded = true).shown)
         assertEquals(listOf(Attention.UPDATE, Attention.ARCHIVED), attentionCards(setOf(Attention.ARCHIVED, Attention.UPDATE)).shown)
     }

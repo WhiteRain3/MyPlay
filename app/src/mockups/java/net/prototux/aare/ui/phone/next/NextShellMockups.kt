@@ -175,4 +175,22 @@ class NextShellMockups {
     @Test fun moreRootPage() = paparazzi.snapshot { Page("more") { NextMoreRoot() } }
     @Test fun moreBackup() = paparazzi.snapshot { Page("more/backup") { NextBackupPage() } }
     @Test fun moreConnection() = paparazzi.snapshot { Page("more/connection") { NextConnectionPage() } }
+
+    @Test fun diagRoot() = paparazzi.snapshot { Page("more/diagnostics") { NextDiagnosticsPage() } }
+    @Test fun diagCarCheckStep() {
+        CarCheckRun.resetForTest(); CarCheckRun.goTo(4)
+        CarCheckRun.add(net.prototux.aare.ui.phone.CheckInput.Key(0, 19, true, false, 0))
+        paparazzi.snapshot { Page("more/diagnostics/car-check") { NextCarCheckPage { 100 } } }
+        CarCheckRun.resetForTest()
+    }
+    @Test fun diagCarCheckDone() {
+        CarCheckRun.resetForTest(); CarCheckRun.add(net.prototux.aare.ui.phone.CheckInput.Turn(0, 65536, 1, 0)); CarCheckRun.goTo(99)
+        paparazzi.snapshot { Page("more/diagnostics/car-check") { NextCarCheckPage { 100 } } }
+        CarCheckRun.resetForTest()
+    }
+    @Test fun diagCarData() = paparazzi.snapshot { Page("more/diagnostics/car-data") { NextCarDataPage() } }
+    @Test fun diagLog() {
+        listOf("08:12:01 USB attached", "08:12:01 Version 1.7 agreed", "08:12:02 TLS done").forEach { net.prototux.aare.DiagLog.add(it) }
+        paparazzi.snapshot { Page("more/diagnostics/log") { NextLogPage() } }
+    }
 }

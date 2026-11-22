@@ -51,7 +51,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import net.prototux.aare.R
 
-private val CheckStep.title: Int
+internal val CheckStep.title: Int
     get() = when (this) {
         CheckStep.KNOB_RIGHT -> R.string.phone_check_knob_right
         CheckStep.KNOB_LEFT -> R.string.phone_check_knob_left

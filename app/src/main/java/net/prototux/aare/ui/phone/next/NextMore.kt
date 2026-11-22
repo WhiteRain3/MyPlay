@@ -95,6 +95,7 @@ fun NextMoreRoot() {
     val check by NextUpdateCheck.result.collectAsState()
     val found = foundUpdate(check, update)
     val known by rememberSetting("known_cars") { knownCars }
+    val carCheck = rememberCarCheckStatus()
     val pins = rememberPins()
     val wireless by rememberSetting("wireless") { wireless }
     val saved by rememberSetting("myplay_backup_last_saved") { myplayBackupLastSaved }
@@ -124,7 +125,11 @@ fun NextMoreRoot() {
                         lastSavedText(saved)?.let { stringResource(R.string.next_more_saved_label, it) } ?: stringResource(R.string.next_more_never_label),
                         Icons.Outlined.History) { nav.open("more/backup") }
                 },
-                { NextValueRow(stringResource(R.string.next_more_diagnostics_label), icon = Icons.Outlined.MonitorHeart) { nav.open("more/diagnostics") } },
+                {
+                    NextValueRow(stringResource(R.string.next_more_diagnostics_label), carCheckWords(carCheck), Icons.Outlined.MonitorHeart) {
+                        nav.open("more/diagnostics")
+                    }
+                },
             ))
             Spacer(Modifier.height(12.dp))
         }

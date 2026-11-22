@@ -66,10 +66,9 @@ fun oneLine(error: String, max: Int = 60): String {
 }
 
 /**
- * Home's attention cards (plan §10), in their order. Trust is the hero itself, not a card; the car
- * check's card comes with its holder (chunk 10).
+ * Home's attention cards (plan §10), in their order. Trust is the hero itself, not a card.
  */
-enum class Attention { CERT_EXPIRED, FINISH_SETUP, UPDATE, CERT_EXPIRING, ARCHIVED }
+enum class Attention { CERT_EXPIRED, FINISH_SETUP, UPDATE, CERT_EXPIRING, CAR_CHECK, ARCHIVED }
 
 /** At most three cards; the rest fold under "N more". */
 data class AttentionCards(val shown: List<Attention>, val more: List<Attention>)

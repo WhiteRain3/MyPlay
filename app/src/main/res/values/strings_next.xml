@@ -497,4 +497,49 @@
     </plurals>
     <string name="next_old_app_label" translatable="false">Back to the old app</string>
     <string name="next_old_app_help" translatable="false">The new app is a preview. Its pages come one by one.</string>
+    <string name="next_diag_step_of_label" translatable="false">%1$d of %2$d</string>
+    <string name="next_diag_done_label" translatable="false">Done</string>
+    <string name="next_diag_done_on_label" translatable="false">Done %1$s</string>
+    <string name="next_diag_in_progress_label" translatable="false">In progress</string>
+    <string name="next_att_car_check_label" translatable="false">Car check: step %1$d of %2$d</string>
+    <string name="next_att_car_check_help" translatable="false">Pick up where you left off</string>
+    <string name="next_att_car_check_stopped_label" translatable="false">Car check stopped</string>
+    <string name="next_att_car_check_stopped_help" translatable="false">The phone closed MyPlay part way. Start again.</string>
+    <string name="next_diag_stopped_label" translatable="false">Stopped</string>
+    <string name="next_diag_not_run_label" translatable="false">Not run yet</string>
+    <string name="next_diag_live_label" translatable="false">Live</string>
+    <string name="next_diag_connect_first_label" translatable="false">Connect first</string>
+    <plurals name="next_diag_lines_label" translatable="false">
+        <item quantity="one">%1$d line</item>
+        <item quantity="other">%1$d lines</item>
+    </plurals>
+    <string name="next_diag_all_done_label" translatable="false">All steps done</string>
+    <string name="next_diag_summary_help" translatable="false">%1$d steps · %2$d with nothing heard</string>
+    <string name="next_diag_nothing_tag_label" translatable="false">Nothing heard</string>
+    <string name="next_diag_heard_tag_label" translatable="false">Heard</string>
+    <string name="next_diag_alert_texts_label" translatable="false">Include alert texts</string>
+    <string name="next_diag_street_names_help" translatable="false">May contain street names</string>
+    <string name="next_diag_what_shared_label" translatable="false">See what is shared</string>
+    <string name="next_diag_share_label" translatable="false">Share the log</string>
+    <string name="next_diag_start_again_label" translatable="false">Start again</string>
+    <string name="next_diag_private_help" translatable="false">Nothing leaves the phone until you share it</string>
+    <string name="next_diag_hold_help" translatable="false">Press and hold, then let go</string>
+    <string name="next_diag_heard_label" translatable="false">Heard from the car</string>
+    <string name="next_diag_of_four_label" translatable="false">%1$d of 4</string>
+    <string name="next_diag_waiting_help" translatable="false">Waiting for the car…</string>
+    <string name="next_diag_again_label" translatable="false">Again</string>
+    <string name="next_diag_nothing_label" translatable="false">Nothing happened</string>
+    <string name="next_diag_next_label" translatable="false">Next</string>
+    <string name="next_diag_show_in_car_label" translatable="false">Show on the car screen</string>
+    <string name="next_diag_car_label" translatable="false">The car</string>
+    <string name="next_diag_live_data_label" translatable="false">Live data</string>
+    <string name="next_diag_open_label" translatable="false">Open</string>
+    <string name="next_diag_verbose_label" translatable="false">Detailed protocol log</string>
+    <string name="next_diag_car_input_label" translatable="false">Log the car\'s buttons and knob</string>
+    <string name="next_diag_empty_help" translatable="false">Nothing logged yet</string>
+    <string name="next_diag_copy_label" translatable="false">Copy</string>
+    <string name="next_diag_clear_label" translatable="false">Clear</string>
+    <string name="next_diag_clear_title_label" translatable="false">Clear the log?</string>
+    <string name="next_diag_clear_info" translatable="false">Every line kept on this phone is removed. This can\'t be undone.</string>
+    <string name="next_diag_log_private_help" translatable="false">Logs stay on the phone until you share them</string>
 </resources>

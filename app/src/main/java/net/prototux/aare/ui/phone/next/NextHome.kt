@@ -116,6 +116,8 @@ data class HomeInputs(
     val setupLeft: List<SetupItem> = emptyList(),
     /** When the hero's error was first seen, for "What happened". */
     val errorAt: Long? = null,
+    /** The Car check's run, for its card (in progress or stopped). */
+    val carCheck: CarCheckStatus = CarCheckStatus.NotRun,
 )
 
 /** What "Finish setup" counts: only what connecting needs (plan §10); the rest is asked in context. */
@@ -154,10 +156,12 @@ fun NextHome() {
     LaunchedEffect(state.lastError) { errorAt = if (state.lastError != null) System.currentTimeMillis() else 0L }
     val setupLeft = remember(resumed, state.audioCapture) { setupLeft(ctx, state.audioCapture) }
     val design = designInUse(preview, language)
+    val carCheck = rememberCarCheckStatus()
     val attention = buildSet {
         expiring?.let { add(if (it.expired) Attention.CERT_EXPIRED else Attention.CERT_EXPIRING) }
         if (setupLeft.isNotEmpty()) add(Attention.FINISH_SETUP)
         if (update != null) add(Attention.UPDATE)
+        if (carCheck is CarCheckStatus.InProgress || carCheck == CarCheckStatus.Stopped) add(Attention.CAR_CHECK)
         if (design != DesignInUse.ORBIT) add(Attention.ARCHIVED)
     }
     val permissions = rememberConnectPermissions()
@@ -180,7 +184,7 @@ fun NextHome() {
         }
     }
     NextHomeContent(
-        HomeInputs(hero, attention, design, update, expiring, setupLeft, errorAt.takeIf { it > 0 }),
+        HomeInputs(hero, attention, design, update, expiring, setupLeft, errorAt.takeIf { it > 0 }, carCheck),
         actions,
         picture = { CarPicture(stringResource(R.string.next_home_car_screen_label), Modifier.fillMaxWidth(), onPart = null) },
     )
@@ -391,6 +395,15 @@ private fun AttentionCard(kind: Attention, inputs: HomeInputs, actions: HomeActi
                     NextButton(stringResource(R.string.next_att_whats_new_label), { nav.open("more/whats-new") }, Modifier.weight(1f), ButtonKind.GHOST, small = true)
                 }
             }
+        }
+        Attention.CAR_CHECK -> NextCard {
+            val c = inputs.carCheck
+            NextValueRow(
+                if (c is CarCheckStatus.InProgress) stringResource(R.string.next_att_car_check_label, c.step + 1, c.total)
+                else stringResource(R.string.next_att_car_check_stopped_label),
+                icon = Icons.Outlined.MonitorHeart,
+                note = RowNote.Help(stringResource(if (c is CarCheckStatus.InProgress) R.string.next_att_car_check_help else R.string.next_att_car_check_stopped_help)),
+            ) { nav.open("more/diagnostics/car-check") }
         }
         Attention.ARCHIVED -> NextCard {
             NextValueRow(
