@@ -127,6 +127,8 @@ class CarUiState {
     var panelTimeoutS by mutableStateOf(net.prototux.aare.ui.car.myplay.PanelTimeout.DEFAULT)
     /** MyPlay (O3): Home was asked for (not Back): the new screen comes back to its plain home, not where it was. */
     var engineHomeAsked by mutableStateOf(false)
+    /** MyPlay (O2b): minutes before a maps app full screen goes home without input; 0 never. */
+    var mapsIdleHomeMin by mutableStateOf(0)
     /** MyPlay (O6): what ORBIT's home pad opens while the ring is hidden; empty: the ring always (as in tests). */
     var homePad by mutableStateOf<Map<net.prototux.aare.ui.car.myplay.HomePadKey, net.prototux.aare.ui.car.myplay.HomePadAction>>(emptyMap())
     /** MyPlay (O3): how often this drive has shown the way home over an app (the first few times only). */

@@ -342,4 +342,29 @@ class MyPlayAppFrameTest {
         rule.waitForIdle()
         rule.onNodeWithTag(FRAME_RAIL_TAG).assertExists()
     }
+
+    /** O2b: a maps app full screen goes home after the chosen minutes untouched; off by default; input restarts the time. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun anUntouchedMapsAppGoesHomeWhenAsked() {
+        val s = show("orbit", screen = CarScreen.App("maps"))
+        rule.mainClock.advanceTimeBy(15 * 60_000L)
+        rule.onNodeWithTag(FRAME_TAG).assertExists() // off by default
+        rule.runOnIdle { s.mapsIdleHomeMin = 2 }
+        rule.waitForIdle()
+        rule.mainClock.advanceTimeBy(100_000)
+        rule.onNodeWithTag("app_maps").performClick() // a touch starts the time again
+        rule.mainClock.advanceTimeBy(100_000)
+        rule.onNodeWithTag(FRAME_TAG).assertExists()
+        rule.mainClock.advanceTimeBy(30_000)
+        assertEquals("home", asked.last())
+        rule.onNodeWithTag(ENGINE_TAG).assertExists()
+    }
+
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun anotherAppNeverGoesHomeByItself() {
+        val s = show("orbit", screen = CarScreen.App("music"))
+        rule.runOnIdle { s.mapsIdleHomeMin = 1 }
+        rule.mainClock.advanceTimeBy(5 * 60_000L)
+        rule.onNodeWithTag(FRAME_TAG).assertExists()
+    }
 }

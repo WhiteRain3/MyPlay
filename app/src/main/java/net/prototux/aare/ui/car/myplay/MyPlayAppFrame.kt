@@ -90,6 +90,15 @@ internal fun MyPlayAppFrame(
     LaunchedEffect(appKey) { grow.animateTo(1f, tween(APP_OPEN_MS, easing = FastOutSlowInEasing)) }
     if (grows) SideEffect { memory.returning = true }
     val hint = remember(appKey) { grows && !sources.picture && state.homeHints < HOME_HINT_TIMES }
+    // O2b: a maps app full screen goes home after the driver's chosen minutes without input (off by default).
+    var inputs by remember { mutableStateOf(0) }
+    val idleHomeMs = MapsIdleHome.ms(state.mapsIdleHomeMin)
+    val isMaps = (state.screen as? net.prototux.aare.ui.car.CarScreen.App)?.appId?.let { state.app(it)?.kind } == net.prototux.aare.ui.car.CarAppKind.NAVIGATION
+    LaunchedEffect(appKey, inputs, idleHomeMs, isMaps, state.call != null) {
+        if (idleHomeMs == null || !isMaps || state.call != null || sources.picture) return@LaunchedEffect
+        delay(idleHomeMs)
+        actions.goHome()
+    }
     LaunchedEffect(appKey) { if (hint) state.homeHints++ }
     val tokens = skin.tokens(state.night)
     val call = sources.calls.call
@@ -174,8 +183,11 @@ internal fun MyPlayAppFrame(
         BoxWithConstraints(
             Modifier.fillMaxSize().background(tokens.background).then(modifier).testTag(FRAME_TAG)
                 .onFocusChanged { frameHasFocus = it.hasFocus }
+                // O2b: any touch is input (only looked at).
+                .pointerInput(Unit) { awaitPointerEventScope { while (true) { awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial); inputs++ } } }
                 // Key ups of the call's keys are kept too, so the app never sees half a press.
                 .onPreviewKeyEvent { e ->
+                    if (e.type == KeyEventType.KeyDown) inputs++
                     when (e.type) {
                         KeyEventType.KeyDown -> { down += e.key; modal && modalKey(e.key, e.isShiftPressed) }
                         KeyEventType.KeyUp -> {

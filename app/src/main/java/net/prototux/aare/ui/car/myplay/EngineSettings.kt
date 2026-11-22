@@ -88,6 +88,14 @@ internal class CarSettingsSource(private val context: Context, private val state
             },
             settings.myplayPanelTimeout.toString(),
         ) { settings.myplayPanelTimeout = it.toInt() },
+        // O2b: a maps app full screen goes back home when untouched (off by default).
+        SettingItem.Choice(
+            "maps_idle_home", s(R.string.myplay_setting_maps_idle_home),
+            MapsIdleHome.CHOICES.map { m ->
+                m.toString() to if (m == MapsIdleHome.OFF) s(R.string.myplay_off) else context.getString(R.string.myplay_setting_maps_idle_home_after, m)
+            },
+            settings.myplayMapsIdleHome.toString(),
+        ) { settings.myplayMapsIdleHome = it.toInt() },
         SettingItem.Toggle("gesture_line", s(R.string.myplay_setting_gesture_line), settings.myplayGestureLine) { settings.myplayGestureLine = it },
         SettingItem.Toggle("banners", s(R.string.setup_switch_message_notifications), settings.messageBanners) { settings.messageBanners = it },
         SettingItem.Toggle("read_aloud", s(R.string.msg_toggle_read_aloud_title), settings.readMessagesAloud) { settings.readMessagesAloud = it },

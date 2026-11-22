@@ -61,6 +61,9 @@
     <string name="myplay_setting_panel_timeout" translatable="false">Close panels by themselves</string>
     <string name="myplay_setting_panel_timeout_after" translatable="false">After %1$d s</string>
     <string name="myplay_setting_panel_timeout_never" translatable="false">Never</string>
+    <!-- O2b: the Settings world's row for a full-screen maps app going home when untouched -->
+    <string name="myplay_setting_maps_idle_home" translatable="false">Maps full screen: home when untouched</string>
+    <string name="myplay_setting_maps_idle_home_after" translatable="false">After %1$d min</string>
     <string name="myplay_settings_hint" translatable="false">turn: choose · push: change · Back: back</string>
     <string name="myplay_car_hint" translatable="false">turn: read on · Back: back</string>
     <string name="myplay_setting_passenger_stopped" translatable="false">Can be turned on only while the car is stopped</string>
