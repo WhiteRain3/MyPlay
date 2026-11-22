@@ -67,6 +67,7 @@ import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarAppKind
 import net.prototux.aare.ui.car.CarFocusVisibility
 import net.prototux.aare.ui.car.CarScreen
+import net.prototux.aare.ui.car.CarNotice
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.LocalMapTapIsKnobStop
 import net.prototux.aare.ui.car.GestureLineOverlay
@@ -174,6 +175,20 @@ internal fun MyPlayEngineShell(
         } else if (homeAlert == null) {
             beforeAlert?.let { chosen = it }
             beforeAlert = null
+        }
+    }
+    // Polish #4: a notice with buttons on the home takes the ring as an alert does: onto its first
+    // button when the driver just asked for it (Call back), else onto Dismiss, so a push meant for
+    // something else only closes it; when it goes, the ring is back where it was.
+    var beforeNotice by remember { mutableStateOf<String?>(null) }
+    val homeNotice = notice?.takeIf { it.actions.isNotEmpty() && model.place == Place.Home }
+    LaunchedEffect(homeNotice?.key) {
+        if (homeNotice != null) {
+            if (beforeNotice == null) beforeNotice = chosen
+            chosen = noticeRing(homeNotice)
+        } else {
+            beforeNotice?.let { chosen = it }
+            beforeNotice = null
         }
     }
     // N8: the bell (while there are unseen notifications) opens the list over the home.
@@ -1147,6 +1162,9 @@ internal fun padKeyOf(key: Key): HomePadKey? = when (key) {
     Key.DirectionLeft, Key.DirectionRight -> HomePadKey.SIDE
     else -> null
 }
+
+/** Polish #4: where a notice with buttons puts the ring on the home. */
+internal fun noticeRing(notice: CarNotice): String = if (notice.asked) noticeActionStop(0) else NOTICE_DISMISS
 
 /** #5: the Navigate world's list and its rows (also test tags). */
 internal const val SLOT_PLACES = "slot_places"

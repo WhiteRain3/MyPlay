@@ -57,6 +57,11 @@ class CarNotice(
     val timeMs: Long = System.currentTimeMillis(),
     /** A message from a contact: its text is hidden while driving, like in the messaging screens. */
     val message: Boolean = false,
+    /**
+     * Polish #4: the driver asked for it this moment (Call back's "Call"): the ring goes onto its
+     * first button, so one push answers. A notice nobody asked for puts the ring on Dismiss instead.
+     */
+    val asked: Boolean = false,
 )
 
 /** Head-unit geometry: the drawable area inside the video margins, and the rail side. */

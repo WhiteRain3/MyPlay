@@ -649,7 +649,7 @@ class CarRuntime(
             val who = missed.name.ifBlank { missed.number }
             val at = android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(missed.dateMs))
             notice(context.getString(R.string.myplay_call_back_who, who), context.getString(R.string.myplay_call_back_when, at),
-                durationMs = 10_000, actions = listOf(context.getString(R.string.myplay_call_back_call) to {
+                durationMs = 10_000, asked = true, actions = listOf(context.getString(R.string.myplay_call_back_call) to {
                     DiagLog.add("call back: calling")
                     Calls.place(context, missed.number)
                 }))
@@ -760,8 +760,8 @@ class CarRuntime(
         if ((ui.screen as? CarScreen.App)?.appId != NOTIFICATIONS_ID) ui.unseen++
     }
 
-    fun notice(title: String, text: String, icon: Bitmap? = null, durationMs: Long = 4_000, actions: List<Pair<String, () -> Unit>> = emptyList(), message: Boolean = false) {
-        val n = CarNotice("n${++noticeSeq}", title, text, icon, actions, message = message)
+    fun notice(title: String, text: String, icon: Bitmap? = null, durationMs: Long = 4_000, actions: List<Pair<String, () -> Unit>> = emptyList(), message: Boolean = false, asked: Boolean = false) {
+        val n = CarNotice("n${++noticeSeq}", title, text, icon, actions, message = message, asked = asked)
         ui.notices.add(n)
         main.postDelayed({ ui.notices.remove(n) }, durationMs)
     }
