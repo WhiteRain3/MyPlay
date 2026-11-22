@@ -44,6 +44,15 @@ class CarCheckLogTest {
     }
 
     @Test
+    fun theMapsAppsAlertsKeepTheirShapeButNotTheirTexts() {
+        val line = "21/11 17:45:02  nav alert com.waze: id 7, title \"Police reported\", subtitle \"On Gedimino pr., limit 50 km/h\", " +
+            "icon type 1 (resource com.waze:2131230), actions [\"Thanks\", \"Not there\"], 8000 ms, has callback"
+        assertEquals("21/11 17:45:02  nav alert com.waze: id 7, title \"[text hidden]\", subtitle \"[text hidden; speeds: 50 km/h]\", " +
+            "icon type 1 (resource com.waze:2131230), actions [\"[text hidden]\", \"[text hidden]\"], 8000 ms, has callback",
+            CarCheckLog.withoutPrivate(line))
+    }
+
+    @Test
     fun phoneNumbersWrittenInGroupsAreTakenOut() {
         assertEquals("from [number]", CarCheckLog.withoutPrivate("from 06 12 34 56 78"))
         assertEquals("from [number]", CarCheckLog.withoutPrivate("from 555-123-4567"))

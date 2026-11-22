@@ -38,6 +38,16 @@ object CarCheckLog {
     private val NAV_TEXT = Regex("""(nav text \S+ (?:turn card|alert|trip): ).*""")
     private val SPEED = Regex("""\b\d{1,3}\s?(km/h|kmh|kph|mph)\b""", RegexOption.IGNORE_CASE)
 
+    /** AL-6: the alert check's lines ("nav alert <app>: id …, title "…", …"): each quoted text hidden, its speeds kept. */
+    private val NAV_ALERT = Regex("""nav alert \S+: .*""")
+
+    private fun navAlert(line: String): String = line.replace(NAV_ALERT) { m ->
+        m.value.replace(QUOTED) { q ->
+            val speeds = SPEED.findAll(q.value).map { it.value }.toList()
+            if (speeds.isEmpty()) "\"[text hidden]\"" else "\"[text hidden; speeds: ${speeds.joinToString()}]\""
+        }
+    }
+
     private fun navText(line: String): String = line.replace(NAV_TEXT) { m ->
         val speeds = SPEED.findAll(m.value.removePrefix(m.groupValues[1])).map { it.value }.toList()
         m.groupValues[1] + if (speeds.isEmpty()) "[text hidden]" else "[text hidden; speeds: ${speeds.joinToString()}]"
@@ -45,7 +55,7 @@ object CarCheckLog {
 
     /** [line] with names, addresses, e-mails, phone numbers and VINs replaced by what they were. */
     fun withoutPrivate(line: String): String {
-        var out = navText(line)
+        var out = navAlert(navText(line))
         for ((pattern, replacement) in NAMES) out = out.replace(pattern, replacement)
         if (out.contains("wireless: ")) out = out.replace(QUOTED, "\"[network]\"")
         return out
