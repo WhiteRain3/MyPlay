@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text of the rebuilt phone app (docs/plans/phone-app.md). English only for now, so not to be translated.
+     Names end in _label (30 characters at most), _help (60) or _info (300); NextStringsTest checks both. -->
+<resources>
+    <!-- Tabs -->
+    <string name="next_tab_home_label" translatable="false">Home</string>
+    <string name="next_tab_screen_label" translatable="false">Screen</string>
+    <string name="next_tab_car_label" translatable="false">Car</string>
+    <string name="next_tab_apps_label" translatable="false">Apps</string>
+    <string name="next_tab_more_label" translatable="false">More</string>
+    <string name="next_back_label" translatable="false">Back</string>
+
+    <!-- Page titles, one per route -->
+    <string name="next_home_label" translatable="false">MyPlay</string>
+    <string name="next_screen_design_label" translatable="false">Design</string>
+    <string name="next_screen_looks_label" translatable="false">Looks</string>
+    <string name="next_screen_colours_label" translatable="false">Colours</string>
+    <string name="next_screen_colours_own_label" translatable="false">Your own colours</string>
+    <string name="next_screen_wallpaper_label" translatable="false">Wallpaper</string>
+    <string name="next_screen_wallpaper_edit_label" translatable="false">Edit the photo</string>
+    <string name="next_screen_map_colours_label" translatable="false">Map colours</string>
+    <string name="next_screen_size_label" translatable="false">Size</string>
+    <string name="next_car_buttons_label" translatable="false">Buttons</string>
+    <string name="next_car_pad_shortcuts_label" translatable="false">ORBIT home: pad shortcuts</string>
+    <string name="next_car_timing_label" translatable="false">Timing</string>
+    <string name="next_car_teach_label" translatable="false">Teach a car button</string>
+    <string name="next_car_maps_label" translatable="false">Maps</string>
+    <string name="next_car_speed_label" translatable="false">Speed</string>
+    <string name="next_car_sound_label" translatable="false">Sound</string>
+    <string name="next_car_messages_label" translatable="false">Messages and calls</string>
+    <string name="next_car_voice_label" translatable="false">Voice assistant</string>
+    <string name="next_apps_phone_apps_label" translatable="false">Phone apps</string>
+    <string name="next_apps_phone_screen_label" translatable="false">Phone screen</string>
+    <string name="next_apps_browser_label" translatable="false">Browser</string>
+    <string name="next_more_updates_label" translatable="false">Updates</string>
+    <string name="next_more_whats_new_label" translatable="false">What\'s new</string>
+    <string name="next_more_cars_label" translatable="false">Cars</string>
+    <string name="next_more_connection_label" translatable="false">Connection</string>
+    <string name="next_more_backup_label" translatable="false">Backup</string>
+    <string name="next_more_diagnostics_label" translatable="false">Diagnostics</string>
+    <string name="next_more_car_check_label" translatable="false">Car check</string>
+    <string name="next_more_car_data_label" translatable="false">Car data</string>
+    <string name="next_more_log_label" translatable="false">Connection log</string>
+    <string name="next_more_advanced_label" translatable="false">Advanced</string>
+    <string name="next_more_certificates_label" translatable="false">Certificates</string>
+    <string name="next_more_developer_label" translatable="false">Developer</string>
+    <string name="next_more_archive_label" translatable="false">Archive</string>
+    <string name="next_more_deck_label" translatable="false">DECK</string>
+    <string name="next_more_layouts_label" translatable="false">Older layouts</string>
+    <string name="next_more_about_label" translatable="false">About</string>
+
+    <!-- Placeholders while the pages are built -->
+    <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
+    <string name="next_old_app_label" translatable="false">Back to the old app</string>
+    <string name="next_old_app_help" translatable="false">The new app is a preview. Its pages come one by one.</string>
+</resources>
