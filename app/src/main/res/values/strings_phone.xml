@@ -418,7 +418,7 @@
     <string name="phone_home_pad_apps" translatable="false">Apps</string>
     <string name="phone_home_pad_calls" translatable="false">Calls</string>
     <string name="phone_home_pad_nothing" translatable="false">Nothing</string>
-    <string name="phone_home_pad_hint" translatable="false">On ORBIT\'s home, while the knob\'s ring is hidden. Turning the knob shows the ring, and then these keys move it as before. Nothing: the key moves the ring.</string>
+    <string name="phone_home_pad_hint" translatable="false">On ORBIT\'s home, while the knob\'s ring is hidden. Turning the knob shows the ring, and then these keys move it as before. Nothing: the key only shows the ring. With every key set to Nothing the shortcuts are off and the ring always shows.</string>
     <string name="phone_maps_idle_home_hint" translatable="false">A maps app opened full screen goes back to the home after this long with nothing pressed.</string>
     <string name="phone_teach_title" translatable="false">Teach a car button</string>
     <string name="phone_teach_choose" translatable="false">What should the button do?</string>
