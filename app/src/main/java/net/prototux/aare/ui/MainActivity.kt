@@ -1204,7 +1204,7 @@ private fun StandaloneAppsSection(settings: Settings, ctx: android.content.Conte
         AlertDialog(
             onDismissRequest = { askYouTube = false },
             title = { Text(stringResource(R.string.phone_youtube_app_title)) },
-            text = { Text(stringResource(R.string.standalone_section_warning)) },
+            text = { Text(stringResource(R.string.standalone_section_warning) + "\n\n" + stringResource(R.string.phone_youtube_app_also)) },
             confirmButton = {
                 TextButton(onClick = {
                     askYouTube = false
