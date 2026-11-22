@@ -88,4 +88,10 @@ class NavTextCheckTest {
         assertEquals("nav alert com.waze: id 7, title \"In 380 m\", subtitle \"Reduced speed\", actions [\"Close\"], 8000 ms",
             NavTextCheck.alertStructure("com.waze", a))
     }
+
+    /** AL-6: a quote in a text cannot end its quoted part early (the shared log hides each whole text). */
+    @Test fun aQuoteInAnAlertTextStaysInside() {
+        val a = Alert.Builder(8, CarText.create("Police \"near\" you"), 4_000).build()
+        assertEquals("nav alert com.waze: id 8, title \"Police 'near' you\", 4000 ms", NavTextCheck.alertStructure("com.waze", a))
+    }
 }

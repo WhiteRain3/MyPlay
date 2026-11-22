@@ -55,14 +55,16 @@ internal object NavTextCheck {
      */
     fun alertStructure(app: String, a: Alert): String = buildString {
         append("nav alert $app: id ${a.id}")
-        append(", title \"").append(text(a.title) ?: "").append('"')
-        text(a.subtitle)?.let { append(", subtitle \"").append(it).append('"') }
+        // AL-6: a quote in a text becomes ' so the shared log's filter finds each text whole.
+        fun q(s: String?) = s.orEmpty().replace('"', '\'')
+        append(", title \"").append(q(text(a.title))).append('"')
+        text(a.subtitle)?.let { append(", subtitle \"").append(q(it)).append('"') }
         a.icon?.let { i ->
             append(", icon type ${i.type}")
             i.icon?.let { ic -> append(" (${iconKind(ic)})") }
             i.tint?.let { append(", tinted") }
         }
-        if (a.actions.isNotEmpty()) append(", actions [").append(a.actions.joinToString(", ") { act -> "\"${text(act.title) ?: "?"}\"" }).append(']')
+        if (a.actions.isNotEmpty()) append(", actions [").append(a.actions.joinToString(", ") { act -> "\"${q(text(act.title) ?: "?")}\"" }).append(']')
         append(", ${a.durationMillis} ms")
         a.callbackDelegate?.let { append(", has callback") }
     }
