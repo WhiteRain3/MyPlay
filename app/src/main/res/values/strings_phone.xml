@@ -442,4 +442,7 @@
     <string name="phone_speed_mobile_allow" translatable="false">Allow</string>
     <string name="phone_speed_kept_unused" translatable="false">%1$s, from %2$s, kept but not used while no region is chosen</string>
     <string name="phone_speed_no_internet" translatable="false">This network has no internet (the car\'s Wi-Fi, perhaps). Try again on another one.</string>
+    <string name="phone_check_knob_buttons" translatable="false">Press each of the 4 buttons round the knob, one at a time</string>
+    <string name="phone_check_knob_buttons_seen" translatable="false">Different buttons seen: %1$d of 4.</string>
+    <string name="phone_buttons_no_holds" translatable="false">This car doesn\'t send holds: the Car check saw every hold arrive as an instant press. Hold and hold-and-turn cannot work here; use double or triple presses instead.</string>
 </resources>

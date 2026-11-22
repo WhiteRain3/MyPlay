@@ -56,6 +56,7 @@ private val CheckStep.title: Int
         CheckStep.KNOB_LEFT -> R.string.phone_check_knob_left
         CheckStep.KNOB_PUSH -> R.string.phone_check_knob_push
         CheckStep.KNOB_HOLD -> R.string.phone_check_knob_hold
+        CheckStep.KNOB_BUTTONS -> R.string.phone_check_knob_buttons
         CheckStep.PAD_UP -> R.string.phone_check_pad_up
         CheckStep.PAD_DOWN -> R.string.phone_check_pad_down
         CheckStep.PAD_LEFT -> R.string.phone_check_pad_left
@@ -80,6 +81,7 @@ private val CheckStep.title: Int
 @Composable
 fun CarCheckPage(inputs: Flow<CheckInput>, report: List<String>, log: () -> List<String>, connected: Boolean, now: () -> Long) {
     val ctx = LocalContext.current
+    val settings = remember { net.prototux.aare.Settings(ctx) }
     var current by rememberSaveable { mutableIntStateOf(0) }
     val captures = remember { mutableStateMapOf<CheckStep, StepCapture>() }
     val step = CheckStep.entries.getOrNull(current)
@@ -108,6 +110,8 @@ fun CarCheckPage(inputs: Flow<CheckInput>, report: List<String>, log: () -> List
                         Text(titles.getValue(step), color = PhoneColors.Text, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     }
                     if (step.hold) Text(stringResource(R.string.phone_check_hold_hint), color = PhoneColors.Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp))
+                    if (step == CheckStep.KNOB_BUTTONS) Text(stringResource(R.string.phone_check_knob_buttons_seen, distinctKeys(captures[step])),
+                        color = PhoneColors.Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 6.dp))
                     Spacer(Modifier.height(12.dp))
                     val lines = captures[step]?.lines(clock).orEmpty()
                     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(PhoneColors.Page).padding(12.dp)
@@ -121,6 +125,8 @@ fun CarCheckPage(inputs: Flow<CheckInput>, report: List<String>, log: () -> List
                         PillButton(stringResource(if (got) R.string.phone_check_next else R.string.phone_check_nothing), main = got) {
                             if (captures[step] == null) captures[step] = StepCapture()
                             current++
+                            // #1: what the hold steps saw, for the Buttons page's note.
+                            carSendsHolds(captures.toMap())?.let { settings.myplayCarSendsHolds = it }
                         }
                         if (got) PillButton(stringResource(R.string.phone_check_again), main = false) { captures[step] = StepCapture() }
                     }

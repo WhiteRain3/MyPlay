@@ -172,6 +172,8 @@ fun ButtonsScreen() {
     Column {
         ControlsDrawing(selected) { p -> part = (p as? Part.Of)?.control?.id ?: "pad"; open = null }
         HintLine(Icons.Rounded.TouchApp, stringResource(R.string.phone_buttons_hint))
+        // #1: the Car check saw this car send every hold as an instant press.
+        if (settings.myplayCarSendsHolds == false) HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_no_holds))
 
         when (selected) {
             Part.Pad -> {

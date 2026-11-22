@@ -28,3 +28,13 @@ var Settings.myplayWallpaperEdit: WallpaperEdit
     set(v) = prefs.edit { putString(KEY_WALLPAPER_EDIT, v.clamped().encode()) }
 
 internal const val KEY_WALLPAPER_EDIT = "myplay_wallpaper_edit"
+
+/**
+ * #1: whether the car sends holds, as the Car check last saw it (null: not checked). Not in
+ * backups: it belongs to this car and the check that saw it.
+ */
+var Settings.myplayCarSendsHolds: Boolean?
+    get() = if (prefs.contains(KEY_CAR_SENDS_HOLDS)) prefs.getBoolean(KEY_CAR_SENDS_HOLDS, true) else null
+    set(v) = prefs.edit { if (v == null) remove(KEY_CAR_SENDS_HOLDS) else putBoolean(KEY_CAR_SENDS_HOLDS, v) }
+
+internal const val KEY_CAR_SENDS_HOLDS = "myplay_car_sends_holds"

@@ -24,6 +24,8 @@ fun CarInputEvent.toCheckInput(): CheckInput = when (this) {
 /** The steps of the Car check, in order: what the owner does with each control (R8 needs each one's codes). */
 enum class CheckStep(val id: String, val hold: Boolean = false) {
     KNOB_RIGHT("knob_right"), KNOB_LEFT("knob_left"), KNOB_PUSH("knob_push"), KNOB_HOLD("knob_hold", hold = true),
+    /** #1: the four buttons round the MMI knob, one after the other; each code that arrives is listed. */
+    KNOB_BUTTONS("knob_buttons"),
     PAD_UP("pad_up"), PAD_DOWN("pad_down"), PAD_LEFT("pad_left"), PAD_RIGHT("pad_right"),
     MENU("menu"), BACK("back"), BACK_HOLD("back_hold", hold = true),
     WHEEL_SCROLL("wheel_scroll"), WHEEL_CLICK("wheel_click"), WHEEL_HOLD("wheel_hold", hold = true),
@@ -103,3 +105,20 @@ fun checkSummary(captures: Map<CheckStep, StepCapture>, titles: (CheckStep) -> S
             else -> capture.lines(nowMs).mapIndexed { i, line -> if (i == 0) "${titles(step)}: $line" else "  $line" }
         }
     }
+
+/** How many different keys a step saw (for the four buttons round the knob). */
+fun distinctKeys(capture: StepCapture?): Int = capture?.keys?.map { it.channel to it.code }?.distinct()?.size ?: 0
+
+/** A hold shorter than this, with no long-press flag and no repeats, is a car sending a tap for a hold. */
+const val INSTANT_HOLD_MS = 100L
+
+/**
+ * #1: whether this car sends holds, from the check's hold steps: true when any held key lasted or
+ * was flagged or repeated as a hold; false when keys came but every one was instant; null when no
+ * hold step saw a key.
+ */
+fun carSendsHolds(captures: Map<CheckStep, StepCapture>): Boolean? {
+    val keys = CheckStep.entries.filter { it.hold }.mapNotNull { captures[it] }.flatMap { it.keys }
+    if (keys.isEmpty()) return null
+    return keys.any { it.heldMs >= INSTANT_HOLD_MS || it.longPress || it.repeats > 0 }
+}

@@ -60,4 +60,21 @@ class CarCheckTest {
         assertEquals(CheckInput.Absolute(4, 1, 9, 9), net.prototux.aare.car.CarInputEvent.Absolute(4, 1, 9, 9).toCheckInput())
         assertEquals(CheckInput.Touchpad(5, 10), net.prototux.aare.car.CarInputEvent.Touchpad(5, 10).toCheckInput())
     }
+
+    @Test
+    fun theFourButtonsAreCountedOnceEach() {
+        val c = capture(CheckInput.Key(3, 1001, true, false, 0), CheckInput.Key(3, 1001, false, false, 5),
+            CheckInput.Key(3, 1002, true, false, 10), CheckInput.Key(3, 1002, false, false, 15))
+        assertEquals(2, distinctKeys(c))
+        assertEquals(0, distinctKeys(null))
+    }
+
+    @Test
+    fun instantHoldsMeanTheCarSendsNone() {
+        val instant = capture(CheckInput.Key(3, 23, true, false, 0), CheckInput.Key(3, 23, false, false, 2))
+        assertEquals(false, carSendsHolds(mapOf(CheckStep.KNOB_HOLD to instant, CheckStep.BACK_HOLD to instant)))
+        val held = capture(CheckInput.Key(3, 4, true, false, 0), CheckInput.Key(3, 4, false, false, 1500))
+        assertEquals(true, carSendsHolds(mapOf(CheckStep.KNOB_HOLD to instant, CheckStep.BACK_HOLD to held)))
+        assertEquals(null, carSendsHolds(mapOf(CheckStep.KNOB_PUSH to held)))
+    }
 }
