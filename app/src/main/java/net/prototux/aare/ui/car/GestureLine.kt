@@ -114,6 +114,9 @@ internal fun GestureLineOverlay(state: CarUiState, modifier: Modifier) {
         val title = GestureLines.title(line, np?.title)
         if (GestureLines.withTitle(words) && title != null) "$first: $title" else first
     }
+    // Polish #1: a skin that draws the line itself (ORBIT, in its glass) gets it; else the plain pill.
+    val draw = LocalGestureLineDraw.current
+    if (draw != null) { draw(text, modifier.testTag(GESTURE_LINE_TAG)); return }
     Text(
         text, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
         modifier = modifier.padding(16.dp).clip(MaterialTheme.shapes.large)
@@ -121,6 +124,9 @@ internal fun GestureLineOverlay(state: CarUiState, modifier: Modifier) {
             .testTag(GESTURE_LINE_TAG),
     )
 }
+
+/** Polish #1: how the new screen's skin draws the line ([text], [modifier] carrying the test tag); null: the plain pill. */
+val LocalGestureLineDraw = androidx.compose.runtime.staticCompositionLocalOf<(@Composable (String, Modifier) -> Unit)?> { null }
 
 /** R6-3: the notice and the gesture line at the top, one under the other, never on top of each other. */
 @Composable

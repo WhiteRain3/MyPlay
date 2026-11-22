@@ -235,7 +235,7 @@ internal fun MyPlayAppFrame(
                         Modifier,
                     )
                 }
-                GestureLineOverlay(state, Modifier)
+                CompositionLocalProvider(net.prototux.aare.ui.car.LocalGestureLineDraw provides skin.gestureLine) { GestureLineOverlay(state, Modifier) }
             }
             // A ringing call: the skin's, over everything, with the knob, as on the home (C-1: touches stop here).
             if (ringing) {

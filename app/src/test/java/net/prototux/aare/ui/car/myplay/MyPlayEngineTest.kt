@@ -957,14 +957,28 @@ class MyPlayEngineTest {
         rule.runOnIdle { state.notices.add(0, aNotice()) }
         rule.waitForIdle()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
-        // Reading order: the notice sits at the top, before the hub and the song.
-        engine.performKeyInput { pressKey(Key.Tab) }
-        engine.performKeyInput { pressKey(Key.Tab) }
+        // Polish #4: a notice nobody asked for takes the ring onto Dismiss; reading order puts its
+        // button just before it, at the top.
+        rule.onNodeWithTag(NOTICE_DISMISS).assertIsSelected()
+        engine.performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) } }
         rule.onNodeWithTag(noticeActionStop(0)).assertIsSelected()
         engine.assertIsFocused()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         assertEquals(listOf("reply", "dismiss:n1"), asked)
         // Gone: the ring is back on the hub.
+        rule.waitForIdle()
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+    }
+
+    /** Polish #4: a notice the driver just asked for (Call back) takes the ring onto its first button: one push answers. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun anAskedForNoticeTakesTheRingOntoItsButton() {
+        val state = show()
+        rule.runOnIdle { state.notices.add(0, CarNotice("n2", "Call back Anna?", "Missed at 14:32", null, listOf("Call" to { asked += "call" }), asked = true)) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(noticeActionStop(0)).assertIsSelected()
+        rule.onNodeWithTag(ENGINE_TAG).performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(listOf("call", "dismiss:n2"), asked)
         rule.waitForIdle()
         rule.onNodeWithTag(STOP_HUB).assertIsSelected()
     }

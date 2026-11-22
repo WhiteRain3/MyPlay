@@ -67,6 +67,7 @@ import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarAppKind
 import net.prototux.aare.ui.car.CarFocusVisibility
 import net.prototux.aare.ui.car.CarScreen
+import net.prototux.aare.ui.car.CarNotice
 import net.prototux.aare.ui.car.CarUiState
 import net.prototux.aare.ui.car.LocalMapTapIsKnobStop
 import net.prototux.aare.ui.car.GestureLineOverlay
@@ -174,6 +175,20 @@ internal fun MyPlayEngineShell(
         } else if (homeAlert == null) {
             beforeAlert?.let { chosen = it }
             beforeAlert = null
+        }
+    }
+    // Polish #4: a notice with buttons on the home takes the ring as an alert does: onto its first
+    // button when the driver just asked for it (Call back), else onto Dismiss, so a push meant for
+    // something else only closes it; when it goes, the ring is back where it was.
+    var beforeNotice by remember { mutableStateOf<String?>(null) }
+    val homeNotice = notice?.takeIf { it.actions.isNotEmpty() && model.place == Place.Home }
+    LaunchedEffect(homeNotice?.key) {
+        if (homeNotice != null) {
+            if (beforeNotice == null) beforeNotice = chosen
+            chosen = noticeRing(homeNotice)
+        } else {
+            beforeNotice?.let { chosen = it }
+            beforeNotice = null
         }
     }
     // N8: the bell (while there are unseen notifications) opens the list over the home.
@@ -797,7 +812,11 @@ internal fun MyPlayEngineShell(
                 Column(edge.align(Alignment.TopEnd).onGloballyPositioned { c -> c.boundsInRoot().let { statusBox = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } },
                     horizontalAlignment = Alignment.End) {
                     // Drive warnings: the skin's ice sign beside the clock.
-                    CompositionLocalProvider(LocalRoadIce provides (state.driveWarnings && state.iceRisk)) {
+                    val carNow by net.prototux.aare.car.CarData.state.collectAsState()
+                    val outside = OutsideTemp.of(state.driveWarnings && !sources.picture,
+                        carNow.has(aap_protobuf.service.sensorsource.message.SensorTypeOuterClass.SensorType.SENSOR_ENVIRONMENT_DATA),
+                        carNow.environment?.value?.temperatureC)
+                    CompositionLocalProvider(LocalRoadIce provides (state.driveWarnings && state.iceRisk), LocalOutsideTemp provides outside) {
                         skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
                     }
                     if (STOP_BELL in actionsOf) {
@@ -845,7 +864,7 @@ internal fun MyPlayEngineShell(
                             { id -> if (atHome) Modifier.stop(id) else Modifier.testTag(id) }, Modifier.padding(top = 12.dp))
                     }
                     // The gesture line (R6), under the call's strip and the notice (R6-3: never on top of them).
-                    if (model.place == Place.Home) GestureLineOverlay(state, Modifier)
+                    if (model.place == Place.Home) CompositionLocalProvider(net.prototux.aare.ui.car.LocalGestureLineDraw provides skin.gestureLine) { GestureLineOverlay(state, Modifier) }
                 }
                 // AL-1: the maps app's alert, in the skin's own place (never over the turn, the hub or the song).
                 if (home && homeAlert != null) {
@@ -981,7 +1000,7 @@ internal fun MyPlayEngineShell(
             // O3: the app shrinking back into the stop it came from.
             if (keeps) ShrinkBack(memory, Modifier)
             // The gesture line (R6) over a world's page or the dial (at home it is under the notice, above).
-            if (model.place != Place.Home) GestureLineOverlay(state, Modifier.align(Alignment.TopCenter))
+            if (model.place != Place.Home) CompositionLocalProvider(net.prototux.aare.ui.car.LocalGestureLineDraw provides skin.gestureLine) { GestureLineOverlay(state, Modifier.align(Alignment.TopCenter)) }
             // N8: the notifications list, over the home.
             if (listOpen && !ringing) {
                 val currentKeys by rememberUpdatedState(listKeys)
@@ -1062,7 +1081,8 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
         }
     }
     DisposableEffect(feed) { onDispose { feed.release(); limits?.close(); SpeedLimitDiag.why = null; net.prototux.aare.car.DriveSummary.pause() } }
-    content(feed.reading)
+    // #7: the limit sign's one pulse when the limit changes, under the drive warnings' switch.
+    CompositionLocalProvider(LocalLimitPulse provides state.driveWarnings) { content(feed.reading) }
 }
 
 private const val SPEED_TICK_MS = 1_000L
@@ -1146,6 +1166,9 @@ internal fun padKeyOf(key: Key): HomePadKey? = when (key) {
     Key.DirectionLeft, Key.DirectionRight -> HomePadKey.SIDE
     else -> null
 }
+
+/** Polish #4: where a notice with buttons puts the ring on the home. */
+internal fun noticeRing(notice: CarNotice): String = if (notice.asked) noticeActionStop(0) else NOTICE_DISMISS
 
 /** #5: the Navigate world's list and its rows (also test tags). */
 internal const val SLOT_PLACES = "slot_places"

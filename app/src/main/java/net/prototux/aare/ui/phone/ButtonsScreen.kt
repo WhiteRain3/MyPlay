@@ -247,6 +247,7 @@ fun ButtonsScreen() {
         TeachButtonSection(settings)
         HomeAddressField(settings)
         PlacesSection(settings) // #5: the saved places, beside Home address
+        ParkedHereSwitch(settings) // #11: where the car was parked
         Spacer(Modifier.height(8.dp))
         RowGroup(rows = listOf {
             SwitchRow(Icons.Rounded.Info, stringResource(R.string.phone_buttons_line_title), line, TileTone.BLUE,

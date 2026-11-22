@@ -98,6 +98,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -124,6 +125,9 @@ import net.prototux.aare.ui.car.carPart
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.mediaProgress
 import net.prototux.aare.ui.car.myplay.LocalRoadIce
+import net.prototux.aare.ui.car.myplay.LocalOutsideTemp
+import net.prototux.aare.ui.car.myplay.LimitPulse
+import net.prototux.aare.ui.car.myplay.LocalLimitPulse
 import net.prototux.aare.ui.car.myplay.LocalSkinTokens
 import net.prototux.aare.ui.car.myplay.LocalStopRinged
 import net.prototux.aare.ui.car.myplay.MUSIC_ART
@@ -407,13 +411,40 @@ object OrbitSkin : MyPlaySkin {
         val known = limit as? LimitShown.Known
         val ring = if (known != null) Color(0xFFD32F2F) else Orbit.glass(night).secondary
         Box(
-            modifier.size(84.dp).shadow(6.dp, CircleShape).clip(CircleShape).background(Color.White)
+            modifier.limitPulse(known?.kmh).size(84.dp).shadow(6.dp, CircleShape).clip(CircleShape).background(limitSignFill(night))
                 .border(9.dp, ring, CircleShape).testTag(LIMIT_SIGN_TAG),
             contentAlignment = Alignment.Center,
         ) {
             Text(known?.kmh?.toString() ?: "–", style = TextStyle(fontSize = if ((known?.kmh ?: 0) >= 100) 28.sp else 34.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111111)), maxLines = 1)
         }
     }
+
+    /**
+     * #7: one soft pulse of the limit sign when the limit changes (LimitPulse's rules), drawn only:
+     * the sign's place and size for the layout stay the same, so neither the map's free area nor the
+     * hints round the hub move. No loop, no sound.
+     */
+    @Composable
+    private fun Modifier.limitPulse(kmh: Int?): Modifier {
+        if (!LocalLimitPulse.current) return this
+        val rule = remember { LimitPulse() }
+        val scale = remember { androidx.compose.animation.core.Animatable(1f) }
+        LaunchedEffect(kmh) {
+            if (rule.update(kmh, System.currentTimeMillis())) {
+                val half = LimitPulse.PULSE_MS / 2
+                scale.animateTo(LimitPulse.SCALE, androidx.compose.animation.core.tween(half))
+                scale.animateTo(1f, androidx.compose.animation.core.tween(half))
+            }
+        }
+        return this.graphicsLayer { scaleX = scale.value; scaleY = scale.value }
+    }
+
+    /**
+     * Polish #2: the limit sign's inside: white by day; at night a light grey (85 %), so it does not
+     * glare on the dark map. The red ring and the black number stay at full strength.
+     */
+    fun limitSignFill(night: Boolean): Color = if (night) LIMIT_FILL_NIGHT else Color.White
+    val LIMIT_FILL_NIGHT = Color(0xFFD9D9D9)
 
     const val HUB_SPEED_TAG = "orbit_hub_speed"
     const val LIMIT_SIGN_TAG = "orbit_limit_sign"
@@ -521,6 +552,17 @@ object OrbitSkin : MyPlaySkin {
                     ) {
                         // Drive warnings: 4 °C or less outside. DW-1: its place is always kept (empty when
                         // warm), so the column's size, and with it the map's free area, never changes because of it.
+                        // Polish #5: the outside temperature, when the car reports it; its place kept all drive
+                        // (as wide as "-88°") so the column never changes width when a reading comes or goes.
+                        val outside = LocalOutsideTemp.current
+                        if (outside.reserve) {
+                            val tempStyle = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontFeatureSettings = "tnum")
+                            val measurer = rememberTextMeasurer()
+                            val widest = remember(measurer) { measurer.measure("-88°", tempStyle).size.width }
+                            Box(Modifier.width(with(LocalDensity.current) { widest.toDp() }).testTag(OUTSIDE_TEMP_TAG), contentAlignment = Alignment.CenterEnd) {
+                                outside.degrees?.let { Text("$it°", style = tempStyle.floating(if (ice) Orbit.warning(night) else g.text), maxLines = 1) }
+                            }
+                        }
                         Box(Modifier.size(30.dp).testTag(ICE_SLOT_TAG)) {
                             if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(30.dp).testTag(ICE_TAG), tint = Orbit.warning(night))
                         }
@@ -531,7 +573,14 @@ object OrbitSkin : MyPlaySkin {
                                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 Icon(batteryIcon(s.battery, s.charging), null, Modifier.size(30.dp), tint = colour)
-                                Text("${s.battery}%", style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold).floating(colour))
+                                // Polish #3: the number keeps the width of "100%" (figures of one width), so the
+                                // column, and the map's free area with it, never shifts as the level changes.
+                                val numberStyle = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontFeatureSettings = "tnum")
+                                val measurer = rememberTextMeasurer()
+                                val widest = remember(measurer) { measurer.measure("100%", numberStyle).size.width }
+                                Box(Modifier.width(with(LocalDensity.current) { widest.toDp() }), contentAlignment = Alignment.CenterEnd) {
+                                    Text("${s.battery}%", style = numberStyle.floating(colour), maxLines = 1, modifier = Modifier.testTag(BATTERY_NUMBER_TAG))
+                                }
                             }
                         }
                     }
@@ -587,7 +636,7 @@ object OrbitSkin : MyPlaySkin {
     private fun SpeedLimit(limit: LimitShown, night: Boolean) {
         val g = Orbit.glass(night)
         Column(Modifier.padding(top = 8.dp).widthIn(max = 170.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            OrbitDisc(60.dp, night, Modifier.border(3.dp, g.secondary, CircleShape)) {
+            OrbitDisc(60.dp, night, Modifier.limitPulse((limit as? LimitShown.Known)?.kmh).border(3.dp, g.secondary, CircleShape)) {
                 Text(
                     (limit as? LimitShown.Known)?.kmh?.toString() ?: "–",
                     style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1,
@@ -794,6 +843,24 @@ object OrbitSkin : MyPlaySkin {
     }
 
     const val MUSIC_PROGRESS_TAG = "orbit_music_progress"
+
+    /**
+     * Polish #1: the short line at the top (a gesture's, the ice's, the phone's heat) in ORBIT's own
+     * glass: the notice card's glass, edge and title type, as a pill.
+     */
+    override val gestureLine: (@Composable (String, Modifier) -> Unit) = { text, modifier ->
+        val g = Orbit.glass(LocalSkinTokens.current.night)
+        Box(modifier) {
+            Scaled {
+                Text(
+                    text, style = TextStyle(fontSize = 26.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = g.text),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 12.dp).widthIn(max = NOTICE_WIDTH).clip(CircleShape).background(g.glass)
+                        .border(2.dp, g.edge, CircleShape).padding(horizontal = 24.dp, vertical = 12.dp),
+                )
+            }
+        }
+    }
 
     @Composable
     override fun Notice(notice: CarNotice, hideText: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) {
@@ -1256,8 +1323,12 @@ object OrbitSkin : MyPlaySkin {
 
     /** Test tags. */
     const val BATTERY_TAG = "orbit_battery"
+    /** Polish #3: the battery's number, in its fixed-width box. */
+    const val BATTERY_NUMBER_TAG = "orbit_battery_number"
     /** Drive warnings: the ice sign beside the battery. */
     const val ICE_TAG = "orbit_ice"
+    /** Polish #5: the outside temperature's place under the clock. */
+    const val OUTSIDE_TEMP_TAG = "orbit_outside_temp"
     /** DW-1: the ice sign's place, kept whether it shows or not. */
     const val ICE_SLOT_TAG = "orbit_ice_slot"
     const val SONG_ART_TAG = "orbit_song_art"

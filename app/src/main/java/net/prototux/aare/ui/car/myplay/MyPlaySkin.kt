@@ -409,6 +409,12 @@ interface MyPlaySkin {
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)
 
     /**
+     * Polish #1: the short line at the top (a gesture's, the ice's, the phone's heat): null, the
+     * plain pill (GestureLine.kt); a skin may draw it in its own style.
+     */
+    val gestureLine: (@Composable (String, Modifier) -> Unit)? get() = null
+
+    /**
      * N3: whether [slot] covers the map, so the maps app keeps its arrow and its own signs out of
      * it. The corner slots do; the chooser and a world's page come and go over the middle, and
      * counting them would make the map jump each time, so by default they do not.

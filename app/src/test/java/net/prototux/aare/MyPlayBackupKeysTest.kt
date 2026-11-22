@@ -48,6 +48,8 @@ class MyPlayBackupKeysTest {
         val NOT_BACKED_UP: Set<String> = setOf(
             "myplay_backup_last_saved", // when this phone last saved a backup: belongs to the phone, not to the settings
             "myplay_places", // saved places (#5): addresses are personal and stay on this phone, not in a backup file
+            "myplay_parked_here", // where I parked (#11): goes with the spot it keeps, which belongs to this phone
+            "myplay_parked_spot", // where the car was last parked (#11): a location, private, stays on this phone
             "myplay_whats_new_seen", // which release notes this install has shown: belongs to the install
             "myplay_wallpaper_edit", // how the wallpaper photo is placed and treated: the photo is not in backups either
             "myplay_car_sends_holds", // what the Car check saw this car do (#1): belongs to the car and the check
