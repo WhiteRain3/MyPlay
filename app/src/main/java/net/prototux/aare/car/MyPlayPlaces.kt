@@ -8,8 +8,10 @@ import org.json.JSONObject
 /**
  * MyPlay (ideas 2026-11-22, #5): up to [MAX] places of the owner's own (a name and an address or
  * lat,lng), listed with Home (myplay_home_address) in ORBIT's Navigate world; a push starts the
- * car's maps app there. Typed on the phone next to Home address. Never backed up and never written
- * to the log: addresses are personal. While none is saved and no home address is set, Navigate
+ * car's maps app there. Typed on the phone next to Home address. Never written to the log, and
+ * kept out of backups on purpose (PL-2): a backup is a file that travels, so a list of personal
+ * addresses stays on this phone; restoring on a new phone means typing them again. (Home address,
+ * HN-1, is backed up; whether it should be is the owner's call.) While none is saved and no home address is set, Navigate
  * stays what it was: the maps app itself.
  */
 data class SavedPlace(val name: String, val address: String)
