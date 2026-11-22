@@ -92,6 +92,8 @@ internal const val GESTURE_LINE_TAG = "gesture_line"
 @Composable
 internal fun GestureLineOverlay(state: CarUiState, modifier: Modifier) {
     val line = state.gestureLine ?: return
+    // DW-2: a warning's own line (shown once per drive) waits out a ringing call with its time not running.
+    if (line.text != null && state.call?.ringing == true) return
     // R6-2: the line is cleared when its time is up, so a screen drawn again later never shows an old one.
     LaunchedEffect(line) {
         delay(line.showMs)
