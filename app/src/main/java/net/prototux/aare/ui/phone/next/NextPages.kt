@@ -76,6 +76,11 @@ object NextPages {
         "more/archive" to R.string.next_more_archive_label,
         "more/archive/deck" to R.string.next_more_deck_label,
         "more/archive/layouts" to R.string.next_more_layouts_label,
+        "more/archive/layouts/map" to R.string.next_arch_map_behind_label,
+        "more/archive/layouts/bar" to R.string.next_arch_bar_label,
+        "more/archive/layouts/cards" to R.string.next_arch_cards_label,
+        "more/archive/layouts/clock" to R.string.next_arch_clock_label,
+        "more/archive/layouts/status" to R.string.next_arch_status_label,
         "more/about" to R.string.next_more_about_label,
     )
 }
@@ -119,6 +124,12 @@ fun NextPage(route: String, onOldApp: () -> Unit) {
         "more/advanced" -> NextAdvancedPage()
         "more/advanced/certificates" -> NextCertificatesPage()
         "more/advanced/developer" -> NextDeveloperPage()
+        "more/archive" -> NextArchivePage()
+        "more/archive/deck" -> NextDeckPage()
+        "more/archive/layouts" -> NextOlderLayoutsPage()
+        "more/archive/layouts/map", "more/archive/layouts/bar", "more/archive/layouts/cards",
+        "more/archive/layouts/clock", "more/archive/layouts/status" -> NextKeptPage(route)
+        "more/about" -> NextAboutPage(onOldApp)
         "more/advanced/developer/parts" -> { val nav = LocalNextNavigator.current; net.prototux.aare.ui.phone.PhonePartsSample { nav.back() } }
         "more/updates" -> NextUpdatesPage()
         "more/whats-new" -> NextWhatsNewPage()

@@ -592,4 +592,33 @@
     <string name="next_dev_nav_text_label" translatable="false">Log the maps app\'s texts</string>
     <string name="next_dev_parts_label" translatable="false">Phone parts sample</string>
     <string name="next_dev_lives_in_log_help" translatable="false">Lives in Connection log</string>
+    <string name="next_arch_deck_label" translatable="false">Use DECK instead of ORBIT</string>
+    <string name="next_arch_deck_help" translatable="false">Its worlds still use ORBIT\'s look</string>
+    <string name="next_arch_deck_needs_help" translatable="false">Needs MyPlay\'s own screen, in Older layouts</string>
+    <string name="next_arch_layouts_help" translatable="false">Taskbar, dock, grid, map behind</string>
+    <string name="next_arch_own_screen_label" translatable="false">Use MyPlay\'s own screen</string>
+    <string name="next_arch_own_screen_help" translatable="false">Off: the older layouts below</string>
+    <string name="next_arch_layout_label" translatable="false">Layout</string>
+    <string name="next_arch_kind_label" translatable="false">Kind of layout</string>
+    <string name="next_arch_preset_label" translatable="false">Ready-made layout</string>
+    <string name="next_arch_preset_value_label" translatable="false">Layout %1$s</string>
+    <string name="next_arch_own_mix_label" translatable="false">Your own mix</string>
+    <string name="next_arch_map_behind_label" translatable="false">Map behind options</string>
+    <string name="next_arch_bar_label" translatable="false">Bar</string>
+    <string name="next_arch_cards_clock_label" translatable="false">Cards, clock and status</string>
+    <string name="next_arch_cards_label" translatable="false">Dashboard cards</string>
+    <string name="next_arch_clock_label" translatable="false">Clock</string>
+    <string name="next_arch_status_label" translatable="false">Status icons</string>
+    <string name="next_arch_weather_section_label" translatable="false">Weather</string>
+    <string name="next_arch_weather_label" translatable="false">Show the weather</string>
+    <string name="next_arch_weather_help" translatable="false">Sends an approximate position to Open-Meteo</string>
+    <string name="next_about_name_label" translatable="false">MyPlay</string>
+    <string name="next_about_version_label" translatable="false">Version %1$s</string>
+    <string name="next_about_project_label" translatable="false">Project page</string>
+    <string name="next_about_report_label" translatable="false">Report a problem</string>
+    <string name="next_about_upstream_label" translatable="false">AARE, the original project</string>
+    <string name="next_about_thanks_label" translatable="false">Thanks</string>
+    <string name="next_about_licences_label" translatable="false">Open-source licences</string>
+    <string name="next_about_map_data_label" translatable="false">Map data</string>
+    <string name="next_about_osm_open_label" translatable="false">Open the copyright page</string>
 </resources>

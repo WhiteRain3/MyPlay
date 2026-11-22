@@ -20,7 +20,8 @@ object NextRoutes {
         "more", "more/updates", "more/whats-new", "more/cars", "more/connection", "more/backup",
         "more/diagnostics", "more/diagnostics/car-check", "more/diagnostics/car-data", "more/diagnostics/log",
         "more/advanced", "more/advanced/certificates", "more/advanced/developer", "more/advanced/developer/parts",
-        "more/archive", "more/archive/deck", "more/archive/layouts", "more/about",
+        "more/archive", "more/archive/deck", "more/archive/layouts", "more/archive/layouts/map", "more/archive/layouts/bar",
+        "more/archive/layouts/cards", "more/archive/layouts/clock", "more/archive/layouts/status", "more/about",
     )
 
     /** Pages drawn full screen, with their own top bar and no tab bar (design frame 16). */

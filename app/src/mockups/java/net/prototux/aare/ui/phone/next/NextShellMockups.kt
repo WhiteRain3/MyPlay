@@ -184,6 +184,11 @@ class NextShellMockups {
         net.prototux.aare.Settings(paparazzi.context).headUnitServer = false
     }
 
+    @Test fun archRoot() = paparazzi.snapshot { Page("more/archive") { NextArchivePage() } }
+    @Test fun archLayouts() = paparazzi.snapshot { Page("more/archive/layouts") { NextOlderLayoutsPage() } }
+    @Test fun archKeptBar() = paparazzi.snapshot { Page("more/archive/layouts/bar") { NextKeptPage("more/archive/layouts/bar") } }
+    @Test fun aboutPage() = paparazzi.snapshot { Page("more/about") { NextAboutPage {} } }
+
     @Test fun diagRoot() = paparazzi.snapshot { Page("more/diagnostics") { NextDiagnosticsPage() } }
     @Test fun diagCarCheckStep() {
         CarCheckRun.resetForTest(); CarCheckRun.goTo(4)
