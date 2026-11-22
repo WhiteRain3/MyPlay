@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.LocalParking
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -28,6 +29,7 @@ import net.prototux.aare.R
 import net.prototux.aare.Settings
 import net.prototux.aare.car.Places
 import net.prototux.aare.car.SavedPlace
+import net.prototux.aare.car.myplayParkedHere
 import net.prototux.aare.car.myplayPlaces
 
 /**
@@ -70,3 +72,15 @@ internal const val PLACE_ADD_TAG = "phone_place_add"
 internal fun placeNameTag(i: Int) = "phone_place_name_$i"
 internal fun placeAddressTag(i: Int) = "phone_place_address_$i"
 internal fun placeDeleteTag(i: Int) = "phone_place_delete_$i"
+
+/** MyPlay (#11): "Remember where I parked", off unless turned on here. */
+@Composable
+internal fun ParkedHereSwitch(settings: Settings) {
+    var on by remember { mutableStateOf(settings.myplayParkedHere) }
+    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
+        RowGroup(rows = listOf {
+            SwitchRow(Icons.Rounded.LocalParking, stringResource(R.string.phone_parked_title), on, TileTone.BLUE,
+                stringResource(R.string.phone_parked_hint)) { on = it; settings.myplayParkedHere = it }
+        })
+    }
+}

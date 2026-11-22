@@ -120,4 +120,11 @@
     <string name="phone_places_address" translatable="false">Address or lat,lng</string>
     <string name="phone_places_add" translatable="false">Add a place</string>
     <string name="phone_places_delete" translatable="false">Remove this place</string>
+    <!-- #11: where I parked (off by default) -->
+    <string name="myplay_parked_channel" translatable="false">Where you parked</string>
+    <string name="myplay_parked_title" translatable="false">Car parked at %1$s</string>
+    <string name="myplay_parked_text" translatable="false">Tap to find your way back to it</string>
+    <string name="myplay_parked_navigate" translatable="false">Navigate back to car</string>
+    <string name="phone_parked_title" translatable="false">Remember where I parked</string>
+    <string name="phone_parked_hint" translatable="false">When a drive ends, keeps the spot on this phone only and offers the way back in a notification.</string>
 </resources>
