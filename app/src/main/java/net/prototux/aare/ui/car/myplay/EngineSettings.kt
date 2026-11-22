@@ -6,6 +6,7 @@ import net.prototux.aare.Settings
 import net.prototux.aare.car.SpeedRules
 import net.prototux.aare.car.SpeedSourceMode
 import net.prototux.aare.car.myplaySpeedLimitMargin
+import net.prototux.aare.car.myplayDriveWarnings
 import net.prototux.aare.car.myplayGestureLine
 import net.prototux.aare.car.myplaySpeedSource
 import net.prototux.aare.ui.car.CarAppKind
@@ -105,6 +106,7 @@ internal class CarSettingsSource(private val context: Context, private val state
         // O11: the info-only home (ORBIT, with the home pad on).
         SettingItem.Toggle("info_home", s(R.string.myplay_setting_info_home), settings.myplayInfoHome) { settings.myplayInfoHome = it },
         SettingItem.Toggle("gesture_line", s(R.string.myplay_setting_gesture_line), settings.myplayGestureLine) { settings.myplayGestureLine = it },
+        SettingItem.Toggle("drive_warnings", s(R.string.myplay_setting_drive_warnings), settings.myplayDriveWarnings) { settings.myplayDriveWarnings = it },
         SettingItem.Toggle("banners", s(R.string.setup_switch_message_notifications), settings.messageBanners) { settings.messageBanners = it },
         SettingItem.Toggle("read_aloud", s(R.string.msg_toggle_read_aloud_title), settings.readMessagesAloud) { settings.readMessagesAloud = it },
         SettingItem.Toggle("car_audio", s(R.string.setup_switch_audio_next_connection), settings.carAudio) { settings.carAudio = it },

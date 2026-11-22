@@ -95,4 +95,9 @@
     <string name="myplay_nav_home_no_maps" translatable="false">No maps app to navigate with</string>
     <string name="phone_home_address_title" translatable="false">Home address (for Navigate home)</string>
     <string name="phone_home_address_hint" translatable="false">An address or lat,lng. Kept on this phone only, not in backups.</string>
+    <!-- Drive warnings (ideas 2026-11-22): quiet road and phone warnings on the car screen -->
+    <string name="myplay_warning_ice" translatable="false">%1$d °C outside: the road may be icy</string>
+    <string name="myplay_warning_ice_sign" translatable="false">Ice possible</string>
+    <string name="myplay_setting_drive_warnings" translatable="false">Ice and phone warnings</string>
+    <string name="phone_drive_warnings_hint" translatable="false">A snowflake by the clock at 4 °C or less outside, if the car reports it, and a short line once per drive.</string>
 </resources>

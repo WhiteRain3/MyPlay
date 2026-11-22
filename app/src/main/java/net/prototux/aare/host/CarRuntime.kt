@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.location.Location
+import net.prototux.aare.car.myplayDriveWarnings
 import net.prototux.aare.car.myplaySpeedSource
 import android.media.projection.MediaProjection
 import android.os.Handler
@@ -366,6 +367,7 @@ class CarRuntime(
         ui.homePad = settings.myplayHomePad // MyPlay (O6): the home pad's shortcuts
         ui.infoHome = settings.myplayInfoHome // MyPlay (O11): the info-only home
         ui.orbitShadeSoft = settings.myplayOrbitShade != net.prototux.aare.ui.car.myplay.ORBIT_SHADE_NONE // MyPlay (SH-1)
+        ui.driveWarnings = settings.myplayDriveWarnings // MyPlay: quiet road and phone warnings
         ui.mapsIdleHomeMin = settings.myplayMapsIdleHome // MyPlay (O2b): a full-screen maps app goes home when idle
         ui.speedSource = settings.myplaySpeedSource // MyPlay (N3): the engine's speed source
         NavTextCheck.on = settings.myplayDebugNavText // MyPlay (N3 check): maps apps' text in the log
@@ -950,6 +952,7 @@ class CarRuntime(
             "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
             "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", KEY_ENGINE_LANGUAGE, "myplay_speed_source", "myplay_debug_nav_text",
             KEY_PANEL_TIMEOUT, net.prototux.aare.ui.car.myplay.KEY_HOME_PAD, net.prototux.aare.ui.car.myplay.KEY_MAPS_IDLE_HOME, net.prototux.aare.ui.car.myplay.KEY_INFO_HOME, net.prototux.aare.ui.car.myplay.KEY_ORBIT_SHADE,
+            net.prototux.aare.car.KEY_DRIVE_WARNINGS,
         )
 
         private const val TAG = "AareRuntime"

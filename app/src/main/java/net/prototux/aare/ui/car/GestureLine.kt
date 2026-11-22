@@ -31,11 +31,23 @@ data class GestureLine(
     /** R6-1: the song and whether it played when the gesture came, to tell a report of its effect from an old one. */
     val titleBefore: String? = null,
     val playingBefore: Boolean? = null,
-)
+    /** MyPlay (drive warnings): a line of its own words instead of a gesture's ([action] is then NOTHING). */
+    val text: String? = null,
+    /** How long the line stays. */
+    val showMs: Long = GestureLines.SHOW_MS,
+) {
+    companion object {
+        /** A warning's line (ice, a hot phone): its own words, a little longer than a gesture's. */
+        fun info(text: String, atMs: Long) = GestureLine(ButtonAction.NOTHING, forward = true, atMs = atMs, text = text, showMs = GestureLines.INFO_MS)
+    }
+}
 
 internal object GestureLines {
     /** How long the line stays. */
     const val SHOW_MS = 1_500L
+
+    /** How long a warning's own line stays (GestureLine.info). */
+    const val INFO_MS = 4_000L
 
     /** Whether [action] gets a line: only what happens away from the ring. */
     fun shows(action: ButtonAction): Boolean = when (action) {
@@ -82,22 +94,24 @@ internal fun GestureLineOverlay(state: CarUiState, modifier: Modifier) {
     val line = state.gestureLine ?: return
     // R6-2: the line is cleared when its time is up, so a screen drawn again later never shows an old one.
     LaunchedEffect(line) {
-        delay(GestureLines.SHOW_MS)
+        delay(line.showMs)
         if (state.gestureLine === line) state.gestureLine = null
     }
     // R6-3: a ringing call's card takes the top of the screen; the line waits.
     if (state.call?.ringing == true) return
-    val np = state.nowPlaying
-    val words = GestureLines.words(line, np?.playing) ?: return
-    val first = stringResource(when (words) {
-        GestureLines.Words.NEXT -> R.string.myplay_gesture_line_next
-        GestureLines.Words.PREVIOUS -> R.string.myplay_gesture_line_previous
-        GestureLines.Words.PLAYING -> R.string.myplay_gesture_line_playing
-        GestureLines.Words.PAUSED -> R.string.myplay_gesture_line_paused
-        GestureLines.Words.ASSISTANT -> R.string.myplay_gesture_line_assistant
-    })
-    val title = GestureLines.title(line, np?.title)
-    val text = if (GestureLines.withTitle(words) && title != null) "$first: $title" else first
+    val text = line.text ?: run {
+        val np = state.nowPlaying
+        val words = GestureLines.words(line, np?.playing) ?: return
+        val first = stringResource(when (words) {
+            GestureLines.Words.NEXT -> R.string.myplay_gesture_line_next
+            GestureLines.Words.PREVIOUS -> R.string.myplay_gesture_line_previous
+            GestureLines.Words.PLAYING -> R.string.myplay_gesture_line_playing
+            GestureLines.Words.PAUSED -> R.string.myplay_gesture_line_paused
+            GestureLines.Words.ASSISTANT -> R.string.myplay_gesture_line_assistant
+        })
+        val title = GestureLines.title(line, np?.title)
+        if (GestureLines.withTitle(words) && title != null) "$first: $title" else first
+    }
     Text(
         text, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
         modifier = modifier.padding(16.dp).clip(MaterialTheme.shapes.large)

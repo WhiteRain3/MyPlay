@@ -1006,6 +1006,26 @@ class CarSession(
             batch.drivingStatusDataList.lastOrNull()?.let { d ->
                 main.post { runtime.carDriving(d.status != 0) }
             }
+            // MyPlay (drive warnings): the ice sign, and its line once per drive.
+            batch.environmentDataList.lastOrNull()?.let { e ->
+                val tempC = if (e.hasTemperatureE3()) e.temperatureE3 / 1e3f else null
+                main.post { onOutsideTemperature(tempC) }
+            }
+        }
+    }
+
+    /** MyPlay (drive warnings): this drive's ice sign and whether its line was shown (main thread). */
+    private val ice = IceTracker()
+
+    private fun onOutsideTemperature(tempC: Float?) {
+        if (closed) return
+        val wasShowing = ice.showing
+        val announce = ice.update(tempC)
+        runtime.ui.iceRisk = ice.showing
+        if (ice.showing != wasShowing) DiagLog.add("drive warnings: ice sign ${if (ice.showing) "on" else "off"} (outside ${tempC ?: "?"} °C)")
+        if (announce && tempC != null && settings.myplayDriveWarnings) {
+            runtime.ui.gestureLine = net.prototux.aare.ui.car.GestureLine.info(
+                context.getString(R.string.myplay_warning_ice, IceWarning.degrees(tempC)), SystemClock.uptimeMillis())
         }
     }
 

@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AcUnit
 import androidx.compose.material.icons.rounded.Battery0Bar
 import androidx.compose.material.icons.rounded.Battery1Bar
 import androidx.compose.material.icons.rounded.Battery2Bar
@@ -121,6 +122,7 @@ import net.prototux.aare.ui.car.CarPart
 import net.prototux.aare.ui.car.carPart
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.mediaProgress
+import net.prototux.aare.ui.car.myplay.LocalRoadIce
 import net.prototux.aare.ui.car.myplay.LocalSkinTokens
 import net.prototux.aare.ui.car.myplay.LocalStopRinged
 import net.prototux.aare.ui.car.myplay.MUSIC_ART
@@ -508,15 +510,26 @@ object OrbitSkin : MyPlaySkin {
             Column(horizontalAlignment = Alignment.End) {
                 Text(time, style = Orbit.Type.clock.floating(g.text), maxLines = 1, modifier = Modifier.carPart(CarPart.Clock))
                 // N5-3: no level shown when the phone does not tell it, never "0%".
-                rememberPhoneStatus()?.takeIf { it.batteryKnown }?.let { s ->
+                val battery = rememberPhoneStatus()?.takeIf { it.batteryKnown }
+                val ice = LocalRoadIce.current
+                if (battery != null || ice) {
                     val night = LocalSkinTokens.current.night
-                    val colour = if (batteryLow(s.battery, s.charging)) Orbit.warning(night) else nav
                     Row(
-                        Modifier.padding(top = 8.dp).testTag(BATTERY_TAG).carPart(CarPart.Status),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Icon(batteryIcon(s.battery, s.charging), null, Modifier.size(30.dp), tint = colour)
-                        Text("${s.battery}%", style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold).floating(colour))
+                        // Drive warnings: 4 °C or less outside. On the battery's row, so the clock's width and the map's free area stay as they are.
+                        if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(30.dp).testTag(ICE_TAG), tint = Orbit.warning(night))
+                        battery?.let { s ->
+                            val colour = if (batteryLow(s.battery, s.charging)) Orbit.warning(night) else nav
+                            Row(
+                                Modifier.testTag(BATTERY_TAG).carPart(CarPart.Status),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Icon(batteryIcon(s.battery, s.charging), null, Modifier.size(30.dp), tint = colour)
+                                Text("${s.battery}%", style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold).floating(colour))
+                            }
+                        }
                     }
                 }
             }
@@ -1222,6 +1235,8 @@ object OrbitSkin : MyPlaySkin {
 
     /** Test tags. */
     const val BATTERY_TAG = "orbit_battery"
+    /** Drive warnings: the ice sign beside the battery. */
+    const val ICE_TAG = "orbit_ice"
     const val SONG_ART_TAG = "orbit_song_art"
     const val SONG_ART_FALLBACK_TAG = "orbit_song_art_fallback"
     const val TRIP_RING_TAG = "orbit_trip_ring"

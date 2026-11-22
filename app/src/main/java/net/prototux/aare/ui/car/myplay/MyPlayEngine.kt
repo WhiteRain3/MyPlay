@@ -774,7 +774,10 @@ internal fun MyPlayEngineShell(
                 } else if (home) slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) } }
                 Column(edge.align(Alignment.TopEnd).onGloballyPositioned { c -> c.boundsInRoot().let { statusBox = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } },
                     horizontalAlignment = Alignment.End) {
-                    skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
+                    // Drive warnings: the skin's ice sign beside the clock.
+                    CompositionLocalProvider(LocalRoadIce provides (state.driveWarnings && state.iceRisk)) {
+                        skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
+                    }
                     if (STOP_BELL in actionsOf) {
                         ringed(STOP_BELL) { skin.Bell(notes.unseen, LocalStopRinged.current, Modifier.slot(Slot.STATUS).stop(STOP_BELL)) }
                     }
