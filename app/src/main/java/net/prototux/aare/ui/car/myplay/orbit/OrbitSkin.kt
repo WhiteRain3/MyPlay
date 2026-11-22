@@ -411,7 +411,7 @@ object OrbitSkin : MyPlaySkin {
         val known = limit as? LimitShown.Known
         val ring = if (known != null) Color(0xFFD32F2F) else Orbit.glass(night).secondary
         Box(
-            modifier.limitPulse(known?.kmh).size(84.dp).shadow(6.dp, CircleShape).clip(CircleShape).background(Color.White)
+            modifier.limitPulse(known?.kmh).size(84.dp).shadow(6.dp, CircleShape).clip(CircleShape).background(limitSignFill(night))
                 .border(9.dp, ring, CircleShape).testTag(LIMIT_SIGN_TAG),
             contentAlignment = Alignment.Center,
         ) {
@@ -438,6 +438,13 @@ object OrbitSkin : MyPlaySkin {
         }
         return this.graphicsLayer { scaleX = scale.value; scaleY = scale.value }
     }
+
+    /**
+     * Polish #2: the limit sign's inside: white by day; at night a light grey (85 %), so it does not
+     * glare on the dark map. The red ring and the black number stay at full strength.
+     */
+    fun limitSignFill(night: Boolean): Color = if (night) LIMIT_FILL_NIGHT else Color.White
+    val LIMIT_FILL_NIGHT = Color(0xFFD9D9D9)
 
     const val HUB_SPEED_TAG = "orbit_hub_speed"
     const val LIMIT_SIGN_TAG = "orbit_limit_sign"
