@@ -7,6 +7,8 @@ import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.location.Location
+import net.prototux.aare.car.myplayDriveWarnings
+import net.prototux.aare.car.myplayPlaces
 import net.prototux.aare.car.myplaySpeedSource
 import android.media.projection.MediaProjection
 import android.os.Handler
@@ -52,6 +54,7 @@ import net.prototux.aare.ui.car.myplay.myplayInfoHome
 import net.prototux.aare.ui.car.myplay.myplayOrbitShade
 import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
 import net.prototux.aare.ui.car.myplay.myplayEnginePreview
+import net.prototux.aare.car.CallBack
 import net.prototux.aare.car.Calls
 import net.prototux.aare.car.DashboardInfo
 import net.prototux.aare.media.MediaHub
@@ -366,6 +369,9 @@ class CarRuntime(
         ui.homePad = settings.myplayHomePad // MyPlay (O6): the home pad's shortcuts
         ui.infoHome = settings.myplayInfoHome // MyPlay (O11): the info-only home
         ui.orbitShadeSoft = settings.myplayOrbitShade != net.prototux.aare.ui.car.myplay.ORBIT_SHADE_NONE // MyPlay (SH-1)
+        ui.driveWarnings = settings.myplayDriveWarnings // MyPlay: quiet road and phone warnings
+        // MyPlay (#5): Home and the saved places for the Navigate world.
+        ui.navPlaces = net.prototux.aare.car.Places.destinations(settings.myplayHomeAddress, settings.myplayPlaces, context.getString(R.string.myplay_places_home))
         ui.mapsIdleHomeMin = settings.myplayMapsIdleHome // MyPlay (O2b): a full-screen maps app goes home when idle
         ui.speedSource = settings.myplaySpeedSource // MyPlay (N3): the engine's speed source
         NavTextCheck.on = settings.myplayDebugNavText // MyPlay (N3 check): maps apps' text in the log
@@ -619,6 +625,37 @@ class CarRuntime(
         return ok
     }
 
+    /**
+     * MyPlay (#10): the last missed call as a notice with a Call button; only that button dials.
+     * The log says what happened, never who called.
+     */
+    fun callBackLastMissed() {
+        val title = context.getString(R.string.myplay_call_back_title)
+        val granted = net.prototux.aare.ui.car.PHONE_PERMISSIONS.all { context.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED }
+        if (!granted) {
+            DiagLog.add("call back: no permission for calls")
+            notice(title, context.getString(R.string.myplay_call_back_no_permission))
+            return
+        }
+        scope.launch {
+            val now = System.currentTimeMillis()
+            val missed = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { CallBack.pick(CallBack.rows(context), now) }
+            if (missed == null) {
+                DiagLog.add("call back: no missed call in the last 24 hours")
+                notice(title, context.getString(R.string.myplay_call_back_none))
+                return@launch
+            }
+            DiagLog.add("call back: offered the last missed call")
+            val who = missed.name.ifBlank { missed.number }
+            val at = android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(missed.dateMs))
+            notice(context.getString(R.string.myplay_call_back_who, who), context.getString(R.string.myplay_call_back_when, at),
+                durationMs = 10_000, actions = listOf(context.getString(R.string.myplay_call_back_call) to {
+                    DiagLog.add("call back: calling")
+                    Calls.place(context, missed.number)
+                }))
+        }
+    }
+
     /** Phone calls for the car's call card: polled, as no telephony listener needs fewer permissions. */
     private suspend fun watchCalls() {
         var since = 0L
@@ -772,6 +809,7 @@ class CarRuntime(
         override fun navigateTo(place: String) {
             if (!this@CarRuntime.navigateTo(place)) notice(context.getString(R.string.notif_navigation_title), context.getString(R.string.notif_navigation_no_app_text))
         }
+        override fun callBackLastMissed() = this@CarRuntime.callBackLastMissed()
     }
 
     /** The chosen assistant's package, or the phone's default assistant. */
@@ -950,6 +988,7 @@ class CarRuntime(
             "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
             "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", KEY_ENGINE_LANGUAGE, "myplay_speed_source", "myplay_debug_nav_text",
             KEY_PANEL_TIMEOUT, net.prototux.aare.ui.car.myplay.KEY_HOME_PAD, net.prototux.aare.ui.car.myplay.KEY_MAPS_IDLE_HOME, net.prototux.aare.ui.car.myplay.KEY_INFO_HOME, net.prototux.aare.ui.car.myplay.KEY_ORBIT_SHADE,
+            net.prototux.aare.car.KEY_DRIVE_WARNINGS, net.prototux.aare.car.KEY_PLACES, net.prototux.aare.car.KEY_HOME_ADDRESS,
         )
 
         private const val TAG = "AareRuntime"

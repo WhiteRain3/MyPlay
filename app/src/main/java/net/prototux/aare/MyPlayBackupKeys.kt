@@ -27,6 +27,7 @@ internal object MyPlayBackupKeys {
         "myplay_learned_buttons" to Type.STRING, // car buttons taught an action in the car, code to action (O11)
         "myplay_orbit_shade" to Type.STRING, // the shade behind ORBIT's parts: soft or none (SH-1)
         "myplay_info_home" to Type.BOOLEAN, // ORBIT's home without the knob's ring (O11)
+        "myplay_drive_warnings" to Type.BOOLEAN, // the ice sign and the phone's heat on the car screen (ideas 2026-11-22)
         "myplay_home_pad" to Type.STRING, // what ORBIT's home pad opens while the ring is hidden (O6)
         "myplay_panel_timeout" to Type.INT, // seconds before a panel over the map closes by itself, 0 never (O2)
         "myplay_speed_limit_margin" to Type.INT, // how far over the limit before the speed changes colour (N20)

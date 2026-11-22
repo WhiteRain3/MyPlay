@@ -36,6 +36,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AcUnit
+import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Battery0Bar
 import androidx.compose.material.icons.rounded.Battery1Bar
 import androidx.compose.material.icons.rounded.Battery2Bar
@@ -121,6 +123,7 @@ import net.prototux.aare.ui.car.CarPart
 import net.prototux.aare.ui.car.carPart
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.mediaProgress
+import net.prototux.aare.ui.car.myplay.LocalRoadIce
 import net.prototux.aare.ui.car.myplay.LocalSkinTokens
 import net.prototux.aare.ui.car.myplay.LocalStopRinged
 import net.prototux.aare.ui.car.myplay.MUSIC_ART
@@ -508,15 +511,29 @@ object OrbitSkin : MyPlaySkin {
             Column(horizontalAlignment = Alignment.End) {
                 Text(time, style = Orbit.Type.clock.floating(g.text), maxLines = 1, modifier = Modifier.carPart(CarPart.Clock))
                 // N5-3: no level shown when the phone does not tell it, never "0%".
-                rememberPhoneStatus()?.takeIf { it.batteryKnown }?.let { s ->
+                val battery = rememberPhoneStatus()?.takeIf { it.batteryKnown }
+                val ice = LocalRoadIce.current
+                run {
                     val night = LocalSkinTokens.current.night
-                    val colour = if (batteryLow(s.battery, s.charging)) Orbit.warning(night) else nav
                     Row(
-                        Modifier.padding(top = 8.dp).testTag(BATTERY_TAG).carPart(CarPart.Status),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        Icon(batteryIcon(s.battery, s.charging), null, Modifier.size(30.dp), tint = colour)
-                        Text("${s.battery}%", style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold).floating(colour))
+                        // Drive warnings: 4 °C or less outside. DW-1: its place is always kept (empty when
+                        // warm), so the column's size, and with it the map's free area, never changes because of it.
+                        Box(Modifier.size(30.dp).testTag(ICE_SLOT_TAG)) {
+                            if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(30.dp).testTag(ICE_TAG), tint = Orbit.warning(night))
+                        }
+                        battery?.let { s ->
+                            val colour = if (batteryLow(s.battery, s.charging)) Orbit.warning(night) else nav
+                            Row(
+                                Modifier.testTag(BATTERY_TAG).carPart(CarPart.Status),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Icon(batteryIcon(s.battery, s.charging), null, Modifier.size(30.dp), tint = colour)
+                                Text("${s.battery}%", style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold).floating(colour))
+                            }
+                        }
                     }
                 }
             }
@@ -1033,17 +1050,34 @@ object OrbitSkin : MyPlaySkin {
     }
 
     @Composable
-    override fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+    override fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) =
+        ListWorld(World.SETTINGS, stringResource(R.string.myplay_settings_hint), page, ringed, row, modifier) { _, r ->
+            if (r.switch) (if (r.on) Icons.Rounded.ToggleOn else Icons.Rounded.ToggleOff) else Icons.Rounded.Tune
+        }
+
+    /** #5: the Navigate world's list: the maps app first, then Home and the saved places. */
+    @Composable
+    override fun PlacesWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) =
+        ListWorld(World.NAVIGATE, stringResource(R.string.myplay_places_hint), page, ringed, row, modifier) { i, _ ->
+            if (i == 0) Icons.Rounded.Navigation else Icons.Rounded.Place
+        }
+
+    /** A world's list of pills (Settings, Navigate's places): its name, a hint, one pill per row. */
+    @Composable
+    private fun ListWorld(
+        world: World, hint: String, page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier,
+        icon: (Int, net.prototux.aare.ui.car.myplay.SettingRow) -> ImageVector,
+    ) {
         val night = LocalSkinTokens.current.night
         val g = Orbit.glass(night)
-        val accent = Orbit.accent(World.SETTINGS, night)
+        val accent = Orbit.accent(world, night)
         val list = androidx.compose.foundation.lazy.rememberLazyListState()
         LaunchedEffect(ringed, page.rows.size) { if (page.rows.isNotEmpty()) list.animateScrollToItem((ringed - 1).coerceAtLeast(0)) }
         Box(modifier.background(g.halo.copy(alpha = 0.7f)).orbitRipple(0.5f, 0.5f)) {
             Scaled {
                 Column(Modifier.fillMaxSize().padding(start = 60.dp, top = 40.dp)) {
-                    Text(worldName(World.SETTINGS), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
-                    Text(stringResource(R.string.myplay_settings_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
+                    Text(worldName(world), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
+                    Text(hint, style = TextStyle(fontSize = 24.sp, color = g.secondary))
                     androidx.compose.foundation.lazy.LazyColumn(
                         state = list, modifier = Modifier.padding(start = 80.dp, top = 24.dp).width(880.dp),
                         verticalArrangement = Arrangement.spacedBy(18.dp),
@@ -1051,7 +1085,7 @@ object OrbitSkin : MyPlaySkin {
                     ) {
                         items(page.rows.size) { i ->
                             val r = page.rows[i]
-                            Pill(r.title, r.note.orEmpty(), if (r.switch) (if (r.on) Icons.Rounded.ToggleOn else Icons.Rounded.ToggleOff) else Icons.Rounded.Tune,
+                            Pill(r.title, r.note.orEmpty(), icon(i, r),
                                 if (r.switch && r.on) accent else null, null, false, i == ringed, accent, night, row(i), trailing = r.value)
                         }
                     }
@@ -1222,6 +1256,10 @@ object OrbitSkin : MyPlaySkin {
 
     /** Test tags. */
     const val BATTERY_TAG = "orbit_battery"
+    /** Drive warnings: the ice sign beside the battery. */
+    const val ICE_TAG = "orbit_ice"
+    /** DW-1: the ice sign's place, kept whether it shows or not. */
+    const val ICE_SLOT_TAG = "orbit_ice_slot"
     const val SONG_ART_TAG = "orbit_song_art"
     const val SONG_ART_FALLBACK_TAG = "orbit_song_art_fallback"
     const val TRIP_RING_TAG = "orbit_trip_ring"

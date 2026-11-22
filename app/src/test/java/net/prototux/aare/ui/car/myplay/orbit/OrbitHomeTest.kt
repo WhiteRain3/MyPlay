@@ -321,6 +321,15 @@ class OrbitHomeTest {
         assertTrue(rule.onAllNodesWithText("0%").fetchSemanticsNodes().isEmpty())
     }
 
+    /** DW-1: the ice sign's place is there when it is warm too, empty, so the free area never moves because of it. */
+    @Test
+    fun theIceSlotIsKeptEmptyWhenWarm() {
+        show()
+        rule.waitForIdle()
+        assertFalse(rule.onAllNodes(hasTestTag(OrbitSkin.ICE_SLOT_TAG), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+        assertTrue(rule.onAllNodes(hasTestTag(OrbitSkin.ICE_TAG), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+    }
+
     @Test fun batteryIconsAndLow() {
         assertTrue(OrbitSkin.batteryLow(20, charging = false))
         assertFalse(OrbitSkin.batteryLow(20, charging = true))

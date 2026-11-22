@@ -126,6 +126,7 @@ internal fun actionName(a: ButtonAction): Int = when (a) {
     ButtonAction.OPEN_MEDIA -> R.string.phone_action_open_media
     ButtonAction.OPEN_PHONE -> R.string.phone_action_open_phone
     ButtonAction.NAVIGATE_HOME -> R.string.phone_action_navigate_home
+    ButtonAction.CALL_BACK -> R.string.phone_action_call_back
     ButtonAction.NOTHING -> R.string.phone_action_nothing
 }
 
@@ -245,6 +246,7 @@ fun ButtonsScreen() {
         HomePadSection(homePad, { homePad = it; settings.myplayHomePad = it }, infoHome) { infoHome = it; settings.myplayInfoHome = it }
         TeachButtonSection(settings)
         HomeAddressField(settings)
+        PlacesSection(settings) // #5: the saved places, beside Home address
         Spacer(Modifier.height(8.dp))
         RowGroup(rows = listOf {
             SwitchRow(Icons.Rounded.Info, stringResource(R.string.phone_buttons_line_title), line, TileTone.BLUE,

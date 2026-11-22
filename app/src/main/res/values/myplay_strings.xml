@@ -95,4 +95,29 @@
     <string name="myplay_nav_home_no_maps" translatable="false">No maps app to navigate with</string>
     <string name="phone_home_address_title" translatable="false">Home address (for Navigate home)</string>
     <string name="phone_home_address_hint" translatable="false">An address or lat,lng. Kept on this phone only, not in backups.</string>
+    <!-- Drive warnings (ideas 2026-11-22): quiet road and phone warnings on the car screen -->
+    <string name="myplay_warning_ice" translatable="false">%1$d °C outside: the road may be icy</string>
+    <string name="myplay_warning_ice_sign" translatable="false">Ice possible</string>
+    <string name="myplay_warning_phone_hot" translatable="false">The phone is hot: the screen may slow down</string>
+    <string name="myplay_setting_drive_warnings" translatable="false">Ice and phone warnings</string>
+    <string name="phone_drive_warnings_hint" translatable="false">A snowflake by the clock at 4 °C or less outside, if the car reports it, and a short line once per drive. Also a line when the phone gets hot.</string>
+    <!-- #10: call back the last missed call (an action for a button or the home pad) -->
+    <string name="phone_action_call_back" translatable="false">Call back the last missed call</string>
+    <string name="myplay_call_back_title" translatable="false">Call back</string>
+    <string name="myplay_call_back_who" translatable="false">Call back %1$s?</string>
+    <string name="myplay_call_back_when" translatable="false">Missed at %1$s</string>
+    <string name="myplay_call_back_call" translatable="false">Call</string>
+    <string name="myplay_call_back_none" translatable="false">No missed call in the last day</string>
+    <string name="myplay_call_back_no_permission" translatable="false">Allow calls for MyPlay on the phone</string>
+    <!-- #5: places (Home and up to five of the owner's own) in ORBIT's Navigate list, a home pad shortcut -->
+    <string name="phone_home_pad_places" translatable="false">Places (Home and saved places)</string>
+    <string name="myplay_places_home" translatable="false">Home</string>
+    <string name="myplay_places_maps" translatable="false">Maps app</string>
+    <string name="myplay_places_hint" translatable="false">Push to go there</string>
+    <string name="phone_places_title" translatable="false">Places</string>
+    <string name="phone_places_hint" translatable="false">Up to five, listed with Home when a pad direction is set to Places. Kept on this phone only, not in backups.</string>
+    <string name="phone_places_name" translatable="false">Name</string>
+    <string name="phone_places_address" translatable="false">Address or lat,lng</string>
+    <string name="phone_places_add" translatable="false">Add a place</string>
+    <string name="phone_places_delete" translatable="false">Remove this place</string>
 </resources>

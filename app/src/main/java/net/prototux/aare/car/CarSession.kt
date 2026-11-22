@@ -177,6 +177,7 @@ class CarSession(
     fun start() {
         // The head unit is waiting for our version answer: start the protocol before the UI work.
         aap.start()
+        DriveSummary.begin(System.currentTimeMillis()) // MyPlay: this drive's line in the log, at the end
         runtime.microphone = { sink, stopped -> micRouter.open(sink, stopped) }
         runtime.projection = projection
         runtime.exitToCar = ::exitToCar
@@ -352,6 +353,7 @@ class CarSession(
             if (settings.resumeMedia) runtime.resumeMedia()
             startPlaybackStatus()
             phoneBridge = PhoneStatusBridge(context, aap, phoneStatus).also { it.start() }
+            heatWatch = PhoneHeatWatch(context, ::onPhoneHeat).also { it.start() } // MyPlay (drive warnings)
             if (settings.callsOnPhoneSpeaker) callSpeaker = CallSpeaker(context).also { it.start() }
         }
     }
@@ -747,6 +749,7 @@ class CarSession(
         ButtonAction.OPEN_MEDIA -> R.string.phone_action_open_media
         ButtonAction.OPEN_PHONE -> R.string.phone_action_open_phone
         ButtonAction.NAVIGATE_HOME -> R.string.phone_action_navigate_home
+        ButtonAction.CALL_BACK -> R.string.phone_action_call_back
         ButtonAction.NOTHING -> R.string.phone_action_nothing
     }
 
@@ -828,6 +831,7 @@ class CarSession(
             ButtonAction.OPEN_MEDIA -> performCarKeyAction(CarKeyAction.OPEN_MEDIA)
             ButtonAction.OPEN_PHONE -> performCarKeyAction(CarKeyAction.OPEN_PHONE)
             ButtonAction.NAVIGATE_HOME -> runtime.navigateHome()
+            ButtonAction.CALL_BACK -> runtime.callBackLastMissed()
             ButtonAction.NOTHING -> Unit
         }
     }
@@ -1006,6 +1010,39 @@ class CarSession(
             batch.drivingStatusDataList.lastOrNull()?.let { d ->
                 main.post { runtime.carDriving(d.status != 0) }
             }
+            // MyPlay (drive warnings): the ice sign, and its line once per drive.
+            batch.environmentDataList.lastOrNull()?.let { e ->
+                val tempC = if (e.hasTemperatureE3()) e.temperatureE3 / 1e3f else null
+                main.post { onOutsideTemperature(tempC) }
+            }
+        }
+    }
+
+    /** MyPlay (drive warnings): the phone's heat, in the log on each change and once on the car screen when hot. */
+    private var heatWatch: PhoneHeatWatch? = null
+    private val heat = PhoneHeatTracker()
+
+    private fun onPhoneHeat(status: Int) {
+        if (closed) return
+        val (changed, announce) = heat.update(status)
+        if (changed) DiagLog.add("phone heat: ${PhoneHeatRule.name(status)}")
+        if (announce && settings.myplayDriveWarnings) {
+            runtime.ui.gestureLine = net.prototux.aare.ui.car.GestureLine.info(context.getString(R.string.myplay_warning_phone_hot), SystemClock.uptimeMillis())
+        }
+    }
+
+    /** MyPlay (drive warnings): this drive's ice sign and whether its line was shown (main thread). */
+    private val ice = IceTracker()
+
+    private fun onOutsideTemperature(tempC: Float?) {
+        if (closed) return
+        val wasShowing = ice.showing
+        val announce = ice.update(tempC)
+        runtime.ui.iceRisk = ice.showing
+        if (ice.showing != wasShowing) DiagLog.add("drive warnings: ice sign ${if (ice.showing) "on" else "off"} (outside ${tempC ?: "?"} °C)")
+        if (announce && tempC != null && settings.myplayDriveWarnings) {
+            runtime.ui.gestureLine = net.prototux.aare.ui.car.GestureLine.info(
+                context.getString(R.string.myplay_warning_ice, IceWarning.degrees(tempC)), SystemClock.uptimeMillis())
         }
     }
 
@@ -1277,6 +1314,7 @@ class CarSession(
 
     private fun teardown() {
         closed = true
+        DriveSummary.end(System.currentTimeMillis())?.let(DiagLog::add) // MyPlay: how the speed and its limit did
         settings.unregisterListener(carKeyPrefsListener)
         settings.unregisterListener(buttonPrefsListener) // MyPlay (R3)
         // Session ending while music fed the car: pause it, so it doesn't jump to the phone speaker.
@@ -1287,6 +1325,7 @@ class CarSession(
         net.prototux.aare.notify.CarNotificationListener.sink = null
         audioOuts.values.forEach { it.stop() }; audioOuts.clear()
         phoneBridge?.stop(); phoneBridge = null
+        heatWatch?.stop(); heatWatch = null
         callSpeaker?.stop(); callSpeaker = null
         locationFeed.stop()
         drivingMode.stop()

@@ -145,6 +145,12 @@ class CarUiState {
     var learnedActions by mutableStateOf<List<net.prototux.aare.car.ButtonAction>>(emptyList())
     /** MyPlay (SH-1): soft plates behind ORBIT's parts (true), or none. */
     var orbitShadeSoft by mutableStateOf(true)
+    /** MyPlay (drive warnings): quiet road and phone warnings wanted (myplay_drive_warnings). */
+    var driveWarnings by mutableStateOf(true)
+    /** MyPlay (drive warnings): the car reports 4 °C or less outside (IceWarning); shown only with [driveWarnings]. */
+    var iceRisk by mutableStateOf(false)
+    /** MyPlay (#5): Home and the saved places, for the Navigate world's list (Places.destinations); empty: none. */
+    var navPlaces by mutableStateOf<List<net.prototux.aare.car.SavedPlace>>(emptyList())
     /** MyPlay (O6): what ORBIT's home pad opens while the ring is hidden; empty: the ring always (as in tests). */
     var homePad by mutableStateOf<Map<net.prototux.aare.ui.car.myplay.HomePadKey, net.prototux.aare.ui.car.myplay.HomePadAction>>(emptyMap())
     /** MyPlay (O3): how often this drive has shown the way home over an app (the first few times only). */
@@ -241,4 +247,6 @@ interface CarActions {
     fun endCall()
     /** Navigate to a place (an address or a name) in the car's navigation app. */
     fun navigateTo(place: String)
+    /** MyPlay (#10): offer the last missed call on the car screen, to call back with one push. */
+    fun callBackLastMissed() = Unit
 }
