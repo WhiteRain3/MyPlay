@@ -548,7 +548,7 @@ internal fun MyPlayEngineShell(
         Place.Home -> if (padHome && !ringAwake && notice == null && call == null && padKeyOf(key)?.let { padMap[it] != HomePadAction.NOTHING } == true) {
             runPad(padMap.getValue(padKeyOf(key)!!))
             true
-        } else if (padHome && !ringAwake && notice == null && (key == Key.Tab || padKeyOf(key) != null)) {
+        } else if (padHome && !ringAwake && notice == null && call == null && (key == Key.Tab || padKeyOf(key) != null)) {
             // The first turn only shows the ring, where it was. O6-1: so does a pad key set to
             // nothing: it never moves the ring while it is hidden.
             ringAwake = true
