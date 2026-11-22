@@ -434,8 +434,10 @@
     <string name="next_car_place_label" translatable="false">A place</string>
     <string name="next_car_place_name_label" translatable="false">Name</string>
     <string name="next_car_place_forgotten_label" translatable="false">Place forgotten</string>
-    <string name="next_speed_warnings_label" translatable="false">Ice and hot-phone warnings</string>
-    <string name="next_speed_warnings_help" translatable="false">Outside temperature, ice and hot-phone signs, limit pulse</string>
+    <string name="next_speed_warnings_label" translatable="false">Ice and phone warnings</string>
+    <string name="next_speed_warnings_help" translatable="false">Outside temperature, ice sign, hot-phone line</string>
+    <string name="next_speed_pulse_label" translatable="false">Limit sign pulse</string>
+    <string name="next_speed_pulse_help" translatable="false">One small pulse when the limit changes</string>
 
     <!-- More -->
     <string name="next_more_ready_label" translatable="false">%1$s ready</string>

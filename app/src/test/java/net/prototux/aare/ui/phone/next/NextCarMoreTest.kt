@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import net.prototux.aare.Settings
 import net.prototux.aare.car.SpeedSourceMode
@@ -89,8 +90,12 @@ class NextCarMoreTest {
 
     @Test fun driveWarningsWriteTheirKey() {
         rule.setContent { NextSpeedPage() }
-        rule.onNode(hasText("Ice and hot-phone warnings") and isToggleable()).performClick()
+        rule.onNode(hasText("Ice and phone warnings") and isToggleable()).performClick()
         assertEquals(false, settings.prefs.getBoolean(net.prototux.aare.car.KEY_DRIVE_WARNINGS, true))
+        // LP-1: the pulse is its own switch, untouched by the warnings one.
+        assertEquals(true, settings.prefs.getBoolean(net.prototux.aare.car.KEY_LIMIT_PULSE, true))
+        rule.onNode(hasText("Limit sign pulse") and isToggleable()).performScrollTo().performClick()
+        assertEquals(false, settings.prefs.getBoolean(net.prototux.aare.car.KEY_LIMIT_PULSE, true))
     }
 
     @Test fun placesForgetWithUndo() {

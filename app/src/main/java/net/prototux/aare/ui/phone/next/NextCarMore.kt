@@ -30,6 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.AcUnit
+import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Description
@@ -88,6 +89,7 @@ import net.prototux.aare.car.SpeedSourceMode
 import net.prototux.aare.car.myplaySpeedLimitMargin
 import net.prototux.aare.car.myplaySpeedSource
 import net.prototux.aare.car.myplayDriveWarnings
+import net.prototux.aare.car.myplayLimitPulse
 import net.prototux.aare.car.myplayParkedHere
 import net.prototux.aare.host.Assistants
 import net.prototux.aare.host.CarAppCatalog
@@ -234,6 +236,7 @@ fun NextSpeedPage() {
     val region by rememberSetting(KEY_SPEED_LIMIT_REGION) { myplaySpeedLimitRegion }
     val mobile by rememberSetting(KEY_SPEED_LIMIT_MOBILE) { myplaySpeedLimitMobile }
     val warnings by rememberSetting(net.prototux.aare.car.KEY_DRIVE_WARNINGS) { myplayDriveWarnings }
+    val pulse by rememberSetting(net.prototux.aare.car.KEY_LIMIT_PULSE) { myplayLimitPulse }
     val state by SpeedLimitDownload.state.collectAsState()
     var changes by remember { mutableIntStateOf(0) }
     val kept = remember(region, state, changes) { if (region.isEmpty()) null else SpeedLimitDownload.kept(ctx, region) }
@@ -336,11 +339,19 @@ fun NextSpeedPage() {
             }
         }
         item {
-            // Ideas 2026-11-22: the outside temperature, the ice sign, the hot-phone line and the limit sign's pulse (on by default).
-            NextCard {
-                NextSwitchRow(stringResource(R.string.next_speed_warnings_label), warnings, { settings.myplayDriveWarnings = it },
-                    Icons.Outlined.AcUnit, note = RowNote.Help(stringResource(R.string.next_speed_warnings_help)), tag = { AlsoOnCarTag() })
-            }
+            // Ideas 2026-11-22: the outside temperature, the ice sign and the hot-phone line (on by default); the limit pulse has its own switch.
+            NextGroup(listOf(
+                {
+                    NextSwitchRow(stringResource(R.string.next_speed_warnings_label), warnings, { settings.myplayDriveWarnings = it },
+                        Icons.Outlined.AcUnit, note = RowNote.Help(stringResource(R.string.next_speed_warnings_help)), tag = { AlsoOnCarTag() })
+                },
+                {
+                    // LP-1: the limit sign's one pulse has its own switch (on by default).
+                    NextSwitchRow(stringResource(R.string.next_speed_pulse_label), pulse, { settings.myplayLimitPulse = it },
+                        Icons.Outlined.Speed, note = RowNote.Help(stringResource(R.string.next_speed_pulse_help)), changed = !pulse,
+                        info = stringResource(R.string.phone_limit_pulse_hint))
+                },
+            ))
             Spacer(Modifier.height(12.dp))
         }
         item {
