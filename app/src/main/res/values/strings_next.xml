@@ -274,7 +274,7 @@
     <string name="next_car_taught_label" translatable="false">%1$d taught</string>
     <string name="next_car_ms_label" translatable="false">%1$d ms</string>
     <string name="next_car_line_label" translatable="false">Show what a button did</string>
-    <string name="next_car_home_address_label" translatable="false">Navigate home</string>
+    <string name="next_car_home_address_label" translatable="false">Home and places</string>
     <string name="next_car_address_field_label" translatable="false">Home address</string>
     <string name="next_car_address_help" translatable="false">An address or lat,lng, for Navigate home</string>
     <string name="next_car_dash_knob_label" translatable="false">Dash knob</string>
@@ -427,6 +427,15 @@
     <string name="next_apps_touch_help" translatable="false">Turn on MyPlay in Accessibility</string>
     <string name="next_apps_browser_parked_help" translatable="false">Pages show only when parked</string>
     <string name="next_apps_start_page_label" translatable="false">Start page</string>
+
+    <!-- Places and drive warnings (ideas 2026-11-22) -->
+    <string name="next_car_add_place_label" translatable="false">Add a place</string>
+    <string name="next_car_places_help" translatable="false">Up to five, for ORBIT\'s Navigate list</string>
+    <string name="next_car_place_label" translatable="false">A place</string>
+    <string name="next_car_place_name_label" translatable="false">Name</string>
+    <string name="next_car_place_forgotten_label" translatable="false">Place forgotten</string>
+    <string name="next_speed_warnings_label" translatable="false">Ice and hot-phone warnings</string>
+    <string name="next_speed_warnings_help" translatable="false">A small sign, and a line once per drive</string>
 
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>

@@ -583,6 +583,11 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 | `myplay_whats_new_seen` | String | — | internal (What's new) |
 | `myplay_wallpaper_edit` | String | — | Screen › Wallpaper › Edit photo |
 | `myplay_debug_map_areas`, `myplay_debug_nav_text` | Boolean | — | Developer |
+| `myplay_new_phone_app` | Boolean | — | internal: the hidden switch to the new app (chunk 0); removed with the old app (chunk 14) |
+| `myplay_update_asked` | Boolean | — | internal: the update question was asked once (§5) |
+| `myplay_home_address` | String | — | Car › Buttons › Home and places (not backed up, HA-1) |
+| `myplay_places` | String | — | Car › Buttons › Home and places (up to five; not backed up, PL-2) |
+| `myplay_drive_warnings` | Boolean | A | Car › Speed (ice sign and hot-phone line; default on) |
 | `myplay_orbit_default_done` | Boolean | — | internal |
 | `myplay_new_phone_app` (**new**, build only) | Boolean | — | the hidden switch (§16); in no backup set; unread after chunk 14 |
 | file `driving_mode` › `previous_interruption_filter` | Int | — | internal |

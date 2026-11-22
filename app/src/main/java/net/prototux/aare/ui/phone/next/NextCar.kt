@@ -93,6 +93,7 @@ import net.prototux.aare.car.myplayGestureDoubleMs
 import net.prototux.aare.car.myplayGestureHoldMs
 import net.prototux.aare.car.myplayGestureLine
 import net.prototux.aare.car.myplayHomeAddress
+import net.prototux.aare.car.myplayPlaces
 import net.prototux.aare.car.myplayLearnButton
 import net.prototux.aare.car.myplayLearnButtonAtMs
 import net.prototux.aare.car.myplayLearnedButtons
@@ -310,6 +311,8 @@ fun NextButtonsPage() {
         item {
             NextSection(stringResource(R.string.next_car_home_address_label))
             HomeAddress(settings)
+            Spacer(Modifier.height(12.dp))
+            PlacesCard(settings)
         }
         item {
             NextResetPage({
@@ -344,6 +347,86 @@ fun NextButtonsPage() {
             }
         }
     }
+}
+
+/**
+ * The saved places (ideas #5) next to the home address: up to five, each a name and an address; tap to
+ * edit, × to forget with undo. Kept on this phone only (not in backups), as the car side decided (PL-2).
+ */
+@Composable
+private fun PlacesCard(settings: Settings) {
+    val undo = LocalNextUndo.current
+    val places by rememberSetting(net.prototux.aare.car.KEY_PLACES) { myplayPlaces }
+    var editing by rememberSaveable { mutableStateOf<Int?>(null) } // index; places.size = a new one
+    val forgotten = stringResource(R.string.next_car_place_forgotten_label)
+    NextCard {
+        places.forEachIndexed { i, p ->
+            if (i > 0) NextDivider(16.dp)
+            val forget = stringResource(R.string.next_car_forget_label, p.name.ifEmpty { p.address })
+            NextRow(p.name.ifEmpty { p.address }, note = if (p.name.isNotEmpty()) RowNote.Help(p.address) else null,
+                onClick = { editing = i }, role = Role.Button) {
+                Box(
+                    Modifier.minimumInteractiveComponentSize().clip(CircleShape).clickable(role = Role.Button) {
+                        val before = settings.myplayPlaces
+                        settings.myplayPlaces = before.filterIndexed { j, _ -> j != i }
+                        undo.show(forgotten) { settings.myplayPlaces = before }
+                    }.semantics { contentDescription = forget },
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Outlined.Close, null, tint = NextColors.Text2) }
+            }
+        }
+        if (places.size < net.prototux.aare.car.Places.MAX) {
+            if (places.isNotEmpty()) NextDivider(16.dp)
+            NextRow(stringResource(R.string.next_car_add_place_label), onClick = { editing = places.size }, role = Role.Button,
+                note = if (places.isEmpty()) RowNote.Help(stringResource(R.string.next_car_places_help)) else null)
+        }
+    }
+    editing?.let { i ->
+        val p = places.getOrNull(i) ?: net.prototux.aare.car.SavedPlace("", "")
+        PlaceDialog(p, onDismiss = { editing = null }) { edited ->
+            editing = null
+            settings.myplayPlaces = if (i < places.size) places.mapIndexed { j, old -> if (j == i) edited else old } else places + edited
+        }
+    }
+}
+
+/** A place's name and address in one dialog; the address is needed, the name is not. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun PlaceDialog(place: net.prototux.aare.car.SavedPlace, onDismiss: () -> Unit, onSave: (net.prototux.aare.car.SavedPlace) -> Unit) {
+    var name by rememberSaveable { mutableStateOf(place.name) }
+    var address by rememberSaveable { mutableStateOf(place.address) }
+    androidx.compose.material3.BasicAlertDialog(onDismissRequest = onDismiss) {
+        Column(
+            Modifier.clip(RoundedCornerShape(NextSpace.SheetRadius)).background(NextColors.Sheet)
+                .border(1.dp, NextColors.Edge2, RoundedCornerShape(NextSpace.SheetRadius)).padding(24.dp),
+        ) {
+            Text(stringResource(R.string.next_car_place_label), style = NextType.SheetTitle, color = NextColors.Text)
+            Spacer(Modifier.height(12.dp))
+            PlaceField(name, { name = it.take(net.prototux.aare.car.Places.NAME_MAX) }, stringResource(R.string.next_car_place_name_label))
+            Spacer(Modifier.height(8.dp))
+            PlaceField(address, { address = it.take(net.prototux.aare.car.Places.ADDRESS_MAX) }, stringResource(R.string.next_car_address_field_label))
+            Spacer(Modifier.height(20.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                NextButton(stringResource(android.R.string.cancel), onDismiss, Modifier.weight(1f), ButtonKind.GHOST)
+                NextButton(stringResource(R.string.next_looks_save_button_label), { onSave(net.prototux.aare.car.SavedPlace(name.trim(), address.trim())) },
+                    Modifier.weight(1f), enabled = address.isNotBlank())
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaceField(value: String, onChange: (String) -> Unit, label: String) {
+    androidx.compose.material3.OutlinedTextField(
+        value, onChange, singleLine = true, modifier = Modifier.fillMaxWidth(), label = { Text(label) },
+        shape = RoundedCornerShape(14.dp),
+        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = NextColors.Int, unfocusedBorderColor = NextColors.Outline,
+            focusedTextColor = NextColors.Text, unfocusedTextColor = NextColors.Text,
+            focusedLabelColor = NextColors.Int, unfocusedLabelColor = NextColors.Text2, cursorColor = NextColors.Int,
+        ),
+    )
 }
 
 /** The home address for "Navigate home", saved as it is typed (plan §3.4 rule 7). */

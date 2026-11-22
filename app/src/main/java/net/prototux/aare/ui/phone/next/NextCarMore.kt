@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Chat
+import androidx.compose.material.icons.outlined.AcUnit
 import androidx.compose.material.icons.outlined.Contacts
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Description
@@ -86,6 +87,7 @@ import net.prototux.aare.car.SpeedRules
 import net.prototux.aare.car.SpeedSourceMode
 import net.prototux.aare.car.myplaySpeedLimitMargin
 import net.prototux.aare.car.myplaySpeedSource
+import net.prototux.aare.car.myplayDriveWarnings
 import net.prototux.aare.host.Assistants
 import net.prototux.aare.host.CarAppCatalog
 import net.prototux.aare.service.ProjectionService
@@ -224,6 +226,7 @@ fun NextSpeedPage() {
     val margin by rememberSetting(KEY_SPEED_LIMIT_MARGIN) { myplaySpeedLimitMargin }
     val region by rememberSetting(KEY_SPEED_LIMIT_REGION) { myplaySpeedLimitRegion }
     val mobile by rememberSetting(KEY_SPEED_LIMIT_MOBILE) { myplaySpeedLimitMobile }
+    val warnings by rememberSetting(net.prototux.aare.car.KEY_DRIVE_WARNINGS) { myplayDriveWarnings }
     val state by SpeedLimitDownload.state.collectAsState()
     var changes by remember { mutableIntStateOf(0) }
     val kept = remember(region, state, changes) { if (region.isEmpty()) null else SpeedLimitDownload.kept(ctx, region) }
@@ -324,6 +327,14 @@ fun NextSpeedPage() {
                     Spacer(Modifier.height(12.dp))
                 }
             }
+        }
+        item {
+            // Ideas 2026-11-22: the ice sign and the hot-phone line on the car screen (on by default).
+            NextCard {
+                NextSwitchRow(stringResource(R.string.next_speed_warnings_label), warnings, { settings.myplayDriveWarnings = it },
+                    Icons.Outlined.AcUnit, note = RowNote.Help(stringResource(R.string.next_speed_warnings_help)), tag = { AlsoOnCarTag() })
+            }
+            Spacer(Modifier.height(12.dp))
         }
         item {
             NextNote(stringResource(R.string.next_speed_offline_help), Icons.Outlined.Lock)

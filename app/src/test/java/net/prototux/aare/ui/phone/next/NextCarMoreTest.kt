@@ -86,4 +86,24 @@ class NextCarMoreTest {
         rule.onNodeWithText("Same as the phone").performClick()
         assertEquals(null, settings.assistantPackage)
     }
+
+    @Test fun driveWarningsWriteTheirKey() {
+        rule.setContent { NextSpeedPage() }
+        rule.onNode(hasText("Ice and hot-phone warnings") and isToggleable()).performClick()
+        assertEquals(false, settings.prefs.getBoolean(net.prototux.aare.car.KEY_DRIVE_WARNINGS, true))
+    }
+
+    @Test fun placesForgetWithUndo() {
+        settings.prefs.edit().putString(net.prototux.aare.car.KEY_PLACES,
+            net.prototux.aare.car.Places.encode(listOf(net.prototux.aare.car.SavedPlace("Work", "54.68,25.28")))).commit()
+        rule.setContent { NextApp(start = "car/buttons") { NextButtonsPage() } }
+        rule.onNodeWithText("Work").assertExists()
+        rule.onNodeWithText("Add a place").assertExists()
+        rule.onNode(androidx.compose.ui.test.hasContentDescription("Forget Work")).performClick()
+        rule.waitForIdle()
+        assertEquals(0, net.prototux.aare.car.Places.decode(settings.prefs.getString(net.prototux.aare.car.KEY_PLACES, null)).size)
+        rule.onNodeWithText("Undo").performClick()
+        rule.waitForIdle()
+        assertEquals(1, net.prototux.aare.car.Places.decode(settings.prefs.getString(net.prototux.aare.car.KEY_PLACES, null)).size)
+    }
 }
