@@ -283,10 +283,10 @@ object OrbitSkin : MyPlaySkin {
                             val colour = if (speed?.over == true) Orbit.caution(night) else g.text
                             Text(speed?.kmh?.toString() ?: "–", style = TextStyle(fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.ExtraBold, color = colour), maxLines = 1)
                             Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, lineHeight = 20.sp, color = g.secondary), maxLines = 1)
-                            val arrival = trip?.arrival
-                            if (arrival != null) {
-                                val left = trip.timeLeft ?: trip.distanceLeft
-                                FitText(listOfNotNull(arrival, left).joinToString(" · "), TextStyle(fontSize = 22.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold, color = g.text), 140.dp)
+                            // O8-1 (the Reviewer: "arrival · time left" got too small to read at a glance):
+                            // one value only, the time left (else the distance, else the arrival), larger.
+                            (trip?.timeLeft ?: trip?.distanceLeft ?: trip?.arrival)?.let {
+                                FitText(it, TextStyle(fontSize = 26.sp, lineHeight = 30.sp, fontWeight = FontWeight.Bold, color = g.text), 150.dp)
                             }
                         }
                     }
