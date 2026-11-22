@@ -1,5 +1,11 @@
 package net.prototux.aare.ui.car.myplay.orbit
 
+import net.prototux.aare.ui.car.myplay.BackdropParts
+
+import androidx.compose.animation.core.tween
+
+import androidx.compose.animation.core.animateFloatAsState
+
 import android.os.SystemClock
 import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
@@ -191,16 +197,24 @@ object OrbitSkin : MyPlaySkin {
         copy(color = color, shadow = Shadow(glass().halo.copy(alpha = 0.85f), Offset(0f, 2f), 6f))
 
     @Composable
-    override fun Backdrop(modifier: Modifier) {
+    override fun Backdrop(parts: BackdropParts, modifier: Modifier) {
         val halo = glass().halo
-        Canvas(modifier) {
-            fun shade(cx: Float, cy: Float, r: Float) = drawRect(
-                Brush.radialGradient(listOf(halo.copy(alpha = 0.78f), Color.Transparent), Offset(size.width * cx, size.height * cy), size.width * r),
-            )
-            shade(0.12f, 0.08f, 0.46f)
-            shade(0.92f, 0.94f, 0.44f)
+        // O4 (the owner: "the darkening still shows when Waze isn't navigating"): each corner's shade
+        // only behind its part, fading in and out with it; the map is clear where nothing is drawn.
+        val turn by animateFloatAsState(if (parts.turn) 1f else 0f, tween(400), label = "turn shade")
+        val song by animateFloatAsState(if (parts.song) 1f else 0f, tween(400), label = "song shade")
+        Box(modifier) {
+            if (turn > 0f) Canvas(Modifier.fillMaxSize().testTag(SHADE_TURN_TAG)) { shade(halo, turn, 0.12f, 0.08f, 0.46f) }
+            if (song > 0f) Canvas(Modifier.fillMaxSize().testTag(SHADE_SONG_TAG)) { shade(halo, song, 0.92f, 0.94f, 0.44f) }
         }
     }
+
+    private fun androidx.compose.ui.graphics.drawscope.DrawScope.shade(halo: Color, alpha: Float, cx: Float, cy: Float, r: Float) = drawRect(
+        Brush.radialGradient(listOf(halo.copy(alpha = 0.78f * alpha), Color.Transparent), Offset(size.width * cx, size.height * cy), size.width * r),
+    )
+
+    const val SHADE_TURN_TAG = "orbit_shade_turn"
+    const val SHADE_SONG_TAG = "orbit_shade_song"
 
     @Composable
     override fun Turn(turn: TurnSlot, modifier: Modifier) = Box(modifier) {

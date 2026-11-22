@@ -328,6 +328,22 @@ class OrbitHomeTest {
         assertEquals(Icons.Rounded.BatteryChargingFull, OrbitSkin.batteryIcon(5, true))
     }
 
+    /** O4: the corners' shades only behind the parts shown: none without a route, none without a song. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theShadesFollowTheParts() {
+        val state = show()
+        rule.onNodeWithTag(OrbitSkin.SHADE_TURN_TAG).assertExists()
+        rule.onNodeWithTag(OrbitSkin.SHADE_SONG_TAG).assertExists()
+        rule.runOnIdle { state.nowPlaying = null }
+        rule.mainClock.advanceTimeBy(1_000)
+        rule.onNodeWithTag(OrbitSkin.SHADE_SONG_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(OrbitSkin.SHADE_TURN_TAG).assertExists()
+        rule.runOnIdle { state.trip = null; state.phoneGuidance = null }
+        rule.mainClock.advanceTimeBy(1_000)
+        rule.onNodeWithTag(OrbitSkin.SHADE_TURN_TAG).assertDoesNotExist()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.STOP_TURN).assertDoesNotExist()
+    }
+
     /** N5-4: a new destination is a new route, even when navigation never ended. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theTripRingStartsAgainForANewDestination() {
@@ -363,6 +379,12 @@ class OrbitHomeTest {
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNoRoute() = picture("orbit-home-no-route-night", night = true, trip = false)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNotNavigatingNothingPlaying() {
+        picture("orbit-home-idle-1280x720-day", night = false, trip = false)
+        rule.runOnIdle { state!!.nowPlaying = null }
+        rule.mainClock.advanceTimeBy(1_000)
+        picture2("orbit-home-idle-nothing-playing-1280x720-day")
+    }
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNoArtDay() = picture("orbit-home-no-art-day", night = false, withArt = false)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun dialNight() = picture("orbit-dial-1280x720-night", night = true, dial = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun dial901x543Day() = picture("orbit-dial-901x543-day", night = false, dial = true)
@@ -491,6 +513,13 @@ class OrbitHomeTest {
             engine.performKeyInput { pressKey(Key.Tab) }
             rule.mainClock.advanceTimeBy(1_000)
         }
+        val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap()
+        val dir = File("build/reports/myplay-screens").apply { mkdirs() }
+        File(dir, "$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** A picture of the screen as it is now. */
+    private fun picture2(name: String) {
         val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap()
         val dir = File("build/reports/myplay-screens").apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }

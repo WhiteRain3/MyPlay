@@ -652,7 +652,10 @@ internal fun MyPlayEngineShell(
                 }
                 val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)
                 val showRing = model.place == Place.Home && CarFocusVisibility.keyInput && !panelOpen
-                skin.Backdrop(Modifier.fillMaxSize())
+                // O4: shades only behind the parts shown (DECK, frozen, keeps both).
+                skin.Backdrop(if (hand != null) BackdropParts(turn = true, song = true)
+                    else BackdropParts(turn = slots.turn != null && model.place !is Place.InWorld, song = slots.song != null && model.place !is Place.InWorld && !listOpen),
+                    Modifier.fillMaxSize())
                 @Composable
                 fun Modifier.slot(slot: Slot): Modifier = if (skin.coversMap(slot)) coversMap() else this
                 fun Modifier.stop(id: String): Modifier = this

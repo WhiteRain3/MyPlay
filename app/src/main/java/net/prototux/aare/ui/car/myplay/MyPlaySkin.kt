@@ -117,6 +117,9 @@ object TripProgress {
     }
 }
 
+/** O4: which corner parts are on screen, so the backdrop shades only behind them. */
+data class BackdropParts(val turn: Boolean, val song: Boolean)
+
 /** N7: what the Music world shows. */
 data class MusicPage(val song: SongSlot?, val transport: MediaTransport)
 
@@ -204,8 +207,11 @@ interface MyPlaySkin {
      */
     val drawsFocus: Boolean get() = false
 
-    /** N5: drawn over the map and under the slots, e.g. a shade in the corners so their text reads. */
-    @Composable fun Backdrop(modifier: Modifier) = Unit
+    /**
+     * N5: drawn over the map and under the slots, e.g. a shade in the corners so their text reads.
+     * O4: only behind the parts on screen ([parts]): no shade where nothing is drawn.
+     */
+    @Composable fun Backdrop(parts: BackdropParts, modifier: Modifier) = Unit
 
     /**
      * N13: a skin whose home is a hand of cards (DECK) instead of the hub and its dial (ORBIT): the
