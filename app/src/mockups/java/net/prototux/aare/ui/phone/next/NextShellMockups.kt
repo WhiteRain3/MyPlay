@@ -11,6 +11,7 @@ import androidx.lifecycle.LifecycleRegistry
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.android.resources.Density
+import androidx.compose.foundation.background
 import org.junit.Rule
 import org.junit.Test
 
@@ -39,4 +40,8 @@ class NextShellMockups {
     @Test fun carRoot() = paparazzi.snapshot { Shell("car") }
     @Test fun morePage() = paparazzi.snapshot { Shell("more/advanced") }
     @Test fun about() = paparazzi.snapshot { Shell("more/about") }
+
+    @Test fun parts() = paparazzi.snapshot {
+        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.background(NextColors.Bg)) { NextPartsGallery() }
+    }
 }

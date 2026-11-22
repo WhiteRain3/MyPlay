@@ -49,6 +49,15 @@
     <string name="next_more_layouts_label" translatable="false">Older layouts</string>
     <string name="next_more_about_label" translatable="false">About</string>
 
+    <!-- Parts -->
+    <string name="next_tag_next_connection_label" translatable="false">Next connection</string>
+    <string name="next_tag_also_on_car_label" translatable="false">Also on the car</string>
+    <string name="next_about_label" translatable="false">About %1$s</string>
+    <string name="next_changed_label" translatable="false">Changed</string>
+    <string name="next_reset_page_label" translatable="false">Reset this page</string>
+    <string name="next_reset_done_label" translatable="false">Page reset</string>
+    <string name="next_undo_label" translatable="false">Undo</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_old_app_label" translatable="false">Back to the old app</string>

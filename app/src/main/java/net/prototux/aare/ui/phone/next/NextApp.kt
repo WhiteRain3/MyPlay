@@ -39,6 +39,8 @@ import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -146,6 +148,9 @@ fun NextApp(
         }
     }
 
+    val snackbar = remember { SnackbarHostState() }
+    val undo = rememberNextUndo(snackbar, stringResource(R.string.next_undo_label))
+
     var backProgress by remember { mutableFloatStateOf(0f) }
     PredictiveBackHandler(enabled = nav.back() != null) { events ->
         try {
@@ -178,7 +183,11 @@ fun NextApp(
                 alpha = 1f - backProgress * 0.25f
             },
         ) {
-            CompositionLocalProvider(LocalNextNavigator provides navigator) {
+            CompositionLocalProvider(
+                LocalNextNavigator provides navigator,
+                LocalNextUndo provides undo,
+                LocalTextStyle provides NextType.Label.copy(color = NextColors.Text),
+            ) {
                 AnimatedContent(
                     targetState = nav.top,
                     transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(100)) },
@@ -192,6 +201,7 @@ fun NextApp(
                     }
                 }
             }
+            NextSnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp))
         }
         NextTabBar(nav.tab) { tab ->
             if (tab == nav.tab && nav.atRoot) {
@@ -215,15 +225,15 @@ private fun NextTopBar(route: String, onBack: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        if (isRoot) {
+        if (isRoot && tab == NextTab.HOME) {
+            NextMark()
+            Text(title, style = NextType.Wordmark, color = NextColors.Text, modifier = Modifier.semantics { heading() })
+        } else if (isRoot) {
             Box(
                 Modifier.size(36.dp).clip(CircleShape).background(tab.world.soft()).border(2.dp, tab.world, CircleShape),
                 contentAlignment = Alignment.Center,
             ) { Icon(tab.icon, null, tint = tab.world, modifier = Modifier.size(20.dp)) }
-            Text(
-                title, color = NextColors.Text, fontSize = if (tab == NextTab.HOME) 20.sp else 30.sp,
-                fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { heading() },
-            )
+            Text(title, style = NextType.RootTitle, color = NextColors.Text, modifier = Modifier.semantics { heading() })
         } else {
             val back = stringResource(R.string.next_back_label)
             Box(
@@ -232,10 +242,7 @@ private fun NextTopBar(route: String, onBack: () -> Unit) {
                     .testTag("next-back"),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = NextColors.Text2) }
-            Text(
-                title, color = NextColors.Text, fontSize = 22.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.semantics { heading() },
-            )
+            Text(title, style = NextType.PageTitle, color = NextColors.Text, modifier = Modifier.semantics { heading() })
         }
     }
 }
@@ -272,8 +279,8 @@ fun NextTabBar(selected: NextTab, badge: Set<NextTab> = emptySet(), onSelect: (N
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        label, fontSize = 12.sp, color = if (on) NextColors.Text else NextColors.Text3,
-                        fontWeight = if (on) FontWeight.SemiBold else FontWeight.Medium,
+                        label, style = NextType.TabLabel.copy(fontWeight = if (on) FontWeight(650) else FontWeight(520)),
+                        color = if (on) NextColors.Text else NextColors.Text3,
                     )
                 }
             }
@@ -290,58 +297,29 @@ fun NextPlaceholder(route: String, onOldApp: () -> Unit) {
     val navigator = LocalNextNavigator.current
     val children = NextPages.children(route)
     val links = NextPages.links(route)
+    val title: @Composable (String) -> String = { r -> NextPages.title(r)?.let { stringResource(it) } ?: r }
     LazyColumn(
         Modifier.fillMaxSize().testTag("next-page-$route"),
         state = rememberNextListState(),
         contentPadding = PaddingValues(horizontal = NextSpace.Gutter, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item {
-            Text(stringResource(R.string.next_placeholder_help), color = NextColors.Text3, fontSize = 13.sp,
-                modifier = Modifier.padding(horizontal = 4.dp))
-        }
+        item { NextNote(stringResource(R.string.next_placeholder_help)) }
         if (children.isNotEmpty() || links.isNotEmpty()) item {
-            PlaceholderCard {
-                children.forEach { PlaceholderRow(it, external = false) { navigator.open(it) } }
-                links.forEach { PlaceholderRow(it, external = true) { navigator.open(it) } }
-            }
+            Spacer(Modifier.height(12.dp))
+            NextGroup(
+                children.map { r -> @Composable { Box(Modifier.testTag("next-row-$r")) { NextValueRow(title(r)) { navigator.open(r) } } } } +
+                    links.map { r -> @Composable { Box(Modifier.testTag("next-row-$r")) { NextLinkRow(title(r)) { navigator.open(r) } } } },
+                inset = 16.dp,
+            )
         }
         if (route == "more/about") item {
-            PlaceholderCard {
-                Column(
-                    Modifier.fillMaxWidth().heightIn(min = NextSpace.RowTall).clickable(role = Role.Button, onClick = onOldApp)
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalArrangement = Arrangement.Center,
-                ) {
-                    Text(stringResource(R.string.next_old_app_label), color = NextColors.Int, fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                    Text(stringResource(R.string.next_old_app_help), color = NextColors.Text3, fontSize = 13.sp)
-                }
+            Spacer(Modifier.height(12.dp))
+            NextCard {
+                NextRow(
+                    stringResource(R.string.next_old_app_label), note = RowNote.Help(stringResource(R.string.next_old_app_help)),
+                    onClick = onOldApp, role = Role.Button,
+                )
             }
         }
-    }
-}
-
-@Composable
-private fun PlaceholderCard(content: @Composable () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(NextSpace.CardRadius)).background(NextColors.Surface)
-            .border(1.dp, NextColors.Edge, RoundedCornerShape(NextSpace.CardRadius)),
-    ) { content() }
-}
-
-@Composable
-private fun PlaceholderRow(route: String, external: Boolean, onClick: () -> Unit) {
-    val title = NextPages.title(route)?.let { stringResource(it) } ?: route
-    Row(
-        Modifier.fillMaxWidth().heightIn(min = NextSpace.RowMin).clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp).testTag("next-row-$route"),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(title, color = NextColors.Text, fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-        Spacer(Modifier.width(8.dp))
-        Icon(
-            if (external) Icons.AutoMirrored.Rounded.OpenInNew else Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-            null, tint = NextColors.Text3,
-        )
     }
 }
