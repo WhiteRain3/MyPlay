@@ -50,6 +50,8 @@ import net.prototux.aare.ui.car.myplay.myplayEnginePreview
 import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
 import net.prototux.aare.ui.car.myplay.MyPlaySkins
 import net.prototux.aare.ui.car.myplay.PanelTimeout
+import net.prototux.aare.ui.car.myplay.MapsIdleHome
+import net.prototux.aare.ui.car.myplay.myplayMapsIdleHome
 import net.prototux.aare.ui.car.myplay.myplayPanelTimeout
 import net.prototux.aare.Settings
 import net.prototux.aare.ui.car.CarLayout
@@ -327,6 +329,7 @@ private fun OrbitPreviewSwitch() {
     var on by remember { mutableStateOf(settings.myplayEnginePreview) }
     var language by remember { mutableStateOf(settings.myplayEngineLanguage) }
     var panelTimeout by remember { mutableIntStateOf(settings.myplayPanelTimeout) }
+    var mapsIdle by remember { mutableIntStateOf(settings.myplayMapsIdleHome) }
     Spacer(Modifier.height(12.dp))
     RowGroup(rows = listOf {
         SwitchRow(Icons.Rounded.Layers, stringResource(R.string.phone_orbit_preview_title), on, TileTone.VIOLET,
@@ -352,6 +355,17 @@ private fun OrbitPreviewSwitch() {
             panelTimeout.toString(),
         ) { id -> id.toIntOrNull()?.let { panelTimeout = PanelTimeout.valid(it); settings.myplayPanelTimeout = panelTimeout } }
         HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_panel_timeout_hint))
+        // O2b: a full-screen maps app goes home after this long untouched (off by default).
+        Spacer(Modifier.height(12.dp))
+        PhoneChoices(
+            stringResource(R.string.myplay_setting_maps_idle_home),
+            MapsIdleHome.CHOICES.map { m ->
+                m.toString() to if (m == MapsIdleHome.OFF) stringResource(R.string.myplay_off)
+                else stringResource(R.string.myplay_setting_maps_idle_home_after, m)
+            },
+            mapsIdle.toString(),
+        ) { id -> id.toIntOrNull()?.let { mapsIdle = MapsIdleHome.valid(it); settings.myplayMapsIdleHome = mapsIdle } }
+        HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_maps_idle_home_hint))
     }
 }
 
