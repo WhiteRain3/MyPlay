@@ -250,7 +250,14 @@ private object NoCarActions : CarActions {
  * [PicturePart.WHOLE]. [night], when set, shows night or day whatever the setting (the Colours page's tabs).
  */
 @Composable
-fun CarPicture(description: String, modifier: Modifier = Modifier, night: Boolean? = null, onPart: ((PicturePart) -> Unit)?) {
+fun CarPicture(
+    description: String,
+    modifier: Modifier = Modifier,
+    night: Boolean? = null,
+    /** The new phone app: the car's own part (null for the whole picture), mapped per design by the caller. */
+    onCarPart: ((CarPart?) -> Unit)? = null,
+    onPart: ((PicturePart) -> Unit)?,
+) {
     val context = LocalContext.current
     val settings = remember { Settings(context) }
     val ui = remember { sampleCarState() }
@@ -269,12 +276,21 @@ fun CarPicture(description: String, modifier: Modifier = Modifier, night: Boolea
             runCatching { BitmapFactory.decodeFile(java.io.File(context.filesDir, Settings.WALLPAPER_FILE).path) }.getOrNull()
         } else null
     }
-    CarPictureFrame(ui, description, modifier, onPart, densityDpi = remember(changes) { settings.carDensity })
+    CarPictureFrame(ui, description, modifier, onPart, densityDpi = remember(changes) { settings.carDensity }, onCarPart = onCarPart)
 }
 
 /** Draws [ui] at the car's size, scaled down to the width it is given, with its parts tappable when [onPart] is set. */
 @Composable
-internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modifier = Modifier, onPart: ((PicturePart) -> Unit)?, densityDpi: Int = 0) {
+internal fun CarPictureFrame(
+    ui: CarUiState,
+    description: String,
+    modifier: Modifier = Modifier,
+    onPart: ((PicturePart) -> Unit)?,
+    densityDpi: Int = 0,
+    onCarPart: ((CarPart?) -> Unit)? = null,
+) {
+    // Either callback makes the parts tappable; the raw one wins (the new phone app maps per design).
+    val tapped: ((CarPart?) -> Unit)? = onCarPart ?: onPart?.let { f -> { part: CarPart? -> f(picturePartOf(part)) } }
     val (carW, carH) = CarPictureSize.layoutSizeDp(densityDpi)
     val shape = RoundedCornerShape(20.dp)
     // Where the car code drew each part, in the window's coordinates (the scaling included).
@@ -292,7 +308,7 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
             .onGloballyPositioned { frame = Rect(it.positionInRoot(), Size(it.size.width.toFloat(), it.size.height.toFloat())) }
             .clearAndSetSemantics {
                 contentDescription = description
-                if (onPart != null) { role = Role.Button; onClick { onPart(PicturePart.WHOLE); true } }
+                if (tapped != null) { role = Role.Button; onClick { tapped(null); true } }
             },
     ) {
         val scale = maxWidth.value / carW
@@ -329,8 +345,8 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
         }
         // Over everything, so the car screen inside never gets the touch.
         Box(
-            Modifier.fillMaxSize().pointerInput(onPart) {
-                if (onPart == null) {
+            Modifier.fillMaxSize().pointerInput(tapped) {
+                if (tapped == null) {
                     // Being hit is enough: the car screen underneath (a sibling) then gets no touch.
                     // Nothing is consumed, so a drag that starts here still scrolls the page.
                     awaitPointerEventScope { while (true) awaitPointerEvent() }
@@ -342,7 +358,7 @@ internal fun CarPictureFrame(ui: CarUiState, description: String, modifier: Modi
                             tryAwaitRelease()
                             pressed = null
                         },
-                        onTap = { at -> onPart(picturePartOf(partAt(registry.regions, frame.topLeft + at)?.first)) },
+                        onTap = { at -> tapped(partAt(registry.regions, frame.topLeft + at)?.first) },
                     )
                 }
             },

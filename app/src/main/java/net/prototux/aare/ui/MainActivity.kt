@@ -929,7 +929,7 @@ private fun CarScreenSettings(settings: Settings, refresh: Int) {
 }
 
 /** Copies the chosen photo into AARE's files, at most 1920 pixels on its longest side, as the car's wallpaper. */
-private fun saveWallpaper(context: android.content.Context, uri: Uri): Boolean {
+internal fun saveWallpaper(context: android.content.Context, uri: Uri): Boolean {
     // Written to a temporary file and renamed over the current one only once complete, so a photo
     // that can't be read or written (a full disk) leaves the current wallpaper alone.
     val tmp = java.io.File(context.filesDir, Settings.WALLPAPER_FILE + ".tmp")

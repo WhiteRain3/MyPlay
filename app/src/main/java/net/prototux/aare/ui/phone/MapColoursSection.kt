@@ -105,8 +105,8 @@ fun MapColoursSection(settings: Settings, night: Boolean) {
     SectionHeading(stringResource(R.string.phone_map_colours))
     Text(stringResource(R.string.phone_map_colours_for), color = PhoneColors.Muted, fontSize = 14.sp, modifier = Modifier.padding(bottom = 10.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        SampleMap(filteredSampleMap(MapColourFilter(), night), stringResource(R.string.phone_map_before), Modifier.weight(1f))
-        SampleMap(filteredSampleMap(filter, night), stringResource(R.string.phone_map_after), Modifier.weight(1f))
+        FilterSampleMap(filteredSampleMap(MapColourFilter(), night), stringResource(R.string.phone_map_before), Modifier.weight(1f))
+        FilterSampleMap(filteredSampleMap(filter, night), stringResource(R.string.phone_map_after), Modifier.weight(1f))
     }
     Spacer(Modifier.height(12.dp))
     val preset = mapPresetOf(filter)
@@ -161,7 +161,7 @@ private fun FilterSlider(label: String, value: Int, range: IntRange, onChange: (
 
 /** The made-up map in [colours], with [caption] under it. */
 @Composable
-private fun SampleMap(colours: Map<SampleMapPart, Int>, caption: String, modifier: Modifier) {
+internal fun FilterSampleMap(colours: Map<SampleMapPart, Int>, caption: String, modifier: Modifier) {
     fun c(p: SampleMapPart) = Color(0xFF000000.toInt() or colours.getValue(p))
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Canvas(Modifier.fillMaxWidth().aspectRatio(1.4f).clip(RoundedCornerShape(12.dp)).border(1.dp, PhoneColors.Border, RoundedCornerShape(12.dp))) {
