@@ -50,6 +50,9 @@ import net.prototux.aare.ui.car.myplay.myplayEnginePreview
 import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
 import net.prototux.aare.ui.car.myplay.MyPlaySkins
 import net.prototux.aare.ui.car.myplay.PanelTimeout
+import net.prototux.aare.ui.car.myplay.ORBIT_SHADE_NONE
+import net.prototux.aare.ui.car.myplay.ORBIT_SHADE_SOFT
+import net.prototux.aare.ui.car.myplay.myplayOrbitShade
 import net.prototux.aare.ui.car.myplay.MapsIdleHome
 import net.prototux.aare.ui.car.myplay.myplayMapsIdleHome
 import net.prototux.aare.ui.car.myplay.myplayPanelTimeout
@@ -329,6 +332,7 @@ private fun OrbitPreviewSwitch() {
     var on by remember { mutableStateOf(settings.myplayEnginePreview) }
     var language by remember { mutableStateOf(settings.myplayEngineLanguage) }
     var panelTimeout by remember { mutableIntStateOf(settings.myplayPanelTimeout) }
+    var shade by remember { mutableStateOf(settings.myplayOrbitShade) }
     var mapsIdle by remember { mutableIntStateOf(settings.myplayMapsIdleHome) }
     Spacer(Modifier.height(12.dp))
     RowGroup(rows = listOf {
@@ -344,6 +348,16 @@ private fun OrbitPreviewSwitch() {
             language,
         ) { id -> language = MyPlaySkins.byId(id).id; settings.myplayEngineLanguage = language }
         if (language == "deck") HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_engine_deck_preview))
+        // The soft plates behind ORBIT's turn, song and clock, or none.
+        Spacer(Modifier.height(12.dp))
+        PhoneChoices(
+            stringResource(R.string.myplay_setting_orbit_shade),
+            listOf(
+                ORBIT_SHADE_SOFT to stringResource(R.string.myplay_setting_orbit_shade_soft),
+                ORBIT_SHADE_NONE to stringResource(R.string.myplay_setting_orbit_shade_none),
+            ),
+            shade,
+        ) { id -> settings.myplayOrbitShade = id; shade = settings.myplayOrbitShade }
         // O2: how long the music panel and ORBIT's dial stay open with nothing pressed.
         Spacer(Modifier.height(12.dp))
         PhoneChoices(

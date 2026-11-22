@@ -8,6 +8,7 @@ import net.prototux.aare.ui.car.WALLPAPER_NAMES
 import net.prototux.aare.ui.theme.CarAccents
 import net.prototux.aare.ui.theme.CarThemes
 import net.prototux.aare.ui.theme.myplayMapFilter
+import net.prototux.aare.ui.car.myplay.myplayOrbitShade
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -142,7 +143,8 @@ class LookDefaultsTest {
                 prefs.getBoolean("myplay_status_percent_sign", false), net.prototux.aare.ui.car.StatusSize.byKey(prefs.getString("myplay_status_size", null)),
                 prefs.getBoolean("myplay_status_color_by_level", false), prefs.getBoolean("myplay_status_signal", true),
                 net.prototux.aare.ui.car.StatusSize.byKey(prefs.getString("myplay_clock_size", null)), prefs.getBoolean("myplay_clock_bold", false),
-                net.prototux.aare.ui.car.myplay.MyPlaySkins.byId(prefs.getString("myplay_engine_language", null)).id)
+                net.prototux.aare.ui.car.myplay.MyPlaySkins.byId(prefs.getString("myplay_engine_language", null)).id,
+                s.myplayOrbitShade)
         }
         val unset = read()
         MyPlayLooks.choose(Settings(ctx), Look("defaults", MyPlayLooks.DEFAULTS))
