@@ -88,6 +88,7 @@ import net.prototux.aare.car.SpeedSourceMode
 import net.prototux.aare.car.myplaySpeedLimitMargin
 import net.prototux.aare.car.myplaySpeedSource
 import net.prototux.aare.car.myplayDriveWarnings
+import net.prototux.aare.car.myplayParkedHere
 import net.prototux.aare.host.Assistants
 import net.prototux.aare.host.CarAppCatalog
 import net.prototux.aare.service.ProjectionService
@@ -134,6 +135,7 @@ fun NextMapsPage() {
     val idle by rememberSetting(KEY_MAPS_IDLE_HOME) { myplayMapsIdleHome }
     val follow by rememberSetting("myplay_maps_follow_car_lights") { mapsFollowCarLights }
     val carGps by rememberSetting("car_gps") { carGpsForPhone }
+    val parked by rememberSetting(net.prototux.aare.car.KEY_PARKED_HERE) { myplayParkedHere }
     val mapKind by rememberSetting("myplay_map_filter") { mapColoursKind(myplayMapFilter) }
     val resumed = rememberResumeTicks()
     val mockAllowed = remember(resumed, carGps) { PhoneLocationFeed.allowed(ctx) }
@@ -181,6 +183,11 @@ fun NextMapsPage() {
                 {
                     NextSwitchRow(stringResource(R.string.next_maps_car_gps_label), carGps, { settings.carGpsForPhone = it }, Icons.Outlined.GpsFixed,
                         note = RowNote.Help(stringResource(R.string.next_maps_car_gps_help)))
+                },
+                {
+                    // Ideas #11: off by default; turning it off forgets the spot (the setter does that).
+                    NextSwitchRow(stringResource(R.string.next_maps_parked_label), parked, { settings.myplayParkedHere = it }, Icons.Outlined.Place,
+                        note = RowNote.Help(stringResource(R.string.next_maps_parked_help)), info = stringResource(R.string.next_maps_parked_info))
                 },
             ))
         }

@@ -106,4 +106,10 @@ class NextCarMoreTest {
         rule.waitForIdle()
         assertEquals(1, net.prototux.aare.car.Places.decode(settings.prefs.getString(net.prototux.aare.car.KEY_PLACES, null)).size)
     }
+
+    @Test fun parkedSpotSwitchWritesItsKey() {
+        rule.setContent { NextMapsPage() }
+        rule.onNode(hasText("Remember where I parked") and isToggleable()).performClick()
+        assertEquals(true, settings.prefs.getBoolean(net.prototux.aare.car.KEY_PARKED_HERE, false))
+    }
 }

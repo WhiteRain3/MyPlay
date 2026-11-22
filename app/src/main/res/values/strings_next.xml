@@ -484,6 +484,10 @@
     <string name="next_more_import_label" translatable="false">Import</string>
     <string name="next_more_trusted_cars_label" translatable="false">Trusted cars</string>
 
+    <string name="next_maps_parked_label" translatable="false">Remember where I parked</string>
+    <string name="next_maps_parked_help" translatable="false">A notice leads you back to the car</string>
+    <string name="next_maps_parked_info" translatable="false">When a drive ends, the spot is kept on this phone only: never in a backup, never in the log, never sent anywhere.</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_switch_on_label" translatable="false">New phone app on</string>

@@ -588,6 +588,7 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 | `myplay_home_address` | String | — | Car › Buttons › Home and places (not backed up, HA-1) |
 | `myplay_places` | String | — | Car › Buttons › Home and places (up to five; not backed up, PL-2) |
 | `myplay_drive_warnings` | Boolean | A | Car › Speed (ice sign and hot-phone line; default on) |
+| `myplay_parked_here`, `myplay_parked_spot` | Boolean/String | — | Car › Maps › Remember where I parked (off by default; the spot is internal) |
 | `myplay_orbit_default_done` | Boolean | — | internal |
 | `myplay_new_phone_app` (**new**, build only) | Boolean | — | the hidden switch (§16); in no backup set; unread after chunk 14 |
 | file `driving_mode` › `previous_interruption_filter` | Int | — | internal |
