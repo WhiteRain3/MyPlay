@@ -221,7 +221,6 @@ fun NextHomeContent(inputs: HomeInputs, actions: HomeActions, picture: @Composab
 
 // ---------------------------------------------------------------- the hero
 
-private enum class RingStyle { FULL, SWEEP, DASHED, CAUTION, ERROR }
 
 @Composable
 private fun HeroBlock(hero: Hero, actions: HomeActions, errorAt: Long?) {
@@ -232,7 +231,7 @@ private fun HeroBlock(hero: Hero, actions: HomeActions, errorAt: Long?) {
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         when (hero) {
             is Hero.Connected -> {
-                HeroRing(RingStyle.FULL, green, Icons.Rounded.DirectionsCar)
+                NextHeroRing(RingStyle.FULL, green, Icons.Rounded.DirectionsCar)
                 HeroTitle(stringResource(R.string.next_home_connected_label), carAndLink(hero.car, hero.how))
                 Spacer(Modifier.height(16.dp))
                 NextCard {
@@ -240,7 +239,7 @@ private fun HeroBlock(hero: Hero, actions: HomeActions, errorAt: Long?) {
                 }
             }
             is Hero.Connecting -> {
-                HeroRing(RingStyle.SWEEP, green, Icons.Outlined.DirectionsCar)
+                NextHeroRing(RingStyle.SWEEP, green, Icons.Outlined.DirectionsCar)
                 HeroTitle(
                     hero.car?.let { stringResource(R.string.next_home_connecting_label, it) } ?: stringResource(R.string.next_home_connecting_any_label),
                     hero.how?.let { linkWord(it) },
@@ -249,7 +248,7 @@ private fun HeroBlock(hero: Hero, actions: HomeActions, errorAt: Long?) {
                 NextButton(stringResource(R.string.next_home_cancel_label), actions::cancel, kind = ButtonKind.GHOST)
             }
             is Hero.Trust -> {
-                HeroRing(RingStyle.CAUTION, NextColors.Caution, Icons.Outlined.GppGood)
+                NextHeroRing(RingStyle.CAUTION, NextColors.Caution, Icons.Outlined.GppGood)
                 HeroTitle(
                     stringResource(if (hero.changed) R.string.next_home_trust_changed_label else R.string.next_home_trust_label),
                     carAndLink(stringResource(R.string.next_home_new_car_label), hero.how),
@@ -272,7 +271,7 @@ private fun HeroBlock(hero: Hero, actions: HomeActions, errorAt: Long?) {
                 NextNote(stringResource(R.string.next_home_then_reconnects_help), Icons.Rounded.Refresh)
             }
             is Hero.Failed -> {
-                HeroRing(RingStyle.ERROR, NextColors.Warn, Icons.Outlined.DirectionsCar)
+                NextHeroRing(RingStyle.ERROR, NextColors.Warn, Icons.Outlined.DirectionsCar)
                 HeroTitle(stringResource(R.string.next_home_failed_label), oneLine(hero.reason))
                 Spacer(Modifier.height(16.dp))
                 NextButton(stringResource(R.string.next_home_try_again_label), actions::tryAgain, Modifier.fillMaxWidth(), icon = Icons.Rounded.Refresh)
@@ -289,7 +288,7 @@ private fun HeroBlock(hero: Hero, actions: HomeActions, errorAt: Long?) {
                 }
             }
             is Hero.NotConnected -> {
-                HeroRing(RingStyle.DASHED, NextColors.Text3, Icons.Outlined.DirectionsCar)
+                NextHeroRing(RingStyle.DASHED, NextColors.Text3, Icons.Outlined.DirectionsCar)
                 val (line, action, icon) = whyWords(hero.why)
                 HeroTitle(stringResource(R.string.next_home_not_connected_label), line)
                 if (action != null) {
@@ -333,40 +332,6 @@ private fun HeroTitle(title: String, sub: String?) {
     Text(title, style = NextType.Hero, color = NextColors.Text, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 14.dp).testTag("next-hero-title"))
     if (sub != null) Text(sub, style = NextType.Value.copy(fontSize = NextType.Label.fontSize), color = NextColors.Text2,
         textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))
-}
-
-/** The hero ring (design frame 77, "Rings"): full when connected, sweeping while connecting, dashed when not. */
-@Composable
-private fun HeroRing(style: RingStyle, color: Color, icon: ImageVector) {
-    val sweep = rememberInfiniteTransition(label = "sweep")
-    val turn by sweep.animateFloat(0f, 360f, infiniteRepeatable(tween(1600, easing = LinearEasing), RepeatMode.Restart), label = "turn")
-    Box(Modifier.padding(top = 8.dp).size(184.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize()) {
-            val w = 10.dp.toPx()
-            val inset = w / 2 + 8.dp.toPx()
-            val box = Size(size.width - 2 * inset, size.height - 2 * inset)
-            val tl = Offset(inset, inset)
-            when (style) {
-                RingStyle.FULL -> {
-                    drawCircle(color.copy(alpha = 0.10f), radius = size.minDimension / 2)
-                    drawArc(color, 0f, 360f, false, tl, box, style = Stroke(w))
-                }
-                RingStyle.SWEEP -> {
-                    drawArc(NextColors.Track, 0f, 360f, false, tl, box, style = Stroke(w))
-                    rotate(turn) { drawArc(color, -90f, 100f, false, tl, box, style = Stroke(w, cap = StrokeCap.Round)) }
-                }
-                RingStyle.DASHED, RingStyle.CAUTION -> drawArc(
-                    color, 0f, 360f, false, tl, box,
-                    style = Stroke(if (style == RingStyle.CAUTION) w * 0.6f else 3.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 12f))),
-                )
-                RingStyle.ERROR -> {
-                    drawArc(NextColors.Track, 0f, 360f, false, tl, box, style = Stroke(w))
-                    drawArc(color, -90f, 110f, false, tl, box, style = Stroke(w, cap = StrokeCap.Round))
-                }
-            }
-        }
-        Icon(icon, null, tint = color, modifier = Modifier.size(56.dp))
-    }
 }
 
 // ---------------------------------------------------------------- attention
