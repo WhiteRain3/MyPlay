@@ -72,6 +72,7 @@ object NextPages {
         "more/advanced" to R.string.next_more_advanced_label,
         "more/advanced/certificates" to R.string.next_more_certificates_label,
         "more/advanced/developer" to R.string.next_more_developer_label,
+        "more/advanced/developer/parts" to R.string.next_dev_parts_label,
         "more/archive" to R.string.next_more_archive_label,
         "more/archive/deck" to R.string.next_more_deck_label,
         "more/archive/layouts" to R.string.next_more_layouts_label,
@@ -115,6 +116,10 @@ fun NextPage(route: String, onOldApp: () -> Unit) {
         "more/diagnostics/car-check" -> NextCarCheckPage()
         "more/diagnostics/car-data" -> NextCarDataPage()
         "more/diagnostics/log" -> NextLogPage()
+        "more/advanced" -> NextAdvancedPage()
+        "more/advanced/certificates" -> NextCertificatesPage()
+        "more/advanced/developer" -> NextDeveloperPage()
+        "more/advanced/developer/parts" -> { val nav = LocalNextNavigator.current; net.prototux.aare.ui.phone.PhonePartsSample { nav.back() } }
         "more/updates" -> NextUpdatesPage()
         "more/whats-new" -> NextWhatsNewPage()
         else -> if (route.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(route.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(route, onOldApp)

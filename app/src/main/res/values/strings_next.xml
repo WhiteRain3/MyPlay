@@ -542,4 +542,52 @@
     <string name="next_diag_clear_title_label" translatable="false">Clear the log?</string>
     <string name="next_diag_clear_info" translatable="false">Every line kept on this phone is removed. This can\'t be undone.</string>
     <string name="next_diag_log_private_help" translatable="false">Logs stay on the phone until you share them</string>
+    <string name="next_adv_video_label" translatable="false">Video</string>
+    <string name="next_adv_resolution_label" translatable="false">Maximum resolution</string>
+    <string name="next_adv_60fps_label" translatable="false">Prefer 60 fps</string>
+    <string name="next_adv_h264_label" translatable="false">Force H.264 video</string>
+    <string name="next_adv_cbr_label" translatable="false">Constant bitrate video</string>
+    <string name="next_adv_security_label" translatable="false">Security</string>
+    <plurals name="next_adv_cert_count_label" translatable="false">
+        <item quantity="one">%1$d certificate</item>
+        <item quantity="other">%1$d certificates</item>
+    </plurals>
+    <string name="next_adv_car_fixes_label" translatable="false">Car fixes</string>
+    <string name="next_adv_overrides_label" translatable="false">Per-vehicle overrides</string>
+    <plurals name="next_adv_rules_label" translatable="false">
+        <item quantity="one">%1$d rule</item>
+        <item quantity="other">%1$d rules</item>
+    </plurals>
+    <string name="next_adv_import_label" translatable="false">Import…</string>
+    <string name="next_adv_template_label" translatable="false">Template</string>
+    <string name="next_adv_replace_title_label" translatable="false">Replace vehicles.json?</string>
+    <string name="next_adv_replace_info" translatable="false">The file on this phone (%1$d rules) is replaced. Save a copy first if you want to keep it.</string>
+    <string name="next_adv_replace_label" translatable="false">Replace</string>
+    <string name="next_cert_built_in_label" translatable="false">MyPlay\'s</string>
+    <string name="next_cert_generated_label" translatable="false">This phone\'s own</string>
+    <string name="next_cert_downloaded_label" translatable="false">Downloaded</string>
+    <string name="next_cert_until_help" translatable="false">Until %1$s</string>
+    <string name="next_cert_expired_help" translatable="false">Expired</string>
+    <string name="next_cert_remove_label" translatable="false">Remove</string>
+    <string name="next_cert_remove_title_label" translatable="false">Remove this certificate?</string>
+    <string name="next_cert_remove_info" translatable="false">Cars that only accept this certificate will stop connecting until you import or download it again.</string>
+    <string name="next_cert_import_label" translatable="false">Import…</string>
+    <string name="next_cert_download_label" translatable="false">Download</string>
+    <string name="next_cert_downloading_label" translatable="false">Downloading…</string>
+    <string name="next_cert_auto_label" translatable="false">Update it automatically</string>
+    <string name="next_cert_why_info" translatable="false">Some cars only accept a certificate issued by Google. MyPlay offers each one in turn until the car accepts one.</string>
+    <string name="next_cert_password_title_label" translatable="false">Certificate password</string>
+    <string name="next_cert_password_label" translatable="false">Password</string>
+    <string name="next_cert_password_wrong_help" translatable="false">That password did not open the file. Try again.</string>
+    <string name="next_dev_network_label" translatable="false">Accept from the network</string>
+    <string name="next_dev_network_help" translatable="false">Anyone on the Wi-Fi can connect</string>
+    <string name="next_dev_once_label" translatable="false">Off after one session</string>
+    <string name="next_dev_mirror_label" translatable="false">Phone screen on the server</string>
+    <string name="next_dev_mirror_help" translatable="false">They can see and tap the phone</string>
+    <string name="next_dev_localhost_label" translatable="false">Allow localhost</string>
+    <string name="next_dev_localhost_help" translatable="false">Any app on this phone can connect</string>
+    <string name="next_dev_map_areas_label" translatable="false">Show the map\'s free area</string>
+    <string name="next_dev_nav_text_label" translatable="false">Log the maps app\'s texts</string>
+    <string name="next_dev_parts_label" translatable="false">Phone parts sample</string>
+    <string name="next_dev_lives_in_log_help" translatable="false">Lives in Connection log</string>
 </resources>

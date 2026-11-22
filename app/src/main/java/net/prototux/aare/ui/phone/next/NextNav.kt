@@ -19,12 +19,12 @@ object NextRoutes {
         "apps", "apps/phone-apps", "apps/phone-screen", "apps/browser",
         "more", "more/updates", "more/whats-new", "more/cars", "more/connection", "more/backup",
         "more/diagnostics", "more/diagnostics/car-check", "more/diagnostics/car-data", "more/diagnostics/log",
-        "more/advanced", "more/advanced/certificates", "more/advanced/developer",
+        "more/advanced", "more/advanced/certificates", "more/advanced/developer", "more/advanced/developer/parts",
         "more/archive", "more/archive/deck", "more/archive/layouts", "more/about",
     )
 
     /** Pages drawn full screen, with their own top bar and no tab bar (design frame 16). */
-    val FULL_SCREEN: Set<String> = setOf("screen/wallpaper/edit")
+    val FULL_SCREEN: Set<String> = setOf("screen/wallpaper/edit", "more/advanced/developer/parts")
 
     /** One car's page: `more/cars/{car}`. */
     const val CAR_PREFIX = "more/cars/"

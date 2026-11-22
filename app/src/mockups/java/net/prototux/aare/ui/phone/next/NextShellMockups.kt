@@ -176,6 +176,14 @@ class NextShellMockups {
     @Test fun moreBackup() = paparazzi.snapshot { Page("more/backup") { NextBackupPage() } }
     @Test fun moreConnection() = paparazzi.snapshot { Page("more/connection") { NextConnectionPage() } }
 
+    @Test fun advRoot() = paparazzi.snapshot { Page("more/advanced") { NextAdvancedPage() } }
+    @Test fun advCertificates() = paparazzi.snapshot { Page("more/advanced/certificates") { NextCertificatesPage() } }
+    @Test fun advDeveloper() {
+        net.prototux.aare.Settings(paparazzi.context).headUnitServer = true
+        paparazzi.snapshot { Page("more/advanced/developer") { NextDeveloperPage() } }
+        net.prototux.aare.Settings(paparazzi.context).headUnitServer = false
+    }
+
     @Test fun diagRoot() = paparazzi.snapshot { Page("more/diagnostics") { NextDiagnosticsPage() } }
     @Test fun diagCarCheckStep() {
         CarCheckRun.resetForTest(); CarCheckRun.goTo(4)
