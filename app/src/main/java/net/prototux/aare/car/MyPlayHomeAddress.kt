@@ -8,7 +8,8 @@ import net.prototux.aare.Settings
  * "Navigate home" action ([ButtonAction.NAVIGATE_HOME]) goes to, as the owner typed it on the
  * phone: an address, or "lat,lng". Empty: not set (the action then says to set it on the phone).
  * Sent to the car's maps app as a geo: query (CarRuntime.navigateTo), so nothing has to be saved
- * in the maps app itself. Backed up.
+ * in the maps app itself. HA-1: not in the settings backup (it is often the owner's street address,
+ * and the backup is a file that can be shared); typed again on a new phone.
  */
 const val KEY_HOME_ADDRESS = "myplay_home_address"
 

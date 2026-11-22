@@ -53,6 +53,7 @@ class MyPlayBackupKeysTest {
             "myplay_speed_limit_checked", // when this phone last looked for a newer speed limit file (N21): belongs to the phone
             "myplay_debug_map_areas", // a check outline on the car screen (MF-4): should not travel to a new phone
             "myplay_debug_nav_text", // the N3 bench check's log of maps apps' text: a check, should not travel to a new phone
+            "myplay_home_address", // HA-1: where Navigate home goes, often the owner's street address: private, kept off the exported backup file
             "myplay_learn_button", // the action the next car key will be taught (O11): a moment's state
             "myplay_learn_button_at", // when that action was armed (O11-1): a moment's state
             "myplay_orbit_default_done", // N10: this install was moved to ORBIT once: belongs to the install

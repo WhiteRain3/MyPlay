@@ -94,5 +94,5 @@
     <string name="myplay_nav_home_unset" translatable="false">Set home address on the phone</string>
     <string name="myplay_nav_home_no_maps" translatable="false">No maps app to navigate with</string>
     <string name="phone_home_address_title" translatable="false">Home address (for Navigate home)</string>
-    <string name="phone_home_address_hint" translatable="false">An address or lat,lng</string>
+    <string name="phone_home_address_hint" translatable="false">An address or lat,lng. Kept on this phone only, not in backups.</string>
 </resources>
