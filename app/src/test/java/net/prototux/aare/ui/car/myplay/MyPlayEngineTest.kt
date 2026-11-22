@@ -541,6 +541,32 @@ class MyPlayEngineTest {
         assertEquals("app:maps", asked.last())
     }
 
+    /** IH-2: without a pad key to the dial or Apps, the info-only home is not taken: the ring still works. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theInfoOnlyHomeNeedsAWayToTheWorlds() {
+        val state = show(guidance = true)
+        rule.runOnIdle { state.homePad = HomePad.decode("center=music;up=maps;side=nothing;down=nothing"); state.infoHome = true }
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.Tab) } // wakes the ring
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
+        rule.onNodeWithTag(STOP_TURN).assertIsSelected()
+    }
+
+    /** IH-1: a ring awake when the info-only home comes on does not swallow the shortcuts. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theInfoOnlyHomeNeverSwallowsTheShortcuts() {
+        val state = show(guidance = true)
+        rule.runOnIdle { state.homePad = HomePad.DEFAULT }
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.Tab) } // the ring awake
+        rule.runOnIdle { state.infoHome = true }
+        rule.waitForIdle()
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
     @Test fun theHomePadsMappingIsStoredAndDefaulted() {
         assertEquals(HomePad.DEFAULT, HomePad.decode(null))
         assertEquals(HomePad.DEFAULT, HomePad.decode("junk;up=nonsense"))

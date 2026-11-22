@@ -175,6 +175,11 @@ internal fun MyPlayEngineShell(
     val padMap = state.homePad
     val padHome = hand == null && HomePad.active(padMap)
     var ringAwake by remember(skin.id) { mutableStateOf(false) }
+    // O11, IH-2: the info-only home only while a pad key opens the dial or the Apps world, so the
+    // car's worlds (and Settings, with this switch) are always reachable from the car.
+    val infoHome = padHome && state.infoHome && padMap.values.any { it == HomePadAction.DIAL || it == HomePadAction.APPS }
+    // IH-1: a ring woken before the info-only home was turned on goes back to sleep.
+    LaunchedEffect(infoHome) { if (infoHome) ringAwake = false }
     val actionsOf: Map<String, () -> Unit> = buildMap {
         if (notes.unseen > 0 && model.place == Place.Home && !listOpen) put(STOP_BELL) { listOpen = true; listChosen = null; notes.markSeen() }
         if (notice != null && model.place == Place.Home) {
@@ -545,10 +550,10 @@ internal fun MyPlayEngineShell(
         }
         key in WORLD_KEYS
     } else when (val p = model.place) {
-        Place.Home -> if (padHome && !ringAwake && notice == null && call == null && padKeyOf(key)?.let { padMap[it] != HomePadAction.NOTHING } == true) {
+        Place.Home -> if (padHome && (!ringAwake || infoHome) && notice == null && call == null && padKeyOf(key)?.let { padMap[it] != HomePadAction.NOTHING } == true) {
             runPad(padMap.getValue(padKeyOf(key)!!))
             true
-        } else if (padHome && state.infoHome && notice == null && call == null && (key == Key.Tab || padKeyOf(key) != null)) {
+        } else if (infoHome && notice == null && call == null && (key == Key.Tab || padKeyOf(key) != null)) {
             // O11: the info-only home: no ring ever; a turn or a key set to nothing does nothing here.
             true
         } else if (padHome && !ringAwake && notice == null && call == null && (key == Key.Tab || padKeyOf(key) != null)) {
