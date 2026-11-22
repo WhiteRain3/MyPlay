@@ -321,7 +321,7 @@ private val SpecCard.title: Int
     }
 
 
-/** N5: try MyPlay's own car screen, ORBIT, while it is being built (myplay_engine_preview, not backed up). */
+/** MyPlay's own car screen (ORBIT or DECK), on by default since N10 (myplay_engine_preview, backed up). */
 @Composable
 private fun OrbitPreviewSwitch() {
     val ctx = LocalContext.current
