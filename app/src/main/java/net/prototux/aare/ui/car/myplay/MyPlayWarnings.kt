@@ -8,3 +8,37 @@ import androidx.compose.runtime.compositionLocalOf
  * [MyPlaySkin.Status]; a skin that draws no sign ignores it.
  */
 val LocalRoadIce = compositionLocalOf { false }
+
+/**
+ * MyPlay (#7): whether the skin's speed limit sign pulses once when the limit changes (the drive
+ * warnings' switch). Provided by the engine round the speed; off in the phone's picture.
+ */
+val LocalLimitPulse = compositionLocalOf { false }
+
+/**
+ * #7: when the limit sign pulses. Only a change from one known limit to another known one (50 to
+ * 70), never its first showing in a drive or after "not known", and not again within [COOLDOWN_MS],
+ * so a limit flickering at a junction does not keep the sign bouncing.
+ */
+class LimitPulse {
+    private var lastKmh: Int? = null
+    private var lastPulseAt: Long? = null
+
+    /** A new limit ([kmh] null: none or not known) at [nowMs]; true when the sign should pulse now. */
+    fun update(kmh: Int?, nowMs: Long): Boolean {
+        val before = lastKmh
+        lastKmh = kmh
+        if (kmh == null || before == null || kmh == before) return false
+        if (lastPulseAt?.let { nowMs - it < COOLDOWN_MS } == true) return false
+        lastPulseAt = nowMs
+        return true
+    }
+
+    companion object {
+        const val COOLDOWN_MS = 5_000L
+        /** The whole pulse: up and back, once. */
+        const val PULSE_MS = 600
+        /** How much larger the sign gets at the top of the pulse. */
+        const val SCALE = 1.12f
+    }
+}

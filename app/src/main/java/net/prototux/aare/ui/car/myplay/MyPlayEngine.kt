@@ -1062,7 +1062,8 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
         }
     }
     DisposableEffect(feed) { onDispose { feed.release(); limits?.close(); SpeedLimitDiag.why = null; net.prototux.aare.car.DriveSummary.pause() } }
-    content(feed.reading)
+    // #7: the limit sign's one pulse when the limit changes, under the drive warnings' switch.
+    CompositionLocalProvider(LocalLimitPulse provides state.driveWarnings) { content(feed.reading) }
 }
 
 private const val SPEED_TICK_MS = 1_000L

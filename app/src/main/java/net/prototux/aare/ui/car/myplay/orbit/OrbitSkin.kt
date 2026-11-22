@@ -98,6 +98,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -124,6 +125,8 @@ import net.prototux.aare.ui.car.carPart
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.mediaProgress
 import net.prototux.aare.ui.car.myplay.LocalRoadIce
+import net.prototux.aare.ui.car.myplay.LimitPulse
+import net.prototux.aare.ui.car.myplay.LocalLimitPulse
 import net.prototux.aare.ui.car.myplay.LocalSkinTokens
 import net.prototux.aare.ui.car.myplay.LocalStopRinged
 import net.prototux.aare.ui.car.myplay.MUSIC_ART
@@ -407,12 +410,32 @@ object OrbitSkin : MyPlaySkin {
         val known = limit as? LimitShown.Known
         val ring = if (known != null) Color(0xFFD32F2F) else Orbit.glass(night).secondary
         Box(
-            modifier.size(84.dp).shadow(6.dp, CircleShape).clip(CircleShape).background(Color.White)
+            modifier.limitPulse(known?.kmh).size(84.dp).shadow(6.dp, CircleShape).clip(CircleShape).background(Color.White)
                 .border(9.dp, ring, CircleShape).testTag(LIMIT_SIGN_TAG),
             contentAlignment = Alignment.Center,
         ) {
             Text(known?.kmh?.toString() ?: "–", style = TextStyle(fontSize = if ((known?.kmh ?: 0) >= 100) 28.sp else 34.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111111)), maxLines = 1)
         }
+    }
+
+    /**
+     * #7: one soft pulse of the limit sign when the limit changes (LimitPulse's rules), drawn only:
+     * the sign's place and size for the layout stay the same, so neither the map's free area nor the
+     * hints round the hub move. No loop, no sound.
+     */
+    @Composable
+    private fun Modifier.limitPulse(kmh: Int?): Modifier {
+        if (!LocalLimitPulse.current) return this
+        val rule = remember { LimitPulse() }
+        val scale = remember { androidx.compose.animation.core.Animatable(1f) }
+        LaunchedEffect(kmh) {
+            if (rule.update(kmh, System.currentTimeMillis())) {
+                val half = LimitPulse.PULSE_MS / 2
+                scale.animateTo(LimitPulse.SCALE, androidx.compose.animation.core.tween(half))
+                scale.animateTo(1f, androidx.compose.animation.core.tween(half))
+            }
+        }
+        return this.graphicsLayer { scaleX = scale.value; scaleY = scale.value }
     }
 
     const val HUB_SPEED_TAG = "orbit_hub_speed"
@@ -587,7 +610,7 @@ object OrbitSkin : MyPlaySkin {
     private fun SpeedLimit(limit: LimitShown, night: Boolean) {
         val g = Orbit.glass(night)
         Column(Modifier.padding(top = 8.dp).widthIn(max = 170.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            OrbitDisc(60.dp, night, Modifier.border(3.dp, g.secondary, CircleShape)) {
+            OrbitDisc(60.dp, night, Modifier.limitPulse((limit as? LimitShown.Known)?.kmh).border(3.dp, g.secondary, CircleShape)) {
                 Text(
                     (limit as? LimitShown.Known)?.kmh?.toString() ?: "–",
                     style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1,
