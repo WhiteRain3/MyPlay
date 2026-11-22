@@ -117,6 +117,7 @@
     <string name="phone_places_title" translatable="false">Places</string>
     <string name="phone_places_hint" translatable="false">Up to five, listed with Home when a pad direction is set to Places. Kept on this phone only, not in backups.</string>
     <string name="phone_places_name" translatable="false">Name</string>
+    <string name="phone_places_address" translatable="false">Address or lat,lng</string>
     <string name="phone_places_add" translatable="false">Add a place</string>
     <string name="phone_places_delete" translatable="false">Remove this place</string>
 </resources>

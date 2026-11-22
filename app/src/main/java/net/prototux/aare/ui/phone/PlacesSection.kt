@@ -50,7 +50,7 @@ internal fun PlacesSection(settings: Settings) {
                         singleLine = true, colors = colors, label = { Text(stringResource(R.string.phone_places_name)) },
                         modifier = Modifier.fillMaxWidth().testTag(placeNameTag(i)))
                     OutlinedTextField(p.address, { v -> save(rows.toMutableList().also { it[i] = p.copy(address = v.take(Places.ADDRESS_MAX)) }) },
-                        singleLine = true, colors = colors, label = { Text(stringResource(R.string.phone_home_address_hint)) },
+                        singleLine = true, colors = colors, label = { Text(stringResource(R.string.phone_places_address)) },
                         modifier = Modifier.fillMaxWidth().testTag(placeAddressTag(i)))
                 }
                 IconButton({ save(rows.toMutableList().also { it.removeAt(i) }) }, Modifier.testTag(placeDeleteTag(i))) {
