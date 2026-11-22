@@ -42,15 +42,25 @@ class FileSpeedLimits(context: Context) : SpeedLimits {
 
     override fun available(): Boolean = runCatching { regionFile() != null }.getOrDefault(false)
 
-    override fun file(): LimitFile = runCatching {
-        when {
+    /** SL-15: the last error looking at the file ("class: message"), while [file] says READ_ERROR. */
+    @Volatile private var lastError: String? = null
+
+    override fun file(): LimitFile = try {
+        val f = when {
             settings.myplaySpeedLimitRegion.isEmpty() -> LimitFile.NO_REGION
             regionFile() == null -> LimitFile.NO_FILE
             else -> LimitFile.READY
         }
-    }.getOrDefault(LimitFile.NO_FILE)
+        lastError = null
+        f
+    } catch (e: Exception) {
+        // SL-15 (the owner's log): an error is not a missing file; say which, and try again soon.
+        lastError = "${e.javaClass.simpleName}: ${e.message}"
+        Log.w(TAG, "speed limit file check", e)
+        LimitFile.READ_ERROR
+    }
 
-    override fun describe(): String = runCatching {
+    override fun describe(): String = lastError?.let { "speed limits: car side could not look at the file ($it)" } ?: runCatching {
         val region = settings.myplaySpeedLimitRegion
         if (region.isEmpty()) return@runCatching "speed limits: car side: no region chosen"
         val f = SpeedLimitFiles.file(app.filesDir, region)

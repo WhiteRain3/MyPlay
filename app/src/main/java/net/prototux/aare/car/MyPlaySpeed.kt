@@ -68,7 +68,11 @@ sealed interface LimitShown {
 }
 
 /** N20: whether the phone keeps a speed limit file to read. */
-enum class LimitFile { NO_REGION, NO_FILE, READY }
+enum class LimitFile {
+    NO_REGION, NO_FILE, READY,
+    /** SL-15: looking at the file failed (an error, not a missing file); tried again soon. */
+    READ_ERROR,
+}
 
 /**
  * N20, the owner's drive: why the speed limit shows or not, for the connection log (the Car check)
@@ -79,6 +83,7 @@ enum class LimitWhy(val line: String) {
     CAR_ONLY("not shown: the speed source is Car only (the limit needs Auto, for the phone's location)"),
     NO_REGION("not shown: no region chosen on the phone (MyPlay, Speed)"),
     NO_FILE("not shown: the region's file is not downloaded yet (MyPlay, Speed)"),
+    READ_ERROR("not shown: the region's file could not be read (the line before says why); trying again"),
     NOT_CONNECTED("not shown: no car connected"),
     NO_MAPS_APP("not shown: no maps app running (its location fixes are the ones used)"),
     NO_PERMISSION("not shown: MyPlay has no location permission on the phone"),
@@ -138,6 +143,7 @@ object SpeedRules {
         mode == SpeedSourceMode.CAR -> LimitWhy.CAR_ONLY
         file == LimitFile.NO_REGION -> LimitWhy.NO_REGION
         file == LimitFile.NO_FILE -> LimitWhy.NO_FILE
+        file == LimitFile.READ_ERROR -> LimitWhy.READ_ERROR
         !connected -> LimitWhy.NOT_CONNECTED
         !mapsRunning -> LimitWhy.NO_MAPS_APP
         !listening -> LimitWhy.NO_PERMISSION

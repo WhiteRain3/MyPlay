@@ -249,6 +249,8 @@ class MyPlaySpeedTest {
         assertEquals(LimitWhy.CAR_ONLY, why(mode = SpeedSourceMode.CAR))
         assertEquals(LimitWhy.NO_REGION, why(file = LimitFile.NO_REGION, maps = false))
         assertEquals(LimitWhy.NO_FILE, why(file = LimitFile.NO_FILE))
+        // SL-15: an error reading the file is said as such, not as a missing file.
+        assertEquals(LimitWhy.READ_ERROR, why(file = LimitFile.READ_ERROR))
         assertEquals(LimitWhy.NOT_CONNECTED, why(connected = false, maps = false))
         assertEquals(LimitWhy.NO_MAPS_APP, why(maps = false, listening = false))
         assertEquals(LimitWhy.NO_PERMISSION, why(listening = false, fresh = false))

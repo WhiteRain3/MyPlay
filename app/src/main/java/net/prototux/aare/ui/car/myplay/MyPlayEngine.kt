@@ -163,7 +163,18 @@ internal fun MyPlayEngineShell(
     val homeAlert = mapAlert.takeIf { skin.drawsMapAlerts && model.place == Place.Home }
     // A new alert with buttons takes the ring onto its last one (usually Close), so a push meant for
     // something else only answers the alert.
-    LaunchedEffect(homeAlert?.key) { homeAlert?.actions?.lastIndex?.takeIf { it >= 0 }?.let { chosen = mapAlertStop(it) } }
+    // AL-2: and when it goes, the ring is back where it was (as after a call, R5-2).
+    var beforeAlert by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(homeAlert?.key) {
+        val last = homeAlert?.actions?.lastIndex?.takeIf { it >= 0 }
+        if (last != null) {
+            if (beforeAlert == null) beforeAlert = chosen
+            chosen = mapAlertStop(last)
+        } else if (homeAlert == null) {
+            beforeAlert?.let { chosen = it }
+            beforeAlert = null
+        }
+    }
     // N8: the bell (while there are unseen notifications) opens the list over the home.
     val notes = sources.notifications
     var listOpen by remember { mutableStateOf(false) }
@@ -950,7 +961,8 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
             value = file
             // SL-13: what the car side sees, in the connection log when it changes (and once per connection).
             if (line != null && line != SpeedLimitDiag.fileLine) { SpeedLimitDiag.fileLine = line; net.prototux.aare.DiagLog.add(line) }
-            delay(LIMITS_RECHECK_MS)
+            // SL-15: after an error, look again soon rather than in a minute.
+            delay(if (file == LimitFile.READ_ERROR) LIMITS_RETRY_MS else LIMITS_RECHECK_MS)
         }
     }
     val inputs = SpeedFeed.Inputs(state.speedSource, shown = true, mapsRunning = state.activeNavAppId != null, car = car,
@@ -985,6 +997,7 @@ internal object SpeedLimitDiag {
     var fileLine: String? = null
 }
 private const val LIMITS_RECHECK_MS = 60_000L
+private const val LIMITS_RETRY_MS = 10_000L
 private const val WHY_LOG_AFTER_MS = 10_000L
 
 /** How long a notice shows (as the car's notice overlay). */
