@@ -925,7 +925,6 @@ object OrbitSkin : MyPlaySkin {
     /** The notice's widest, at the sheet's scale: the room between the turn and the clock. */
     private val NOTICE_WIDTH = 480.dp
 
-    /** Up to two letters for a caller's disc; null for a number (then a phone icon). */
     /** A call's time: m:ss, and h:mm:ss from an hour on ("1:05:03", not "65:03"). */
     fun callTime(seconds: Long): String {
         val s = seconds.coerceAtLeast(0)
@@ -935,6 +934,7 @@ object OrbitSkin : MyPlaySkin {
         return if (h > 0) String.format(java.util.Locale.ROOT, "%d:%02d:%02d", h, m, sec) else String.format(java.util.Locale.ROOT, "%d:%02d", m, sec)
     }
 
+    /** Up to two letters for a caller's disc; null for a number (then a phone icon). */
     fun initials(name: String): String? {
         val words = name.trim().split(Regex("\\s+")).filter { w -> w.firstOrNull()?.isLetter() == true }
         if (words.isEmpty()) return null
