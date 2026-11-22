@@ -540,7 +540,15 @@ object OrbitSkin : MyPlaySkin {
             }
             val time = DateFormat.format(if (DateFormat.is24HourFormat(context)) "H:mm" else "h:mm", now).toString()
             Column(horizontalAlignment = Alignment.End) {
-                Text(time, style = Orbit.Type.clock.floating(g.text), maxLines = 1, modifier = Modifier.carPart(CarPart.Clock))
+                // Polish: the clock keeps one width (as wide as "88:88", figures of one width), so the turn
+                // of the minute or the hour (9:59 -> 10:00) never changes the column's width, and with it
+                // the map's free area; right-aligned as before.
+                val clockStyle = Orbit.Type.clock.copy(fontFeatureSettings = "tnum")
+                val clockMeasurer = rememberTextMeasurer()
+                val clockWidth = remember(clockMeasurer) { clockMeasurer.measure("88:88", clockStyle).size.width }
+                Box(Modifier.width(with(LocalDensity.current) { clockWidth.toDp() }), contentAlignment = Alignment.CenterEnd) {
+                    Text(time, style = clockStyle.floating(g.text), maxLines = 1, modifier = Modifier.carPart(CarPart.Clock).testTag(CLOCK_TAG))
+                }
                 // N5-3: no level shown when the phone does not tell it, never "0%".
                 val battery = rememberPhoneStatus()?.takeIf { it.batteryKnown }
                 val ice = LocalRoadIce.current
@@ -1323,6 +1331,8 @@ object OrbitSkin : MyPlaySkin {
 
     /** Test tags. */
     const val BATTERY_TAG = "orbit_battery"
+    /** The clock's time, in its fixed-width box. */
+    const val CLOCK_TAG = "orbit_clock"
     /** Polish #3: the battery's number, in its fixed-width box. */
     const val BATTERY_NUMBER_TAG = "orbit_battery_number"
     /** Drive warnings: the ice sign beside the battery. */
