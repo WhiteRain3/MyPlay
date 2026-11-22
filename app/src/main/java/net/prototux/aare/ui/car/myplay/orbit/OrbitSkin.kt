@@ -238,10 +238,18 @@ object OrbitSkin : MyPlaySkin {
         val last = remember { arrayOfNulls<net.prototux.aare.ui.car.myplay.FocusGraph.Box>(2) }
         parts.turnBox?.let { last[0] = it }
         parts.songBox?.let { last[1] = it }
+        // SH-3: one paint and one blur for every plate, made once per blur size (the plates are drawn
+        // one after the other on the main thread; each sets its own colour), not on every frame.
+        val blur = with(LocalDensity.current) { 26.dp.toPx() }
+        val paint = remember(blur) {
+            android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                maskFilter = android.graphics.BlurMaskFilter(blur, android.graphics.BlurMaskFilter.Blur.NORMAL)
+            }
+        }
         Box(modifier) {
-            if (turn > 0f) last[0]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_TURN_TAG)) { plate(halo, turn * strength, b) } }
-            if (song > 0f) last[1]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_SONG_TAG)) { plate(halo, song * strength, b) } }
-            parts.statusBox?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_STATUS_TAG)) { plate(halo, strength, b) } }
+            if (turn > 0f) last[0]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_TURN_TAG)) { plate(paint, halo, turn * strength, b) } }
+            if (song > 0f) last[1]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_SONG_TAG)) { plate(paint, halo, song * strength, b) } }
+            parts.statusBox?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_STATUS_TAG)) { plate(paint, halo, strength, b) } }
         }
     }
 
@@ -253,15 +261,11 @@ object OrbitSkin : MyPlaySkin {
      * SH-1: a soft plate round [b] (screen pixels): a rounded shape a little wider than the part,
      * its edge blurred away over about 26 dp (a real blur, no bands); [alpha] in the middle.
      */
-    private fun androidx.compose.ui.graphics.drawscope.DrawScope.plate(halo: Color, alpha: Float, b: net.prototux.aare.ui.car.myplay.FocusGraph.Box) {
+    private fun androidx.compose.ui.graphics.drawscope.DrawScope.plate(paint: android.graphics.Paint, halo: Color, alpha: Float, b: net.prototux.aare.ui.car.myplay.FocusGraph.Box) {
         val pad = 6.dp.toPx()
-        val blur = 26.dp.toPx()
         val h = (b.bottom - b.top) + 2 * pad
         val r = minOf(h / 2f, 64.dp.toPx())
-        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            color = halo.copy(alpha = alpha.coerceIn(0f, 1f)).toArgb()
-            maskFilter = android.graphics.BlurMaskFilter(blur, android.graphics.BlurMaskFilter.Blur.NORMAL)
-        }
+        paint.color = halo.copy(alpha = alpha.coerceIn(0f, 1f)).toArgb()
         drawIntoCanvas { c -> c.nativeCanvas.drawRoundRect(b.left - pad, b.top - pad, b.right + pad, b.bottom + pad, r, r, paint) }
     }
 
