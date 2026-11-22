@@ -89,9 +89,11 @@ class NavTextCheckTest {
             NavTextCheck.alertStructure("com.waze", a))
     }
 
-    /** AL-6: a quote in a text cannot end its quoted part early (the shared log hides each whole text). */
+    /** AL-6, AL-7: a quote or a line break in a text cannot end its quoted part early or start a new log line (the shared log hides each whole text). */
     @Test fun aQuoteInAnAlertTextStaysInside() {
-        val a = Alert.Builder(8, CarText.create("Police \"near\" you"), 4_000).build()
-        assertEquals("nav alert com.waze: id 8, title \"Police 'near' you\", 4000 ms", NavTextCheck.alertStructure("com.waze", a))
+        val a = Alert.Builder(8, CarText.create("Police \"near\" you"), 4_000)
+            .setSubtitle(CarText.create("on Main St\nreported by Anna")).build()
+        assertEquals("nav alert com.waze: id 8, title \"Police 'near' you\", subtitle \"on Main St reported by Anna\", 4000 ms",
+            NavTextCheck.alertStructure("com.waze", a))
     }
 }

@@ -55,8 +55,9 @@ internal object NavTextCheck {
      */
     fun alertStructure(app: String, a: Alert): String = buildString {
         append("nav alert $app: id ${a.id}")
-        // AL-6: a quote in a text becomes ' so the shared log's filter finds each text whole.
-        fun q(s: String?) = s.orEmpty().replace('"', '\'')
+        // AL-6, AL-7: a quote in a text becomes ' and a line break a space, so the shared log's
+        // filter finds each text whole and no text spills onto a line of its own.
+        fun q(s: String?) = s.orEmpty().replace('"', '\'').replace(Regex("[\\r\\n\\u2028\\u2029]+"), " ")
         append(", title \"").append(q(text(a.title))).append('"')
         text(a.subtitle)?.let { append(", subtitle \"").append(q(it)).append('"') }
         a.icon?.let { i ->
