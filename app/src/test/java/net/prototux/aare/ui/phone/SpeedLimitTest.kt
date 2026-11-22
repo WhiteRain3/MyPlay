@@ -117,6 +117,16 @@ class SpeedLimitRegionSettingTest {
     }
 }
 
+class SpeedLimitNetworkRuleTest {
+    @Test
+    fun wifiAlwaysMobileOnlyWhenAllowedAndNeverRoaming() {
+        assertTrue(SpeedLimitDownload.mayDownload(unmetered = true, mobileAllowed = false) { true })
+        assertFalse(SpeedLimitDownload.mayDownload(unmetered = false, mobileAllowed = false) { false })
+        assertTrue(SpeedLimitDownload.mayDownload(unmetered = false, mobileAllowed = true) { false })
+        assertFalse(SpeedLimitDownload.mayDownload(unmetered = false, mobileAllowed = true) { true })
+    }
+}
+
 class SpeedSourceChoiceTest {
     @Test
     fun everySourceIsOfferedOnce() {

@@ -54,7 +54,11 @@ object SpeedLimitDownload {
 
     /** Whether a download may run now: on Wi-Fi, or on mobile data when the owner allowed it. */
     fun mayDownload(context: Context): Boolean =
-        unmetered(context) || (Settings(context).myplaySpeedLimitMobile && !roaming(context))
+        mayDownload(unmetered(context), Settings(context).myplaySpeedLimitMobile) { roaming(context) }
+
+    /** The rule: Wi-Fi always; mobile data only when allowed and not roaming ([roaming] asked only then). */
+    fun mayDownload(unmetered: Boolean, mobileAllowed: Boolean, roaming: () -> Boolean): Boolean =
+        unmetered || (mobileAllowed && !roaming())
 
     /** Whether the phone is roaming now: mobile data is then never used for the file (SL-12). Unknown counts as roaming. */
     fun roaming(context: Context): Boolean {
