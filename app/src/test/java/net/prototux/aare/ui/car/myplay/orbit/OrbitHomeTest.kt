@@ -616,6 +616,34 @@ class OrbitHomeTest {
         File(dir, "orbit_free_area_centred.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /**
+     * AR-1 (the owner: the album art sometimes an oval): wide (16:9) and tall (9:16) art, with a
+     * title long enough to fill the corner, is still a true circle: the ring and the art square,
+     * the art cropped, never stretched. On the narrower 1200 wide screen too.
+     */
+    @Test @Config(qualifiers = "w1200dp-h720dp-land-mdpi")
+    fun theArtIsAlwaysACircle() {
+        val state = show()
+        val long = "A Very Long Song Title That Goes On And On Past The Corner (Extended Remix)"
+        for ((w, h) in listOf(1600 to 900, 900 to 1600, 640 to 640)) {
+            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).apply { eraseColor(0xFF3D7BFF.toInt()) }
+            rule.runOnIdle { state.nowPlaying = NowPlaying("music", long, "The Synthwaves", bmp, playing = true, positionMs = 95_000, durationMs = 240_000, updatedAtMs = android.os.SystemClock.elapsedRealtime()) }
+            rule.waitForIdle()
+            for (tag in listOf(OrbitSkin.SONG_ART_TAG, OrbitSkin.SONG_RING_TAG)) {
+                val b = rule.onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+                org.junit.Assert.assertEquals("$tag ${w}x$h $b", b.width, b.height, 0.5f)
+            }
+            val ring = rule.onNodeWithTag(OrbitSkin.SONG_RING_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            // Its full size, not a squeezed one (152 dp at ORBIT's scale for this screen).
+            org.junit.Assert.assertEquals(152f * OrbitSkin.scale(1200, 720), ring.width, 1f)
+        }
+        // The turn's disc likewise beside a long road name.
+        rule.runOnIdle { state.phoneGuidance = net.prototux.aare.notify.PhoneGuidance("k", "mock.maps", "Maps", "300 m", long, "", null, null, "") }
+        rule.waitForIdle()
+        val turn = rule.onNodeWithTag(STOP_TURN).fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("turn $turn", turn.height >= 132f * OrbitSkin.scale(1200, 720) - 1f)
+    }
+
     /** A picture of the screen as it is now. */
     private fun picture2(name: String) {
         val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap()
