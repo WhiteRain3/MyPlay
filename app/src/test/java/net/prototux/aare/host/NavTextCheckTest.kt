@@ -78,4 +78,14 @@ class NavTextCheckTest {
             .setActionStrip(strip).build()
         assertEquals(listOf("Arrived", "Have a nice day"), NavTextCheck.templateTexts(message))
     }
+
+    /** AL-4: an alert's structure in one line: its id, title, subtitle, buttons and time; no other text. */
+    @Test fun anAlertsStructureIsOneLine() {
+        val a = Alert.Builder(7, CarText.create("In 380 m"), 8_000)
+            .setSubtitle(CarText.create("Reduced speed"))
+            .addAction(Action.Builder().setTitle("Close").setOnClickListener {}.build())
+            .build()
+        assertEquals("nav alert com.waze: id 7, title \"In 380 m\", subtitle \"Reduced speed\", actions [\"Close\"], 8000 ms",
+            NavTextCheck.alertStructure("com.waze", a))
+    }
 }
