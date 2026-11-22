@@ -4,12 +4,31 @@ import androidx.core.content.edit
 import net.prototux.aare.Settings
 
 /**
- * MyPlay (N1): draw the car screen with MyPlay's own engine (phase N) instead of the chosen
- * layout. Hidden and off: a preview while phase N is built, until N10 makes it the layout.
+ * MyPlay (N1, N10): draw the car screen with MyPlay's own engine (ORBIT, or DECK) instead of the
+ * chosen older layout. N10 (the owner: "focus fully on ORBIT"): on by default, and every install
+ * is moved to it once ([MyPlayOrbitDefault]); turning it off still picks an older layout, until
+ * N12 removes them. Backed up.
  */
 var Settings.myplayEnginePreview: Boolean
-    get() = prefs.getBoolean("myplay_engine_preview", false)
-    set(v) = prefs.edit { putBoolean("myplay_engine_preview", v) }
+    get() {
+        MyPlayOrbitDefault.migrate(this)
+        return prefs.getBoolean("myplay_engine_preview", true)
+    }
+    set(v) {
+        MyPlayOrbitDefault.migrate(this)
+        prefs.edit { putBoolean("myplay_engine_preview", v) }
+    }
+
+/** N10: moving an install to ORBIT once, whatever it chose while ORBIT was a preview. */
+object MyPlayOrbitDefault {
+    private const val DONE = "myplay_orbit_default_done"
+
+    fun migrate(settings: Settings) {
+        val p = settings.prefs
+        if (p.getBoolean(DONE, false)) return
+        p.edit { remove("myplay_engine_preview"); putBoolean(DONE, true) }
+    }
+}
 
 /** N13: the design language of MyPlay's own car screen ([MyPlaySkins]: "orbit" or "deck"). Backed up. */
 const val KEY_ENGINE_LANGUAGE = "myplay_engine_language"
