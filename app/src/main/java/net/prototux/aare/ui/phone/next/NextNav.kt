@@ -1,5 +1,6 @@
 package net.prototux.aare.ui.phone.next
 
+import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -162,6 +163,19 @@ object NextDeepLink {
         Intent().setComponent(ComponentName(context.packageName, ALIAS))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             .putExtra(EXTRA_ROUTE, route)
+
+    /**
+     * A notification's tap: opens [route] (plan §3.5). Each notification has its own [requestCode] so
+     * their taps don't collapse into one PendingIntent.
+     */
+    fun pendingIntent(context: Context, route: String, requestCode: Int): PendingIntent =
+        PendingIntent.getActivity(context, requestCode, intent(context, route), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+
+    /** Request codes of the notifications that open a page. */
+    const val CODE_STATUS = 100
+    const val CODE_TRUST = 101
+    const val CODE_CERT_NOTICE = 102
+    const val CODE_CERT_EXPIRY = 103
 
     /** The route [intent] asks for, or null when it has none or did not come through [ALIAS]. */
     fun routeOf(intent: Intent?): String? {

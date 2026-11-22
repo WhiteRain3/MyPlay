@@ -17,6 +17,7 @@ import net.prototux.aare.service.ProjectionService
 import java.text.DateFormat
 import java.util.Date
 import kotlin.concurrent.thread
+import net.prototux.aare.ui.phone.next.NextDeepLink
 
 /**
  * Keeps the Google-issued certificate usable, for head units that accept no other.
@@ -127,6 +128,7 @@ object CertificateUpdates {
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))
             .setAutoCancel(true)
+            .setContentIntent(NextDeepLink.pendingIntent(context, "more/advanced/certificates", NextDeepLink.CODE_CERT_EXPIRY))
         if (download) {
             val intent = PendingIntent.getService(context, NOTIFICATION_ID,
                 Intent(context, ProjectionService::class.java).setAction(ProjectionService.ACTION_DOWNLOAD_CERT),

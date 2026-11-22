@@ -55,7 +55,7 @@ import net.prototux.aare.transport.TcpServer
 import net.prototux.aare.transport.UsbAccessoryTransport
 import net.prototux.aare.transport.UsbReattach
 import net.prototux.aare.transport.wireless.WirelessConnector
-import net.prototux.aare.ui.MainActivity
+import net.prototux.aare.ui.phone.next.NextDeepLink
 
 /**
  * Keeps the car connection alive: owns at most one [CarSession], the transports that can start
@@ -585,7 +585,7 @@ class ProjectionService : Service() {
     private fun notification(text: String): Notification {
         // Screen-capture consent only lives as long as the service: say why it stays without a car.
         val shown = if (session == null && projection != null) getString(R.string.notif_keeping_consent_suffix, text) else text
-        val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+        val open = NextDeepLink.pendingIntent(this, "home", NextDeepLink.CODE_STATUS)
         val stop = PendingIntent.getService(this, 1, Intent(this, ProjectionService::class.java).setAction(ACTION_STOP), PendingIntent.FLAG_IMMUTABLE)
         return Notification.Builder(this, CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
@@ -616,6 +616,8 @@ class ProjectionService : Service() {
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))
             .setAutoCancel(true)
+            // A tap opens Home, whose hero shows the same Trust.
+            .setContentIntent(NextDeepLink.pendingIntent(this, "home", NextDeepLink.CODE_TRUST))
             .addAction(Notification.Action.Builder(null, getString(R.string.notif_action_trust), trust).build())
             .build())
     }
@@ -635,6 +637,7 @@ class ProjectionService : Service() {
             .setContentText(text)
             .setStyle(Notification.BigTextStyle().bigText(text))
             .setAutoCancel(!retry)
+            .setContentIntent(NextDeepLink.pendingIntent(this, "more/advanced/certificates", NextDeepLink.CODE_CERT_NOTICE))
         if (retry) {
             val download = PendingIntent.getService(this, CERT_DOWNLOAD_NOTIFICATION_ID,
                 Intent(this, ProjectionService::class.java).setAction(ACTION_DOWNLOAD_CERT),
