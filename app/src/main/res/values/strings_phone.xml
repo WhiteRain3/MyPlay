@@ -439,4 +439,5 @@
     <string name="phone_speed_mobile_confirm" translatable="false">The speed limit file is %1$s. Downloading it, and each monthly update, may then use that much mobile data.</string>
     <string name="phone_speed_mobile_confirm_unknown" translatable="false">The file\'s size could not be looked up just now. Downloading it, and each monthly update, may then use mobile data.</string>
     <string name="phone_speed_mobile_allow" translatable="false">Allow</string>
+    <string name="phone_speed_kept_unused" translatable="false">%1$s, from %2$s, kept but not used while no region is chosen</string>
 </resources>

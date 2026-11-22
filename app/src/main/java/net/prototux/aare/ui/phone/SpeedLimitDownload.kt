@@ -54,7 +54,18 @@ object SpeedLimitDownload {
 
     /** Whether a download may run now: on Wi-Fi, or on mobile data when the owner allowed it. */
     fun mayDownload(context: Context): Boolean =
-        mayDownload(unmetered(context), Settings(context).myplaySpeedLimitMobile) { roaming(context) }
+        hasInternet(context) && mayDownload(unmetered(context), Settings(context).myplaySpeedLimitMobile) { roaming(context) }
+
+    /**
+     * Whether the network has working internet (Android validated it). During a drive the phone is
+     * often on the head unit's Wi-Fi, which is unmetered but has no internet: nothing is tried there.
+     */
+    fun hasInternet(context: Context): Boolean {
+        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return false
+        val caps = cm.activeNetwork?.let { cm.getNetworkCapabilities(it) } ?: return false
+        return caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
 
     /** The rule: Wi-Fi always; mobile data only when allowed and not roaming ([roaming] asked only then). */
     fun mayDownload(unmetered: Boolean, mobileAllowed: Boolean, roaming: () -> Boolean): Boolean =
@@ -82,7 +93,8 @@ object SpeedLimitDownload {
     suspend fun checkIfDue(context: Context) {
         val settings = Settings(context)
         if (!SpeedLimitCheck.due(settings.myplaySpeedLimitRegion, settings.myplaySpeedLimitChecked, System.currentTimeMillis())) return
-        if (!mayDownload(context)) return
+        if (!mayDownload(context)) { DiagLog.add("speed limits: monthly look due, waiting for a network with internet"); return }
+        DiagLog.add("speed limits: monthly look")
         update(context, force = false)
     }
 
@@ -98,6 +110,8 @@ object SpeedLimitDownload {
             val result = withContext(Dispatchers.IO) { fetch(context, region) }
             // A failed try (a timeout, Wi-Fi lost midway) is tried again next time the app opens.
             if (SpeedLimitCheck.counts(result)) settings.myplaySpeedLimitChecked = System.currentTimeMillis()
+            // #5: every outcome in the connection log (downloads and failures already say more).
+            DiagLog.add("speed limits: look for the $region file ended: ${result.javaClass.simpleName}")
             _state.value = result
         } finally { busy.set(false) }
     }

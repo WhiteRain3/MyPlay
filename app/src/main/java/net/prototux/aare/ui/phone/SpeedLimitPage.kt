@@ -124,6 +124,20 @@ fun SpeedLimitPage() {
             HintLine(Icons.Rounded.Wifi, stringResource(R.string.phone_speed_wifi_only))
         }
         SpeedMarginChoice(settings)
+        // SL-15: with no region chosen, files kept from before can still be deleted here.
+        if (region.isEmpty()) {
+            val leftOver = remember(changes) { SpeedLimitFiles.REGIONS.mapNotNull { r -> SpeedLimitDownload.kept(ctx, r.id)?.let { r to it } } }
+            leftOver.forEach { (r, m) ->
+                RowGroup(rows = listOf {
+                    SimpleRow(Icons.Rounded.Map, r.name, TileTone.GREEN,
+                        stringResource(R.string.phone_speed_kept_unused, Formatter.formatShortFileSize(ctx, m.bytes), m.built)) {
+                        PillButton(stringResource(R.string.phone_speed_delete), main = false) {
+                            SpeedLimitDownload.delete(ctx, r.id, "the Delete button, no region chosen"); changes++
+                        }
+                    }
+                })
+            }
+        }
         HintLine(Icons.Rounded.Speed, stringResource(R.string.phone_speed_hint_only))
         HintLine(Icons.Rounded.Info, stringResource(R.string.phone_speed_offline))
         Text(stringResource(R.string.phone_osm_notice), color = PhoneColors.Muted, fontSize = 12.sp)
