@@ -375,6 +375,13 @@ interface MyPlaySkin {
      * counting them would make the map jump each time, so by default they do not.
      */
     fun coversMap(slot: Slot): Boolean = slot != Slot.CHOOSER && slot != Slot.WORLD
+
+    /**
+     * MC-1: the map's free area is centred on the screen (MapGeometry.centred), so the app's arrow
+     * is in the middle. Then only the hard parts count: the slots [coversMap] names, and what the
+     * skin marks itself (a disc beside its text); text may lie over the map.
+     */
+    val mapAreaCentred: Boolean get() = false
 }
 
 internal val LocalSkinTokens = staticCompositionLocalOf<SkinTokens> { error("no MyPlay skin") }

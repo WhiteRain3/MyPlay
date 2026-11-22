@@ -2,6 +2,8 @@ package net.prototux.aare.host.templates
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -49,6 +51,12 @@ internal class MapCoverRegistry {
         if (now) shown[key] = rect else shown.remove(key)
     }
 
+    /**
+     * MC-1: the skin wants the free area centred on the screen ([MapGeometry.centred]): only the
+     * hard parts it marks count, and the app's arrow sits in the middle.
+     */
+    var centred by androidx.compose.runtime.mutableStateOf(false)
+
     fun remove(key: Any) {
         shown.remove(key)
         reserved.remove(key)
@@ -87,7 +95,14 @@ internal object MapAreas {
      * around [shown]; the stable area is the largest free rectangle inside the visible area that
      * is clear of every reserved place (M2-2), so it always nests in the visible area.
      */
-    fun compute(map: MapGeometry.Box, shown: List<MapGeometry.Box>, reserved: List<MapGeometry.Box>): Areas {
+    fun compute(map: MapGeometry.Box, shown: List<MapGeometry.Box>, reserved: List<MapGeometry.Box>, centred: Boolean = false, minGutter: Float = 0f): Areas {
+        if (centred) {
+            // MC-1: both centred on the screen; the stable one inside the visible one (M2-2).
+            val gutter = maxOf(minGutter, map.width * MapGeometry.CENTRED_GUTTER)
+            val visible = MapGeometry.centred(map, shown, gutter)
+            val stable = MapGeometry.centred(map, shown + reserved, gutter).intersect(visible) ?: visible
+            return Areas(visible, stable)
+        }
         val visible = MapGeometry.unobstructed(map, shown)
         val stable = MapGeometry.unobstructed(visible, reserved)
         return Areas(visible, stable)

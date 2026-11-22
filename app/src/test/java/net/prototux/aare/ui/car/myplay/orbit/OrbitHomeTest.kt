@@ -180,7 +180,7 @@ class OrbitHomeTest {
                     }
                 }) {
                     CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
-                        navMap = { _, m -> Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
+                        navMap = { _, m -> covers = net.prototux.aare.host.templates.LocalMapCovers.current; Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
                 }
             }
         }
@@ -577,6 +577,43 @@ class OrbitHomeTest {
         val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap()
         val dir = File("build/reports/myplay-screens").apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** What the engine tells the map covers it (MC-1). */
+    private var covers: net.prototux.aare.host.templates.MapCoverRegistry? = null
+
+    /** MC-1: the free area the maps app would be told, from what ORBIT marks, on the whole screen. */
+    private fun freeArea(): net.prototux.aare.host.templates.MapGeometry.Box {
+        val c = rule.runOnIdle { covers }!!
+        org.junit.Assert.assertTrue("ORBIT centres the free area", c.centred)
+        val s = rule.onNodeWithTag(ENGINE_TAG).fetchSemanticsNode().boundsInRoot
+        fun boxes(m: Map<Any, androidx.compose.ui.geometry.Rect>) = m.values.map { net.prototux.aare.host.templates.MapGeometry.Box(it.left, it.top, it.right, it.bottom) }
+        return net.prototux.aare.host.templates.MapAreas.compute(net.prototux.aare.host.templates.MapGeometry.Box(s.left, s.top, s.right, s.bottom),
+            boxes(c.shown), boxes(c.reserved), centred = true, minGutter = 16f).visible
+    }
+
+    /** MC-1: with the turn, the hub's speed and limit, the clock and the song, Waze's area is centred and nearly full height. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theMapsFreeAreaIsCentred() {
+        val state = show(speed = SpeedReading(64, SpeedReading.From.CAR, LimitShown.Known(50), over = true))
+        rule.runOnIdle { state.phoneGuidance = net.prototux.aare.notify.PhoneGuidance("k", "mock.maps", "Maps", "300 m", "Main Street", "", null, null, "") }
+        rule.waitForIdle()
+        val free = freeArea()
+        org.junit.Assert.assertEquals(640f, (free.left + free.right) / 2, 0.5f)
+        org.junit.Assert.assertEquals(360f, (free.top + free.bottom) / 2, 0.5f)
+        org.junit.Assert.assertEquals("left $free", 288f, free.left, 1f)
+        org.junit.Assert.assertEquals("top $free", 43.2f, free.top, 1f)
+        // Clear of the discs, the hub and the clock; the song's title may lie over it.
+        for (tag in listOf(STOP_HUB, OrbitSkin.SONG_RING_TAG, net.prototux.aare.ui.car.myplay.SLOT_STATUS)) {
+            val b = rule.onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            org.junit.Assert.assertNull("$tag $b", net.prototux.aare.host.templates.MapGeometry.Box(b.left, b.top, b.right, b.bottom).intersect(free))
+        }
+        // The picture with the area outlined, for a look.
+        val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap().copy(Bitmap.Config.ARGB_8888, true)
+        android.graphics.Canvas(bmp).drawRect(free.left, free.top, free.right, free.bottom,
+            android.graphics.Paint().apply { style = android.graphics.Paint.Style.STROKE; strokeWidth = 4f; color = android.graphics.Color.YELLOW })
+        val dir = File("build/reports/myplay-screens").apply { mkdirs() }
+        File(dir, "orbit_free_area_centred.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     /** A picture of the screen as it is now. */

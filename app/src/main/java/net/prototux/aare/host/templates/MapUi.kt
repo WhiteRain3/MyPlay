@@ -208,13 +208,14 @@ private fun CompactMapScaffold(modifier: Modifier, overlay: (@Composable BoxWith
 private fun ReportAreas(registry: ObstructionRegistry, panState: androidx.compose.runtime.State<Boolean>) {
     val host = LocalTemplateHost.current
     val covers = LocalMapCovers.current
-    LaunchedEffect(registry, host, covers) {
+    val minGutter = with(androidx.compose.ui.platform.LocalDensity.current) { MapGeometry.CENTRED_MIN_GUTTER_DP.dp.toPx() }
+    LaunchedEffect(registry, host, covers, minGutter) {
         var lastVisible: List<Int>? = null
         var lastStable: List<Int>? = null
         var logged = 0 // MyPlay: lines written to the connection log for this map
         snapshotFlow {
             listOf(registry.map, registry.rects.values.toList(), panState.value,
-                covers?.shown?.values?.toList().orEmpty(), covers?.reserved?.values?.toList().orEmpty())
+                covers?.shown?.values?.toList().orEmpty(), covers?.reserved?.values?.toList().orEmpty(), covers?.centred)
         }
             .distinctUntilChanged()
             .collect { _ ->
@@ -223,7 +224,7 @@ private fun ReportAreas(registry: ObstructionRegistry, panState: androidx.compos
                 if (map.width <= 0f || map.height <= 0f) return@collect
                 val shown = registry.rects.values.map { it.toBox() } + covers?.shown?.values?.map { it.toBox() }.orEmpty()
                 val reserved = covers?.reserved?.values?.map { it.toBox() }.orEmpty()
-                val areas = MapAreas.compute(map.toBox(), shown, reserved)
+                val areas = MapAreas.compute(map.toBox(), shown, reserved, centred = covers?.centred == true, minGutter = minGutter)
                 val area = MapAreas.inSurface(map.toBox(), areas.visible)
                 val visibleChanged = area != lastVisible
                 if (visibleChanged) {

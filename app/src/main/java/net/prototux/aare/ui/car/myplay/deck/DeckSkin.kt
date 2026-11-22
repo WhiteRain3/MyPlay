@@ -142,6 +142,11 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
     /** O7 is ORBIT's: DECK (frozen, a hand, no dial) keeps all six. */
     override val dial: List<World>? get() = null
 
+    /** MC-1 is ORBIT's: DECK (frozen) keeps the largest free area, every slot counted. */
+    override val mapAreaCentred get() = false
+    override fun coversMap(slot: net.prototux.aare.ui.car.myplay.Slot): Boolean =
+        slot != net.prototux.aare.ui.car.myplay.Slot.CHOOSER && slot != net.prototux.aare.ui.car.myplay.Slot.WORLD
+
     /** O8 is ORBIT's: DECK (frozen) keeps its speed under the status. */
     override val speedInHub get() = false
 

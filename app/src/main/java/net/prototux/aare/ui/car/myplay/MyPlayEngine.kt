@@ -510,6 +510,8 @@ internal fun MyPlayEngineShell(
     val currentApps by rememberUpdatedState(apps)
     val currentMusicActions by rememberUpdatedState(musicActions)
     val covers = remember { MapCoverRegistry() }
+    // MC-1: the skin's free area, centred or the largest.
+    androidx.compose.runtime.SideEffect { covers.centred = skin.mapAreaCentred }
     val focus = remember { FocusRequester() }
     // Not in the phone's picture of the car screen: it must not pull focus into the phone's own UI.
     LaunchedEffect(Unit) { if (!sources.picture) runCatching { focus.requestFocus() } }

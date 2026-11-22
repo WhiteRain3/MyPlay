@@ -1,5 +1,6 @@
 package net.prototux.aare.ui.car.myplay.orbit
 
+import net.prototux.aare.host.templates.coversMap
 import androidx.compose.ui.graphics.toArgb
 
 import androidx.compose.ui.graphics.nativeCanvas
@@ -148,6 +149,7 @@ import net.prototux.aare.media.LibraryRow
 import net.prototux.aare.ui.car.myplay.MyPlaySkin
 import net.prototux.aare.ui.car.myplay.upNextStop
 import net.prototux.aare.ui.car.myplay.SkinTokens
+import net.prototux.aare.ui.car.myplay.Slot
 import net.prototux.aare.ui.car.myplay.SongSlot
 import net.prototux.aare.ui.car.myplay.TripSlot
 import net.prototux.aare.ui.car.myplay.TurnDirection
@@ -265,7 +267,7 @@ object OrbitSkin : MyPlaySkin {
             val g = glass()
             val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
             Row(Modifier.carPart(CarPart.OrbitTurn), verticalAlignment = Alignment.CenterVertically) {
-                OrbitDisc(132.dp, LocalSkinTokens.current.night, Modifier.orbitFocus(LocalStopRinged.current, nav, g.halo), fill = nav, edge = nav) {
+                OrbitDisc(132.dp, LocalSkinTokens.current.night, Modifier.coversMap().orbitFocus(LocalStopRinged.current, nav, g.halo), fill = nav, edge = nav) {
                     val arrow = turn.arrow
                     if (arrow != null) {
                         val image = remember(arrow) { arrow.asImageBitmap() }
@@ -296,6 +298,15 @@ object OrbitSkin : MyPlaySkin {
         TurnDirection.U_TURN_RIGHT -> Icons.Rounded.UTurnRight
         null -> Icons.Rounded.Navigation
     }
+
+    /**
+     * MC-1 (the owner: Waze's free area centred, the song's text may lie over the map): the free
+     * area is centred on the screen, and only ORBIT's hard parts count: the hub, the clock and
+     * battery, and the turn's and the song's discs (marked in [Turn] and [Song]). The texts beside
+     * the discs, the alert pill and the music panel (both come and go) do not.
+     */
+    override val mapAreaCentred get() = true
+    override fun coversMap(slot: Slot): Boolean = slot == Slot.HUB || slot == Slot.STATUS || slot == Slot.SPEED
 
     /** AL-1: ORBIT draws the maps app's alerts itself, compact, in the free lower middle. */
     override val drawsMapAlerts get() = true
@@ -440,7 +451,7 @@ object OrbitSkin : MyPlaySkin {
                 }
                 Spacer(Modifier.width(10.dp))
                 val musicColour = Orbit.accent(World.MUSIC, LocalSkinTokens.current.night)
-                OrbitRing(progress, 152.dp, 7.dp, musicColour, g.track, Modifier.testTag(SONG_RING_TAG).progressSemantics(progress).orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
+                OrbitRing(progress, 152.dp, 7.dp, musicColour, g.track, Modifier.coversMap().testTag(SONG_RING_TAG).progressSemantics(progress).orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
                     val art = song.art
                     if (art != null) {
                         val image = remember(art) { art.asImageBitmap() }

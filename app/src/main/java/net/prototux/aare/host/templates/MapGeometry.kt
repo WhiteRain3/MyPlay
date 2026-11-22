@@ -55,6 +55,70 @@ internal object MapGeometry {
         return best ?: greedy(map, obs)
     }
 
+    /**
+     * MC-1 (the owner: "the map's free area centred", for ORBIT): the free area as a rectangle
+     * centred on [map]'s middle, so the app's arrow sits in the middle of the screen. Its half
+     * height is at most the map's less a [margin] (a share of the height) at the top and the bottom;
+     * its half width is the distance from the middle to the nearest [hard] part beside the span it
+     * covers, less a [gutter]. It is never flatter than [minAspect] (width over height): the tallest
+     * such rectangle is kept. A part that crosses the middle line limits the height instead (it is
+     * not beside the span but in it). Only the parts given count: text the map may lie under (the
+     * song's title) is left out by the caller. Pure.
+     */
+    fun centred(map: Box, hard: List<Box>, gutter: Float, margin: Float = CENTRED_MARGIN, minAspect: Float = CENTRED_MIN_ASPECT): Box {
+        val cx = (map.left + map.right) / 2
+        val cy = (map.top + map.bottom) / 2
+        val hhMax = map.height / 2 - map.height * margin
+        if (map.width <= 0f || hhMax <= 0f) return map
+        // Each part, grown by the gutter: from which half height it is level with the span, and the
+        // half width it then leaves (0 when it crosses the middle line: the span must stop short of it).
+        class Part(val from: Float, val room: Float)
+        val parts = hard.mapNotNull { it.intersect(map) }.map { o ->
+            val from = when {
+                o.top - gutter >= cy -> o.top - gutter - cy
+                o.bottom + gutter <= cy -> cy - (o.bottom + gutter)
+                else -> 0f
+            }
+            val room = when {
+                o.left >= cx -> o.left - gutter - cx
+                o.right <= cx -> cx - (o.right + gutter)
+                else -> 0f
+            }.coerceAtLeast(0f)
+            Part(from, room)
+        }.sortedBy { it.from }
+        val wide = map.width / 2
+        // The half width is a step function of the half height (it narrows each time a part comes
+        // level): in each step the tallest half height that keeps the shape is min(the step's end,
+        // the half width / minAspect); the tallest over the steps is the answer.
+        var bestHh = 0f
+        var bestHw = 0f
+        var room = wide
+        var start = 0f
+        var i = 0
+        while (start < hhMax) {
+            while (i < parts.size && parts[i].from <= start) { room = minOf(room, parts[i].room); i++ }
+            val end = if (i < parts.size) minOf(parts[i].from, hhMax) else hhMax
+            val hh = minOf(end, room / minAspect)
+            if (hh > start && hh > bestHh && room > 0f) { bestHh = hh; bestHw = room }
+            if (room <= 0f) break
+            start = end
+        }
+        if (bestHh <= 0f || bestHw <= 0f) return unobstructed(map, hard)
+        return Box(cx - bestHw, cy - bestHh, cx + bestHw, cy + bestHh)
+    }
+
+    /** MC-1: the share of the height kept free at the top and at the bottom. */
+    const val CENTRED_MARGIN = 0.06f
+
+    /** MC-1: the centred area is at least this wide for its height (the app needs width). */
+    const val CENTRED_MIN_ASPECT = 0.9f
+
+    /** MC-1: the gap kept between the centred area and a part: this share of the width, or more. */
+    const val CENTRED_GUTTER = 0.025f
+
+    /** MC-1: the smallest gap, in dp. */
+    const val CENTRED_MIN_GUTTER_DP = 16
+
     /** More obstacles than this: the greedy cut below (never on MyPlay's screens). */
     private const val MAX_EXACT = 10
 
