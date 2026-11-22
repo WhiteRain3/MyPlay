@@ -512,14 +512,17 @@ object OrbitSkin : MyPlaySkin {
                 // N5-3: no level shown when the phone does not tell it, never "0%".
                 val battery = rememberPhoneStatus()?.takeIf { it.batteryKnown }
                 val ice = LocalRoadIce.current
-                if (battery != null || ice) {
+                run {
                     val night = LocalSkinTokens.current.night
                     Row(
                         Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        // Drive warnings: 4 °C or less outside. On the battery's row, so the clock's width and the map's free area stay as they are.
-                        if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(30.dp).testTag(ICE_TAG), tint = Orbit.warning(night))
+                        // Drive warnings: 4 °C or less outside. DW-1: its place is always kept (empty when
+                        // warm), so the column's size, and with it the map's free area, never changes because of it.
+                        Box(Modifier.size(30.dp).testTag(ICE_SLOT_TAG)) {
+                            if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(30.dp).testTag(ICE_TAG), tint = Orbit.warning(night))
+                        }
                         battery?.let { s ->
                             val colour = if (batteryLow(s.battery, s.charging)) Orbit.warning(night) else nav
                             Row(
@@ -1237,6 +1240,8 @@ object OrbitSkin : MyPlaySkin {
     const val BATTERY_TAG = "orbit_battery"
     /** Drive warnings: the ice sign beside the battery. */
     const val ICE_TAG = "orbit_ice"
+    /** DW-1: the ice sign's place, kept whether it shows or not. */
+    const val ICE_SLOT_TAG = "orbit_ice_slot"
     const val SONG_ART_TAG = "orbit_song_art"
     const val SONG_ART_FALLBACK_TAG = "orbit_song_art_fallback"
     const val TRIP_RING_TAG = "orbit_trip_ring"
