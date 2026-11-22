@@ -52,11 +52,20 @@ object SpeedLimitDownload {
         SpeedLimitManifest.parse(runCatching { SpeedLimitFiles.manifestFile(context.filesDir, region).readText() }.getOrNull())
             ?.takeIf { SpeedLimitFiles.file(context.filesDir, region).isFile }
 
+    /** Whether a download may run now: on Wi-Fi, or on mobile data when the owner allowed it. */
+    fun mayDownload(context: Context): Boolean = unmetered(context) || Settings(context).myplaySpeedLimitMobile
+
+    /** The region's file description from the release page, for its size before a download (small, any network); null if unknown. */
+    suspend fun lookUp(region: String): SpeedLimitManifest? = withContext(Dispatchers.IO) {
+        runCatching { SpeedLimitManifest.parse(String(get(SpeedLimitFiles.manifestUrl(SpeedLimitFiles.known(region).ifEmpty { return@runCatching null })), Charsets.UTF_8)) }
+            .getOrNull()?.takeIf { it.region == region }
+    }
+
     /** The look a month after the last one (called when the app or the page opens); quiet when it is not due or not on Wi-Fi. */
     suspend fun checkIfDue(context: Context) {
         val settings = Settings(context)
         if (!SpeedLimitCheck.due(settings.myplaySpeedLimitRegion, settings.myplaySpeedLimitChecked, System.currentTimeMillis())) return
-        if (!unmetered(context)) return
+        if (!mayDownload(context)) return
         update(context, force = false)
     }
 
@@ -65,7 +74,7 @@ object SpeedLimitDownload {
         val settings = Settings(context)
         val region = settings.myplaySpeedLimitRegion
         if (region.isEmpty()) return
-        if (!unmetered(context)) { if (force) _state.value = State.NeedsWifi; return }
+        if (!mayDownload(context)) { if (force) _state.value = State.NeedsWifi; return }
         if (!busy.compareAndSet(false, true)) return
         try {
             _state.value = State.Checking

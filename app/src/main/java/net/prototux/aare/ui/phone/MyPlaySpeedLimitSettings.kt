@@ -22,6 +22,12 @@ var Settings.myplaySpeedLimitChecked: Long
     get() = prefs.getLong(KEY_SPEED_LIMIT_CHECKED, 0)
     set(v) = prefs.edit { putLong(KEY_SPEED_LIMIT_CHECKED, v) }
 
+/** Whether the file may also be downloaded on mobile data (the owner's choice; Wi-Fi only by default). Backed up. */
+var Settings.myplaySpeedLimitMobile: Boolean
+    get() = prefs.getBoolean(KEY_SPEED_LIMIT_MOBILE, false)
+    set(v) = prefs.edit { putBoolean(KEY_SPEED_LIMIT_MOBILE, v) }
+
+const val KEY_SPEED_LIMIT_MOBILE = "myplay_speed_limit_mobile"
 const val KEY_SPEED_LIMIT_REGION = "myplay_speed_limit_region"
 const val KEY_SPEED_LIMIT_CHECKED = "myplay_speed_limit_checked"
 

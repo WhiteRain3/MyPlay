@@ -124,3 +124,18 @@ class SpeedSourceChoiceTest {
         assertEquals(SPEED_SOURCE_NAMES.size, SPEED_SOURCE_NAMES.map { it.first }.distinct().size)
     }
 }
+
+@org.junit.runner.RunWith(org.robolectric.RobolectricTestRunner::class)
+@org.robolectric.annotation.Config(sdk = [35])
+class SpeedLimitMobileTest {
+    @Test
+    fun mobileDataIsOffUntilAllowed() {
+        val ctx = androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+        val s = net.prototux.aare.Settings(ctx)
+        assertFalse(s.myplaySpeedLimitMobile)
+        s.myplaySpeedLimitMobile = true
+        assertTrue(s.myplaySpeedLimitMobile)
+        assertTrue(SpeedLimitDownload.mayDownload(ctx))
+        assertTrue(KEY_SPEED_LIMIT_MOBILE in net.prototux.aare.SettingsBackup.ALLOWED)
+    }
+}

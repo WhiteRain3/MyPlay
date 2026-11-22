@@ -56,6 +56,8 @@ fun SpeedLimitPage() {
     val settings = remember { Settings(ctx) }
     val scope = rememberCoroutineScope()
     var region by remember { mutableStateOf(settings.myplaySpeedLimitRegion) }
+    var mobile by remember { mutableStateOf(settings.myplaySpeedLimitMobile) }
+    var askMobile by remember { mutableStateOf<Long?>(null) } // the file's size while asking; -1 when not known
     val state by SpeedLimitDownload.state.collectAsState()
     // Read again after each download or delete.
     var changes by remember { mutableIntStateOf(0) }
@@ -97,6 +99,28 @@ fun SpeedLimitPage() {
                 if (kept != null) PillButton(stringResource(R.string.phone_speed_delete), main = false) {
                     SpeedLimitDownload.delete(ctx, region); changes++
                 }
+            }
+            // The owner may let it download on mobile data too: asked once, with the file's size.
+            RowGroup(rows = listOf {
+                SwitchRow(Icons.Rounded.Download, stringResource(R.string.phone_speed_mobile_title), mobile, TileTone.AMBER,
+                    stringResource(R.string.phone_speed_mobile_hint)) { on ->
+                    if (!on) { mobile = false; settings.myplaySpeedLimitMobile = false }
+                    else scope.launch { askMobile = SpeedLimitDownload.lookUp(region)?.bytes ?: -1L }
+                }
+            })
+            askMobile?.let { bytes ->
+                androidx.compose.material3.AlertDialog(
+                    onDismissRequest = { askMobile = null },
+                    title = { Text(stringResource(R.string.phone_speed_mobile_title)) },
+                    text = { Text(if (bytes > 0) stringResource(R.string.phone_speed_mobile_confirm, Formatter.formatShortFileSize(ctx, bytes))
+                        else stringResource(R.string.phone_speed_mobile_confirm_unknown)) },
+                    confirmButton = {
+                        androidx.compose.material3.TextButton(onClick = { askMobile = null; mobile = true; settings.myplaySpeedLimitMobile = true }) {
+                            Text(stringResource(R.string.phone_speed_mobile_allow))
+                        }
+                    },
+                    dismissButton = { androidx.compose.material3.TextButton(onClick = { askMobile = null }) { Text(stringResource(R.string.common_cancel)) } },
+                )
             }
             HintLine(Icons.Rounded.Wifi, stringResource(R.string.phone_speed_wifi_only))
         }

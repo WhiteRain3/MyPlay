@@ -374,12 +374,12 @@
     <string name="phone_speed_downloading" translatable="false">Downloading…</string>
     <string name="phone_speed_up_to_date" translatable="false">The file is up to date.</string>
     <string name="phone_speed_done" translatable="false">Downloaded.</string>
-    <string name="phone_speed_needs_wifi" translatable="false">Connect to Wi-Fi to download it.</string>
+    <string name="phone_speed_needs_wifi" translatable="false">Connect to Wi-Fi to download it, or allow mobile data below.</string>
     <string name="phone_speed_failed" translatable="false">The file could not be downloaded. Try again later.</string>
     <string name="phone_speed_download" translatable="false">Download</string>
     <string name="phone_speed_look_now" translatable="false">Look for a newer one</string>
     <string name="phone_speed_delete" translatable="false">Delete</string>
-    <string name="phone_speed_wifi_only" translatable="false">Downloaded on Wi-Fi only, from MyPlay\'s own release page. Looked for again once a month, when MyPlay is opened. Choosing another region, or none, deletes the old file.</string>
+    <string name="phone_speed_wifi_only" translatable="false">Downloaded on Wi-Fi only unless allowed above, from MyPlay\'s own release page. Looked for again once a month, when MyPlay is opened. Choosing another region, or none, deletes the old file.</string>
     <string name="phone_speed_hint_only" translatable="false">The limit is a hint; the signs on the road win. OpenStreetMap does not know every limit: it misses road works, variable motorway signs and some limits by time or weather, and a match can be wrong at junctions or on roads side by side.</string>
     <string name="phone_speed_offline" translatable="false">The file is used offline on the phone: the car\'s position is never sent anywhere to find a limit.</string>
     <string name="phone_osm_notice" translatable="false">Speed limit data © OpenStreetMap contributors, available under the Open Database Licence (ODbL) 1.0: openstreetmap.org/copyright</string>
@@ -434,4 +434,9 @@
     <string name="phone_youtube_app_hint" translatable="false">The real YouTube app, as a phone app on the car screen: parked only, with root or Shizuku. Turning it on also turns on phone apps on the car screen. While it is on, the car leaves out the YouTube website entry, so there is only one YouTube.</string>
     <string name="phone_youtube_app_needs_root" translatable="false">The real YouTube app, as a phone app on the car screen: parked only. Needs root or Shizuku, which this phone does not give MyPlay yet.</string>
     <string name="phone_youtube_app_also" translatable="false">This also turns on phone apps on the car screen, with any other apps chosen below.</string>
+    <string name="phone_speed_mobile_title" translatable="false">Download on mobile data</string>
+    <string name="phone_speed_mobile_hint" translatable="false">Off: Wi-Fi only. On: the file and its monthly update may also use mobile data.</string>
+    <string name="phone_speed_mobile_confirm" translatable="false">The speed limit file is %1$s. Downloading it, and each monthly update, may then use that much mobile data.</string>
+    <string name="phone_speed_mobile_confirm_unknown" translatable="false">The file\'s size could not be looked up just now. Downloading it, and each monthly update, may then use mobile data.</string>
+    <string name="phone_speed_mobile_allow" translatable="false">Allow</string>
 </resources>

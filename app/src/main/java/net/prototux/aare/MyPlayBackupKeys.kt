@@ -50,5 +50,6 @@ internal object MyPlayBackupKeys {
         "myplay_button_codes" to Type.STRING,
         "myplay_looks" to Type.STRING, // the owner's saved looks (phone, F7)
         "myplay_speed_limit_region" to Type.STRING, // which region's speed limit file to keep (phone, N21)
+        "myplay_speed_limit_mobile" to Type.BOOLEAN, // the speed limit file may download on mobile data (phone)
     )
 }
