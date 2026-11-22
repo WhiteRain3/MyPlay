@@ -22,6 +22,7 @@ internal object MyPlayBackupKeys {
         "myplay_gesture_line" to Type.BOOLEAN, // the line after a button gesture (R6)
         "myplay_speed_source" to Type.STRING, // where the car screen's speed comes from (N3)
         "myplay_engine_language" to Type.STRING, // the new car screen's design language, ORBIT or DECK (N13)
+        "myplay_home_pad" to Type.STRING, // what ORBIT's home pad opens while the ring is hidden (O6)
         "myplay_panel_timeout" to Type.INT, // seconds before a panel over the map closes by itself, 0 never (O2)
         "myplay_speed_limit_margin" to Type.INT, // how far over the limit before the speed changes colour (N20)
         "myplay_map_filter" to Type.STRING, // the map colour filter, one of a look's settings

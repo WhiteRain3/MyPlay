@@ -171,6 +171,10 @@ internal fun MyPlayEngineShell(
     // O1-1: keyed on the skin, so a new language (DECK has no song slot to draw it) starts closed.
     var panelOpen by remember(skin.id) { mutableStateOf(false) }
     var panelChosen by remember(skin.id) { mutableStateOf(PANEL_PLAY) }
+    // O6: the home pad opens things directly while the knob's ring is hidden; a turn shows the ring.
+    val padMap = state.homePad
+    val padHome = hand == null && HomePad.active(padMap)
+    var ringAwake by remember(skin.id) { mutableStateOf(false) }
     val actionsOf: Map<String, () -> Unit> = buildMap {
         if (notes.unseen > 0 && model.place == Place.Home && !listOpen) put(STOP_BELL) { listOpen = true; listChosen = null; notes.markSeen() }
         if (notice != null && model.place == Place.Home) {
@@ -283,6 +287,12 @@ internal fun MyPlayEngineShell(
         delay(idleMs)
         if (panelOpen) { panelOpen = false; chosen = STOP_SONG }
         if (model.place is Place.Chooser) model.back()
+    }
+    // O6: the ring hides again after the panel time without input (8 s when panels never close).
+    LaunchedEffect(ringAwake, inputs, idleMs) {
+        if (!ringAwake) return@LaunchedEffect
+        delay(idleMs ?: 8_000L)
+        ringAwake = false
     }
     fun padPanel(dir: FocusGraph.Direction) {
         val sideways = dir == FocusGraph.Direction.LEFT || dir == FocusGraph.Direction.RIGHT
@@ -490,6 +500,18 @@ internal fun MyPlayEngineShell(
     // Declared later, so it comes first: Back goes up the library, then out of it.
     BackHandler(enabled = lib != null) { if (lib?.canGoBack == true) lib.back() else library = null }
 
+    /** O6: what a home pad key does while the ring is hidden. */
+    fun runPad(action: HomePadAction) {
+        when (action) {
+            HomePadAction.MUSIC -> if (slots.song != null) { panelOpen = true; panelChosen = PANEL_PLAY } else { model.enter(World.MUSIC); freshWorld(World.MUSIC) }
+            HomePadAction.MAPS -> { memory.origin = null; openMaps() }
+            HomePadAction.DIAL -> model.push()
+            HomePadAction.APPS -> { model.enter(World.APPS); freshWorld(World.APPS) }
+            HomePadAction.CALLS -> openCalls()
+            HomePadAction.NOTHING -> Unit
+        }
+    }
+
     fun onKey(key: Key, shift: Boolean): Boolean = if (ringing) {
         // R5-2: the engine's own ring is left where it was, so it is there again once the call is answered or declined.
         val live = callBoxes.filterKeys { it in callActions }
@@ -523,7 +545,14 @@ internal fun MyPlayEngineShell(
         }
         key in WORLD_KEYS
     } else when (val p = model.place) {
-        Place.Home -> when (key) {
+        Place.Home -> if (padHome && !ringAwake && notice == null && call == null && padKeyOf(key)?.let { padMap[it] != HomePadAction.NOTHING } == true) {
+            runPad(padMap.getValue(padKeyOf(key)!!))
+            true
+        } else if (padHome && !ringAwake && notice == null && key == Key.Tab) {
+            // The first turn only shows the ring, where it was.
+            ringAwake = true
+            true
+        } else when (key) {
             Key.Tab -> { if (hand != null && ring == STOP_HUB) swing(if (shift) -1 else 1, knob = true) else move(FocusGraph.knob(live, ring, if (shift) -1 else 1)); true }
             // N13: on the hand, left and right swing it; past its ends they move on as elsewhere.
             Key.DirectionLeft, Key.DirectionRight -> if (hand != null && ring == STOP_HUB) {
@@ -651,7 +680,8 @@ internal fun MyPlayEngineShell(
                     if (nav != null) navMap(nav, Modifier.fillMaxSize()) else Wallpaper(state, Modifier.fillMaxSize())
                 }
                 val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)
-                val showRing = model.place == Place.Home && CarFocusVisibility.keyInput && !panelOpen
+                val showRing = model.place == Place.Home && CarFocusVisibility.keyInput && !panelOpen &&
+                    (!padHome || ringAwake || notice != null || call != null)
                 // O4: shades only behind the parts shown (DECK, frozen, keeps both).
                 skin.Backdrop(if (hand != null) BackdropParts(turn = true, song = true)
                     else BackdropParts(turn = slots.turn != null && model.place !is Place.InWorld, song = slots.song != null && model.place !is Place.InWorld && !listOpen),
@@ -969,3 +999,12 @@ internal fun libraryRowTag(i: Int) = "library_row_$i"
 
 /** An app's disc in the Apps world (its test tag). */
 internal fun appTag(app: CarAppEntry) = "app_${app.id}"
+
+/** O6: the home pad key a key is, or null. */
+internal fun padKeyOf(key: Key): HomePadKey? = when (key) {
+    Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> HomePadKey.CENTER
+    Key.DirectionUp -> HomePadKey.UP
+    Key.DirectionDown -> HomePadKey.DOWN
+    Key.DirectionLeft, Key.DirectionRight -> HomePadKey.SIDE
+    else -> null
+}

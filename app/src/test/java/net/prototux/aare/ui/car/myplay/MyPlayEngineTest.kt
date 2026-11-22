@@ -435,6 +435,75 @@ class MyPlayEngineTest {
         assertEquals(15, PanelTimeout.valid(15))
     }
 
+    /** O6: the home pad opens things while the ring is hidden; a turn shows the ring, which hides again. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theHomePadOpensThingsDirectly() {
+        val state = show()
+        rule.runOnIdle { state.homePad = HomePad.DEFAULT }
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        fun back() { rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }; rule.waitForIdle() }
+        // Centre: the music panel.
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        back()
+        // A side: the dial.
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+        back()
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+        back()
+        // Up: the maps app.
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
+        assertEquals(listOf("app:maps"), asked)
+        // Down does nothing by default (it moves the ring, as before, and shows it).
+        // A turn shows the ring where it was (the song, since the panel closed), without moving it;
+        // then the pad moves it as before, and a push is the ringed stop's.
+        engine.performKeyInput { pressKey(Key.Tab) }
+        rule.onNodeWithTag(STOP_SONG).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+        back()
+        // The ring hides again after the panel time; the push is the music panel's again.
+        rule.mainClock.advanceTimeBy(5_500)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+    }
+
+    /** O6: with nothing playing, the centre opens the Music world; a remapped key does its new thing. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theHomePadFollowsItsMapping() {
+        val state = show()
+        rule.runOnIdle {
+            state.nowPlaying = null
+            state.homePad = HomePad.decode("center=music;up=apps;side=calls;down=dial")
+        }
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        fun back() { rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }; rule.waitForIdle() }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC).assertExists()
+        while (rule.onAllNodes(hasTestTag(STOP_HUB)).fetchSemanticsNodes().isEmpty() || rule.onAllNodes(hasTestTag(SLOT_CHOOSER)).fetchSemanticsNodes().isNotEmpty()) back()
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        while (rule.onAllNodes(hasTestTag(STOP_HUB)).fetchSemanticsNodes().isEmpty() || rule.onAllNodes(hasTestTag(SLOT_CHOOSER)).fetchSemanticsNodes().isNotEmpty()) back()
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    @Test fun theHomePadsMappingIsStoredAndDefaulted() {
+        assertEquals(HomePad.DEFAULT, HomePad.decode(null))
+        assertEquals(HomePad.DEFAULT, HomePad.decode("junk;up=nonsense"))
+        val m = HomePad.decode("up=calls")
+        assertEquals(HomePadAction.CALLS, m[HomePadKey.UP])
+        assertEquals(HomePadAction.MUSIC, m[HomePadKey.CENTER])
+        assertEquals(m, HomePad.decode(HomePad.encode(m)))
+        assertTrue(!HomePad.active(HomePadKey.entries.associateWith { HomePadAction.NOTHING }))
+    }
+
     /** O1-1: a new language while the panel is open (DECK has no song slot): the panel is gone, the knob is the home's. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun aNewLanguageClosesThePanel() {
