@@ -136,6 +136,9 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
     /** O3 is ORBIT's: DECK (frozen) keeps the rail beside an app. */
     override val appRail get() = true
 
+    /** AL-1 is ORBIT's: DECK (frozen) keeps the default alert card. */
+    override val drawsMapAlerts get() = false
+
     /** O7 is ORBIT's: DECK (frozen, a hand, no dial) keeps all six. */
     override val dial: List<World>? get() = null
 

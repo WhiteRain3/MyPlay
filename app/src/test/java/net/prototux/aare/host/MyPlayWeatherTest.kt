@@ -48,4 +48,15 @@ class MyPlayWeatherTest {
         assertFalse(wanted(CarLayout.MAP_BEHIND, showWeather = false, s = withClock))
         assertFalse(wanted(CarLayout.MAP_BEHIND, showWeather = true, s = without))
     }
+
+    /** MyPlay's own screen (ORBIT, DECK) shows no weather: no position is sent for it, whatever the older layout had. */
+    @org.junit.Test
+    fun myPlaysOwnScreenNeverFetchesTheWeather() {
+        for (layout in net.prototux.aare.ui.car.CarLayout.entries) {
+            // The same choices with the older layout shown do fetch it (the taskbar's weather card).
+            if (layout == CarLayout.TASKBAR) org.junit.Assert.assertTrue(MyPlayWeather.wanted(layout, true, listOf(RailWidget.WEATHER), listOf(DashCard.WEATHER), spec, false))
+            org.junit.Assert.assertFalse(MyPlayWeather.wanted(layout, true, listOf(net.prototux.aare.ui.car.RailWidget.WEATHER),
+                listOf(net.prototux.aare.ui.car.DashCard.WEATHER), spec, false, engine = true))
+        }
+    }
 }

@@ -292,6 +292,16 @@ interface MyPlaySkin {
      */
     @Composable fun MusicWorld(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier)
 
+    /** AL-1: whether this skin draws the maps app's alerts on the home itself ([MapAlertCard]). */
+    val drawsMapAlerts: Boolean get() = false
+
+    /**
+     * AL-1: the maps app's alert on the home, compact, in the free lower middle (never over the
+     * turn, the hub or the song): its icon, title, subtitle and up to two buttons ([mapAlertStop]),
+     * each taking `stop(id)`; [ringed] as on the home.
+     */
+    @Composable fun MapAlertCard(alert: MapAlert, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) = Unit
+
     /**
      * O1: the music panel, opened by a push on the home's song and drawn above it: the music app
      * ([PANEL_APP]), previous, play/pause and next ([PANEL_PREV], [PANEL_PLAY], [PANEL_NEXT]) and,
