@@ -113,6 +113,33 @@ class MyPlayAlertTest {
         org.junit.Assert.assertFalse(state.knobBusy)
     }
 
+    /** MC-2: ORBIT's pill sits at the bottom between the hub and the song, never in the keep-clear zone round the middle (Waze's arrow). */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theAlertKeepsClearOfTheMiddle() {
+        show(skin = net.prototux.aare.ui.car.myplay.orbit.OrbitSkin)
+        rule.runOnIdle { appAlert = alert() }
+        rule.waitForIdle()
+        val pill = rule.onNodeWithTag(SLOT_MAP_ALERT).fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("clear of the middle: $pill", pill.top >= 360f + 720f * ALERT_KEEP_CLEAR)
+        org.junit.Assert.assertEquals("just above the bottom margin: $pill", 720f - 43.2f, pill.bottom, 1f)
+        org.junit.Assert.assertEquals("centred: $pill", 640f, pill.center.x, 1f)
+        for (tag in listOf(STOP_HUB, STOP_SONG)) {
+            val b = rule.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
+            org.junit.Assert.assertFalse("$tag $b overlaps $pill", b.overlaps(pill))
+        }
+        val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap()
+        val dir = java.io.File("build/reports/myplay-screens").apply { mkdirs() }
+        java.io.File(dir, "orbit_alert_placed.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    @Test fun thePillsPlaceIsWorkedOut() {
+        val hub = FocusGraph.Box(44f, 464f, 256f, 676f)
+        val song = FocusGraph.Box(886f, 524f, 1236f, 676f)
+        assertEquals(AlertPlace(43.2f, 428f), alertPlace(1280f, 720f, hub, song, 16f).let { AlertPlace(Math.round(it.bottom * 10) / 10f, it.maxWidth) })
+        // No song: only the hub narrows it, on both sides alike.
+        assertEquals(2 * (640f - 256f - 32f), alertPlace(1280f, 720f, hub, null, 16f).maxWidth, 0.01f)
+    }
+
     /** AL-2: after the alert, the ring is back on the stop it was on. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun afterTheAlertTheRingIsBackWhereItWas() {

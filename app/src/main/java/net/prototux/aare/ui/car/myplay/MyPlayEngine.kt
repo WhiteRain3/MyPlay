@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -801,8 +802,15 @@ internal fun MyPlayEngineShell(
                 }
                 // AL-1: the maps app's alert, in the skin's own place (never over the turn, the hub or the song).
                 if (home && homeAlert != null) {
+                    // MC-2: at the bottom of the free area, between the hub and the song, clear of the middle.
+                    val density = LocalDensity.current
+                    val place = with(density) {
+                        alertPlace(maxWidth.toPx(), maxHeight.toPx(), boxes[STOP_HUB], boxes[STOP_SONG],
+                            net.prototux.aare.host.templates.MapGeometry.CENTRED_MIN_GUTTER_DP.dp.toPx())
+                    }
                     skin.MapAlertCard(homeAlert, ring.takeIf { showRing }, { id -> Modifier.stop(id) },
-                        Modifier.align(Alignment.BottomCenter).slot(Slot.SONG).testTag(SLOT_MAP_ALERT))
+                        Modifier.align(Alignment.BottomCenter).padding(bottom = with(density) { place.bottom.toDp() })
+                            .widthIn(max = with(density) { place.maxWidth.toDp() }).slot(Slot.SONG).testTag(SLOT_MAP_ALERT))
                 }
                 if (home && hand == null) slots.song?.let { song ->
                     // O1: the music panel opens above the song, in the same corner.

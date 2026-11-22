@@ -313,7 +313,8 @@ object OrbitSkin : MyPlaySkin {
 
     /**
      * AL-1 (the owner's photo: Waze's wide grey alert card covered the turn): the alert as a compact
-     * glass pill above the bottom row (the hub left, the song right), in the map's free lower middle:
+     * glass pill at the bottom, between the hub and the song (MC-2: the engine places it, clear of
+     * the middle where the maps app's arrow is):
      * its icon (or a caution sign), the title and the subtitle on one line each, and its buttons as
      * small pills the knob reaches.
      */
@@ -326,7 +327,7 @@ object OrbitSkin : MyPlaySkin {
             val accent = Orbit.accent(World.NAVIGATE, night)
             val pill = androidx.compose.foundation.shape.RoundedCornerShape(40.dp)
             Row(
-                Modifier.padding(bottom = 232.dp).widthIn(max = 600.dp).clip(pill).background(g.glass).border(2.dp, g.edge, pill)
+                Modifier.widthIn(max = 600.dp).clip(pill).background(g.glass).border(2.dp, g.edge, pill)
                     .padding(start = 14.dp, end = 18.dp, top = 12.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {

@@ -26,3 +26,28 @@ val LocalMapAlertSink = staticCompositionLocalOf<((MapAlert?) -> Unit)?> { null 
 
 /** A map alert's action button (its test tag and home stop). */
 fun mapAlertStop(i: Int) = "map_alert_action_$i"
+
+/** MC-2: where the alert pill goes: [bottom] px above the screen's bottom, at most [maxWidth] px wide, centred. */
+internal data class AlertPlace(val bottom: Float, val maxWidth: Float)
+
+/** MC-2: the share of the screen's height round its middle (as a radius) that the pill keeps clear: the maps app's arrow is there. */
+internal const val ALERT_KEEP_CLEAR = 0.12f
+
+/**
+ * MC-2 (the dispatcher: the alert pill must never sit on Waze's arrow, which is now in the very
+ * middle, MC-1): the pill goes at the bottom of the centred free area, just above its bottom
+ * margin (MapGeometry's, a share of the height), far below the keep-clear zone round the middle;
+ * centred, and no wider than the room between the bottom parts beside it ([left], the hub, and
+ * [right], the song, whole with its text), less the same gutter as the free area. A part not given,
+ * or above the middle, does not narrow it. On a 1280x720 screen: 43 px up, 428 px wide at most.
+ */
+internal fun alertPlace(w: Float, h: Float, left: FocusGraph.Box?, right: FocusGraph.Box?, minGutter: Float): AlertPlace {
+    val g = net.prototux.aare.host.templates.MapGeometry
+    val gutter = maxOf(minGutter, w * g.CENTRED_GUTTER)
+    val cx = w / 2
+    val cy = h / 2
+    val l = left?.takeIf { it.bottom > cy }?.right ?: 0f
+    val r = right?.takeIf { it.bottom > cy }?.left ?: w
+    val room = (minOf(cx - l, r - cx) - gutter).coerceAtLeast(w * 0.15f)
+    return AlertPlace(bottom = h * g.CENTRED_MARGIN, maxWidth = 2 * room)
+}
