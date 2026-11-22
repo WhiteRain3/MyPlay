@@ -136,6 +136,9 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
     /** O3 is ORBIT's: DECK (frozen) keeps the rail beside an app. */
     override val appRail get() = true
 
+    /** O8 is ORBIT's: DECK (frozen) keeps its speed under the status. */
+    override val speedInHub get() = false
+
     override val id = "deck"
 
     override fun tokens(night: Boolean): SkinTokens = Deck.tokens(night)

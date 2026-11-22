@@ -238,7 +238,7 @@ class OrbitHomeTest {
         show()
         rule.onNodeWithText("350 m").assertExists()
         rule.onNodeWithText("Hauptstraße").assertExists()
-        rule.onNodeWithText("18 min").assertExists()
+        rule.onNodeWithText("18 min", substring = true).assertExists()
         rule.onNodeWithText(PadWalkStates.SONG_TITLE).assertExists()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         rule.onNodeWithTag(STOP_HUB).assertIsSelected()
@@ -326,6 +326,21 @@ class OrbitHomeTest {
         assertEquals(Icons.Rounded.Battery0Bar, OrbitSkin.batteryIcon(5, false))
         assertEquals(Icons.Rounded.Battery3Bar, OrbitSkin.batteryIcon(50, false))
         assertEquals(Icons.Rounded.BatteryChargingFull, OrbitSkin.batteryIcon(5, true))
+    }
+
+    /** O8: the speed is in the hub with the trip, and the limit is a sign with its number; no separate speed part. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theSpeedAndTheLimitNumberAreInTheHub() {
+        show(speed = SpeedReading(64, SpeedReading.From.CAR, LimitShown.Known(50), over = true))
+        rule.onNodeWithTag(OrbitSkin.HUB_SPEED_TAG, useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(OrbitSkin.LIMIT_SIGN_TAG, useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("50", useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("64", useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_SPEED).assertDoesNotExist()
+        // The sign sits on the hub's edge.
+        val hub = rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.STOP_HUB).fetchSemanticsNode().boundsInRoot
+        val sign = rule.onNodeWithTag(OrbitSkin.LIMIT_SIGN_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertTrue("sign $sign on the hub $hub", sign.overlaps(hub))
     }
 
     /** O4: the corners' shades only behind the parts shown: none without a route, none without a song. */

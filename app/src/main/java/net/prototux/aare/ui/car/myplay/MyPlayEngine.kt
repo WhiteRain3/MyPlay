@@ -684,7 +684,7 @@ internal fun MyPlayEngineShell(
                     if (STOP_BELL in actionsOf) {
                         ringed(STOP_BELL) { skin.Bell(notes.unseen, LocalStopRinged.current, Modifier.slot(Slot.STATUS).stop(STOP_BELL)) }
                     }
-                    if (skin.showsSpeed && state.speedSource != SpeedSourceMode.OFF) {
+                    if (skin.showsSpeed && !(skin.speedInHub && hand == null) && state.speedSource != SpeedSourceMode.OFF) {
                         EngineSpeed(state, sources.speed) { skin.Speed(it, Modifier.slot(Slot.SPEED).testTag(SLOT_SPEED)) }
                     }
                 }
@@ -694,7 +694,13 @@ internal fun MyPlayEngineShell(
                         skin.Hand(model.front, slots.song, LocalStopRinged.current, { w -> chosen = STOP_HUB; if (w == model.front) openFront() else model.front = w },
                             edge.align(Alignment.BottomEnd).slot(Slot.HUB).stop(STOP_HUB))
                     }
-                } else if (home) ringed(STOP_HUB) { skin.Hub(slots.trip, edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)) }
+                } else if (home) ringed(STOP_HUB) {
+                    val hubMod = edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)
+                    // O8: the speed and its limit in the hub (ORBIT), read only while shown.
+                    if (skin.speedInHub && skin.showsSpeed && state.speedSource != SpeedSourceMode.OFF) {
+                        EngineSpeed(state, sources.speed) { skin.HubSpeed(slots.trip, it, hubMod) }
+                    } else skin.Hub(slots.trip, hubMod)
+                }
                 // N8: at the top of the home: in a call its strip, and a notice under it; their parts are home stops.
                 Column(Modifier.align(Alignment.TopCenter).padding(top = tokens.edge), horizontalAlignment = Alignment.CenterHorizontally) {
                     if (model.place == Place.Home && call != null && !ringing) {

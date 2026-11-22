@@ -255,6 +255,15 @@ interface MyPlaySkin {
      */
     val showsSpeed: Boolean get() = false
 
+    /**
+     * O8: the speed is drawn in the hub ([HubSpeed]) rather than under the status. Only for a skin
+     * with a hub (no [hand]).
+     */
+    val speedInHub: Boolean get() = false
+
+    /** O8: the hub with the speed (null: none known yet, a dash) and its limit; by default the plain hub. */
+    @Composable fun HubSpeed(trip: TripSlot?, speed: SpeedReading?, modifier: Modifier) = Hub(trip, modifier)
+
     /** The speed, or null when none is known (show a dash, never a guess). */
     @Composable fun Speed(reading: SpeedReading?, modifier: Modifier) = Unit
     /** The six worlds, [selected] ringed. */

@@ -79,6 +79,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -253,6 +254,58 @@ object OrbitSkin : MyPlaySkin {
         TurnDirection.U_TURN_RIGHT -> Icons.Rounded.UTurnRight
         null -> Icons.Rounded.Navigation
     }
+
+    /** O8: the speed (and the limit) is in the hub, with the trip, not a part of its own. */
+    override val speedInHub get() = true
+
+    /**
+     * O8 (the owner: fewer separate parts; "I would like to actually see the speed limit in
+     * number"): the hub with the speed in its middle (amber when over the limit by the margin), the
+     * trip's arrival and time left under it, and the limit as a road-sign ring with its number on
+     * the hub's edge (grey with a dash when no limit is known).
+     */
+    @Composable
+    override fun HubSpeed(trip: TripSlot?, speed: SpeedReading?, modifier: Modifier) = Box(modifier) {
+        Scaled {
+            val g = glass()
+            val night = LocalSkinTokens.current.night
+            val nav = Orbit.accent(World.NAVIGATE, night)
+            Box(Modifier.size(212.dp)) {
+                OrbitDisc(192.dp, night, Modifier.align(Alignment.BottomStart).carPart(CarPart.OrbitHub).orbitFocus(LocalStopRinged.current, nav, g.halo)) {
+                    OrbitRing(trip?.progress, 184.dp, 9.dp, nav, g.track, Modifier.testTag(TRIP_RING_TAG).progressSemantics(trip?.progress)) {
+                        Column(Modifier.testTag(HUB_SPEED_TAG).carPart(CarPart.OrbitSpeed), horizontalAlignment = Alignment.CenterHorizontally) {
+                            val colour = if (speed?.over == true) Orbit.caution(night) else g.text
+                            Text(speed?.kmh?.toString() ?: "–", style = TextStyle(fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.ExtraBold, color = colour), maxLines = 1)
+                            Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, lineHeight = 20.sp, color = g.secondary), maxLines = 1)
+                            val arrival = trip?.arrival
+                            if (arrival != null) {
+                                val left = trip.timeLeft ?: trip.distanceLeft
+                                FitText(listOfNotNull(arrival, left).joinToString(" · "), TextStyle(fontSize = 22.sp, lineHeight = 26.sp, fontWeight = FontWeight.Bold, color = g.text), 140.dp)
+                            }
+                        }
+                    }
+                }
+                speed?.limit?.let { LimitSign(it, night, Modifier.align(Alignment.TopEnd)) }
+            }
+        }
+    }
+
+    /** O8: the limit as a road sign: a red ring, white inside, the number in black; grey with a dash when unknown. */
+    @Composable
+    private fun LimitSign(limit: LimitShown, night: Boolean, modifier: Modifier) {
+        val known = limit as? LimitShown.Known
+        val ring = if (known != null) Color(0xFFD32F2F) else Orbit.glass(night).secondary
+        Box(
+            modifier.size(84.dp).shadow(6.dp, CircleShape).clip(CircleShape).background(Color.White)
+                .border(9.dp, ring, CircleShape).testTag(LIMIT_SIGN_TAG),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(known?.kmh?.toString() ?: "–", style = TextStyle(fontSize = if ((known?.kmh ?: 0) >= 100) 28.sp else 34.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111111)), maxLines = 1)
+        }
+    }
+
+    const val HUB_SPEED_TAG = "orbit_hub_speed"
+    const val LIMIT_SIGN_TAG = "orbit_limit_sign"
 
     @Composable
     override fun Hub(trip: TripSlot?, modifier: Modifier) = Box(modifier) {
