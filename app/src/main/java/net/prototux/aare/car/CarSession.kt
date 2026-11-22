@@ -191,6 +191,7 @@ class CarSession(
         runtime.start()
         settings.registerListener(carKeyPrefsListener)
         settings.registerListener(buttonPrefsListener) // MyPlay (R3)
+        DiagLog.add(buttonTable.describe()) // MyPlay (G-3): the button table this connection uses
         listener.onStatus(this, context.getString(R.string.notif_status_connecting_to, transport.name))
     }
 
@@ -705,7 +706,11 @@ class CarSession(
     /** [buttonTable]'s codes, read for every key from the car (the injector's set below). */
     @Volatile private var buttonCodes: Set<Int> = buttonTable.allCodes
     private val buttonPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (isButtonTableKey(key)) main.post { buttonTable = settings.buttonTable; buttonCodes = buttonTable.allCodes }
+        if (isButtonTableKey(key)) main.post {
+            buttonTable = settings.buttonTable; buttonCodes = buttonTable.allCodes
+            // G-3: what the car side now uses, in the connection log.
+            DiagLog.add(buttonTable.describe())
+        }
         // MyPlay (O11): the phone arms a button to teach, or changes the learned ones.
         if (isLearnKey(key)) main.post {
             learned = settings.myplayLearnedButtons
