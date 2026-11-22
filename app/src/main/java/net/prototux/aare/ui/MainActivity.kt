@@ -174,6 +174,9 @@ import net.prototux.aare.ui.phone.SizePage
 import net.prototux.aare.ui.phone.StatusIconsPage
 import net.prototux.aare.ui.phone.ColoursPage
 import net.prototux.aare.ui.phone.LooksPage
+import net.prototux.aare.ui.phone.YouTubeAppRow
+import net.prototux.aare.ui.phone.withYouTubeApp
+import net.prototux.aare.ui.phone.youTubeAppOnCar
 import net.prototux.aare.ui.phone.MirrorTurnChoice
 import net.prototux.aare.ui.phone.SpeedLimitPage
 import net.prototux.aare.ui.phone.SpeedLimitDownload
@@ -1194,9 +1197,32 @@ private fun StandaloneAppsSection(settings: Settings, ctx: android.content.Conte
     var keepAwake by remember { mutableStateOf(settings.standaloneKeepScreenAwake) }
     var allowed by remember { mutableStateOf(settings.standaloneAppPackages) }
     val available = remember { AppLauncher.available(ctx) }
+    // MyPlay: the YouTube app itself on the car screen, in one step (the owner's phone is rooted).
+    var askYouTube by remember { mutableStateOf(false) }
+    val youTubeInstalled = remember { runCatching { ctx.packageManager.getApplicationInfo(CarRuntime.YOUTUBE_PACKAGE, 0) }.isSuccess }
+    if (askYouTube) {
+        AlertDialog(
+            onDismissRequest = { askYouTube = false },
+            title = { Text(stringResource(R.string.phone_youtube_app_title)) },
+            text = { Text(stringResource(R.string.standalone_section_warning)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    askYouTube = false
+                    enabled = true; settings.standaloneApps = true
+                    allowed = withYouTubeApp(allowed); settings.standaloneAppPackages = allowed
+                }) { Text(stringResource(R.string.phone_youtube_app_action)) }
+            },
+            dismissButton = { TextButton(onClick = { askYouTube = false }) { Text(stringResource(R.string.common_cancel)) } },
+        )
+    }
     Section(stringResource(R.string.standalone_section_title)) {
         Text(stringResource(R.string.standalone_section_warning), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
         Spacer(Modifier.height(8.dp))
+        if (youTubeInstalled) {
+            val onCar = youTubeAppOnCar(enabled, allowed)
+            YouTubeAppRow(onCar, available) { if (onCar) { allowed = allowed - CarRuntime.YOUTUBE_PACKAGE; settings.standaloneAppPackages = allowed } else askYouTube = true }
+            Spacer(Modifier.height(8.dp))
+        }
         Toggle(stringResource(R.string.standalone_toggle_title), stringResource(R.string.standalone_toggle_subtitle), enabled) {
             enabled = it; settings.standaloneApps = it
         }

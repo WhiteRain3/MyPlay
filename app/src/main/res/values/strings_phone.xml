@@ -429,4 +429,8 @@
     <string name="phone_teach_forget" translatable="false">Forget %1$s</string>
     <string name="phone_teach_seconds" translatable="false">Waiting %1$d more seconds.</string>
     <string name="phone_info_home_hint" translatable="false">The home never shows the knob\'s ring: the pad and the taught buttons do everything. Needs a pad key set to The dial or Apps, so the car\'s settings stay reachable; without one the ring stays.</string>
+    <string name="phone_youtube_app_title" translatable="false">YouTube app on the car screen</string>
+    <string name="phone_youtube_app_action" translatable="false">Put it on</string>
+    <string name="phone_youtube_app_hint" translatable="false">The real YouTube app, as a phone app on the car screen: parked only, with root or Shizuku.</string>
+    <string name="phone_youtube_app_needs_root" translatable="false">The real YouTube app, as a phone app on the car screen: parked only. Needs root or Shizuku, which this phone does not give MyPlay yet.</string>
 </resources>
