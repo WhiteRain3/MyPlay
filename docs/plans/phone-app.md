@@ -1,6 +1,6 @@
 # MyPlay phone app: new information architecture (plan)
 
-Information architect, 2026-11-22. **Revision 3**: owner decisions folded in (§13). Revision 2 followed the independent review
+Information architect, 2026-11-22. **Revision 4**: aligned with the approved design (`docs/design/phone-app/`, review "Second pass", bfaa662) and a build order added (§16). Revision 3 folded in the owner decisions (§13). Revision 2 followed the independent review
 (`docs/plans/phone-app-review.md`, commit b4818e9); §15 answers each of its 24 findings.
 A plan only: no app code is changed. Built from reading the code on `claude/myplay`
 (`ui/MainActivity.kt`, `ui/MyPlayUpdateCheck.kt`, `ui/phone/*`, `Settings.kt`, `SettingsBackup.kt`,
@@ -144,14 +144,14 @@ Screen                      (large car picture at the top; parts tappable)
 
 Car
 ├─ › Buttons .............. drawing of wheel + knob → per control: press, hold, double, hold+turn
-│                            · Timing · Show what a button did · › Home shortcuts
+│                            · Timing · Show what a button did · › ORBIT home: pad shortcuts
 │                            · › Teach a car button · Reset this page
 ├─ › Maps ................. Map on home · Go home when idle · Follow the car's lights
 │                            · Use the car's GPS (+ mock-location row) · Map colours › (link)
 │                            · [slot: maps apps]
 ├─ › Speed ................ Speed source · Region · Limits file · Warn when over by
 │                            · [slot: Limit from Waze]
-├─ › Sound ................ Sound to the car · method in use · set up a method
+├─ › Sound ................ Sound to the car · status (Best / All sound / Music only) · method rows
 │                            · Play music when connected
 ├─ › Messages and calls ... Banners · Group chats · Read aloud · Do not disturb · Auto-reply
 │                            · Calls on phone speaker
@@ -168,10 +168,10 @@ Apps                        (the root IS the car screen's app list)
 More
 ├─ › Updates .............. version · Install · Check now · Check automatically · What's new ›
 ├─ › Cars ................. one list: name, last connected, how, Trusted tag · › a car (Forget)
-├─ › Connection ........... Wireless
+├─ › Connection ........... Wireless · Phone's Bluetooth address (optional)
 ├─ › Backup ............... Save · Load · last saved · after-loading list
 ├─ › Diagnostics .......... › Car check · › Car data (live) · › Connection log
-├─ › Advanced ............. Video · Certificates › · Car fixes (Bluetooth address, vehicles.json)
+├─ › Advanced ............. Video · Certificates › · Per-car fixes (vehicles.json)
 │   └─ › Developer ........ Head unit server (+4) · Map areas · Maps text · Phone parts sample
 │                            · link: Detailed protocol log (lives in Connection log)
 ├─ › Archive .............. › DECK · › Older layouts
@@ -186,7 +186,7 @@ More
 |---|---|
 | Home | `home` |
 | Screen | `screen` · `screen/design` · `screen/looks` · `screen/colours` · `screen/colours/own` · `screen/wallpaper` · `screen/wallpaper/edit` · `screen/map-colours` · `screen/size` |
-| Car | `car` · `car/buttons` · `car/buttons/home-shortcuts` · `car/buttons/teach` · `car/maps` · `car/speed` · `car/sound` · `car/messages` · `car/voice` |
+| Car | `car` · `car/buttons` · `car/buttons/pad-shortcuts` · `car/buttons/teach` · `car/maps` · `car/speed` · `car/sound` · `car/messages` · `car/voice` |
 | Apps | `apps` · `apps/phone-apps` · `apps/phone-screen` · `apps/browser` |
 | More | `more` · `more/updates` · `more/whats-new` · `more/cars` · `more/cars/{car}` · `more/connection` · `more/backup` · `more/diagnostics` · `more/diagnostics/car-check` · `more/diagnostics/car-data` · `more/diagnostics/log` · `more/advanced` · `more/advanced/certificates` · `more/advanced/developer` · `more/archive` · `more/archive/deck` · `more/archive/layouts` · `more/about` |
 | (outside tabs) | `setup` (first run, full screen, no bar) |
@@ -249,7 +249,7 @@ More
 
 | Status | Primary home | Shown elsewhere |
 |---|---|---|
-| Connected / connecting / not connected (and why, §10) | Home › Status card | Home tab **icon** changes (outline car → filled car). No dot: dots mean "needs attention" only |
+| Connected / connecting / not connected (and why, §10) | Home › Status card | **Nowhere else.** The Home tab is a **house** (Car is a car); the tab has **no connected cue**. Dots on tabs mean "needs attention" only |
 | Video, certificate in use, last error | Status card › Details (collapsed) | Diagnostics |
 | Trust a new car | Status card (action) | notification |
 | Update available | More › Updates | Home card; **badge on More** |
@@ -280,10 +280,10 @@ Removed: the Updates section from Connection, the tile that opened About, the se
 **Advanced** (needed once; one line each):
 - **Video**: Highest resolution · Prefer 60 fps · Force H.264 · Steady bitrate.
 - **Certificates ›**: list · Import · Download · Update automatically.
-- **Car fixes**: Phone's Bluetooth address · Per-car fixes (vehicles.json Import / Template;
+- **Per-car fixes**: vehicles.json Import / Template;
   Import **asks before replacing** an existing file).
 
-**Developer** (last row of Advanced): head unit server and its four sub-switches · Show map areas ·
+**Developer** (last row of Advanced): head unit server and its four sub-switches (each risky one, "Allow localhost" included, with a warning line: "Any app on this phone can connect") · Show map areas ·
 Log maps text · Phone parts sample · a **link** to Detailed protocol log (which lives only in
 Diagnostics › Connection log).
 
@@ -387,7 +387,7 @@ notifications still use are untouched. A translation pass is a later, separate t
 | Car › Buttons | Default / N changed |
 | Car › Maps | home map choice (Last used / Always ask / app name) |
 | Car › Speed | source · region, e.g. "Auto · Lithuania" / "Off" |
-| Car › Sound | Best / All sound / Music only / Set up / Off |
+| Car › Sound | Best / All sound / Music only / Set up / Off. Never a method name ("Shizuku", "root") here or in the Sound page's status line; method names appear only on the Sound page's method rows, explained in ⓘ (rule 8). The switch is labelled **"Sound to the car"** everywhere (design frame 34's "Phone audio in the car" changes to match) |
 | Car › Messages and calls | Banners on / Off / Set up |
 | Car › Voice assistant | app name / Phone's default |
 | Car › Passenger mode | switch |
@@ -440,7 +440,7 @@ Appendix C lists all 45 long strings and what each becomes.
 | **Offline** | — | Check now, certificate and speed-file downloads: "No internet. Try again later." |
 | **Certificate expiring** | card, dismissible until the next stage (`cert_expiry_dismissed`) | notification |
 | **Certificate expired** | card, **not** dismissible | notification |
-| **Last connection error** | one line in the status card; full text in ⓘ | Connection log |
+| **Couldn't connect / last connection error** | the hero shows the reason in one line, **Try again**, and a **"What happened"** row (design frame 07) that opens the full text; every hero state that reports a failure uses the same row | Connection log |
 | **Car check in progress / stopped** | card | Car check page |
 | **Archived design in use** | quiet card → Archive | — |
 | **Backup loaded** | — | Result on the Backup page: "Loaded. N settings skipped." and an **after-loading list**: wallpaper photo, speed-limit file ("Download Lithuania limits"), certificates, trusted cars |
@@ -534,7 +534,7 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 | `dashboard_media_first`, `show_calendar` (legacy) | Boolean | A | none (fallback) |
 | `car_theme` | String | A | Screen › Colours › Day and night |
 | `car_audio` | Boolean | A | Car › Sound |
-| `phone_bt_address` | String | — | More › Advanced › Car fixes (later: per car) |
+| `phone_bt_address` | String | — | More › Connection (optional field; later: per car) |
 | `root_audio` | Boolean | B | Car › Sound (set by the root check, not a switch) |
 | `assistant_pkg` | String? | A | Car › Voice assistant |
 | `phone_screen` | Boolean | A | Apps › Phone screen row |
@@ -563,7 +563,7 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 | `myplay_maps_idle_home` | Int | A | Car › Maps |
 | `myplay_learned_buttons` | String | A | Car › Buttons › Teach |
 | `myplay_learn_button`, `myplay_learn_button_at` | String/Long | — | internal (Teach) |
-| `myplay_info_home`, `myplay_home_pad` | Boolean/String | A | Car › Buttons › Home shortcuts |
+| `myplay_info_home`, `myplay_home_pad` | Boolean/String | A | Car › Buttons › ORBIT home: pad shortcuts (`car/buttons/pad-shortcuts`) |
 | `myplay_panel_timeout` | Int | A | Screen › Design |
 | `myplay_speed_limit_margin`, `myplay_speed_limit_region` | Int/String | A | Car › Speed |
 | `myplay_speed_limit_checked` | Long | — | internal (Speed; monthly check) |
@@ -580,10 +580,11 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 | `myplay_wallpaper_edit` | String | — | Screen › Wallpaper › Edit photo |
 | `myplay_debug_map_areas`, `myplay_debug_nav_text` | Boolean | — | Developer |
 | `myplay_orbit_default_done` | Boolean | — | internal |
+| `myplay_new_phone_app` (**new**, build only) | Boolean | — | the hidden switch (§16); in no backup set; unread after chunk 14 |
 | file `driving_mode` › `previous_interruption_filter` | Int | — | internal |
 | file `head_unit_pins` › one key per car | StringSet | — | More › Cars (Trusted tag; Forget clears it with `known_cars`) |
 | `filesDir/wallpaper.jpg` | file | — | Screen › Wallpaper |
-| `vehicles.json` | file | — | Advanced › Car fixes |
+| `vehicles.json` | file | — | Advanced › Per-car fixes |
 | `filesDir/speed_limits/<region>.bin/.json` | files | — | Car › Speed |
 | certificate store | files | — | Advanced › Certificates |
 | connection log (`DiagLog`, memory) | — | — | Diagnostics › Connection log |
@@ -618,6 +619,54 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 | 22 | No translation policy | **Accepted.** English-only for now, new IDs, stale translations removed (§9.2). |
 | 23 | Add per-car settings and "also on the car" | **Accepted.** §8. |
 | 24 | Polish: changed markers, reset, live preview, a11y, large screens, theme, motion | **Accepted.** §11. |
+
+---
+
+## 16. Build order
+
+The design in `docs/design/phone-app/` (frames 00–77, style sheet 77, `index.md`) is approved and is
+the visual source of truth; this plan is the structural one. Where they disagree, raise it; don't guess.
+
+### How the new app ships
+
+- The new app is built **beside** the old one. The old screens (`MainActivity`'s pages and
+  `ui/phone/*`) stay untouched and stay the default until chunk 14.
+- **Hidden switch:** a new internal key `myplay_new_phone_app` (Boolean, default false). It is **not**
+  in any backup set, so `ALLOWED`/`BLOCKED` stay unchanged. `MainActivity` shows the new app when it
+  is on. It can be turned on in two hidden ways: 7 taps on the version line of today's About page, and,
+  in debug builds, an adb extra `new_phone_app=true` (like `hu_server`). The new app's More › About has
+  "Back to the old app" while the switch exists.
+- New code goes in a new package (`ui/phone2/` or similar) so the two never share page state. Shared
+  logic (backup, update install, certificate store, speed-limit download, capture-method checks) is
+  reused, not copied.
+- Each chunk is one push to `claude/myplay` (or the Phone worker's branch), builds, passes its tests,
+  and is checked against its design frames with screenshots at the Audi's phone size. A chunk never
+  changes a stored key, default or backup set.
+
+### Chunks
+
+| # | Chunk | Contents | Design frames | Tests / done when |
+|---|---|---|---|---|
+| 0 | **Shell** | Hidden switch; 5-tab bottom bar (house, palette, car, apps, more icons); route table (§3.3) with one owning tab per route; per-tab stacks; saved scroll and open rows; cross-tab rule (§3.4); predictive back; `route` deep-link extra in `onCreate`/`onNewIntent`; settings observation layer (one flow per key or a prefs listener); empty placeholder page per route | 00, 76 (rail on large screens can wait for 13) | Back/scroll/tab-switch/rotation/process-death tests; deep link opens the right tab and page; backup-sets-unchanged test; string-length test and `_label`/`_help`/`_info` naming in place |
+| 1 | **Parts** | Colour tokens (neutral interaction colour, world colours for identity only, caution orange), Roboto Flex, row types (switch, value, picker sheet, link), "changed" hollow ring, warn line, next-connection tag, ⓘ sheet, undo snackbar, confirm dialog, empty state, Reset this page | 77 | Contrast checks (text and non-text ≥ 3:1) as unit tests; TalkBack names on icon-only controls and colour swatches |
+| 2 | **Home** | Status hero: connected, connecting, not connected with the reason and one action, couldn't connect with Try again and **What happened**; Trust ("New car · USB", Trust and Not now equal weight); attention cards and their order and dismissal; small picture → Screen; Preview, Disconnect; notification request codes and routes | 01–07 | One test per hero state; notification taps land on the right page |
+| 3 | **Updates** | More › Updates (install, check now, check automatically, up to date, installing, failed with "allow unknown apps"), What's new, ask-once prompt, badge on More | 44–48 | `check_updates` default unchanged; the prompt writes the key once |
+| 4 | **Screen I** | Large picture with per-design part mapping (§3.5) and press-to-show rings; Design (ORBIT, panel timeout); Size (text, controls, density picker); Wallpaper and photo editor; Map colours | 08–10, 15–19 | Part mapping test per design; values read back unchanged |
+| 5 | **Screen II** | Colours (themes, accents, phone colours, app-screen live preview), Your own colours, Looks (built-in, yours with menu, "(changed)", list of what a look changes, design-change confirm) | 11–14 | Applying a look writes exactly `MyPlayLooks.KEYS`; a DECK look asks first |
+| 6 | **Car I** | Car root with every value (§9.3); Buttons drawing with all gestures (triple press included, holds disabled when the car sends none); action picker ("highlight" wording); Timing; ORBIT home: pad shortcuts (`car/buttons/pad-shortcuts`); Teach (waiting, offline, Forget) | 20–28 | Button table round-trips; Reset uses undo |
+| 7 | **Car II** | Maps (home map picker, idle → home picker, follow car lights, car GPS + mock-location row, link to Map colours); Speed (source, region, file download/offline/delete, margin picker, monthly-check line); Sound ("Sound to the car", status as Best/All sound/Music only, method rows, ⓘ for Shizuku/root); Messages and calls (two permission cards); Voice; Passenger mode with warn line | 29–38 | Permissions asked in context only; no method name outside Sound's method rows |
+| 8 | **Apps** | The list as the root (show/hide inline), Reorder text button and mode with up/down, Phone apps (no-root state links to Sound), Phone screen, Browser, YouTube, Car data row, apps that can't run | 39–42 | Order and hidden sets write `app_order`/`hidden_apps` exactly as today |
+| 9 | **More I** | More root; Cars (one list, a car's page, Forget with undo, empty); Connection (Wireless, Bluetooth address); Backup (save, load confirm, after-loading list, skipped count) | 43, 49–56 | Forget clears `known_cars` entry and the pin; backup round-trip test with an old export |
+| 10 | **More II** | Diagnostics: Car check with its run in a process-scoped holder (share sheet with "Include alert texts" unticked each time), Car data live, Connection log | 57–62 | Car check survives page and tab changes; "stopped" card after process death |
+| 11 | **More III** | Advanced (video, resolution picker), Certificates and PKCS#12 password, Per-car fixes with replace confirm, Developer with warn lines (localhost included), Archive (DECK, Older layouts with every archived setting), About | 63–70 | Developer and Archive write the same keys as today |
+| 12 | **Setup and search** | First-run Setup steps 1–4 (no tab bar); search in every tab's top bar with translatable synonyms and "Turn on X first" | 71–75 | Fresh install shows Setup, not What's new; every route and setting is findable |
+| 13 | **Polish** | 200 % font size, large-screen rail and list-detail, motion and haptics, review "Second pass" items 3–7 if not already done | 21, 76 | Accessibility checks pass; screenshots match the frames |
+| 14 | **Switch over** | New app becomes the default; old pages, `CustomiseScreen`, `BehindTheScenes`, `CategoryRow`, `Header` and the copy-into-`remember` pages removed; old string IDs and their stale translations removed (§9.2); hidden switch and "Back to the old app" removed (the key is left unread) | — | Owner has used the new app in the car at least once; all tests green; a release |
+
+Chunks 4–11 depend only on 0–1 and can be taken in any order after 2; the order above follows how
+often the owner uses each part.
+
+---
 
 ## Appendix A. Inventory of today's phone app
 
