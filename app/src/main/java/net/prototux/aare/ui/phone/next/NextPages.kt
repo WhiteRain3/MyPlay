@@ -84,6 +84,12 @@ object NextPages {
 fun NextPage(route: String, onOldApp: () -> Unit) {
     when (route) {
         "home" -> NextHome()
+        "screen" -> NextScreenRoot()
+        "screen/design" -> NextDesignPage()
+        "screen/size" -> NextSizePage()
+        "screen/wallpaper" -> NextWallpaperPage()
+        "screen/wallpaper/edit" -> NextPhotoEditorPage()
+        "screen/map-colours" -> NextMapColoursPage()
         "more/updates" -> NextUpdatesPage()
         "more/whats-new" -> NextWhatsNewPage()
         else -> NextPlaceholder(route, onOldApp)

@@ -111,7 +111,15 @@ class NextShellMockups {
             override val lifecycle: Lifecycle get() = life
             override val onBackPressedDispatcher = OnBackPressedDispatcher()
         }
-        CompositionLocalProvider(LocalOnBackPressedDispatcherOwner provides owner) {
+        // No activity here: a registry that never launches, for the photo picker.
+        val registry = object : androidx.activity.result.ActivityResultRegistry() {
+            override fun <I, O> onLaunch(requestCode: Int, contract: androidx.activity.result.contract.ActivityResultContract<I, O>, input: I, options: androidx.core.app.ActivityOptionsCompat?) = Unit
+        }
+        val results = object : androidx.activity.result.ActivityResultRegistryOwner { override val activityResultRegistry = registry }
+        CompositionLocalProvider(
+            LocalOnBackPressedDispatcherOwner provides owner,
+            androidx.activity.compose.LocalActivityResultRegistryOwner provides results,
+        ) {
             NextApp(start = route, badges = setOf(NextTab.MORE)) { content() }
         }
     }
@@ -137,4 +145,11 @@ class NextShellMockups {
     @Test fun whatsNew() = paparazzi.snapshot {
         Page("more/whats-new") { NextWhatsNewPage() }
     }
+
+    @Test fun screenRoot() = paparazzi.snapshot { Page("screen") { NextScreenRoot() } }
+    @Test fun screenDesign() = paparazzi.snapshot { Page("screen/design") { NextDesignPage() } }
+    @Test fun screenSize() = paparazzi.snapshot { Page("screen/size") { NextSizePage() } }
+    @Test fun screenWallpaper() = paparazzi.snapshot { Page("screen/wallpaper") { NextWallpaperPage() } }
+    @Test fun screenMapColours() = paparazzi.snapshot { Page("screen/map-colours") { NextMapColoursPage() } }
+    @Test fun screenEditor() = paparazzi.snapshot { Page("screen/wallpaper/edit") { NextPhotoEditorPage() } }
 }

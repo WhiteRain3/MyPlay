@@ -23,6 +23,9 @@ object NextRoutes {
         "more/archive", "more/archive/deck", "more/archive/layouts", "more/about",
     )
 
+    /** Pages drawn full screen, with their own top bar and no tab bar (design frame 16). */
+    val FULL_SCREEN: Set<String> = setOf("screen/wallpaper/edit")
+
     /** One car's page: `more/cars/{car}`. */
     const val CAR_PREFIX = "more/cars/"
 

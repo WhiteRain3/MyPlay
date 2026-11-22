@@ -646,3 +646,85 @@ fun NextMark(size: Dp = 28.dp) {
         drawCircle(NextTab.SCREEN.world, radius = 3.6f * s, center = Offset(25f * s, 9f * s))
     }
 }
+
+/**
+ * A slider (design frame 77): label and value above, the thumb a ring in [NextColors.Int], the rail
+ * with ≥ 3:1 contrast, the ends under it. [onDone] runs when the finger lifts (write the setting then).
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NextSlider(
+    label: String,
+    valueText: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    onChange: (Float) -> Unit,
+    onDone: () -> Unit = {},
+    steps: Int = 0,
+    ends: Pair<String, String>? = null,
+    changed: Boolean = false,
+    enabled: Boolean = true,
+    note: String? = null,
+) {
+    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(label, style = NextType.Label, color = NextColors.Text)
+            if (changed) { Spacer(Modifier.width(8.dp)); NextChangedMark() }
+            Spacer(Modifier.weight(1f))
+            Text(valueText, style = NextType.Value.copy(fontWeight = androidx.compose.ui.text.font.FontWeight(600)), color = NextColors.Text)
+        }
+        if (note != null) Text(note, style = NextType.Help, color = NextColors.Text3)
+        val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+        androidx.compose.material3.Slider(
+            value = value, onValueChange = onChange, valueRange = range, steps = steps, enabled = enabled,
+            onValueChangeFinished = onDone, interactionSource = interaction,
+            colors = androidx.compose.material3.SliderDefaults.colors(
+                activeTrackColor = NextColors.Int, inactiveTrackColor = NextColors.SliderRail,
+                activeTickColor = NextColors.On, inactiveTickColor = NextColors.Outline,
+                disabledActiveTrackColor = NextColors.Disabled, disabledInactiveTrackColor = NextColors.Track,
+            ),
+            thumb = {
+                Box(
+                    Modifier.size(28.dp).clip(CircleShape).background(NextColors.Bg)
+                        .border(3.dp, if (enabled) NextColors.Int else NextColors.Disabled, CircleShape),
+                )
+            },
+            // The design's 4 dp rail (frame 77), with a dot per step.
+            track = { st ->
+                val span = st.valueRange.endInclusive - st.valueRange.start
+                val fraction = if (span == 0f) 0f else ((st.value - st.valueRange.start) / span).coerceIn(0f, 1f)
+                androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(6.dp)) {
+                    val h = 4.dp.toPx()
+                    val y = (size.height - h) / 2
+                    val r = androidx.compose.ui.geometry.CornerRadius(h / 2)
+                    drawRoundRect(NextColors.SliderRail, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Size(size.width, h), r)
+                    drawRoundRect(if (enabled) NextColors.Int else NextColors.Disabled, androidx.compose.ui.geometry.Offset(0f, y),
+                        androidx.compose.ui.geometry.Size(size.width * fraction, h), r)
+                    if (steps > 0) for (i in 0..steps + 1) {
+                        drawCircle(NextColors.Outline, 3.dp.toPx(), androidx.compose.ui.geometry.Offset(size.width * i / (steps + 1), size.height / 2))
+                    }
+                }
+            },
+        )
+        if (ends != null) Row(Modifier.fillMaxWidth()) {
+            Text(ends.first, style = NextType.Help.copy(fontSize = NextType.TabLabel.fontSize), color = NextColors.Text3)
+            Spacer(Modifier.weight(1f))
+            Text(ends.second, style = NextType.Help.copy(fontSize = NextType.TabLabel.fontSize), color = NextColors.Text3)
+        }
+    }
+}
+
+/** A preset chip (design frame 17): outlined, filled with [NextColors.Int] when chosen. */
+@Composable
+fun NextChip(text: String, selected: Boolean, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(20.dp)
+    Box(
+        Modifier.height(40.dp).clip(shape).background(if (selected) NextColors.Int else Color.Transparent)
+            .border(1.5.dp, if (selected) NextColors.Int else NextColors.Outline, shape)
+            .selectable(selected, role = Role.RadioButton, onClick = onClick).padding(horizontal = 16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text, style = NextType.Value.copy(fontWeight = androidx.compose.ui.text.font.FontWeight(560)),
+            color = if (selected) NextColors.On else NextColors.Text2)
+    }
+}

@@ -151,6 +151,57 @@
     <string name="next_upd_fail_signer_help" translatable="false">The file is signed by someone else</string>
     <string name="next_upd_fail_install_help" translatable="false">Android didn\'t install it</string>
 
+    <!-- Screen -->
+    <string name="next_scr_tap_part_help" translatable="false">Tap a part of the picture to change it</string>
+    <string name="next_scr_not_saved_label" translatable="false">Not saved</string>
+    <string name="next_scr_own_colours_label" translatable="false">%1$s · own colours</string>
+    <string name="next_scr_none_label" translatable="false">None</string>
+    <string name="next_scr_photo_label" translatable="false">Photo</string>
+    <string name="next_scr_custom_label" translatable="false">Custom</string>
+    <string name="next_scr_auto_label" translatable="false">Auto</string>
+    <string name="next_scr_fixed_label" translatable="false">Fixed</string>
+    <string name="next_scr_dpi_label" translatable="false">%1$d dpi</string>
+    <string name="next_scr_size_values_label" translatable="false">%1$s · %2$s</string>
+    <string name="next_scr_orbit_help" translatable="false">Rounds and rings over the map</string>
+    <string name="next_scr_in_use_label" translatable="false">In use</string>
+    <string name="next_scr_race_label" translatable="false">RACE</string>
+    <string name="next_scr_race_help" translatable="false">A sportier design</string>
+    <string name="next_scr_coming_label" translatable="false">Coming later</string>
+    <string name="next_scr_shade_label" translatable="false">Shade behind ORBIT\'s parts</string>
+    <string name="next_scr_panels_label" translatable="false">Close panels after</string>
+    <string name="next_scr_never_label" translatable="false">Never</string>
+    <string name="next_scr_seconds_label" translatable="false">%1$d s</string>
+    <string name="next_scr_archive_help" translatable="false">DECK and older layouts are in More › Archive</string>
+    <string name="next_scr_text_size_label" translatable="false">Text size</string>
+    <string name="next_scr_control_size_label" translatable="false">Control size</string>
+    <string name="next_scr_fits_label" translatable="false">How much fits</string>
+    <string name="next_scr_fits_help" translatable="false">Higher draws larger, so less fits</string>
+    <string name="next_scr_density_label" translatable="false">Density</string>
+    <string name="next_scr_fixed_help" translatable="false">Fixed: 120, 160, 200, 213 or 240 dpi</string>
+    <string name="next_scr_live_label" translatable="false">Live</string>
+    <string name="next_scr_edit_photo_label" translatable="false">Edit the photo</string>
+    <string name="next_scr_darker_value_label" translatable="false">Darker %1$d %%</string>
+    <string name="next_scr_other_photo_label" translatable="false">Choose another photo</string>
+    <string name="next_scr_photo_private_help" translatable="false">A photo is not in backups or shared looks</string>
+    <string name="next_scr_close_label" translatable="false">Close</string>
+    <string name="next_scr_start_again_label" translatable="false">Start again</string>
+    <string name="next_scr_drag_help" translatable="false">Drag to move, pinch to zoom</string>
+    <string name="next_scr_darker_label" translatable="false">Darker</string>
+    <string name="next_scr_blur_label" translatable="false">Blur</string>
+    <string name="next_scr_use_label" translatable="false">Use as wallpaper</string>
+    <string name="next_scr_saving_label" translatable="false">Saving…</string>
+    <string name="next_scr_before_help" translatable="false">As the app draws it</string>
+    <string name="next_scr_after_help" translatable="false">On the car screen</string>
+    <string name="next_scr_preset_label" translatable="false">Preset</string>
+    <string name="next_scr_fine_tune_label" translatable="false">Fine-tune</string>
+    <string name="next_scr_hue_label" translatable="false">Hue shift</string>
+    <string name="next_scr_colourful_label" translatable="false">Colourfulness</string>
+    <string name="next_scr_brightness_label" translatable="false">Brightness</string>
+    <string name="next_scr_contrast_label" translatable="false">Contrast</string>
+    <string name="next_scr_tint_label" translatable="false">Tint</string>
+    <string name="next_scr_tint_colour_label" translatable="false">Tint colour</string>
+    <string name="next_scr_night_label" translatable="false">Darker at night</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_switch_on_label" translatable="false">New phone app on</string>

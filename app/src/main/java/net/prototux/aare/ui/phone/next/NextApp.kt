@@ -92,6 +92,8 @@ val NextTab.icon: ImageVector
 class NextNavigator internal constructor(
     val open: (String) -> Unit,
     internal val scrollTop: Int,
+    /** Back, as the system's Back would do it. */
+    val back: () -> Unit = {},
 )
 
 val LocalNextNavigator = compositionLocalOf { NextNavigator(open = {}, scrollTop = 0) }
@@ -176,7 +178,7 @@ fun NextApp(
             )
         },
     ) {
-        val navigator = NextNavigator(open = { go(nav.open(it)) }, scrollTop = scrollTop[nav.tab.ordinal])
+        val navigator = NextNavigator(open = { go(nav.open(it)) }, scrollTop = scrollTop[nav.tab.ordinal], back = { nav.back()?.let { go(it) } })
         val shift = with(LocalDensity.current) { 48.dp.toPx() }
         Box(
             Modifier.weight(1f).fillMaxWidth().graphicsLayer {
@@ -196,7 +198,7 @@ fun NextApp(
                 ) { entry ->
                     pages.SaveableStateProvider(entry.route) {
                         Column(Modifier.fillMaxSize()) {
-                            NextTopBar(entry.route, onBack = { nav.back()?.let { go(it) } })
+                            if (entry.route !in NextRoutes.FULL_SCREEN) NextTopBar(entry.route, onBack = { nav.back()?.let { go(it) } })
                             Box(Modifier.weight(1f)) { page(entry.route) }
                         }
                     }
@@ -204,7 +206,7 @@ fun NextApp(
             }
             NextSnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp))
         }
-        NextTabBar(nav.tab, badges) { tab ->
+        if (nav.route !in NextRoutes.FULL_SCREEN) NextTabBar(nav.tab, badges) { tab ->
             if (tab == nav.tab && nav.atRoot) {
                 scrollTop = scrollTop.copyOf().also { it[tab.ordinal]++ }
             } else {

@@ -157,4 +157,11 @@ class NextAppTest {
         page("screen/colours").assertExists()
         back(); page("screen").assertExists()
     }
+
+    @Test fun aFullScreenPageHasNoBars() {
+        rule.setContent { NextApp(start = "screen/wallpaper/edit") { TestPage(it) } }
+        rule.onNodeWithTag("next-tab-home").assertDoesNotExist()
+        rule.onNodeWithTag("next-back").assertDoesNotExist()
+        back(); rule.onNodeWithTag("next-tab-home").assertExists()
+    }
 }
