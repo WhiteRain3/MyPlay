@@ -435,7 +435,7 @@
     <string name="phone_youtube_app_needs_root" translatable="false">The real YouTube app, as a phone app on the car screen: parked only. Needs root or Shizuku, which this phone does not give MyPlay yet.</string>
     <string name="phone_youtube_app_also" translatable="false">This also turns on phone apps on the car screen, with any other apps chosen below.</string>
     <string name="phone_speed_mobile_title" translatable="false">Download on mobile data</string>
-    <string name="phone_speed_mobile_hint" translatable="false">Off: Wi-Fi only. On: the file and its monthly update may also use mobile data.</string>
+    <string name="phone_speed_mobile_hint" translatable="false">Off: Wi-Fi only. On: the file and its monthly update may also use mobile data, never when roaming.</string>
     <string name="phone_speed_mobile_confirm" translatable="false">The speed limit file is %1$s. Downloading it, and each monthly update, may then use that much mobile data.</string>
     <string name="phone_speed_mobile_confirm_unknown" translatable="false">The file\'s size could not be looked up just now. Downloading it, and each monthly update, may then use mobile data.</string>
     <string name="phone_speed_mobile_allow" translatable="false">Allow</string>

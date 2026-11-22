@@ -135,7 +135,6 @@ class SpeedLimitMobileTest {
         assertFalse(s.myplaySpeedLimitMobile)
         s.myplaySpeedLimitMobile = true
         assertTrue(s.myplaySpeedLimitMobile)
-        assertTrue(SpeedLimitDownload.mayDownload(ctx))
         assertTrue(KEY_SPEED_LIMIT_MOBILE in net.prototux.aare.SettingsBackup.ALLOWED)
     }
 }

@@ -53,7 +53,20 @@ object SpeedLimitDownload {
             ?.takeIf { SpeedLimitFiles.file(context.filesDir, region).isFile }
 
     /** Whether a download may run now: on Wi-Fi, or on mobile data when the owner allowed it. */
-    fun mayDownload(context: Context): Boolean = unmetered(context) || Settings(context).myplaySpeedLimitMobile
+    fun mayDownload(context: Context): Boolean =
+        unmetered(context) || (Settings(context).myplaySpeedLimitMobile && !roaming(context))
+
+    /** Whether the phone is roaming now: mobile data is then never used for the file (SL-12). Unknown counts as roaming. */
+    fun roaming(context: Context): Boolean {
+        val cm = context.getSystemService(ConnectivityManager::class.java) ?: return true
+        val network = cm.activeNetwork ?: return true
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            val caps = cm.getNetworkCapabilities(network) ?: return true
+            return !caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING)
+        }
+        @Suppress("DEPRECATION")
+        return cm.activeNetworkInfo?.isRoaming ?: true
+    }
 
     /** The region's file description from the release page, for its size before a download (small, any network); null if unknown. */
     suspend fun lookUp(region: String): SpeedLimitManifest? = withContext(Dispatchers.IO) {
