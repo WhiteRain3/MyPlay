@@ -68,7 +68,8 @@ import net.prototux.aare.car.myplayGestureHoldMs
 /** The gestures the page offers for [control]. Back has no double press: two quick Backs already leave an app that ignores Back. */
 internal fun gesturesFor(control: Control): List<Gesture> = when (control) {
     Control.KNOB_PUSH -> listOf(Gesture.PRESS, Gesture.HOLD, Gesture.DOUBLE, Gesture.TRIPLE, Gesture.HOLD_TURN)
-    Control.WHEEL_CLICK, Control.MENU -> listOf(Gesture.PRESS, Gesture.HOLD, Gesture.DOUBLE)
+    Control.WHEEL_CLICK -> listOf(Gesture.PRESS, Gesture.HOLD, Gesture.DOUBLE, Gesture.TRIPLE)
+    Control.MENU -> listOf(Gesture.PRESS, Gesture.HOLD, Gesture.DOUBLE)
     Control.BACK -> listOf(Gesture.PRESS, Gesture.HOLD)
 }
 
