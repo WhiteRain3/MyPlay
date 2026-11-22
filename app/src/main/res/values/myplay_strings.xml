@@ -100,7 +100,7 @@
     <string name="myplay_warning_ice_sign" translatable="false">Ice possible</string>
     <string name="myplay_warning_phone_hot" translatable="false">The phone is hot: the screen may slow down</string>
     <string name="myplay_setting_drive_warnings" translatable="false">Ice and phone warnings</string>
-    <string name="phone_drive_warnings_hint" translatable="false">The outside temperature and, at 4 °C or less, a snowflake by the clock, if the car reports it, with a short line once per drive. Also a line when the phone gets hot, and one soft pulse of the limit sign when the limit changes.</string>
+    <string name="phone_drive_warnings_hint" translatable="false">The outside temperature and, at 4 °C or less, a snowflake by the clock, if the car reports it, with a short line once per drive. Also a line when the phone gets hot.</string>
     <!-- #10: call back the last missed call (an action for a button or the home pad) -->
     <string name="phone_action_call_back" translatable="false">Call back the last missed call</string>
     <string name="myplay_call_back_title" translatable="false">Call back</string>
@@ -127,4 +127,7 @@
     <string name="myplay_parked_navigate" translatable="false">Navigate back to car</string>
     <string name="phone_parked_title" translatable="false">Remember where I parked</string>
     <string name="phone_parked_hint" translatable="false">When a drive ends, keeps the spot on this phone only and offers the way back in a notification.</string>
+    <!-- LP-1: the limit sign's pulse on its own switch -->
+    <string name="myplay_setting_limit_pulse" translatable="false">Limit sign pulse</string>
+    <string name="phone_limit_pulse_hint" translatable="false">The speed limit sign grows a little once when the limit changes. No sound.</string>
 </resources>

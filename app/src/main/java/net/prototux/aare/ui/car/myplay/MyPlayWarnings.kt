@@ -10,8 +10,8 @@ import androidx.compose.runtime.compositionLocalOf
 val LocalRoadIce = compositionLocalOf { false }
 
 /**
- * MyPlay (#7): whether the skin's speed limit sign pulses once when the limit changes (the drive
- * warnings' switch). Provided by the engine round the speed; off in the phone's picture.
+ * MyPlay (#7): whether the skin's speed limit sign pulses once when the limit changes (LP-1: its
+ * own switch, myplay_limit_pulse). Provided by the engine round the speed; off in the phone's picture.
  */
 val LocalLimitPulse = compositionLocalOf { false }
 

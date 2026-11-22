@@ -8,6 +8,7 @@ import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.location.Location
 import net.prototux.aare.car.myplayDriveWarnings
+import net.prototux.aare.car.myplayLimitPulse
 import net.prototux.aare.car.myplayPlaces
 import net.prototux.aare.car.myplaySpeedSource
 import android.media.projection.MediaProjection
@@ -370,6 +371,7 @@ class CarRuntime(
         ui.infoHome = settings.myplayInfoHome // MyPlay (O11): the info-only home
         ui.orbitShadeSoft = settings.myplayOrbitShade != net.prototux.aare.ui.car.myplay.ORBIT_SHADE_NONE // MyPlay (SH-1)
         ui.driveWarnings = settings.myplayDriveWarnings // MyPlay: quiet road and phone warnings
+        ui.limitPulse = settings.myplayLimitPulse // MyPlay (LP-1): the limit sign's pulse
         // MyPlay (#5): Home and the saved places for the Navigate world.
         ui.navPlaces = net.prototux.aare.car.Places.destinations(settings.myplayHomeAddress, settings.myplayPlaces, context.getString(R.string.myplay_places_home))
         ui.mapsIdleHomeMin = settings.myplayMapsIdleHome // MyPlay (O2b): a full-screen maps app goes home when idle
@@ -988,7 +990,7 @@ class CarRuntime(
             "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
             "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", KEY_ENGINE_LANGUAGE, "myplay_speed_source", "myplay_debug_nav_text",
             KEY_PANEL_TIMEOUT, net.prototux.aare.ui.car.myplay.KEY_HOME_PAD, net.prototux.aare.ui.car.myplay.KEY_MAPS_IDLE_HOME, net.prototux.aare.ui.car.myplay.KEY_INFO_HOME, net.prototux.aare.ui.car.myplay.KEY_ORBIT_SHADE,
-            net.prototux.aare.car.KEY_DRIVE_WARNINGS, net.prototux.aare.car.KEY_PLACES, net.prototux.aare.car.KEY_HOME_ADDRESS,
+            net.prototux.aare.car.KEY_DRIVE_WARNINGS, net.prototux.aare.car.KEY_LIMIT_PULSE, net.prototux.aare.car.KEY_PLACES, net.prototux.aare.car.KEY_HOME_ADDRESS,
         )
 
         private const val TAG = "AareRuntime"

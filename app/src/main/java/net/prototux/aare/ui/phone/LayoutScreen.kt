@@ -53,6 +53,7 @@ import net.prototux.aare.ui.car.myplay.PanelTimeout
 import net.prototux.aare.ui.car.myplay.ORBIT_SHADE_NONE
 import net.prototux.aare.ui.car.myplay.ORBIT_SHADE_SOFT
 import net.prototux.aare.car.myplayDriveWarnings
+import net.prototux.aare.car.myplayLimitPulse
 import net.prototux.aare.ui.car.myplay.myplayOrbitShade
 import net.prototux.aare.ui.car.myplay.MapsIdleHome
 import net.prototux.aare.ui.car.myplay.myplayMapsIdleHome
@@ -336,6 +337,7 @@ private fun OrbitPreviewSwitch() {
     var shade by remember { mutableStateOf(settings.myplayOrbitShade) }
     var mapsIdle by remember { mutableIntStateOf(settings.myplayMapsIdleHome) }
     var warnings by remember { mutableStateOf(settings.myplayDriveWarnings) }
+    var pulse by remember { mutableStateOf(settings.myplayLimitPulse) }
     Spacer(Modifier.height(12.dp))
     RowGroup(rows = listOf {
         SwitchRow(Icons.Rounded.Layers, stringResource(R.string.phone_orbit_preview_title), on, TileTone.VIOLET,
@@ -387,6 +389,12 @@ private fun OrbitPreviewSwitch() {
         RowGroup(rows = listOf {
             SwitchRow(Icons.Rounded.Layers, stringResource(R.string.myplay_setting_drive_warnings), warnings, TileTone.VIOLET,
                 stringResource(R.string.phone_drive_warnings_hint)) { warnings = it; settings.myplayDriveWarnings = it }
+        })
+        // LP-1: the limit sign's pulse, on its own switch.
+        Spacer(Modifier.height(12.dp))
+        RowGroup(rows = listOf {
+            SwitchRow(Icons.Rounded.Layers, stringResource(R.string.myplay_setting_limit_pulse), pulse, TileTone.VIOLET,
+                stringResource(R.string.phone_limit_pulse_hint)) { pulse = it; settings.myplayLimitPulse = it }
         })
     }
 }
