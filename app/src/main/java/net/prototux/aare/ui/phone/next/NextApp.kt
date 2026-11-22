@@ -220,7 +220,8 @@ fun NextApp(
 @Composable
 private fun NextTopBar(route: String, onBack: () -> Unit) {
     val tab = NextRoutes.tabOf(route) ?: NextTab.HOME
-    val title = NextPages.title(route)?.let { stringResource(it) } ?: route.substringAfterLast('/')
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val title = NextPages.title(route)?.let { stringResource(it) } ?: carTitle(ctx, route) ?: route.substringAfterLast('/')
     val isRoot = route == tab.root
     Row(
         Modifier.fillMaxWidth().statusBarsPadding().height(if (isRoot) 72.dp else 64.dp)

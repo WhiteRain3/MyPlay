@@ -107,8 +107,12 @@ fun NextPage(route: String, onOldApp: () -> Unit) {
         "apps/phone-apps" -> NextPhoneAppsPage()
         "apps/phone-screen" -> NextPhoneScreenPage()
         "apps/browser" -> NextBrowserPage()
+        "more" -> NextMoreRoot()
+        "more/cars" -> NextCarsPage()
+        "more/connection" -> NextConnectionPage()
+        "more/backup" -> NextBackupPage()
         "more/updates" -> NextUpdatesPage()
         "more/whats-new" -> NextWhatsNewPage()
-        else -> NextPlaceholder(route, onOldApp)
+        else -> if (route.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(route.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(route, onOldApp)
     }
 }

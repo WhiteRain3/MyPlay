@@ -437,6 +437,53 @@
     <string name="next_speed_warnings_label" translatable="false">Ice and hot-phone warnings</string>
     <string name="next_speed_warnings_help" translatable="false">A small sign, and a line once per drive</string>
 
+    <!-- More -->
+    <string name="next_more_ready_label" translatable="false">%1$s ready</string>
+    <string name="next_more_wireless_on_label" translatable="false">Wireless on</string>
+    <string name="next_more_wireless_off_label" translatable="false">Wireless off</string>
+    <string name="next_more_saved_label" translatable="false">Saved %1$s</string>
+    <string name="next_more_never_label" translatable="false">Never</string>
+    <string name="next_more_normal_label" translatable="false">Normal</string>
+    <string name="next_more_changed_label" translatable="false">Changed</string>
+    <string name="next_more_not_used_label" translatable="false">Not used</string>
+    <plurals name="next_more_cars_count_label" translatable="false">
+        <item quantity="one">%1$d car</item>
+        <item quantity="other">%1$d cars</item>
+    </plurals>
+    <string name="next_more_no_cars_help" translatable="false">Cars appear here after the first connection.</string>
+    <string name="next_more_trusted_label" translatable="false">Trusted</string>
+    <string name="next_more_trusted_info" translatable="false">MyPlay checks this car\'s certificate each time. A different one asks for Trust again.</string>
+    <string name="next_more_not_trusted_label" translatable="false">Not trusted yet</string>
+    <string name="next_more_asks_help" translatable="false">Each car asks once</string>
+    <string name="next_more_car_fixes_label" translatable="false">Car fixes</string>
+    <string name="next_more_forget_car_label" translatable="false">Forget this car</string>
+    <string name="next_more_car_forgotten_label" translatable="false">Car forgotten</string>
+    <string name="next_more_last_connected_label" translatable="false">Last connected %1$s</string>
+    <string name="next_more_wifi_label" translatable="false">Wi-Fi</string>
+    <string name="next_more_wireless_label" translatable="false">Wireless</string>
+    <string name="next_more_bt_label" translatable="false">Phone\'s Bluetooth address</string>
+    <string name="next_more_bt_help" translatable="false">Optional, if the car needs it</string>
+    <string name="next_more_bt_field_label" translatable="false">Like 00:11:22:33:44:55</string>
+    <string name="next_more_bt_dialog_help" translatable="false">Empty means MyPlay finds it.</string>
+    <string name="next_more_bt_error_help" translatable="false">Six pairs of 0–9 or A–F, with colons</string>
+    <string name="next_more_save_label" translatable="false">Save to a file</string>
+    <string name="next_more_last_saved_help" translatable="false">Last saved %1$s</string>
+    <string name="next_more_never_saved_help" translatable="false">Not saved yet</string>
+    <string name="next_more_load_label" translatable="false">Load from a file</string>
+    <string name="next_more_load_help" translatable="false">Replaces your settings; asks first</string>
+    <string name="next_more_load_button_label" translatable="false">Load</string>
+    <string name="next_more_not_in_file_help" translatable="false">Photos, certificates and trusted cars are not in it</string>
+    <string name="next_more_replace_label" translatable="false">Replace your settings?</string>
+    <string name="next_more_replace_info" translatable="false">Your current settings are overwritten by the file. This can\'t be undone.</string>
+    <string name="next_more_replace_button_label" translatable="false">Replace</string>
+    <string name="next_more_loaded_label" translatable="false">Settings loaded</string>
+    <string name="next_more_left_out_help" translatable="false">%1$d left out as unknown or blocked</string>
+    <string name="next_more_set_again_label" translatable="false">Set these again on this phone</string>
+    <string name="next_more_photo_label" translatable="false">Wallpaper photo</string>
+    <string name="next_more_choose_label" translatable="false">Choose</string>
+    <string name="next_more_import_label" translatable="false">Import</string>
+    <string name="next_more_trusted_cars_label" translatable="false">Trusted cars</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_switch_on_label" translatable="false">New phone app on</string>

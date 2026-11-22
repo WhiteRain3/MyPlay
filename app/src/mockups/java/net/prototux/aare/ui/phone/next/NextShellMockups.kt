@@ -171,4 +171,8 @@ class NextShellMockups {
 
     @Test fun appsRoot() = paparazzi.snapshot { Page("apps") { NextAppsRoot() } }
     @Test fun appsPhoneApps() = paparazzi.snapshot { Page("apps/phone-apps") { NextPhoneAppsPage() } }
+
+    @Test fun moreRootPage() = paparazzi.snapshot { Page("more") { NextMoreRoot() } }
+    @Test fun moreBackup() = paparazzi.snapshot { Page("more/backup") { NextBackupPage() } }
+    @Test fun moreConnection() = paparazzi.snapshot { Page("more/connection") { NextConnectionPage() } }
 }

@@ -580,22 +580,34 @@ fun NextConfirm(title: String, text: String, confirm: String, onConfirm: () -> U
     }
 }
 
-/** Shows an undo snackbar: [message], and [undo] if the owner taps Undo in time (plan §10). */
-fun interface NextUndo {
-    fun show(message: String, undo: () -> Unit)
+/**
+ * Shows an undo snackbar: [message], and [undo] if the owner taps Undo in time (plan §10). [commit] runs
+ * when the time is up without Undo, for actions that only take effect after the undo window (Forget a car).
+ */
+interface NextUndo {
+    fun show(message: String, undo: () -> Unit) = show(message, undo) {}
+    fun show(message: String, undo: () -> Unit, commit: () -> Unit)
 }
 
-val LocalNextUndo = staticCompositionLocalOf { NextUndo { _, _ -> } }
+val LocalNextUndo = staticCompositionLocalOf<NextUndo> { object : NextUndo { override fun show(message: String, undo: () -> Unit, commit: () -> Unit) = commit() } }
 
 /** The snackbar host the shell places above the tab bar; [undoLabel] is "Undo". */
 @Composable
 fun rememberNextUndo(host: SnackbarHostState, undoLabel: String): NextUndo {
     val scope = rememberCoroutineScope()
     return remember(host, undoLabel) {
-        NextUndo { message, undo ->
-            scope.launch {
-                host.currentSnackbarData?.dismiss()
-                if (host.showSnackbar(message, undoLabel, duration = SnackbarDuration.Short) == SnackbarResult.ActionPerformed) undo()
+        object : NextUndo {
+            override fun show(message: String, undo: () -> Unit, commit: () -> Unit) {
+                scope.launch {
+                    host.currentSnackbarData?.dismiss()
+                    val result = try {
+                        host.showSnackbar(message, undoLabel, duration = SnackbarDuration.Short)
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        // The app went away before the time was up: that counts as no Undo.
+                        commit(); throw e
+                    }
+                    if (result == SnackbarResult.ActionPerformed) undo() else commit()
+                }
             }
         }
     }
