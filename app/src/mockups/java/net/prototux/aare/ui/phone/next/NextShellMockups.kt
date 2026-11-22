@@ -162,4 +162,10 @@ class NextShellMockups {
     @Test fun carPad() = paparazzi.snapshot { Page("car/buttons/pad-shortcuts") { NextPadShortcutsPage() } }
     @Test fun carTiming() = paparazzi.snapshot { Page("car/buttons/timing") { NextTimingPage() } }
     @Test fun carTeach() = paparazzi.snapshot { Page("car/buttons/teach") { NextTeachPage() } }
+
+    @Test fun car2Maps() = paparazzi.snapshot { Page("car/maps") { NextMapsPage() } }
+    @Test fun car2Speed() = paparazzi.snapshot { Page("car/speed") { NextSpeedPage() } }
+    @Test fun car2Sound() = paparazzi.snapshot { Page("car/sound") { NextSoundPage() } }
+    @Test fun car2Messages() = paparazzi.snapshot { Page("car/messages") { NextMessagesPage() } }
+    @Test fun car2Voice() = paparazzi.snapshot { Page("car/voice") { NextVoicePage() } }
 }
