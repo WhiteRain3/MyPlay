@@ -169,13 +169,17 @@ class MyPlayOpeningTest {
         // The first frame the app is on screen (of its 260 ms).
         var frames = 0
         while (rule.onAllNodes(androidx.compose.ui.test.hasTestTag(FRAME_APP_TAG)).fetchSemanticsNodes().isEmpty() && frames++ < 30) rule.mainClock.advanceTimeByFrame()
-        val start = rule.onNodeWithTag(FRAME_APP_TAG).fetchSemanticsNode().boundsInRoot
-        assertTrue("starts small, round the disc $disc: $start", start.width < 1280f * 0.8f && start.contains(disc.center))
+        // O3-3: the app itself is full size at once (a surface view never has to follow a scale);
+        // the cover over it leaves a window round the disc.
+        val app = rule.onNodeWithTag(FRAME_APP_TAG).fetchSemanticsNode().boundsInRoot
+        assertEquals(1280f, app.width, 1f)
+        rule.onNodeWithTag(REVEAL_TAG).assertExists()
+        val box = FocusGraph.Box(disc.left, disc.top, disc.right, disc.bottom)
+        val window = revealRect(box, 1280f, 720f, 0f)
+        assertEquals(box, window)
         rule.mainClock.advanceTimeBy(1_000)
-        val end = rule.onNodeWithTag(FRAME_APP_TAG).fetchSemanticsNode().boundsInRoot
-        assertEquals(0f, end.left, 1f)
-        assertEquals(1280f, end.right, 1f)
-        assertEquals(720f, end.bottom, 1f)
+        rule.onNodeWithTag(REVEAL_TAG).assertDoesNotExist()
+        assertEquals(FocusGraph.Box(0f, 0f, 1280f, 720f), revealRect(box, 1280f, 720f, 1f))
     }
 
     @Test fun theScaleRunsFromTheStopToTheScreen() {

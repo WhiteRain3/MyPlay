@@ -192,9 +192,11 @@ internal fun MyPlayAppFrame(
                 if (!state.railOnRight) rail()
                 val origin = memory.origin
                 ContentArea(state, actions, appContent, navMap,
-                    Modifier.weight(1f).fillMaxHeight().let { if (grows) it.grownFrom(origin) { grow.value } else it }.testTag(FRAME_APP_TAG))
+                    Modifier.weight(1f).fillMaxHeight().testTag(FRAME_APP_TAG))
                 if (state.railOnRight) rail()
             }
+            // O3-3: the app shows through a window growing out of its stop (over any surface view).
+            if (grows && grow.value < 1f) RevealCover(memory.origin, { grow.value }, tokens.background, Modifier.matchParentSize())
             overlay(Modifier.align(Alignment.BottomCenter))
             // O3: the way home, the first few times in a drive (there is no rail to show it).
             if (hint) key(appKey) { HomeHint(true, Modifier.align(Alignment.BottomCenter).padding(bottom = 28.dp)) }

@@ -135,3 +135,37 @@ internal fun HomeHint(show: Boolean, modifier: Modifier) {
 
 internal const val SHRINK_TAG = "app_shrink"
 internal const val HOME_HINT_TAG = "app_home_hint"
+
+/**
+ * O3-3: the window an opening app shows through at [p] (0 the stop, 1 the whole [w]x[h] screen),
+ * from [box] (null: the middle).
+ */
+internal fun revealRect(box: FocusGraph.Box?, w: Float, h: Float, p: Float): FocusGraph.Box {
+    val b = box ?: FocusGraph.Box(w * 0.2f, h * 0.2f, w * 0.8f, h * 0.8f)
+    val v = p.coerceIn(0f, 1f)
+    fun lerp(a: Float, z: Float) = a + (z - a) * v
+    return FocusGraph.Box(lerp(b.left, 0f), lerp(b.top, 0f), lerp(b.right, w), lerp(b.bottom, h))
+}
+
+/**
+ * O3-3 (the Reviewer: a maps app's SurfaceView does not follow a scaled layer): the app is drawn
+ * full size at once, and this cover, in the screen's background, hides all but a window that grows
+ * from the stop to the whole screen. Drawn over the app, so it works over any surface.
+ */
+@Composable
+internal fun RevealCover(box: FocusGraph.Box?, p: () -> Float, color: androidx.compose.ui.graphics.Color, modifier: Modifier) =
+    androidx.compose.foundation.Canvas(modifier.fillMaxSize().testTag(REVEAL_TAG)) {
+        val v = p()
+        if (v >= 1f) return@Canvas
+        val r = revealRect(box, size.width, size.height, v)
+        val corner = (48 * (1f - v)).dp.toPx()
+        val path = androidx.compose.ui.graphics.Path().apply {
+            fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+            addRect(androidx.compose.ui.geometry.Rect(0f, 0f, size.width, size.height))
+            addRoundRect(androidx.compose.ui.geometry.RoundRect(r.left, r.top, r.right, r.bottom,
+                androidx.compose.ui.geometry.CornerRadius(corner, corner)))
+        }
+        drawPath(path, color)
+    }
+
+internal const val REVEAL_TAG = "app_reveal"
