@@ -24,6 +24,8 @@ internal class GestureEngine(
     private val timings: () -> Timings,
     private val doubleCapable: (code: Int) -> Boolean,
     private val clock: Clock,
+    /** G-2: keys whose triple press does something (they then wait for a third press after a second). */
+    private val tripleCapable: (code: Int) -> Boolean = { false },
     private val emit: (Gesture) -> Unit,
 ) {
     data class Timings(val holdMs: Long = HOLD_MS, val doubleMs: Long = DOUBLE_MS, val staleMs: Long = STALE_MS)
@@ -33,6 +35,8 @@ internal class GestureEngine(
         data class Press(override val code: Int) : Gesture
         data class Hold(override val code: Int) : Gesture
         data class Double(override val code: Int) : Gesture
+        /** G-2: three presses, each within [Timings.doubleMs] of the last. */
+        data class Triple(override val code: Int) : Gesture
         data class HoldTurn(override val code: Int, val steps: Int) : Gesture
     }
 
@@ -51,6 +55,8 @@ internal class GestureEngine(
     private val downs = HashMap<Int, Down>()
     /** A first press of a double-capable key, waiting to see whether a second follows. */
     private val waiting = HashMap<Int, () -> Unit>()
+    /** G-2: presses so far in a run of a key that waits for more. */
+    private val presses = HashMap<Int, Int>()
 
     fun onKey(code: Int, down: Boolean, carLongPress: Boolean = false) {
         val now = clock.now()
@@ -75,16 +81,21 @@ internal class GestureEngine(
         if (d != null && d.used) return
         // The car flags the up only (or sends no down): it was a long press all the same.
         if (carLongPress) { emit(Gesture.Hold(code)); return }
-        if (!doubleCapable(code)) { emit(Gesture.Press(code)); return }
-        val first = waiting.remove(code)
-        if (first != null) {
-            first()
-            emit(Gesture.Double(code))
-        } else {
-            waiting[code] = clock.after(timings().doubleMs) {
-                waiting.remove(code)
-                emit(Gesture.Press(code))
-            }
+        val triple = tripleCapable(code)
+        if (!doubleCapable(code) && !triple) { emit(Gesture.Press(code)); return }
+        // G-2: a run of presses, each within the double-press time of the last: one, two or three.
+        waiting.remove(code)?.invoke()
+        val n = (presses[code] ?: 0) + 1
+        if (n >= 3 || (n == 2 && !triple)) {
+            presses.remove(code)
+            emit(if (n >= 3) Gesture.Triple(code) else Gesture.Double(code))
+            return
+        }
+        presses[code] = n
+        waiting[code] = clock.after(timings().doubleMs) {
+            waiting.remove(code)
+            val count = presses.remove(code) ?: 1
+            emit(if (count >= 2) Gesture.Double(code) else Gesture.Press(code))
         }
     }
 

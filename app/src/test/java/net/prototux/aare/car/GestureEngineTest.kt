@@ -43,6 +43,36 @@ class GestureEngineTest {
         engine.onKey(code, false)
     }
 
+    /** G-2: a key with a triple action: one, two or three quick presses. */
+    private val triples = GestureEngine({ GestureEngine.Timings() }, doubleCapable = { it == ENTER }, clock = clock,
+        emit = { got += it }, tripleCapable = { it == ENTER })
+
+    private fun press3(code: Int) {
+        triples.onKey(code, true)
+        advance(30)
+        triples.onKey(code, false)
+    }
+
+    @Test fun threeQuickPressesAreATriple() {
+        repeat(3) { press3(ENTER); advance(120) }
+        assertEquals(listOf(Gesture.Triple(ENTER)), got)
+        advance(1_000)
+        assertEquals(listOf(Gesture.Triple(ENTER)), got)
+    }
+
+    @Test fun withATripleTwoPressesWaitThenAreADouble() {
+        repeat(2) { press3(ENTER); advance(120) }
+        assertTrue(got.isEmpty())
+        advance(GestureEngine.DOUBLE_MS)
+        assertEquals(listOf(Gesture.Double(ENTER)), got)
+    }
+
+    @Test fun withATripleOnePressIsStillAPress() {
+        press3(ENTER)
+        advance(GestureEngine.DOUBLE_MS)
+        assertEquals(listOf(Gesture.Press(ENTER)), got)
+    }
+
     @Test fun aShortPressOfAPlainKeyIsAPressAtOnce() {
         press(BACK)
         assertEquals(listOf(Gesture.Press(BACK)), got)

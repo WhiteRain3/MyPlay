@@ -762,6 +762,7 @@ class CarSession(
             }
         },
         emit = ::onGesture,
+        tripleCapable = { buttonTable.tripleCapable(it) },
     )
 
     private fun gestureTurn(steps: Int) = gestures.onTurn(steps, buttonTable::turnCapable)
@@ -771,6 +772,7 @@ class CarSession(
             is GestureEngine.Gesture.Press -> ButtonTable.Gesture.PRESS
             is GestureEngine.Gesture.Hold -> ButtonTable.Gesture.HOLD
             is GestureEngine.Gesture.Double -> ButtonTable.Gesture.DOUBLE
+            is GestureEngine.Gesture.Triple -> ButtonTable.Gesture.TRIPLE
             is GestureEngine.Gesture.HoldTurn -> ButtonTable.Gesture.HOLD_TURN
         }
         val action = buttonTable.resolve(g.code, gesture) ?: return

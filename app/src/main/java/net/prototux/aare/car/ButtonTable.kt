@@ -27,7 +27,9 @@ internal class ButtonTable(
     }
 
     enum class Gesture(val id: String) {
-        PRESS("press"), HOLD("hold"), DOUBLE("double"), HOLD_TURN("hold_turn");
+        PRESS("press"), HOLD("hold"), DOUBLE("double"), HOLD_TURN("hold_turn"),
+        /** G-2: three quick presses. */
+        TRIPLE("triple");
 
         companion object {
             fun byId(id: String) = entries.firstOrNull { it.id == id }
@@ -48,6 +50,9 @@ internal class ButtonTable(
 
     /** Whether a double press of [code] does something: if not, its press need not wait. */
     fun doubleCapable(code: Int) = resolve(code, Gesture.DOUBLE).let { it != null && it != ButtonAction.NOTHING }
+
+    /** G-2: whether a triple press of [code] does something: if so, a double press waits for a third. */
+    fun tripleCapable(code: Int) = resolve(code, Gesture.TRIPLE).let { it != null && it != ButtonAction.NOTHING }
 
     /** Whether a knob turn while [code] is held belongs to the hold rather than to the ring. */
     fun turnCapable(code: Int) = resolve(code, Gesture.HOLD_TURN).let { it != null && it != ButtonAction.NOTHING }
@@ -74,6 +79,9 @@ internal class ButtonTable(
             (Control.KNOB_PUSH to Gesture.HOLD) to ButtonAction.NEXT,
             (Control.KNOB_PUSH to Gesture.DOUBLE) to ButtonAction.NOTHING,
             (Control.KNOB_PUSH to Gesture.HOLD_TURN) to ButtonAction.SKIP_SONGS,
+            // G-2 (the owner: the wheel has no next/previous buttons; its click is the knob's code):
+            // three quick pushes, the previous song.
+            (Control.KNOB_PUSH to Gesture.TRIPLE) to ButtonAction.PREVIOUS,
             (Control.WHEEL_CLICK to Gesture.PRESS) to ButtonAction.PLAY_PAUSE,
             (Control.WHEEL_CLICK to Gesture.HOLD) to ButtonAction.NEXT,
             (Control.WHEEL_CLICK to Gesture.DOUBLE) to ButtonAction.PREVIOUS,

@@ -156,6 +156,7 @@
     <string name="phone_gesture_hold" translatable="false">Press and hold</string>
     <string name="phone_gesture_double" translatable="false">Double press</string>
     <string name="phone_gesture_hold_turn" translatable="false">Hold and turn</string>
+    <string name="phone_gesture_triple" translatable="false">Triple press</string>
     <string name="phone_buttons_default" translatable="false">Default</string>
     <string name="phone_buttons_changed" translatable="false">Changed</string>
     <string name="phone_buttons_choose" translatable="false">Does</string>
