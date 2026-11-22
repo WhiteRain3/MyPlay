@@ -585,6 +585,8 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 | `myplay_debug_map_areas`, `myplay_debug_nav_text` | Boolean | — | Developer |
 | `myplay_new_phone_app` | Boolean | — | internal: the hidden switch to the new app (chunk 0); removed with the old app (chunk 14) |
 | `myplay_update_asked` | Boolean | — | internal: the update question was asked once (§5) |
+| `myplay_setup_done` | Boolean | — | internal: first-run Setup was finished or left (§10); not backed up |
+| `myplay_car_check_running` | Boolean | — | internal: a Car check run was going on, for the "stopped" Home card (§4); not backed up |
 | `myplay_home_address` | String | — | Car › Buttons › Home and places (not backed up, HA-1) |
 | `myplay_places` | String | — | Car › Buttons › Home and places (up to five; not backed up, PL-2) |
 | `myplay_drive_warnings` | Boolean | A | Car › Speed (ice sign and hot-phone line; default on) |

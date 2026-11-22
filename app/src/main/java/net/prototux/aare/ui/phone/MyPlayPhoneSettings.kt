@@ -60,3 +60,13 @@ var Settings.myplayUpdateAsked: Boolean
     set(v) = prefs.edit { putBoolean(KEY_UPDATE_ASKED, v) }
 
 internal const val KEY_UPDATE_ASKED = "myplay_update_asked"
+
+/**
+ * First-run Setup was finished or left (plan §10). Setup shows only on a fresh install and only until
+ * this is set. Not in backups: it belongs to this install.
+ */
+var Settings.myplaySetupDone: Boolean
+    get() = prefs.getBoolean(KEY_SETUP_DONE, false)
+    set(v) = prefs.edit { putBoolean(KEY_SETUP_DONE, v) }
+
+internal const val KEY_SETUP_DONE = "myplay_setup_done"

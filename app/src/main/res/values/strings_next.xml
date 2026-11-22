@@ -621,4 +621,51 @@
     <string name="next_about_licences_label" translatable="false">Open-source licences</string>
     <string name="next_about_map_data_label" translatable="false">Map data</string>
     <string name="next_about_osm_open_label" translatable="false">Open the copyright page</string>
+    <string name="next_setup_step_label" translatable="false">%1$d of %2$d</string>
+    <string name="next_setup_skip_label" translatable="false">Skip for now</string>
+    <string name="next_setup_find_label" translatable="false">Find your car</string>
+    <string name="next_setup_find_help" translatable="false">MyPlay needs three things to connect</string>
+    <string name="next_setup_allowed_label" translatable="false">Allowed</string>
+    <string name="next_setup_nearby_label" translatable="false">Nearby devices</string>
+    <string name="next_setup_nearby_help" translatable="false">To find the car</string>
+    <string name="next_setup_location_label" translatable="false">Location</string>
+    <string name="next_setup_location_help" translatable="false">To join the car\'s Wi-Fi</string>
+    <string name="next_setup_notifications_label" translatable="false">Notifications</string>
+    <string name="next_setup_notifications_help" translatable="false">Shows when you are connected</string>
+    <string name="next_setup_sound_label" translatable="false">Sound in the car</string>
+    <string name="next_setup_sound_help" translatable="false">Let the phone\'s sound reach the car</string>
+    <string name="next_setup_capture_help" translatable="false">Works on every phone, with limits</string>
+    <string name="next_setup_best_here_label" translatable="false">Best here</string>
+    <string name="next_setup_better_help" translatable="false">Root or Shizuku work better: Car › Sound</string>
+    <string name="next_setup_updates_label" translatable="false">Check for updates?</string>
+    <string name="next_setup_updates_help" translatable="false">Once a day, from GitHub</string>
+    <string name="next_setup_no_label" translatable="false">No</string>
+    <string name="next_setup_yes_label" translatable="false">Yes</string>
+    <string name="next_setup_connect_label" translatable="false">Connect to the car</string>
+    <string name="next_setup_connect_help" translatable="false">Either way works</string>
+    <string name="next_setup_usb_help" translatable="false">Plug the phone into the car</string>
+    <string name="next_setup_wireless_help" translatable="false">Start the car; the phone joins by itself</string>
+    <string name="next_setup_done_label" translatable="false">Done</string>
+    <string name="next_setup_back_label" translatable="false">Back</string>
+    <string name="next_search_label" translatable="false">Search</string>
+    <string name="next_search_hint_label" translatable="false">Search settings</string>
+    <string name="next_search_results_label" translatable="false">Results</string>
+    <string name="next_search_none_help" translatable="false">Nothing found. Try another word.</string>
+    <string name="next_search_turn_on_label" translatable="false">Turn on %1$s first</string>
+    <string name="next_syn_map_colours_info" translatable="false">night, dark, filter, map, colours, colors</string>
+    <string name="next_syn_size_info" translatable="false">density, dpi, scale, zoom, bigger, smaller</string>
+    <string name="next_syn_wallpaper_info" translatable="false">background, photo, picture, image</string>
+    <string name="next_syn_colours_info" translatable="false">theme, accent, colors, palette</string>
+    <string name="next_syn_buttons_info" translatable="false">keys, knob, steering wheel, controls, MMI</string>
+    <string name="next_syn_speed_info" translatable="false">limit, speed camera, warning, km/h</string>
+    <string name="next_syn_sound_info" translatable="false">audio, music, volume, Shizuku, root</string>
+    <string name="next_syn_voice_info" translatable="false">assistant, Google, microphone, talk</string>
+    <string name="next_syn_maps_info" translatable="false">navigation, Waze, GPS, location, parked</string>
+    <string name="next_syn_connection_info" translatable="false">wireless, Wi-Fi, Bluetooth, USB, connect</string>
+    <string name="next_syn_backup_info" translatable="false">export, import, restore, save, file</string>
+    <string name="next_syn_updates_info" translatable="false">version, upgrade, install, new</string>
+    <string name="next_syn_diagnostics_info" translatable="false">debug, log, bug, problem, test</string>
+    <string name="next_syn_certificates_info" translatable="false">trust, security, PKCS#12, PEM, Google</string>
+    <string name="next_syn_developer_info" translatable="false">DHU, adb, head unit server, debug</string>
+    <string name="next_syn_resolution_info" translatable="false">quality, 1080p, 720p, video, sharp</string>
 </resources>

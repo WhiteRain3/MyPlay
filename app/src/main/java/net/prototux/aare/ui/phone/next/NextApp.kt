@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
@@ -137,6 +138,8 @@ fun NextApp(
     // Per tab: bumped when the tab is tapped at its root, so its list scrolls to the top.
     var scrollTop by rememberSaveable { mutableStateOf(IntArray(NextTab.entries.size)) }
     val pages = rememberSaveableStateHolder()
+    // Search (plan §7) takes the page's place; the tab bar stays.
+    var searching by rememberSaveable { mutableStateOf(false) }
 
     fun go(next: NavState) {
         // A page that left every stack starts fresh next time.
@@ -191,14 +194,15 @@ fun NextApp(
                 LocalNextUndo provides undo,
                 LocalTextStyle provides NextType.Label.copy(color = NextColors.Text),
             ) {
-                AnimatedContent(
+                if (searching) NextSearch(onOpen = { searching = false; go(nav.open(it)) }, onClose = { searching = false })
+                else AnimatedContent(
                     targetState = nav.top,
                     transitionSpec = { fadeIn(tween(150)) togetherWith fadeOut(tween(100)) },
                     label = "route",
                 ) { entry ->
                     pages.SaveableStateProvider(entry.route) {
                         Column(Modifier.fillMaxSize()) {
-                            if (entry.route !in NextRoutes.FULL_SCREEN) NextTopBar(entry.route, onBack = { nav.back()?.let { go(it) } })
+                            if (entry.route !in NextRoutes.FULL_SCREEN) NextTopBar(entry.route, onBack = { nav.back()?.let { go(it) } }, onSearch = { searching = true })
                             Box(Modifier.weight(1f)) { page(entry.route) }
                         }
                     }
@@ -207,7 +211,10 @@ fun NextApp(
             NextSnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp))
         }
         if (nav.route !in NextRoutes.FULL_SCREEN) NextTabBar(nav.tab, badges) { tab ->
-            if (tab == nav.tab && nav.atRoot) {
+            if (searching) {
+                searching = false
+                go(nav.selectTab(tab))
+            } else if (tab == nav.tab && nav.atRoot) {
                 scrollTop = scrollTop.copyOf().also { it[tab.ordinal]++ }
             } else {
                 go(nav.selectTab(tab))
@@ -218,7 +225,7 @@ fun NextApp(
 
 /** A root's title with the tab's world glyph, or a page's title with Back (design frames 01, 20, 10). */
 @Composable
-private fun NextTopBar(route: String, onBack: () -> Unit) {
+private fun NextTopBar(route: String, onBack: () -> Unit, onSearch: () -> Unit = {}) {
     val tab = NextRoutes.tabOf(route) ?: NextTab.HOME
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val title = NextPages.title(route)?.let { stringResource(it) } ?: carTitle(ctx, route) ?: route.substringAfterLast('/')
@@ -248,6 +255,14 @@ private fun NextTopBar(route: String, onBack: () -> Unit) {
             ) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, null, tint = NextColors.Text2) }
             Text(title, style = NextType.PageTitle, color = NextColors.Text, modifier = Modifier.semantics { heading() })
         }
+        Spacer(Modifier.weight(1f))
+        // In every tab's top bar (plan §7).
+        val search = stringResource(R.string.next_search_label)
+        Box(
+            Modifier.size(NextSpace.Target).clip(CircleShape).clickable(role = Role.Button, onClick = onSearch)
+                .semantics { contentDescription = search }.testTag("next-search-button"),
+            contentAlignment = Alignment.Center,
+        ) { Icon(Icons.Rounded.Search, null, tint = NextColors.Text2) }
     }
 }
 

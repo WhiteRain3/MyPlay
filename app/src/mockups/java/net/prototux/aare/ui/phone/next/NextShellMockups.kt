@@ -105,7 +105,10 @@ class NextShellMockups {
     }
 
     @Composable
-    private fun Page(route: String, content: @Composable () -> Unit) {
+    private fun Page(route: String, content: @Composable () -> Unit) = Page(route, bare = false, content)
+
+    @Composable
+    private fun Page(route: String, bare: Boolean, content: @Composable () -> Unit) {
         val owner = object : OnBackPressedDispatcherOwner {
             private val life = LifecycleRegistry.createUnsafe(this as LifecycleOwner).apply { currentState = Lifecycle.State.RESUMED }
             override val lifecycle: Lifecycle get() = life
@@ -120,7 +123,7 @@ class NextShellMockups {
             LocalOnBackPressedDispatcherOwner provides owner,
             androidx.activity.compose.LocalActivityResultRegistryOwner provides results,
         ) {
-            NextApp(start = route, badges = setOf(NextTab.MORE)) { content() }
+            if (bare) content() else NextApp(start = route, badges = setOf(NextTab.MORE)) { content() }
         }
     }
 
@@ -188,6 +191,9 @@ class NextShellMockups {
     @Test fun archLayouts() = paparazzi.snapshot { Page("more/archive/layouts") { NextOlderLayoutsPage() } }
     @Test fun archKeptBar() = paparazzi.snapshot { Page("more/archive/layouts/bar") { NextKeptPage("more/archive/layouts/bar") } }
     @Test fun aboutPage() = paparazzi.snapshot { Page("more/about") { NextAboutPage {} } }
+
+    @Test fun searchReply() = paparazzi.snapshot { Page("car", bare = true) { NextSearch({}, {}, initial = "reply") } }
+    @Test fun setupStep1() = paparazzi.snapshot { Page("home", bare = true) { NextSetup {} } }
 
     @Test fun diagRoot() = paparazzi.snapshot { Page("more/diagnostics") { NextDiagnosticsPage() } }
     @Test fun diagCarCheckStep() {

@@ -530,7 +530,7 @@ private fun setupLeft(ctx: Context, audioCapture: Boolean): List<SetupItem> = bu
  * system settings open instead (today's rule, [permissionBlocked]).
  */
 @Composable
-private fun rememberConnectPermissions(): () -> Unit {
+internal fun rememberConnectPermissions(): () -> Unit {
     val ctx = LocalContext.current
     val activity = ctx as? android.app.Activity
     val settings = remember { Settings(ctx) }
