@@ -714,6 +714,7 @@ class CarSession(
         // MyPlay (O11): the phone arms a button to teach, or changes the learned ones.
         if (isLearnKey(key)) main.post {
             learned = settings.myplayLearnedButtons
+            runtime.ui.learnedActions = learnedActions(learned)
             val wasAt = learnArmedAt
             learnArmed = settings.myplayLearnButton
             learnArmedAt = settings.myplayLearnButtonAtMs
@@ -727,7 +728,7 @@ class CarSession(
     }
 
     /** MyPlay (O11): the learned buttons, and the action the next key will be taught (main thread). */
-    private var learned: Map<Int, ButtonAction> = settings.myplayLearnedButtons
+    private var learned: Map<Int, ButtonAction> = settings.myplayLearnedButtons.also { runtime.ui.learnedActions = learnedActions(it) }
     private var learnArmed: ButtonAction? = settings.myplayLearnButton
     private var learnArmedAt: Long = settings.myplayLearnButtonAtMs
 
@@ -745,6 +746,7 @@ class CarSession(
         ButtonAction.OPEN_NAVIGATION -> R.string.phone_action_open_navigation
         ButtonAction.OPEN_MEDIA -> R.string.phone_action_open_media
         ButtonAction.OPEN_PHONE -> R.string.phone_action_open_phone
+        ButtonAction.NAVIGATE_HOME -> R.string.phone_action_navigate_home
         ButtonAction.NOTHING -> R.string.phone_action_nothing
     }
 
@@ -825,6 +827,7 @@ class CarSession(
             ButtonAction.OPEN_NAVIGATION -> performCarKeyAction(CarKeyAction.OPEN_NAVIGATION)
             ButtonAction.OPEN_MEDIA -> performCarKeyAction(CarKeyAction.OPEN_MEDIA)
             ButtonAction.OPEN_PHONE -> performCarKeyAction(CarKeyAction.OPEN_PHONE)
+            ButtonAction.NAVIGATE_HOME -> runtime.navigateHome()
             ButtonAction.NOTHING -> Unit
         }
     }

@@ -147,6 +147,10 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
     override fun coversMap(slot: net.prototux.aare.ui.car.myplay.Slot): Boolean =
         slot != net.prototux.aare.ui.car.myplay.Slot.CHOOSER && slot != net.prototux.aare.ui.car.myplay.Slot.WORLD
 
+    /** HN-2 is ORBIT's: DECK (frozen) draws no hints. */
+    @androidx.compose.runtime.Composable
+    override fun PadHints(hints: net.prototux.aare.ui.car.myplay.PadHints, modifier: Modifier) = Unit
+
     /** O8 is ORBIT's: DECK (frozen) keeps its speed under the status. */
     override val speedInHub get() = false
 

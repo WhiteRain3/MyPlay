@@ -66,3 +66,7 @@ var Settings.myplayLearnButton: ButtonAction?
 val Settings.myplayLearnButtonAtMs: Long get() = prefs.getLong("myplay_learn_button_at", 0L)
 
 internal fun isLearnKey(key: String?) = key == "myplay_learned_buttons" || key == "myplay_learn_button"
+
+/** HN-2: the learned buttons' actions for the car screen's hints, in the codes' order, each once, never NOTHING. */
+internal fun learnedActions(m: Map<Int, ButtonAction>): List<ButtonAction> =
+    m.entries.sortedBy { it.key }.map { it.value }.filter { it != ButtonAction.NOTHING }.distinct()

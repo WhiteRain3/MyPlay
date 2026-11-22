@@ -88,4 +88,11 @@
     <string name="myplay_car_line_speed_limit" translatable="false">Speed limit</string>
     <string name="myplay_frame_home" translatable="false">Home</string>
     <string name="myplay_youtube_label" translatable="false">YouTube (web)</string>
+    <!-- HN-1: Navigate home (a learned button's action). -->
+    <string name="phone_action_navigate_home" translatable="false">Navigate home</string>
+    <string name="myplay_nav_home_title" translatable="false">Navigate home</string>
+    <string name="myplay_nav_home_unset" translatable="false">Set home address on the phone</string>
+    <string name="myplay_nav_home_no_maps" translatable="false">No maps app to navigate with</string>
+    <string name="phone_home_address_title" translatable="false">Home address (for Navigate home)</string>
+    <string name="phone_home_address_hint" translatable="false">An address or lat,lng</string>
 </resources>

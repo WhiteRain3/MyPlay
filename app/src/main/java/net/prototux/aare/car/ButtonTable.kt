@@ -148,6 +148,8 @@ enum class ButtonAction(val id: String) {
     OPEN_NAVIGATION("open_navigation"),
     OPEN_MEDIA("open_media"),
     OPEN_PHONE("open_phone"),
+    /** HN-1: the car's maps app to the home address set on the phone ([myplayHomeAddress]). */
+    NAVIGATE_HOME("navigate_home"),
     NOTHING("nothing"),
     ;
 

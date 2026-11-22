@@ -54,6 +54,31 @@ val LocalStopRinged = staticCompositionLocalOf { false }
 enum class Slot { TURN, STATUS, SPEED, HUB, SONG, CHOOSER, WORLD }
 
 /**
+ * HN-2: the hints round the hub: what the pad's directions open on the home (null: nothing, not
+ * drawn; left and right share [side]) and the actions of the buttons taught in the car ([corners],
+ * in order; each drawn on a diagonal). No hold actions: the owner's car sends none.
+ */
+data class PadHints(
+    val up: HomePadAction? = null,
+    val down: HomePadAction? = null,
+    val side: HomePadAction? = null,
+    val corners: List<net.prototux.aare.car.ButtonAction> = emptyList(),
+    /** The hub shows the speed (its box then holds the limit sign too: the disc sits lower in it). */
+    val speedShown: Boolean = false,
+) {
+    val isEmpty get() = up == null && down == null && side == null && corners.isEmpty()
+
+    companion object {
+        /** From the home pad's mapping (when the home pad is on) and the learned buttons' actions. */
+        fun of(pad: Map<HomePadKey, HomePadAction>?, learned: List<net.prototux.aare.car.ButtonAction>): PadHints {
+            fun at(k: HomePadKey) = pad?.get(k)?.takeIf { it != HomePadAction.NOTHING }
+            return PadHints(at(HomePadKey.UP), at(HomePadKey.DOWN), at(HomePadKey.SIDE),
+                learned.filter { it != net.prototux.aare.car.ButtonAction.NOTHING }.take(2))
+        }
+    }
+}
+
+/**
  * The next turn: the distance, then the road or instruction. Null fields are not known. [arrow] is
  * the maps app's own arrow picture when it sends one (phone guidance); else [direction], from the
  * route step's manoeuvre, when it is one MyPlay can draw; else neither (draw no direction at all).
@@ -310,6 +335,13 @@ interface MyPlaySkin {
      * each taking `stop(id)`; [ringed] as on the home.
      */
     @Composable fun MapAlertCard(alert: MapAlert, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) = Unit
+
+    /**
+     * HN-2 (the owner's hints A, C, E and F): what each control does, round the hub, drawn at the
+     * hub's own place ([modifier] is the hub's). Only what has an action is in [hints]. By default
+     * none (DECK, the test skins).
+     */
+    @Composable fun PadHints(hints: PadHints, modifier: Modifier) = Unit
 
     /**
      * O1: the music panel, opened by a push on the home's song and drawn above it: the music app

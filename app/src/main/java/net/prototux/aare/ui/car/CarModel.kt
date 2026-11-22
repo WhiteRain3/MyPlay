@@ -137,6 +137,12 @@ class CarUiState {
      * knob's push as a plain press (no double or triple, no wait).
      */
     var knobBusy by mutableStateOf(false)
+
+    /**
+     * HN-2: the actions of the buttons the owner taught in the car (their codes' order), for the
+     * hints by ORBIT's speed: a button with an action gets its icon, one with none nothing.
+     */
+    var learnedActions by mutableStateOf<List<net.prototux.aare.car.ButtonAction>>(emptyList())
     /** MyPlay (SH-1): soft plates behind ORBIT's parts (true), or none. */
     var orbitShadeSoft by mutableStateOf(true)
     /** MyPlay (O6): what ORBIT's home pad opens while the ring is hidden; empty: the ring always (as in tests). */

@@ -357,6 +357,12 @@ object OrbitSkin : MyPlaySkin {
         }
     }
 
+    /** HN-2: the hints round the hub (OrbitHints.kt). */
+    @Composable
+    override fun PadHints(hints: net.prototux.aare.ui.car.myplay.PadHints, modifier: Modifier) = Box(modifier) {
+        Scaled { OrbitPadHints(hints, hints.speedShown, LocalSkinTokens.current.night, Modifier) }
+    }
+
     /** O8: the speed (and the limit) is in the hub, with the trip, not a part of its own. */
     override val speedInHub get() = true
 
