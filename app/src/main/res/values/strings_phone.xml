@@ -420,4 +420,11 @@
     <string name="phone_home_pad_nothing" translatable="false">Nothing</string>
     <string name="phone_home_pad_hint" translatable="false">On ORBIT\'s home, while the knob\'s ring is hidden. Turning the knob shows the ring, and then these keys move it as before. Nothing: the key moves the ring.</string>
     <string name="phone_maps_idle_home_hint" translatable="false">A maps app opened full screen goes back to the home after this long with nothing pressed.</string>
+    <string name="phone_teach_title" translatable="false">Teach a car button</string>
+    <string name="phone_teach_choose" translatable="false">What should the button do?</string>
+    <string name="phone_teach_start" translatable="false">Teach it</string>
+    <string name="phone_teach_waiting" translatable="false">Now press the button in the car. It will do: %1$s.</string>
+    <string name="phone_teach_hint" translatable="false">For buttons MyPlay does not know, like the ones round the knob. With the car connected, choose what it should do, tap Teach it, then press the button once. Back and the knob cannot be taught.</string>
+    <string name="phone_teach_learned" translatable="false">Buttons taught</string>
+    <string name="phone_teach_forget" translatable="false">Forget %1$s</string>
 </resources>

@@ -108,7 +108,7 @@ internal fun allowedActions(stored: String, control: Control, gesture: Gesture):
 fun changedCount(stored: String): Int =
     ButtonTable.decodeOverrides(stored).count { (k, v) -> v != defaultAction(k.first, k.second) }
 
-private fun actionName(a: ButtonAction): Int = when (a) {
+internal fun actionName(a: ButtonAction): Int = when (a) {
     ButtonAction.SELECT -> R.string.phone_action_select
     ButtonAction.BACK -> R.string.phone_action_back
     ButtonAction.HOME -> R.string.phone_action_home
@@ -234,6 +234,7 @@ fun ButtonsScreen() {
         HintLine(Icons.Rounded.Info, stringResource(R.string.phone_buttons_codes_unknown))
         Spacer(Modifier.height(8.dp))
         HomePadSection(homePad) { homePad = it; settings.myplayHomePad = it }
+        TeachButtonSection(settings)
         Spacer(Modifier.height(8.dp))
         RowGroup(rows = listOf {
             SwitchRow(Icons.Rounded.Info, stringResource(R.string.phone_buttons_line_title), line, TileTone.BLUE,
