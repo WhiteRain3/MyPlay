@@ -102,6 +102,8 @@ class MyPlayEngineTest {
 
     /** What the engine tells the maps app covers its map, as the map sees it. */
     private var covers: MapCoverRegistry? = null
+    /** O9-1: whether the home told the map that MyPlay shows the turn itself. */
+    private var ownTurn: Boolean? = null
 
     private fun bounds(tag: String) = rule.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
         .let { MapGeometry.Box(it.left, it.top, it.right, it.bottom) }
@@ -126,7 +128,7 @@ class MyPlayEngineTest {
         rule.setContent {
             CarTheme(night = state.night, theme = state.theme) {
                 MyPlayEngineShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
-                    navMap = { _, m -> covers = LocalMapCovers.current; Box(m.background(Color(0xFF2E4A3A))) },
+                    navMap = { _, m -> covers = LocalMapCovers.current; ownTurn = net.prototux.aare.host.templates.LocalOwnTurnShown.current; Box(m.background(Color(0xFF2E4A3A))) },
                     overlay = { m -> if (otherStop) Box(m.size(40.dp).focusable().testTag("other_stop")) }, skin = TestSkin,
                     sources = EngineSources.of(state, actions, LocalContext.current).let { if (phone != null) it.copy(phone = phone) else it }
                         .let { if (settings != null) it.copy(settings = settings) else it }
@@ -492,6 +494,32 @@ class MyPlayEngineTest {
         while (rule.onAllNodes(hasTestTag(STOP_HUB)).fetchSemanticsNodes().isEmpty() || rule.onAllNodes(hasTestTag(SLOT_CHOOSER)).fetchSemanticsNodes().isNotEmpty()) back()
         engine.performKeyInput { pressKey(Key.DirectionDown) }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    /** O9-1: the maps app's turn card is left out only while the home shows a turn of its own. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theAppsTurnCardStaysWhenTheHomeHasNoTurn() {
+        val state = show(guidance = false)
+        assertEquals(false, rule.runOnIdle { ownTurn })
+        rule.runOnIdle { state.phoneGuidance = guidance() }
+        rule.waitForIdle()
+        assertEquals(true, rule.runOnIdle { ownTurn })
+    }
+
+    /** O6-1: a pad key set to nothing only shows the ring; it never moves it while hidden. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun anUnboundPadKeyOnlyShowsTheRing() {
+        val state = show(guidance = true)
+        rule.runOnIdle { state.homePad = HomePad.DEFAULT } // down: nothing
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionUp) } // maps
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+        // Awake now: down moves as before (nothing below the hub: it stays).
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
+        rule.onNodeWithTag(STOP_TURN).assertIsSelected()
     }
 
     @Test fun theHomePadsMappingIsStoredAndDefaulted() {

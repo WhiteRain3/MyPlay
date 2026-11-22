@@ -548,8 +548,9 @@ internal fun MyPlayEngineShell(
         Place.Home -> if (padHome && !ringAwake && notice == null && call == null && padKeyOf(key)?.let { padMap[it] != HomePadAction.NOTHING } == true) {
             runPad(padMap.getValue(padKeyOf(key)!!))
             true
-        } else if (padHome && !ringAwake && notice == null && key == Key.Tab) {
-            // The first turn only shows the ring, where it was.
+        } else if (padHome && !ringAwake && notice == null && (key == Key.Tab || padKeyOf(key) != null)) {
+            // The first turn only shows the ring, where it was. O6-1: so does a pad key set to
+            // nothing: it never moves the ring while it is hidden.
             ringAwake = true
             true
         } else when (key) {
@@ -680,9 +681,10 @@ internal fun MyPlayEngineShell(
             // skin's colour filter while the look sets none.
             CompositionLocalProvider(LocalMapCovers provides covers) {
                 val nav = state.app(state.homeNavAppId)
-                // O9: the skin shows the next turn itself, so the maps app's turn card is left out on the home.
+                // O9: while the skin shows the next turn itself, the maps app's turn card is left out on the
+                // home. O9-1: only then: a maps app whose turn reaches MyPlay only through its card keeps it.
                 CompositionLocalProvider(LocalMapTapIsKnobStop provides false, LocalSkinMapFilter provides tokens.mapFilter,
-                    net.prototux.aare.host.templates.LocalOwnTurnShown provides true) {
+                    net.prototux.aare.host.templates.LocalOwnTurnShown provides (slots.turn != null)) {
                     if (nav != null) navMap(nav, Modifier.fillMaxSize()) else Wallpaper(state, Modifier.fillMaxSize())
                 }
                 val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)
