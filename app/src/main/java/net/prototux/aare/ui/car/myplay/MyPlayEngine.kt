@@ -860,7 +860,7 @@ internal fun MyPlayEngineShell(
                             { id -> if (atHome) Modifier.stop(id) else Modifier.testTag(id) }, Modifier.padding(top = 12.dp))
                     }
                     // The gesture line (R6), under the call's strip and the notice (R6-3: never on top of them).
-                    if (model.place == Place.Home) GestureLineOverlay(state, Modifier)
+                    if (model.place == Place.Home) CompositionLocalProvider(net.prototux.aare.ui.car.LocalGestureLineDraw provides skin.gestureLine) { GestureLineOverlay(state, Modifier) }
                 }
                 // AL-1: the maps app's alert, in the skin's own place (never over the turn, the hub or the song).
                 if (home && homeAlert != null) {
@@ -996,7 +996,7 @@ internal fun MyPlayEngineShell(
             // O3: the app shrinking back into the stop it came from.
             if (keeps) ShrinkBack(memory, Modifier)
             // The gesture line (R6) over a world's page or the dial (at home it is under the notice, above).
-            if (model.place != Place.Home) GestureLineOverlay(state, Modifier.align(Alignment.TopCenter))
+            if (model.place != Place.Home) CompositionLocalProvider(net.prototux.aare.ui.car.LocalGestureLineDraw provides skin.gestureLine) { GestureLineOverlay(state, Modifier.align(Alignment.TopCenter)) }
             // N8: the notifications list, over the home.
             if (listOpen && !ringing) {
                 val currentKeys by rememberUpdatedState(listKeys)

@@ -825,6 +825,24 @@ object OrbitSkin : MyPlaySkin {
 
     const val MUSIC_PROGRESS_TAG = "orbit_music_progress"
 
+    /**
+     * Polish #1: the short line at the top (a gesture's, the ice's, the phone's heat) in ORBIT's own
+     * glass: the notice card's glass, edge and title type, as a pill.
+     */
+    override val gestureLine: (@Composable (String, Modifier) -> Unit) = { text, modifier ->
+        val g = Orbit.glass(LocalSkinTokens.current.night)
+        Box(modifier) {
+            Scaled {
+                Text(
+                    text, style = TextStyle(fontSize = 26.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = g.text),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 12.dp).widthIn(max = NOTICE_WIDTH).clip(CircleShape).background(g.glass)
+                        .border(2.dp, g.edge, CircleShape).padding(horizontal = 24.dp, vertical = 12.dp),
+                )
+            }
+        }
+    }
+
     @Composable
     override fun Notice(notice: CarNotice, hideText: Boolean, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) {
         val night = LocalSkinTokens.current.night
