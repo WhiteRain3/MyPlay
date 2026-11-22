@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material.icons.rounded.PhoneCallback
+import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.RadioButtonChecked
 import androidx.compose.material.icons.rounded.SkipNext
@@ -73,12 +74,13 @@ internal object OrbitHints {
         HomePadAction.APPS -> Icons.Rounded.Apps
         HomePadAction.CALLS -> Icons.Rounded.Phone
         HomePadAction.CALL_BACK -> Icons.Rounded.PhoneCallback
+        HomePadAction.PLACES -> Icons.Rounded.Place
         HomePadAction.NOTHING -> Icons.Rounded.RadioButtonChecked
     }
 
     fun world(a: HomePadAction): World? = when (a) {
         HomePadAction.MUSIC -> World.MUSIC
-        HomePadAction.MAPS -> World.NAVIGATE
+        HomePadAction.MAPS, HomePadAction.PLACES -> World.NAVIGATE
         HomePadAction.APPS -> World.APPS
         HomePadAction.CALLS, HomePadAction.CALL_BACK -> World.CALLS
         else -> null

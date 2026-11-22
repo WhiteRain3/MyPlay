@@ -24,6 +24,8 @@ enum class HomePadAction(val id: String) {
     CALLS("calls"),
     /** MyPlay (#10): the last missed call, called back only with a push on its Call button. */
     CALL_BACK("call_back"),
+    /** MyPlay (#5): the Navigate world's list (the maps app, Home, the saved places); with none saved, the maps app. */
+    PLACES("places"),
     NOTHING("nothing"),
     ;
 

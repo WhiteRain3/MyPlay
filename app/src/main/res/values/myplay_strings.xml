@@ -109,4 +109,14 @@
     <string name="myplay_call_back_call" translatable="false">Call</string>
     <string name="myplay_call_back_none" translatable="false">No missed call in the last day</string>
     <string name="myplay_call_back_no_permission" translatable="false">Allow calls for MyPlay on the phone</string>
+    <!-- #5: places (Home and up to five of the owner's own) in ORBIT's Navigate list, a home pad shortcut -->
+    <string name="phone_home_pad_places" translatable="false">Places (Home and saved places)</string>
+    <string name="myplay_places_home" translatable="false">Home</string>
+    <string name="myplay_places_maps" translatable="false">Maps app</string>
+    <string name="myplay_places_hint" translatable="false">Push to go there</string>
+    <string name="phone_places_title" translatable="false">Places</string>
+    <string name="phone_places_hint" translatable="false">Up to five, listed with Home when a pad direction is set to Places. Kept on this phone only, not in backups.</string>
+    <string name="phone_places_name" translatable="false">Name</string>
+    <string name="phone_places_add" translatable="false">Add a place</string>
+    <string name="phone_places_delete" translatable="false">Remove this place</string>
 </resources>

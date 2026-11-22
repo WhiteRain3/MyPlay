@@ -37,6 +37,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AcUnit
+import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material.icons.rounded.Battery0Bar
 import androidx.compose.material.icons.rounded.Battery1Bar
 import androidx.compose.material.icons.rounded.Battery2Bar
@@ -1049,17 +1050,34 @@ object OrbitSkin : MyPlaySkin {
     }
 
     @Composable
-    override fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) {
+    override fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) =
+        ListWorld(World.SETTINGS, stringResource(R.string.myplay_settings_hint), page, ringed, row, modifier) { _, r ->
+            if (r.switch) (if (r.on) Icons.Rounded.ToggleOn else Icons.Rounded.ToggleOff) else Icons.Rounded.Tune
+        }
+
+    /** #5: the Navigate world's list: the maps app first, then Home and the saved places. */
+    @Composable
+    override fun PlacesWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) =
+        ListWorld(World.NAVIGATE, stringResource(R.string.myplay_places_hint), page, ringed, row, modifier) { i, _ ->
+            if (i == 0) Icons.Rounded.Navigation else Icons.Rounded.Place
+        }
+
+    /** A world's list of pills (Settings, Navigate's places): its name, a hint, one pill per row. */
+    @Composable
+    private fun ListWorld(
+        world: World, hint: String, page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier,
+        icon: (Int, net.prototux.aare.ui.car.myplay.SettingRow) -> ImageVector,
+    ) {
         val night = LocalSkinTokens.current.night
         val g = Orbit.glass(night)
-        val accent = Orbit.accent(World.SETTINGS, night)
+        val accent = Orbit.accent(world, night)
         val list = androidx.compose.foundation.lazy.rememberLazyListState()
         LaunchedEffect(ringed, page.rows.size) { if (page.rows.isNotEmpty()) list.animateScrollToItem((ringed - 1).coerceAtLeast(0)) }
         Box(modifier.background(g.halo.copy(alpha = 0.7f)).orbitRipple(0.5f, 0.5f)) {
             Scaled {
                 Column(Modifier.fillMaxSize().padding(start = 60.dp, top = 40.dp)) {
-                    Text(worldName(World.SETTINGS), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
-                    Text(stringResource(R.string.myplay_settings_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
+                    Text(worldName(world), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
+                    Text(hint, style = TextStyle(fontSize = 24.sp, color = g.secondary))
                     androidx.compose.foundation.lazy.LazyColumn(
                         state = list, modifier = Modifier.padding(start = 80.dp, top = 24.dp).width(880.dp),
                         verticalArrangement = Arrangement.spacedBy(18.dp),
@@ -1067,7 +1085,7 @@ object OrbitSkin : MyPlaySkin {
                     ) {
                         items(page.rows.size) { i ->
                             val r = page.rows[i]
-                            Pill(r.title, r.note.orEmpty(), if (r.switch) (if (r.on) Icons.Rounded.ToggleOn else Icons.Rounded.ToggleOff) else Icons.Rounded.Tune,
+                            Pill(r.title, r.note.orEmpty(), icon(i, r),
                                 if (r.switch && r.on) accent else null, null, false, i == ringed, accent, night, row(i), trailing = r.value)
                         }
                     }

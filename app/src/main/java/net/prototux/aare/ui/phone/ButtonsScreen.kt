@@ -246,6 +246,7 @@ fun ButtonsScreen() {
         HomePadSection(homePad, { homePad = it; settings.myplayHomePad = it }, infoHome) { infoHome = it; settings.myplayInfoHome = it }
         TeachButtonSection(settings)
         HomeAddressField(settings)
+        PlacesSection(settings) // #5: the saved places, beside Home address
         Spacer(Modifier.height(8.dp))
         RowGroup(rows = listOf {
             SwitchRow(Icons.Rounded.Info, stringResource(R.string.phone_buttons_line_title), line, TileTone.BLUE,

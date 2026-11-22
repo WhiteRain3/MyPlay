@@ -376,6 +376,16 @@ internal fun MyPlayEngineShell(
         if (key == PHONE_APP_KEY) { phone.open(); return }
         currentPhoneEntries.firstOrNull { "tel:${it.number}" == key }?.let(phone::call)
     }
+    // #5: the Navigate world's list: the maps app (row 0), then Home and the saved places.
+    var placeRing by remember { mutableIntStateOf(0) }
+    val placeCount = state.navPlaces.size + 1
+    fun goToPlace(i: Int) {
+        val dest = state.navPlaces.getOrNull(i - 1)
+        // Like the maps app from the dial: Back from it comes home.
+        model.place = Place.Home
+        memory.origin = null
+        if (dest == null) openMaps() else actions.navigateTo(dest.address)
+    }
     // N9: the Car world: the car's data to read; the ring stays on a line (its label) as values change.
     var carChosen by remember { mutableStateOf<String?>(null) }
     val carLines = if (model.place == Place.InWorld(World.CAR)) sources.carLines() else emptyList()
@@ -438,7 +448,7 @@ internal fun MyPlayEngineShell(
             World.CALLS -> phoneChosen = null
             World.SETTINGS -> settingChosen = null
             World.CAR -> carChosen = null
-            World.NAVIGATE -> Unit
+            World.NAVIGATE -> placeRing = 0
         }
     }
     // N13: the hand's push. Navigate is the maps app itself (as on the dial, N9); the others open their world.
@@ -556,6 +566,7 @@ internal fun MyPlayEngineShell(
             HomePadAction.APPS -> { model.enter(World.APPS); freshWorld(World.APPS) }
             HomePadAction.CALLS -> openCalls()
             HomePadAction.CALL_BACK -> actions.callBackLastMissed()
+            HomePadAction.PLACES -> if (state.navPlaces.isEmpty()) { memory.origin = null; openMaps() } else { model.enter(World.NAVIGATE); freshWorld(World.NAVIGATE) }
             HomePadAction.NOTHING -> Unit
         }
     }
@@ -690,6 +701,16 @@ internal fun MyPlayEngineShell(
                 Key.DirectionUp -> settingChosen = settingItems[(settingIndex - 1).coerceAtLeast(0)].id
                 Key.DirectionDown -> settingChosen = settingItems[(settingIndex + 1).coerceAtMost(n - 1)].id
                 Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> changeSetting(settingItems[settingIndex].id)
+                else -> Unit
+            }
+            key in WORLD_KEYS
+        } else if (p.world == World.NAVIGATE) {
+            val n = placeCount
+            when (key) {
+                Key.Tab -> placeRing = (placeRing + if (shift) -1 else 1).coerceIn(0, n - 1)
+                Key.DirectionUp -> placeRing = (placeRing - 1).coerceAtLeast(0)
+                Key.DirectionDown -> placeRing = (placeRing + 1).coerceAtMost(n - 1)
+                Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> goToPlace(placeRing.coerceIn(0, n - 1))
                 else -> Unit
             }
             key in WORLD_KEYS
@@ -903,6 +924,17 @@ internal fun MyPlayEngineShell(
                                 .semantics { selected = i == settingIndex }
                                 .testTag(settingRowTag(id))
                         }, Modifier.fillMaxSize().testTag(SLOT_SETTINGS))
+                    } else if (p.world == World.NAVIGATE) {
+                        val mapsName = state.app(state.homeNavAppId ?: state.activeNavAppId)?.label ?: stringResource(R.string.myplay_places_maps)
+                        val rows = listOf(SettingRow(mapsName, "", switch = false, on = false)) +
+                            state.navPlaces.map { SettingRow(it.name, "", switch = false, on = false) }
+                        val ringed = placeRing.coerceIn(0, rows.size - 1)
+                        skin.PlacesWorld(SettingsPage(rows), ringed, { i ->
+                            Modifier
+                                .pointerInput(i) { detectTapGestures { goToPlace(i) } }
+                                .semantics { selected = i == ringed }
+                                .testTag(placeRowTag(i))
+                        }, Modifier.fillMaxSize().testTag(SLOT_PLACES))
                     } else if (p.world == World.CALLS) {
                         skin.PhoneWorld(
                             PhonePage(phoneRows, loading = phoneData == null && phone.permitted, permitted = phone.permitted),
@@ -1114,6 +1146,10 @@ internal fun padKeyOf(key: Key): HomePadKey? = when (key) {
     Key.DirectionLeft, Key.DirectionRight -> HomePadKey.SIDE
     else -> null
 }
+
+/** #5: the Navigate world's list and its rows (also test tags). */
+internal const val SLOT_PLACES = "slot_places"
+internal fun placeRowTag(i: Int) = "place_row_$i"
 
 /** O7: the dial's world index for a pad direction: up, right, down, left (clockwise from the top). */
 internal fun dialIndex(key: Key): Int? = when (key) {

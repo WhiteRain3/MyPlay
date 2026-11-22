@@ -398,6 +398,13 @@ interface MyPlaySkin {
     /** N9: the Settings world: one row per setting, its value shown; each row takes `row(i)`; the ring is on [ringed]. */
     @Composable fun SettingsWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier)
 
+    /**
+     * MyPlay (#5): the Navigate world's list: the maps app first, then Home and the saved places
+     * ([SettingRow.title] the name, [SettingRow.value] empty); each row takes `row(i)`. By default
+     * drawn as the Settings world's list.
+     */
+    @Composable fun PlacesWorld(page: SettingsPage, ringed: Int, row: (Int) -> Modifier, modifier: Modifier) = SettingsWorld(page, ringed, row, modifier)
+
     /** A world not drawn yet by this skin (the chunks after N1 replace it world by world). */
     @Composable fun WorldPlaceholder(world: World, modifier: Modifier)
 
