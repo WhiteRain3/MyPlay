@@ -709,12 +709,13 @@ class CarSession(
         // MyPlay (O11): the phone arms a button to teach, or changes the learned ones.
         if (isLearnKey(key)) main.post {
             learned = settings.myplayLearnedButtons
-            val was = learnArmed
+            val wasAt = learnArmedAt
             learnArmed = settings.myplayLearnButton
             learnArmedAt = settings.myplayLearnButtonAtMs
-            // O11-1: say on the car screen that the next button is being taught.
-            learnArmed?.takeIf { it != was }?.let { a ->
-                runtime.notice(context.getString(R.string.myplay_teach_title), context.getString(R.string.myplay_teach_text, a.id.replace('_', ' ')),
+            // O11-1: say on the car screen that the next button is being taught. O11-4: on every new
+            // arm (its time), the same action armed again included, with the action's own name.
+            learnArmed?.takeIf { learnArmedAt != wasAt }?.let { a ->
+                runtime.notice(context.getString(R.string.myplay_teach_title), context.getString(R.string.myplay_teach_text, context.getString(actionNameRes(a))),
                     durationMs = LearnedButtons.ARM_MS)
             }
         }
@@ -724,6 +725,23 @@ class CarSession(
     private var learned: Map<Int, ButtonAction> = settings.myplayLearnedButtons
     private var learnArmed: ButtonAction? = settings.myplayLearnButton
     private var learnArmedAt: Long = settings.myplayLearnButtonAtMs
+
+    /** O11-4: an action's name, as the phone's Buttons page shows it. */
+    private fun actionNameRes(a: ButtonAction): Int = when (a) {
+        ButtonAction.SELECT -> R.string.phone_action_select
+        ButtonAction.BACK -> R.string.phone_action_back
+        ButtonAction.HOME -> R.string.phone_action_home
+        ButtonAction.HOME_OR_APPS -> R.string.phone_action_home_or_apps
+        ButtonAction.ASSISTANT -> R.string.phone_action_assistant
+        ButtonAction.PLAY_PAUSE -> R.string.phone_action_play_pause
+        ButtonAction.NEXT -> R.string.phone_action_next
+        ButtonAction.PREVIOUS -> R.string.phone_action_previous
+        ButtonAction.SKIP_SONGS -> R.string.phone_action_skip_songs
+        ButtonAction.OPEN_NAVIGATION -> R.string.phone_action_open_navigation
+        ButtonAction.OPEN_MEDIA -> R.string.phone_action_open_media
+        ButtonAction.OPEN_PHONE -> R.string.phone_action_open_phone
+        ButtonAction.NOTHING -> R.string.phone_action_nothing
+    }
 
     /** O11-1: the arm is over ([why]: not taught, for the log; null: a key was learned). */
     private fun disarm(why: String?) {
