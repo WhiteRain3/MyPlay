@@ -131,6 +131,12 @@ class CarUiState {
     var mapsIdleHomeMin by mutableStateOf(0)
     /** MyPlay (O11): ORBIT's home shows information only, no knob ring (with the home pad on). */
     var infoHome by mutableStateOf(false)
+    /**
+     * MyPlay (G-4): something holds the knob that a push must answer at once (the music panel, a
+     * map alert's button); with a call or a notice with buttons, the car side then takes the
+     * knob's push as a plain press (no double or triple, no wait).
+     */
+    var knobBusy by mutableStateOf(false)
     /** MyPlay (SH-1): soft plates behind ORBIT's parts (true), or none. */
     var orbitShadeSoft by mutableStateOf(true)
     /** MyPlay (O6): what ORBIT's home pad opens while the ring is hidden; empty: the ring always (as in tests). */

@@ -191,6 +191,9 @@ internal fun MyPlayEngineShell(
     // O1-1: keyed on the skin, so a new language (DECK has no song slot to draw it) starts closed.
     var panelOpen by remember(skin.id) { mutableStateOf(false) }
     var panelChosen by remember(skin.id) { mutableStateOf(PANEL_PLAY) }
+    // G-4: the car side takes the knob's push as a plain press while the panel or an alert holds it.
+    val knobBusy = panelOpen || homeAlert != null
+    LaunchedEffect(knobBusy) { state.knobBusy = knobBusy }
     // O6: the home pad opens things directly while the knob's ring is hidden; a turn shows the ring.
     val padMap = state.homePad
     val padHome = hand == null && HomePad.active(padMap)
