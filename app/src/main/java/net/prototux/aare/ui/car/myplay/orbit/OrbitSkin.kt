@@ -390,7 +390,7 @@ object OrbitSkin : MyPlaySkin {
                     OrbitRing(trip?.progress, 184.dp, 9.dp, nav, g.track, Modifier.testTag(TRIP_RING_TAG).progressSemantics(trip?.progress)) {
                         Column(Modifier.testTag(HUB_SPEED_TAG).carPart(CarPart.OrbitSpeed), horizontalAlignment = Alignment.CenterHorizontally) {
                             val colour = if (speed?.over == true) Orbit.caution(night) else g.text
-                            Text(speed?.kmh?.toString() ?: "–", style = TextStyle(fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.ExtraBold, color = colour), maxLines = 1)
+                            Text(speed?.kmh?.toString() ?: "–", style = TextStyle(fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"), maxLines = 1)
                             Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, lineHeight = 20.sp, color = g.secondary), maxLines = 1)
                             // O8-1 (the Reviewer: "arrival · time left" got too small to read at a glance):
                             // one value only, the time left (else the distance, else the arrival), larger.
@@ -627,7 +627,7 @@ object OrbitSkin : MyPlaySkin {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         // N20: over the limit by more than the margin, the number turns a calm amber; no sound.
                         val colour = if (reading?.over == true) Orbit.caution(night) else g.text
-                        Text(reading?.kmh?.toString() ?: "–", style = Orbit.Type.name.copy(color = colour, lineHeight = 36.sp), maxLines = 1)
+                        Text(reading?.kmh?.toString() ?: "–", style = Orbit.Type.name.copy(color = colour, lineHeight = 36.sp, fontFeatureSettings = "tnum"), maxLines = 1)
                         Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, color = g.secondary), maxLines = 1)
                     }
                 }
@@ -923,6 +923,15 @@ object OrbitSkin : MyPlaySkin {
     private val NOTICE_WIDTH = 480.dp
 
     /** Up to two letters for a caller's disc; null for a number (then a phone icon). */
+    /** A call's time: m:ss, and h:mm:ss from an hour on ("1:05:03", not "65:03"). */
+    fun callTime(seconds: Long): String {
+        val s = seconds.coerceAtLeast(0)
+        val h = s / 3600
+        val m = (s % 3600) / 60
+        val sec = s % 60
+        return if (h > 0) String.format(java.util.Locale.ROOT, "%d:%02d:%02d", h, m, sec) else String.format(java.util.Locale.ROOT, "%d:%02d", m, sec)
+    }
+
     fun initials(name: String): String? {
         val words = name.trim().split(Regex("\\s+")).filter { w -> w.firstOrNull()?.isLetter() == true }
         if (words.isEmpty()) return null
@@ -1001,8 +1010,8 @@ object OrbitSkin : MyPlaySkin {
                             if (letters != null) Text(letters, style = TextStyle(fontSize = 24.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = Orbit.onAccent(night)))
                             else Icon(Icons.Rounded.Phone, null, tint = Orbit.onAccent(night))
                         }
-                        Text(stringResource(R.string.phone_in_call_elapsed, call.name, "${elapsed / 60}:${"%02d".format(elapsed % 60)}"),
-                            style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = g.text),
+                        Text(stringResource(R.string.phone_in_call_elapsed, call.name, callTime(elapsed.toLong())),
+                            style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = g.text, fontFeatureSettings = "tnum"),
                             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 460.dp))
                     }
                     if (canEnd) {
