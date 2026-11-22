@@ -41,4 +41,11 @@ class HideableBuiltinsTest {
     fun youtubeCanBeHidden() {
         assertEquals(setOf(CarRuntime.YOUTUBE_ID), CarRuntime.launcherHiddenIds(setOf(CarRuntime.YOUTUBE_ID, CarRuntime.SETTINGS_ID)))
     }
+
+    /** YT-3: one YouTube on the car screen: the web entry steps aside for the real app. */
+    @org.junit.Test
+    fun theWebYouTubeStepsAsideForTheApp() {
+        org.junit.Assert.assertTrue(CarRuntime.showsWebYouTube(realAppOnCar = false))
+        org.junit.Assert.assertFalse(CarRuntime.showsWebYouTube(realAppOnCar = true))
+    }
 }

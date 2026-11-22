@@ -503,6 +503,7 @@ class CarRuntime(
             entries += CarAppEntry(PHONE_SCREEN_ID, context.packageName, context.getString(R.string.phone_section_title), builtinIcon(R.drawable.ic_phone_screen), CarAppKind.PHONE_SCREEN)
         }
         // Ordinary phone apps the user allowed onto the car screen (parked only; needs root/Shizuku).
+        var realYouTube = false // MyPlay (YT-3): the YouTube app itself is among them
         if (settings.standaloneApps && AppLauncher.available(context)) {
             for (pkg in settings.standaloneAppPackages) {
                 if (pkg in hidden) continue
@@ -510,14 +511,19 @@ class CarRuntime(
                 val label = context.packageManager.getApplicationLabel(info).toString()
                 val icon = runCatching { context.packageManager.getApplicationIcon(info).toBitmap(128, 128) }.getOrNull()
                 entries += CarAppEntry(standaloneId(pkg), pkg, label, icon, CarAppKind.STANDALONE)
+                if (pkg == YOUTUBE_PACKAGE) realYouTube = true
             }
         }
         if (settings.browser) {
             entries += CarAppEntry(BROWSER_ID, context.packageName, context.getString(R.string.browser_app_label), builtinIcon(R.drawable.ic_car_browser), CarAppKind.BROWSER)
             // MyPlay (the owner: "Add YouTube"): YouTube in the car browser (its mobile site, videos can
             // go fullscreen), with the YouTube app's icon when it is installed. Parked only, as the browser.
-            val ytIcon = runCatching { context.packageManager.getApplicationIcon(YOUTUBE_PACKAGE).toBitmap(128, 128) }.getOrNull()
-            entries += CarAppEntry(YOUTUBE_ID, context.packageName, context.getString(R.string.myplay_youtube_label), ytIcon ?: builtinIcon(R.drawable.ic_car_browser), CarAppKind.BROWSER)
+            // YT-3: left out while the YouTube app itself is on the car screen (one YouTube, the real
+            // one); otherwise named "YouTube (web)", so it is not taken for the app.
+            if (showsWebYouTube(realYouTube)) {
+                val ytIcon = runCatching { context.packageManager.getApplicationIcon(YOUTUBE_PACKAGE).toBitmap(128, 128) }.getOrNull()
+                entries += CarAppEntry(YOUTUBE_ID, context.packageName, context.getString(R.string.myplay_youtube_label), ytIcon ?: builtinIcon(R.drawable.ic_car_browser), CarAppKind.BROWSER)
+            }
         }
         if (settings.carDataApp) {
             entries += CarAppEntry(CAR_DATA_ID, context.packageName, context.getString(R.string.car_data_app_label), builtinIcon(R.drawable.ic_car_data), CarAppKind.CAR_DATA)
@@ -936,6 +942,9 @@ class CarRuntime(
         const val YOUTUBE_ID = "youtube"
         const val YOUTUBE_URL = "https://www.youtube.com/tv"
         const val YOUTUBE_PACKAGE = "com.google.android.youtube"
+
+        /** MyPlay (YT-3): the web YouTube entry shows only while the YouTube app itself is not on the car screen. */
+        fun showsWebYouTube(realAppOnCar: Boolean): Boolean = !realAppOnCar
         const val CAR_DATA_ID = "car-data"
         const val PHONE_ID = "phone"
         const val SETTINGS_ID = "car-settings"
