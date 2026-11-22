@@ -14,6 +14,15 @@ var Settings.myplayDriveWarnings: Boolean
     set(v) = prefs.edit { putBoolean(KEY_DRIVE_WARNINGS, v) }
 
 /**
+ * LP-1: the speed limit sign's one pulse when the limit changes (#7), on its own switch so the
+ * motion can be turned off while keeping the warnings. On by default. Backed up.
+ */
+const val KEY_LIMIT_PULSE = "myplay_limit_pulse"
+var Settings.myplayLimitPulse: Boolean
+    get() = prefs.getBoolean(KEY_LIMIT_PULSE, true)
+    set(v) = prefs.edit { putBoolean(KEY_LIMIT_PULSE, v) }
+
+/**
  * Ice: the outside temperature the car reports (CarData.Environment) at or below [ON_AT_C], as car
  * makers' own clusters warn. It goes off again only above [OFF_ABOVE_C], so a reading wavering
  * around 4 °C does not make the sign blink. No temperature from the car: no warning.

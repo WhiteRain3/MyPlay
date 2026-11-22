@@ -166,30 +166,27 @@ internal fun MyPlayEngineShell(
     // A new alert with buttons takes the ring onto its last one (usually Close), so a push meant for
     // something else only answers the alert.
     // AL-2: and when it goes, the ring is back where it was (as after a call, R5-2).
-    var beforeAlert by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(homeAlert?.key) {
-        val last = homeAlert?.actions?.lastIndex?.takeIf { it >= 0 }
-        if (last != null) {
-            if (beforeAlert == null) beforeAlert = chosen
-            chosen = mapAlertStop(last)
-        } else if (homeAlert == null) {
-            beforeAlert?.let { chosen = it }
-            beforeAlert = null
-        }
-    }
     // Polish #4: a notice with buttons on the home takes the ring as an alert does: onto its first
     // button when the driver just asked for it (Call back), else onto Dismiss, so a push meant for
-    // something else only closes it; when it goes, the ring is back where it was.
-    var beforeNotice by remember { mutableStateOf<String?>(null) }
+    // something else only closes it.
+    // NR-1: one shared memory of where the ring was before either took it; when one goes while the
+    // other is still up, the ring goes to the one still up, and only when both are gone is it back
+    // where it was.
+    var beforeHold by remember { mutableStateOf<String?>(null) }
+    val alertHold = homeAlert?.actions?.lastIndex?.takeIf { it >= 0 }?.let(::mapAlertStop)
     val homeNotice = notice?.takeIf { it.actions.isNotEmpty() && model.place == Place.Home }
+    val noticeHold = homeNotice?.let(::noticeRing)
+    fun takeRing(stop: String) { if (beforeHold == null) beforeHold = chosen; chosen = stop }
+    fun giveRingBack(stillUp: String?) {
+        if (stillUp != null) { chosen = stillUp; return }
+        beforeHold?.let { chosen = it }
+        beforeHold = null
+    }
+    LaunchedEffect(homeAlert?.key) {
+        if (alertHold != null) takeRing(alertHold) else if (homeAlert == null) giveRingBack(noticeHold)
+    }
     LaunchedEffect(homeNotice?.key) {
-        if (homeNotice != null) {
-            if (beforeNotice == null) beforeNotice = chosen
-            chosen = noticeRing(homeNotice)
-        } else {
-            beforeNotice?.let { chosen = it }
-            beforeNotice = null
-        }
+        if (noticeHold != null) takeRing(noticeHold) else giveRingBack(alertHold)
     }
     // N8: the bell (while there are unseen notifications) opens the list over the home.
     val notes = sources.notifications
@@ -1081,8 +1078,8 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
         }
     }
     DisposableEffect(feed) { onDispose { feed.release(); limits?.close(); SpeedLimitDiag.why = null; net.prototux.aare.car.DriveSummary.pause() } }
-    // #7: the limit sign's one pulse when the limit changes, under the drive warnings' switch.
-    CompositionLocalProvider(LocalLimitPulse provides state.driveWarnings) { content(feed.reading) }
+    // #7: the limit sign's one pulse when the limit changes (LP-1: its own switch).
+    CompositionLocalProvider(LocalLimitPulse provides state.limitPulse) { content(feed.reading) }
 }
 
 private const val SPEED_TICK_MS = 1_000L

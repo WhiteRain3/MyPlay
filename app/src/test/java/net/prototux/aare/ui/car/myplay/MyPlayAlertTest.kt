@@ -82,6 +82,45 @@ class MyPlayAlertTest {
         rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
     }
 
+    private fun aNotice() = net.prototux.aare.ui.car.CarNotice("n1", "Anna K.", "Running late", null, listOf("Reply" to { ran += "reply" }))
+
+    /** NR-1: a notice, then an alert: the notice going leaves the ring on the alert; both gone, it is back where it was. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aNoticeAndAnAlertGiveTheRingBackInTurn() {
+        val state = show()
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+        rule.runOnIdle { state.notices.add(0, aNotice()) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.NOTICE_DISMISS).assertIsSelected()
+        rule.runOnIdle { appAlert = alert() }
+        rule.waitForIdle()
+        rule.onNodeWithTag(mapAlertStop(0)).assertIsSelected()
+        rule.runOnIdle { state.notices.clear() }
+        rule.waitForIdle()
+        // The alert is still up: the ring stays on its button.
+        rule.onNodeWithTag(mapAlertStop(0)).assertIsSelected()
+        rule.runOnIdle { appAlert = null }
+        rule.waitForIdle()
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+    }
+
+    /** NR-1: the other order: an alert, then a notice; the alert going leaves the ring on the notice. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun anAlertAndANoticeGiveTheRingBackInTurn() {
+        val state = show()
+        rule.runOnIdle { appAlert = alert() }
+        rule.waitForIdle()
+        rule.runOnIdle { state.notices.add(0, aNotice()) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.NOTICE_DISMISS).assertIsSelected()
+        rule.runOnIdle { appAlert = null }
+        rule.waitForIdle()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.NOTICE_DISMISS).assertIsSelected()
+        rule.runOnIdle { state.notices.clear() }
+        rule.waitForIdle()
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+    }
+
     /** G-4: while the alert or the music panel holds the knob, the car side takes a push as a plain press. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theAlertAndThePanelMakeThePushPlain() {
@@ -130,6 +169,17 @@ class MyPlayAlertTest {
         val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap()
         val dir = java.io.File("build/reports/myplay-screens").apply { mkdirs() }
         java.io.File(dir, "orbit_alert_placed.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** ORBIT polish: a long button label is cut, never wider than ALERT_BUTTON_MAX, so the alert's title keeps its room. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aLongAlertButtonIsCut() {
+        show(skin = net.prototux.aare.ui.car.myplay.orbit.OrbitSkin)
+        rule.runOnIdle { appAlert = MapAlert(8, "In 380 m", "Police reported", null, listOf("Thanks, I can see it clearly ahead of me" to { ran += "long" })) }
+        rule.waitForIdle()
+        val button = rule.onNodeWithTag(mapAlertStop(0)).fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("button $button", button.width <= 200f + 1f)
+        rule.onNodeWithTag(SLOT_MAP_ALERT).assertExists()
     }
 
     @Test fun thePillsPlaceIsWorkedOut() {
