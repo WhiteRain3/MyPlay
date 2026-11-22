@@ -42,3 +42,23 @@ class LimitPulse {
         const val SCALE = 1.12f
     }
 }
+
+/**
+ * Polish #5: the outside temperature under the clock, with the ice sign. [reserve]: its place is
+ * kept for the whole drive (the car says it has the sensor, or has sent a reading), so the
+ * status column's width does not change when a reading comes or goes; [degrees]: what to show
+ * (null: nothing, the place stays empty).
+ */
+data class OutsideTemp(val reserve: Boolean, val degrees: Int?) {
+    companion object {
+        val NONE = OutsideTemp(false, null)
+
+        fun of(warnings: Boolean, carHasSensor: Boolean, tempC: Float?): OutsideTemp {
+            if (!warnings) return NONE
+            val reading = tempC?.takeIf { !it.isNaN() && !it.isInfinite() }
+            return OutsideTemp(carHasSensor || reading != null, reading?.let { Math.round(it) })
+        }
+    }
+}
+
+val LocalOutsideTemp = compositionLocalOf { OutsideTemp.NONE }

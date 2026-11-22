@@ -125,6 +125,7 @@ import net.prototux.aare.ui.car.carPart
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.mediaProgress
 import net.prototux.aare.ui.car.myplay.LocalRoadIce
+import net.prototux.aare.ui.car.myplay.LocalOutsideTemp
 import net.prototux.aare.ui.car.myplay.LimitPulse
 import net.prototux.aare.ui.car.myplay.LocalLimitPulse
 import net.prototux.aare.ui.car.myplay.LocalSkinTokens
@@ -544,6 +545,17 @@ object OrbitSkin : MyPlaySkin {
                     ) {
                         // Drive warnings: 4 °C or less outside. DW-1: its place is always kept (empty when
                         // warm), so the column's size, and with it the map's free area, never changes because of it.
+                        // Polish #5: the outside temperature, when the car reports it; its place kept all drive
+                        // (as wide as "-88°") so the column never changes width when a reading comes or goes.
+                        val outside = LocalOutsideTemp.current
+                        if (outside.reserve) {
+                            val tempStyle = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontFeatureSettings = "tnum")
+                            val measurer = rememberTextMeasurer()
+                            val widest = remember(measurer) { measurer.measure("-88°", tempStyle).size.width }
+                            Box(Modifier.width(with(LocalDensity.current) { widest.toDp() }).testTag(OUTSIDE_TEMP_TAG), contentAlignment = Alignment.CenterEnd) {
+                                outside.degrees?.let { Text("$it°", style = tempStyle.floating(if (ice) Orbit.warning(night) else g.text), maxLines = 1) }
+                            }
+                        }
                         Box(Modifier.size(30.dp).testTag(ICE_SLOT_TAG)) {
                             if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(30.dp).testTag(ICE_TAG), tint = Orbit.warning(night))
                         }
@@ -1308,6 +1320,8 @@ object OrbitSkin : MyPlaySkin {
     const val BATTERY_NUMBER_TAG = "orbit_battery_number"
     /** Drive warnings: the ice sign beside the battery. */
     const val ICE_TAG = "orbit_ice"
+    /** Polish #5: the outside temperature's place under the clock. */
+    const val OUTSIDE_TEMP_TAG = "orbit_outside_temp"
     /** DW-1: the ice sign's place, kept whether it shows or not. */
     const val ICE_SLOT_TAG = "orbit_ice_slot"
     const val SONG_ART_TAG = "orbit_song_art"

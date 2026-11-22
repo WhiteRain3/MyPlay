@@ -812,7 +812,11 @@ internal fun MyPlayEngineShell(
                 Column(edge.align(Alignment.TopEnd).onGloballyPositioned { c -> c.boundsInRoot().let { statusBox = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } },
                     horizontalAlignment = Alignment.End) {
                     // Drive warnings: the skin's ice sign beside the clock.
-                    CompositionLocalProvider(LocalRoadIce provides (state.driveWarnings && state.iceRisk)) {
+                    val carNow by net.prototux.aare.car.CarData.state.collectAsState()
+                    val outside = OutsideTemp.of(state.driveWarnings && !sources.picture,
+                        carNow.has(aap_protobuf.service.sensorsource.message.SensorTypeOuterClass.SensorType.SENSOR_ENVIRONMENT_DATA),
+                        carNow.environment?.value?.temperatureC)
+                    CompositionLocalProvider(LocalRoadIce provides (state.driveWarnings && state.iceRisk), LocalOutsideTemp provides outside) {
                         skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
                     }
                     if (STOP_BELL in actionsOf) {

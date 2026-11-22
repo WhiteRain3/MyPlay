@@ -100,7 +100,7 @@
     <string name="myplay_warning_ice_sign" translatable="false">Ice possible</string>
     <string name="myplay_warning_phone_hot" translatable="false">The phone is hot: the screen may slow down</string>
     <string name="myplay_setting_drive_warnings" translatable="false">Ice and phone warnings</string>
-    <string name="phone_drive_warnings_hint" translatable="false">A snowflake by the clock at 4 °C or less outside, if the car reports it, and a short line once per drive. Also a line when the phone gets hot, and one soft pulse of the limit sign when the limit changes.</string>
+    <string name="phone_drive_warnings_hint" translatable="false">The outside temperature and, at 4 °C or less, a snowflake by the clock, if the car reports it, with a short line once per drive. Also a line when the phone gets hot, and one soft pulse of the limit sign when the limit changes.</string>
     <!-- #10: call back the last missed call (an action for a button or the home pad) -->
     <string name="phone_action_call_back" translatable="false">Call back the last missed call</string>
     <string name="myplay_call_back_title" translatable="false">Call back</string>
