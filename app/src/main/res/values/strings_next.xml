@@ -120,6 +120,37 @@
     <string name="next_att_archived_help" translatable="false">Kept as it was. Not updated any more.</string>
     <string name="next_att_more_label" translatable="false">%1$d more</string>
 
+    <!-- More › Updates -->
+    <string name="next_upd_ready_label" translatable="false">MyPlay %1$s is ready</string>
+    <string name="next_upd_install_label" translatable="false">Download and install %1$s</string>
+    <string name="next_upd_downloading_label" translatable="false">Downloading %1$s…</string>
+    <string name="next_upd_installing_label" translatable="false">Installing %1$s…</string>
+    <string name="next_upd_confirm_help" translatable="false">Then confirm in Android\'s window</string>
+    <string name="next_upd_failed_label" translatable="false">Couldn\'t install %1$s</string>
+    <string name="next_upd_needs_permission_help" translatable="false">MyPlay may not install apps yet</string>
+    <string name="next_upd_checking_label" translatable="false">Checking…</string>
+    <string name="next_upd_up_to_date_label" translatable="false">Up to date</string>
+    <string name="next_upd_version_help" translatable="false">MyPlay %1$s</string>
+    <string name="next_upd_allow_label" translatable="false">Allow MyPlay to install apps</string>
+    <string name="next_upd_allow_help" translatable="false">Needed once, in the screen that opens</string>
+    <string name="next_upd_allow_button_label" translatable="false">Allow</string>
+    <string name="next_upd_check_now_label" translatable="false">Check now</string>
+    <string name="next_upd_checked_label" translatable="false">Checked %1$s</string>
+    <string name="next_upd_checked_now_label" translatable="false">Checked just now</string>
+    <string name="next_upd_offline_label" translatable="false">No internet</string>
+    <string name="next_upd_automatic_label" translatable="false">Check automatically</string>
+    <string name="next_upd_automatic_help" translatable="false">Once a day, from GitHub</string>
+    <string name="next_upd_ask_label" translatable="false">Check for updates by itself?</string>
+    <string name="next_upd_no_label" translatable="false">No</string>
+    <string name="next_upd_yes_label" translatable="false">Yes</string>
+    <string name="next_upd_fail_network_help" translatable="false">The download was incomplete. Try again later.</string>
+    <string name="next_upd_fail_no_apk_help" translatable="false">This release has no app to install</string>
+    <string name="next_upd_fail_checksum_help" translatable="false">The download didn\'t match its checksum</string>
+    <string name="next_upd_fail_not_myplay_help" translatable="false">The file is not MyPlay</string>
+    <string name="next_upd_fail_version_help" translatable="false">The file is a different version</string>
+    <string name="next_upd_fail_signer_help" translatable="false">The file is signed by someone else</string>
+    <string name="next_upd_fail_install_help" translatable="false">Android didn\'t install it</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_switch_on_label" translatable="false">New phone app on</string>

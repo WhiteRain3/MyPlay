@@ -57,6 +57,7 @@ class MyPlayBackupKeysTest {
             "myplay_learn_button_at", // when that action was armed (O11-1): a moment's state
             "myplay_orbit_default_done", // N10: this install was moved to ORBIT once: belongs to the install
             "myplay_new_phone_app", // the hidden switch to the rebuilt phone app (plan §16): belongs to this install, not in any backup set
+            "myplay_update_asked", // whether this install was asked once about automatic update checks (plan §5): belongs to the install
         )
 
         /** "myplay_" strings that are not settings keys. */

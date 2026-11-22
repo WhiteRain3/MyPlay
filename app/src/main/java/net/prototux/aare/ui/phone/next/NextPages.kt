@@ -84,6 +84,8 @@ object NextPages {
 fun NextPage(route: String, onOldApp: () -> Unit) {
     when (route) {
         "home" -> NextHome()
+        "more/updates" -> NextUpdatesPage()
+        "more/whats-new" -> NextWhatsNewPage()
         else -> NextPlaceholder(route, onOldApp)
     }
 }

@@ -96,4 +96,45 @@ class NextShellMockups {
     @Test fun homeFailed() = paparazzi.snapshot {
         Home(HomeInputs(Hero.Failed("The car stopped the video. Code 4"), setOf(Attention.ARCHIVED), DesignInUse.DECK, errorAt = 0L))
     }
+
+    private val noUpdateTaps = object : UpdateActions {
+        override fun install(version: String) = Unit
+        override fun checkNow() = Unit
+        override fun setAutomatic(on: Boolean) = Unit
+        override fun allowInstalls() = Unit
+    }
+
+    @Composable
+    private fun Page(route: String, content: @Composable () -> Unit) {
+        val owner = object : OnBackPressedDispatcherOwner {
+            private val life = LifecycleRegistry.createUnsafe(this as LifecycleOwner).apply { currentState = Lifecycle.State.RESUMED }
+            override val lifecycle: Lifecycle get() = life
+            override val onBackPressedDispatcher = OnBackPressedDispatcher()
+        }
+        CompositionLocalProvider(LocalOnBackPressedDispatcherOwner provides owner) {
+            NextApp(start = route, badges = setOf(NextTab.MORE)) { content() }
+        }
+    }
+
+    @Test fun updatesReady() = paparazzi.snapshot {
+        Page("more/updates") { NextUpdatesContent(UpdateHero.Ready("2.4"), null, 1_700_000_000_000L, true, noUpdateTaps) }
+    }
+
+    @Test fun updatesDownloading() = paparazzi.snapshot {
+        Page("more/updates") { NextUpdatesContent(UpdateHero.Downloading("2.4", 42), null, 1_700_000_000_000L, true, noUpdateTaps) }
+    }
+
+    @Test fun updatesFailed() = paparazzi.snapshot {
+        Page("more/updates") {
+            NextUpdatesContent(UpdateHero.NeedsPermission("2.4"), null, 1_700_000_000_000L, true, noUpdateTaps)
+        }
+    }
+
+    @Test fun updatesCurrent() = paparazzi.snapshot {
+        Page("more/updates") { NextUpdatesContent(UpdateHero.UpToDate, null, 1_700_000_000_000L, true, noUpdateTaps) }
+    }
+
+    @Test fun whatsNew() = paparazzi.snapshot {
+        Page("more/whats-new") { NextWhatsNewPage() }
+    }
 }

@@ -49,3 +49,14 @@ var Settings.myplayNewPhoneApp: Boolean
     set(v) = prefs.edit { putBoolean(KEY_NEW_PHONE_APP, v) }
 
 internal const val KEY_NEW_PHONE_APP = "myplay_new_phone_app"
+
+/**
+ * The owner was asked once whether to check for updates by itself (plan §5): asked in the first
+ * What's new of the new app, or in Setup. The answer goes to check_updates; this only remembers that
+ * the question was asked. Not in backups: it belongs to this install.
+ */
+var Settings.myplayUpdateAsked: Boolean
+    get() = prefs.getBoolean(KEY_UPDATE_ASKED, false)
+    set(v) = prefs.edit { putBoolean(KEY_UPDATE_ASKED, v) }
+
+internal const val KEY_UPDATE_ASKED = "myplay_update_asked"
