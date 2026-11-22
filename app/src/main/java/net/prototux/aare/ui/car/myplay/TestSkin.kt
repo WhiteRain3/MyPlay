@@ -131,6 +131,20 @@ object TestSkin : MyPlaySkin {
         }
     }
 
+    override val drawsMapAlerts get() = true
+
+    @Composable
+    override fun MapAlertCard(alert: MapAlert, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) {
+        val t = LocalSkinTokens.current
+        Row(modifier.background(t.background.copy(alpha = 0.8f)).padding(12.dp)) {
+            Text(alert.title + (alert.subtitle?.let { " · $it" } ?: ""), color = t.onSurface, fontSize = 18.sp, modifier = Modifier.padding(12.dp))
+            alert.actions.forEachIndexed { i, (label, _) ->
+                val id = mapAlertStop(i)
+                Text(label, color = if (id == ringed) t.accent else t.onSurface, fontSize = 18.sp, modifier = stop(id).padding(12.dp))
+            }
+        }
+    }
+
     @Composable
     override fun MusicPanel(page: MusicPage, ringed: String, stop: (String) -> Modifier, modifier: Modifier) {
         val t = LocalSkinTokens.current

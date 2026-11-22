@@ -155,6 +155,13 @@ internal fun MyPlayEngineShell(
             sources.notifications.dismiss(notice)
         }
     }
+    // AL-1: the maps app's alert on the home, drawn by the skin in its own place (when it draws them).
+    var mapAlert by remember { mutableStateOf<MapAlert?>(null) }
+    val alertSink: (MapAlert?) -> Unit = remember { { a -> mapAlert = a } }
+    val homeAlert = mapAlert.takeIf { skin.drawsMapAlerts && model.place == Place.Home }
+    // A new alert with buttons takes the ring onto its last one (usually Close), so a push meant for
+    // something else only answers the alert.
+    LaunchedEffect(homeAlert?.key) { homeAlert?.actions?.lastIndex?.takeIf { it >= 0 }?.let { chosen = mapAlertStop(it) } }
     // N8: the bell (while there are unseen notifications) opens the list over the home.
     val notes = sources.notifications
     var listOpen by remember { mutableStateOf(false) }
@@ -188,6 +195,8 @@ internal fun MyPlayEngineShell(
             notice.actions.take(2).forEachIndexed { i, (_, run) -> put(noticeActionStop(i)) { run(); sources.notifications.dismiss(notice) } }
             put(NOTICE_DISMISS) { sources.notifications.dismiss(notice) }
         }
+        // AL-1: the alert's buttons are home stops, as a notice's are.
+        homeAlert?.actions?.forEachIndexed { i, (_, run) -> put(mapAlertStop(i), run) }
         if (call != null && !ringing) {
             put(STOP_CALL) { openCalls() }
             if (canEnd) put(STOP_HANG_UP, sources.calls::end)
@@ -550,13 +559,13 @@ internal fun MyPlayEngineShell(
         }
         key in WORLD_KEYS
     } else when (val p = model.place) {
-        Place.Home -> if (padHome && (!ringAwake || infoHome) && notice == null && call == null && padKeyOf(key)?.let { padMap[it] != HomePadAction.NOTHING } == true) {
+        Place.Home -> if (padHome && (!ringAwake || infoHome) && notice == null && homeAlert == null && call == null && padKeyOf(key)?.let { padMap[it] != HomePadAction.NOTHING } == true) {
             runPad(padMap.getValue(padKeyOf(key)!!))
             true
-        } else if (infoHome && notice == null && call == null && (key == Key.Tab || padKeyOf(key) != null)) {
+        } else if (infoHome && notice == null && homeAlert == null && call == null && (key == Key.Tab || padKeyOf(key) != null)) {
             // O11: the info-only home: no ring ever; a turn or a key set to nothing does nothing here.
             true
-        } else if (padHome && !ringAwake && notice == null && call == null && (key == Key.Tab || padKeyOf(key) != null)) {
+        } else if (padHome && !ringAwake && notice == null && homeAlert == null && call == null && (key == Key.Tab || padKeyOf(key) != null)) {
             // The first turn only shows the ring, where it was. O6-1: so does a pad key set to
             // nothing: it never moves the ring while it is hidden.
             ringAwake = true
@@ -692,12 +701,13 @@ internal fun MyPlayEngineShell(
                 // O9: while the skin shows the next turn itself, the maps app's turn card is left out on the
                 // home. O9-1: only then: a maps app whose turn reaches MyPlay only through its card keeps it.
                 CompositionLocalProvider(LocalMapTapIsKnobStop provides false, LocalSkinMapFilter provides tokens.mapFilter,
-                    net.prototux.aare.host.templates.LocalOwnTurnShown provides (slots.turn != null)) {
+                    net.prototux.aare.host.templates.LocalOwnTurnShown provides (slots.turn != null),
+                    LocalMapAlertSink provides (if (skin.drawsMapAlerts) alertSink else null)) {
                     if (nav != null) navMap(nav, Modifier.fillMaxSize()) else Wallpaper(state, Modifier.fillMaxSize())
                 }
                 val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)
                 val showRing = model.place == Place.Home && CarFocusVisibility.keyInput && !panelOpen &&
-                    (!padHome || ringAwake || notice != null || call != null)
+                    (!padHome || ringAwake || notice != null || homeAlert != null || call != null)
                 // O4: shades only behind the parts shown (DECK, frozen, keeps both).
                 skin.Backdrop(if (hand != null) BackdropParts(turn = true, song = true)
                     else BackdropParts(turn = slots.turn != null && model.place !is Place.InWorld, song = slots.song != null && model.place !is Place.InWorld && !listOpen),
@@ -760,6 +770,11 @@ internal fun MyPlayEngineShell(
                     }
                     // The gesture line (R6), under the call's strip and the notice (R6-3: never on top of them).
                     if (model.place == Place.Home) GestureLineOverlay(state, Modifier)
+                }
+                // AL-1: the maps app's alert, in the skin's own place (never over the turn, the hub or the song).
+                if (home && homeAlert != null) {
+                    skin.MapAlertCard(homeAlert, ring.takeIf { showRing }, { id -> Modifier.stop(id) },
+                        Modifier.align(Alignment.BottomCenter).slot(Slot.SONG).testTag(SLOT_MAP_ALERT))
                 }
                 if (home && hand == null) slots.song?.let { song ->
                     // O1: the music panel opens above the song, in the same corner.
@@ -989,6 +1004,8 @@ internal const val SLOT_APPS = "slot_apps"
 internal const val SLOT_MUSIC = "slot_music"
 /** O1: the music panel over the home. */
 internal const val SLOT_MUSIC_PANEL = "slot_music_panel"
+/** AL-1: the maps app's alert on the home. */
+internal const val SLOT_MAP_ALERT = "slot_map_alert"
 internal const val SLOT_CALL = "slot_call"
 internal const val SLOT_PHONE = "slot_phone"
 internal const val SLOT_NOTICES = "slot_notices"

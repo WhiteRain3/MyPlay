@@ -67,6 +67,7 @@ import androidx.compose.material.icons.rounded.TurnSlightLeft
 import androidx.compose.material.icons.rounded.TurnSlightRight
 import androidx.compose.material.icons.rounded.UTurnLeft
 import androidx.compose.material.icons.rounded.UTurnRight
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -259,6 +260,52 @@ object OrbitSkin : MyPlaySkin {
         TurnDirection.U_TURN_LEFT -> Icons.Rounded.UTurnLeft
         TurnDirection.U_TURN_RIGHT -> Icons.Rounded.UTurnRight
         null -> Icons.Rounded.Navigation
+    }
+
+    /** AL-1: ORBIT draws the maps app's alerts itself, compact, in the free lower middle. */
+    override val drawsMapAlerts get() = true
+
+    /**
+     * AL-1 (the owner's photo: Waze's wide grey alert card covered the turn): the alert as a compact
+     * glass pill above the bottom row (the hub left, the song right), in the map's free lower middle:
+     * its icon (or a caution sign), the title and the subtitle on one line each, and its buttons as
+     * small pills the knob reaches.
+     */
+    @Composable
+    override fun MapAlertCard(alert: net.prototux.aare.ui.car.myplay.MapAlert, ringed: String?, stop: (String) -> Modifier, modifier: Modifier) = Box(modifier) {
+        Scaled {
+            val night = LocalSkinTokens.current.night
+            val g = Orbit.glass(night)
+            val caution = Orbit.caution(night)
+            val accent = Orbit.accent(World.NAVIGATE, night)
+            val pill = androidx.compose.foundation.shape.RoundedCornerShape(40.dp)
+            Row(
+                Modifier.padding(bottom = 232.dp).widthIn(max = 600.dp).clip(pill).background(g.glass).border(2.dp, g.edge, pill)
+                    .padding(start = 14.dp, end = 18.dp, top = 12.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Box(Modifier.size(52.dp).clip(CircleShape).background(caution.copy(alpha = 0.22f)), contentAlignment = Alignment.Center) {
+                    val icon = alert.icon
+                    if (icon != null) Image(icon, null, Modifier.size(34.dp), contentScale = ContentScale.Fit)
+                    else Icon(Icons.Rounded.Warning, null, Modifier.size(32.dp), tint = caution)
+                }
+                Column(Modifier.weight(1f, fill = false)) {
+                    Text(alert.title, style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    alert.subtitle?.takeIf { it.isNotBlank() }?.let {
+                        Text(it, style = TextStyle(fontSize = 20.sp, color = g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                }
+                alert.actions.forEachIndexed { i, (label, _) ->
+                    val id = net.prototux.aare.ui.car.myplay.mapAlertStop(i)
+                    Text(
+                        label, style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1,
+                        modifier = stop(id).orbitFocusRounded(ringed == id, accent, g.halo, 24.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)).background(g.track)
+                            .padding(horizontal = 18.dp, vertical = 10.dp),
+                    )
+                }
+            }
+        }
     }
 
     /** O8: the speed (and the limit) is in the hub, with the trip, not a part of its own. */

@@ -113,7 +113,44 @@ fun CarAppScreen(conn: CarAppConnection, runtime: CarRuntime, modifier: Modifier
         // MyPlay (M4): not a knob stop where the map fills the screen (LocalMapTapIsKnobStop).
         val knobStop = LocalMapTapIsKnobStop.current
         if (compact && onOpen != null) Box(Modifier.fillMaxSize().focusProperties { canFocus = knobStop }.carFocusHighlight(RoundedCornerShape(LocalCarDimens.current.cardRadius)).clickable(onClick = onOpen))
-        conn.alert?.let { AlertCard(it, conn, host, Modifier.align(Alignment.TopCenter)) }
+        // MyPlay (AL-1): on MyPlay's home the skin draws the alert itself, in its own place.
+        val sink = net.prototux.aare.ui.car.myplay.LocalMapAlertSink.current
+        if (compact && sink != null) AlertToSkin(conn.alert, conn, host, sink)
+        else conn.alert?.let { AlertCard(it, conn, host, Modifier.align(Alignment.TopCenter)) }
+    }
+}
+
+/** MyPlay (AL-1): the app's alert handed to MyPlay's skin; it times out as the default card does. */
+@Composable
+private fun AlertToSkin(alert: Alert?, conn: CarAppConnection, host: TemplateHost, sink: (net.prototux.aare.ui.car.myplay.MapAlert?) -> Unit) {
+    if (alert != null) AlertTimeout(alert, conn, host)
+    val okLabel = stringResource(R.string.common_ok)
+    DisposableEffect(alert) {
+        sink(alert?.let { a ->
+            net.prototux.aare.ui.car.myplay.MapAlert(
+                key = a.id, title = a.title.toString(), subtitle = a.subtitle?.toString(),
+                icon = a.icon?.let { host.loadIcon(it, 96) },
+                actions = a.actions.take(2).map { action ->
+                    (action.title?.toString() ?: okLabel) to {
+                        runCatching { action.onClickDelegate?.sendClick(host.done) }
+                        conn.dismissAlert()
+                    }
+                },
+            )
+        })
+        onDispose { sink(null) }
+    }
+}
+
+/** An alert's own timeout: told to the app, then the alert goes. */
+@Composable
+private fun AlertTimeout(alert: Alert, conn: CarAppConnection, host: TemplateHost) {
+    LaunchedEffect(alert) {
+        if (alert.durationMillis > 0) {
+            delay(alert.durationMillis)
+            runCatching { alert.callbackDelegate?.sendCancel(AlertCallback.REASON_TIMEOUT, host.done) }
+            conn.dismissAlert()
+        }
     }
 }
 
@@ -153,13 +190,7 @@ private fun AppMessage(conn: CarAppConnection, message: String?, retry: (() -> U
 /** Car app alerts (e.g. "Accept new route?"): a card with up to two actions and an optional timeout. */
 @Composable
 private fun AlertCard(alert: Alert, conn: CarAppConnection, host: TemplateHost, modifier: Modifier) {
-    LaunchedEffect(alert) {
-        if (alert.durationMillis > 0) {
-            delay(alert.durationMillis)
-            runCatching { alert.callbackDelegate?.sendCancel(AlertCallback.REASON_TIMEOUT, host.done) }
-            conn.dismissAlert()
-        }
-    }
+    AlertTimeout(alert, conn, host)
     Column(
         modifier.padding(16.dp).widthIn(max = 640.dp).fillMaxWidth().clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainerHighest).padding(20.dp),
