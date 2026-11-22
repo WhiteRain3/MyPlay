@@ -87,6 +87,8 @@ object AboutOss {
                 OssComponent("Protocol Buffers (protobuf-javalite)", "BSD-3-Clause", "https://github.com/protocolbuffers/protobuf"),
                 OssComponent("Shizuku API", "MIT", "https://github.com/RikkaApps/Shizuku-API"),
                 OssComponent("Android Hidden API Bypass", "Apache-2.0", "https://github.com/LSPosed/AndroidHiddenApiBypass"),
+                // The rebuilt phone app's font: a Latin subset with the weight axis (res/font/roboto_flex.ttf).
+                OssComponent("Roboto Flex (Google Fonts)", "OFL-1.1", "https://github.com/googlefonts/roboto-flex"),
                 // Brought in by the libraries above.
                 OssComponent("Kotlin standard library (JetBrains)", "Apache-2.0", "https://github.com/JetBrains/kotlin"),
                 OssComponent("kotlinx.serialization", "Apache-2.0", "https://github.com/Kotlin/kotlinx.serialization"),
