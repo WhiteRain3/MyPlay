@@ -44,4 +44,10 @@ class DriveWarningsTest {
         assertEquals(-2, IceWarning.degrees(-2.4f))
         assertEquals(0, IceWarning.degrees(-0.4f))
     }
+
+    @Test fun theLimitPulseIsItsOwnSwitchOnByDefaultAndBackedUp() {
+        assertEquals("myplay_limit_pulse", KEY_LIMIT_PULSE)
+        assertTrue(KEY_LIMIT_PULSE in net.prototux.aare.MyPlayBackupKeys.ALLOWED)
+        assertTrue(KEY_LIMIT_PULSE in net.prototux.aare.host.CarRuntime.SCREEN_SETTING_KEYS)
+    }
 }

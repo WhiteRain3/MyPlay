@@ -353,9 +353,12 @@ object OrbitSkin : MyPlaySkin {
                 }
                 alert.actions.forEachIndexed { i, (label, _) ->
                     val id = net.prototux.aare.ui.car.myplay.mapAlertStop(i)
+                    // Polish: a long label (the app chooses it) is cut with "…" rather than squeezing the
+                    // alert's own title out of the pill.
                     Text(
                         label, style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1,
-                        modifier = stop(id).orbitFocusRounded(ringed == id, accent, g.halo, 24.dp)
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = stop(id).widthIn(max = ALERT_BUTTON_MAX).orbitFocusRounded(ringed == id, accent, g.halo, 24.dp)
                             .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)).background(g.track)
                             .padding(horizontal = 18.dp, vertical = 10.dp),
                     )
@@ -390,7 +393,7 @@ object OrbitSkin : MyPlaySkin {
                     OrbitRing(trip?.progress, 184.dp, 9.dp, nav, g.track, Modifier.testTag(TRIP_RING_TAG).progressSemantics(trip?.progress)) {
                         Column(Modifier.testTag(HUB_SPEED_TAG).carPart(CarPart.OrbitSpeed), horizontalAlignment = Alignment.CenterHorizontally) {
                             val colour = if (speed?.over == true) Orbit.caution(night) else g.text
-                            Text(speed?.kmh?.toString() ?: "–", style = TextStyle(fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.ExtraBold, color = colour), maxLines = 1)
+                            Text(speed?.kmh?.toString() ?: "–", style = TextStyle(fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"), maxLines = 1)
                             Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, lineHeight = 20.sp, color = g.secondary), maxLines = 1)
                             // O8-1 (the Reviewer: "arrival · time left" got too small to read at a glance):
                             // one value only, the time left (else the distance, else the arrival), larger.
@@ -540,7 +543,15 @@ object OrbitSkin : MyPlaySkin {
             }
             val time = DateFormat.format(if (DateFormat.is24HourFormat(context)) "H:mm" else "h:mm", now).toString()
             Column(horizontalAlignment = Alignment.End) {
-                Text(time, style = Orbit.Type.clock.floating(g.text), maxLines = 1, modifier = Modifier.carPart(CarPart.Clock))
+                // Polish: the clock keeps one width (as wide as "88:88", figures of one width), so the turn
+                // of the minute or the hour (9:59 -> 10:00) never changes the column's width, and with it
+                // the map's free area; right-aligned as before.
+                val clockStyle = Orbit.Type.clock.copy(fontFeatureSettings = "tnum")
+                val clockMeasurer = rememberTextMeasurer()
+                val clockWidth = remember(clockMeasurer) { clockMeasurer.measure("88:88", clockStyle).size.width }
+                Box(Modifier.width(with(LocalDensity.current) { clockWidth.toDp() }), contentAlignment = Alignment.CenterEnd) {
+                    Text(time, style = clockStyle.floating(g.text), maxLines = 1, modifier = Modifier.carPart(CarPart.Clock).testTag(CLOCK_TAG))
+                }
                 // N5-3: no level shown when the phone does not tell it, never "0%".
                 val battery = rememberPhoneStatus()?.takeIf { it.batteryKnown }
                 val ice = LocalRoadIce.current
@@ -619,7 +630,7 @@ object OrbitSkin : MyPlaySkin {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         // N20: over the limit by more than the margin, the number turns a calm amber; no sound.
                         val colour = if (reading?.over == true) Orbit.caution(night) else g.text
-                        Text(reading?.kmh?.toString() ?: "–", style = Orbit.Type.name.copy(color = colour, lineHeight = 36.sp), maxLines = 1)
+                        Text(reading?.kmh?.toString() ?: "–", style = Orbit.Type.name.copy(color = colour, lineHeight = 36.sp, fontFeatureSettings = "tnum"), maxLines = 1)
                         Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, color = g.secondary), maxLines = 1)
                     }
                 }
@@ -914,6 +925,15 @@ object OrbitSkin : MyPlaySkin {
     /** The notice's widest, at the sheet's scale: the room between the turn and the clock. */
     private val NOTICE_WIDTH = 480.dp
 
+    /** A call's time: m:ss, and h:mm:ss from an hour on ("1:05:03", not "65:03"). */
+    fun callTime(seconds: Long): String {
+        val s = seconds.coerceAtLeast(0)
+        val h = s / 3600
+        val m = (s % 3600) / 60
+        val sec = s % 60
+        return if (h > 0) String.format(java.util.Locale.ROOT, "%d:%02d:%02d", h, m, sec) else String.format(java.util.Locale.ROOT, "%d:%02d", m, sec)
+    }
+
     /** Up to two letters for a caller's disc; null for a number (then a phone icon). */
     fun initials(name: String): String? {
         val words = name.trim().split(Regex("\\s+")).filter { w -> w.firstOrNull()?.isLetter() == true }
@@ -993,8 +1013,8 @@ object OrbitSkin : MyPlaySkin {
                             if (letters != null) Text(letters, style = TextStyle(fontSize = 24.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = Orbit.onAccent(night)))
                             else Icon(Icons.Rounded.Phone, null, tint = Orbit.onAccent(night))
                         }
-                        Text(stringResource(R.string.phone_in_call_elapsed, call.name, "${elapsed / 60}:${"%02d".format(elapsed % 60)}"),
-                            style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = g.text),
+                        Text(stringResource(R.string.phone_in_call_elapsed, call.name, callTime(elapsed.toLong())),
+                            style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, color = g.text, fontFeatureSettings = "tnum"),
                             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 460.dp))
                     }
                     if (canEnd) {
@@ -1323,6 +1343,10 @@ object OrbitSkin : MyPlaySkin {
 
     /** Test tags. */
     const val BATTERY_TAG = "orbit_battery"
+    /** The widest a map alert's button gets (its label is cut with "…" past it). */
+    val ALERT_BUTTON_MAX = 200.dp
+    /** The clock's time, in its fixed-width box. */
+    const val CLOCK_TAG = "orbit_clock"
     /** Polish #3: the battery's number, in its fixed-width box. */
     const val BATTERY_NUMBER_TAG = "orbit_battery_number"
     /** Drive warnings: the ice sign beside the battery. */

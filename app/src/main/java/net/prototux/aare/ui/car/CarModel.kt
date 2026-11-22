@@ -154,6 +154,8 @@ class CarUiState {
     var driveWarnings by mutableStateOf(true)
     /** MyPlay (drive warnings): the car reports 4 °C or less outside (IceWarning); shown only with [driveWarnings]. */
     var iceRisk by mutableStateOf(false)
+    /** MyPlay (LP-1): the limit sign pulses once when the limit changes (myplay_limit_pulse). */
+    var limitPulse by mutableStateOf(true)
     /** MyPlay (#5): Home and the saved places, for the Navigate world's list (Places.destinations); empty: none. */
     var navPlaces by mutableStateOf<List<net.prototux.aare.car.SavedPlace>>(emptyList())
     /** MyPlay (O6): what ORBIT's home pad opens while the ring is hidden; empty: the ring always (as in tests). */
