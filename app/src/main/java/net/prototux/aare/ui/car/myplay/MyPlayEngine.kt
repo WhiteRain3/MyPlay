@@ -555,6 +555,7 @@ internal fun MyPlayEngineShell(
             HomePadAction.DIAL -> model.push()
             HomePadAction.APPS -> { model.enter(World.APPS); freshWorld(World.APPS) }
             HomePadAction.CALLS -> openCalls()
+            HomePadAction.CALL_BACK -> actions.callBackLastMissed()
             HomePadAction.NOTHING -> Unit
         }
     }

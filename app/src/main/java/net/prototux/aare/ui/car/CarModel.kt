@@ -245,4 +245,6 @@ interface CarActions {
     fun endCall()
     /** Navigate to a place (an address or a name) in the car's navigation app. */
     fun navigateTo(place: String)
+    /** MyPlay (#10): offer the last missed call on the car screen, to call back with one push. */
+    fun callBackLastMissed() = Unit
 }

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Phone
+import androidx.compose.material.icons.rounded.PhoneCallback
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.RadioButtonChecked
 import androidx.compose.material.icons.rounded.SkipNext
@@ -71,6 +72,7 @@ internal object OrbitHints {
         HomePadAction.DIAL -> Icons.Rounded.DonutLarge
         HomePadAction.APPS -> Icons.Rounded.Apps
         HomePadAction.CALLS -> Icons.Rounded.Phone
+        HomePadAction.CALL_BACK -> Icons.Rounded.PhoneCallback
         HomePadAction.NOTHING -> Icons.Rounded.RadioButtonChecked
     }
 
@@ -78,7 +80,7 @@ internal object OrbitHints {
         HomePadAction.MUSIC -> World.MUSIC
         HomePadAction.MAPS -> World.NAVIGATE
         HomePadAction.APPS -> World.APPS
-        HomePadAction.CALLS -> World.CALLS
+        HomePadAction.CALLS, HomePadAction.CALL_BACK -> World.CALLS
         else -> null
     }
 
@@ -87,6 +89,7 @@ internal object OrbitHints {
         ButtonAction.OPEN_NAVIGATION -> Icons.Rounded.Navigation
         ButtonAction.OPEN_MEDIA -> Icons.Rounded.MusicNote
         ButtonAction.OPEN_PHONE -> Icons.Rounded.Phone
+        ButtonAction.CALL_BACK -> Icons.Rounded.PhoneCallback
         ButtonAction.PLAY_PAUSE -> Icons.Rounded.PlayArrow
         ButtonAction.NEXT -> Icons.Rounded.SkipNext
         ButtonAction.PREVIOUS -> Icons.Rounded.SkipPrevious
@@ -100,7 +103,7 @@ internal object OrbitHints {
     fun world(a: ButtonAction): World? = when (a) {
         ButtonAction.NAVIGATE_HOME, ButtonAction.OPEN_NAVIGATION -> World.NAVIGATE
         ButtonAction.OPEN_MEDIA, ButtonAction.PLAY_PAUSE, ButtonAction.NEXT, ButtonAction.PREVIOUS, ButtonAction.SKIP_SONGS -> World.MUSIC
-        ButtonAction.OPEN_PHONE -> World.CALLS
+        ButtonAction.OPEN_PHONE, ButtonAction.CALL_BACK -> World.CALLS
         else -> null
     }
 }

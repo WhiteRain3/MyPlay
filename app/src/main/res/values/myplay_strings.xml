@@ -101,4 +101,12 @@
     <string name="myplay_warning_phone_hot" translatable="false">The phone is hot: the screen may slow down</string>
     <string name="myplay_setting_drive_warnings" translatable="false">Ice and phone warnings</string>
     <string name="phone_drive_warnings_hint" translatable="false">A snowflake by the clock at 4 °C or less outside, if the car reports it, and a short line once per drive. Also a line when the phone gets hot.</string>
+    <!-- #10: call back the last missed call (an action for a button or the home pad) -->
+    <string name="phone_action_call_back" translatable="false">Call back the last missed call</string>
+    <string name="myplay_call_back_title" translatable="false">Call back</string>
+    <string name="myplay_call_back_who" translatable="false">Call back %1$s?</string>
+    <string name="myplay_call_back_when" translatable="false">Missed at %1$s</string>
+    <string name="myplay_call_back_call" translatable="false">Call</string>
+    <string name="myplay_call_back_none" translatable="false">No missed call in the last day</string>
+    <string name="myplay_call_back_no_permission" translatable="false">Allow calls for MyPlay on the phone</string>
 </resources>

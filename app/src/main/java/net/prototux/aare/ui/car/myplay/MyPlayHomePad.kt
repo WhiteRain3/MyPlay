@@ -22,6 +22,8 @@ enum class HomePadAction(val id: String) {
     DIAL("dial"),
     APPS("apps"),
     CALLS("calls"),
+    /** MyPlay (#10): the last missed call, called back only with a push on its Call button. */
+    CALL_BACK("call_back"),
     NOTHING("nothing"),
     ;
 

@@ -53,6 +53,7 @@ import net.prototux.aare.ui.car.myplay.myplayInfoHome
 import net.prototux.aare.ui.car.myplay.myplayOrbitShade
 import net.prototux.aare.ui.car.myplay.myplayEngineLanguage
 import net.prototux.aare.ui.car.myplay.myplayEnginePreview
+import net.prototux.aare.car.CallBack
 import net.prototux.aare.car.Calls
 import net.prototux.aare.car.DashboardInfo
 import net.prototux.aare.media.MediaHub
@@ -621,6 +622,37 @@ class CarRuntime(
         return ok
     }
 
+    /**
+     * MyPlay (#10): the last missed call as a notice with a Call button; only that button dials.
+     * The log says what happened, never who called.
+     */
+    fun callBackLastMissed() {
+        val title = context.getString(R.string.myplay_call_back_title)
+        val granted = net.prototux.aare.ui.car.PHONE_PERMISSIONS.all { context.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED }
+        if (!granted) {
+            DiagLog.add("call back: no permission for calls")
+            notice(title, context.getString(R.string.myplay_call_back_no_permission))
+            return
+        }
+        scope.launch {
+            val now = System.currentTimeMillis()
+            val missed = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { CallBack.pick(CallBack.rows(context), now) }
+            if (missed == null) {
+                DiagLog.add("call back: no missed call in the last 24 hours")
+                notice(title, context.getString(R.string.myplay_call_back_none))
+                return@launch
+            }
+            DiagLog.add("call back: offered the last missed call")
+            val who = missed.name.ifBlank { missed.number }
+            val at = android.text.format.DateFormat.getTimeFormat(context).format(java.util.Date(missed.dateMs))
+            notice(context.getString(R.string.myplay_call_back_who, who), context.getString(R.string.myplay_call_back_when, at),
+                durationMs = 10_000, actions = listOf(context.getString(R.string.myplay_call_back_call) to {
+                    DiagLog.add("call back: calling")
+                    Calls.place(context, missed.number)
+                }))
+        }
+    }
+
     /** Phone calls for the car's call card: polled, as no telephony listener needs fewer permissions. */
     private suspend fun watchCalls() {
         var since = 0L
@@ -774,6 +806,7 @@ class CarRuntime(
         override fun navigateTo(place: String) {
             if (!this@CarRuntime.navigateTo(place)) notice(context.getString(R.string.notif_navigation_title), context.getString(R.string.notif_navigation_no_app_text))
         }
+        override fun callBackLastMissed() = this@CarRuntime.callBackLastMissed()
     }
 
     /** The chosen assistant's package, or the phone's default assistant. */
