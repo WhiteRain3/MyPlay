@@ -25,6 +25,7 @@ internal object MyPlayBackupKeys {
         "myplay_engine_language" to Type.STRING, // the new car screen's design language, ORBIT or DECK (N13)
         "myplay_maps_idle_home" to Type.INT, // minutes before a full-screen maps app goes home, 0 never (O2b)
         "myplay_learned_buttons" to Type.STRING, // car buttons taught an action in the car, code to action (O11)
+        "myplay_home_address" to Type.STRING, // where Navigate home goes: an address or lat,lng (HN-1)
         "myplay_orbit_shade" to Type.STRING, // the shade behind ORBIT's parts: soft or none (SH-1)
         "myplay_info_home" to Type.BOOLEAN, // ORBIT's home without the knob's ring (O11)
         "myplay_home_pad" to Type.STRING, // what ORBIT's home pad opens while the ring is hidden (O6)

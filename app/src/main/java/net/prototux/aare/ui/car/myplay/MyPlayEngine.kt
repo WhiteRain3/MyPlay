@@ -330,6 +330,15 @@ internal fun MyPlayEngineShell(
         delay(idleMs ?: 8_000L)
         ringAwake = false
     }
+    // HN-2 (the owner's hints C): the hints round the hub wake on any press, knob turn or touch and
+    // fade after the panel time without input (8 s when panels never close), as the ring does.
+    var hintsAwake by remember(skin.id) { mutableStateOf(false) }
+    LaunchedEffect(inputs) { if (inputs > 0) hintsAwake = true }
+    LaunchedEffect(hintsAwake, inputs, idleMs) {
+        if (!hintsAwake) return@LaunchedEffect
+        delay(idleMs ?: 8_000L)
+        hintsAwake = false
+    }
     fun padPanel(dir: FocusGraph.Direction) {
         val sideways = dir == FocusGraph.Direction.LEFT || dir == FocusGraph.Direction.RIGHT
         if (panelRing == PANEL_SEEK && sideways) seek(dir == FocusGraph.Direction.RIGHT)
@@ -779,7 +788,20 @@ internal fun MyPlayEngineShell(
                         skin.Hand(model.front, slots.song, LocalStopRinged.current, { w -> chosen = STOP_HUB; if (w == model.front) openFront() else model.front = w },
                             edge.align(Alignment.BottomEnd).slot(Slot.HUB).stop(STOP_HUB))
                     }
-                } else if (home) ringed(STOP_HUB) {
+                } else if (home) {
+                    // HN-2: what the pad's directions (while they open things: the ring hidden, or the
+                    // info-only home) and the taught buttons do, round the hub; only on the plain home.
+                    val hubSpeed = skin.speedInHub && skin.showsSpeed && state.speedSource != SpeedSourceMode.OFF
+                    val padNow = padHome && (!ringAwake || infoHome)
+                    val hints = PadHints.of(if (padNow) padMap else null, state.learnedActions).copy(speedShown = hubSpeed)
+                    val hintsShown = hintsAwake && !hints.isEmpty && model.place == Place.Home && !panelOpen &&
+                        homeAlert == null && call == null && notice == null
+                    androidx.compose.animation.AnimatedVisibility(hintsShown, edge.align(Alignment.BottomStart),
+                        enter = androidx.compose.animation.fadeIn(), exit = androidx.compose.animation.fadeOut()) {
+                        skin.PadHints(hints, Modifier.testTag(SLOT_HINTS))
+                    }
+                }
+                if (home && hand == null) ringed(STOP_HUB) {
                     val hubMod = edge.align(Alignment.BottomStart).slot(Slot.HUB).stop(STOP_HUB)
                     // O8: the speed and its limit in the hub (ORBIT), read only while shown.
                     if (skin.speedInHub && skin.showsSpeed && state.speedSource != SpeedSourceMode.OFF) {
@@ -1077,6 +1099,9 @@ internal fun libraryRowTag(i: Int) = "library_row_$i"
 internal fun appTag(app: CarAppEntry) = "app_${app.id}"
 
 /** O6: the home pad key a key is, or null. */
+/** HN-2: the hints round the hub (their layer). */
+internal const val SLOT_HINTS = "slot_hints"
+
 internal fun padKeyOf(key: Key): HomePadKey? = when (key) {
     Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> HomePadKey.CENTER
     Key.DirectionUp -> HomePadKey.UP

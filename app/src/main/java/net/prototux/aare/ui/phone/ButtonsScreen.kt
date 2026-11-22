@@ -40,6 +40,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.testTag
+import net.prototux.aare.car.myplayHomeAddress
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -123,6 +125,7 @@ internal fun actionName(a: ButtonAction): Int = when (a) {
     ButtonAction.OPEN_NAVIGATION -> R.string.phone_action_open_navigation
     ButtonAction.OPEN_MEDIA -> R.string.phone_action_open_media
     ButtonAction.OPEN_PHONE -> R.string.phone_action_open_phone
+    ButtonAction.NAVIGATE_HOME -> R.string.phone_action_navigate_home
     ButtonAction.NOTHING -> R.string.phone_action_nothing
 }
 
@@ -241,6 +244,7 @@ fun ButtonsScreen() {
         Spacer(Modifier.height(8.dp))
         HomePadSection(homePad, { homePad = it; settings.myplayHomePad = it }, infoHome) { infoHome = it; settings.myplayInfoHome = it }
         TeachButtonSection(settings)
+        HomeAddressField(settings)
         Spacer(Modifier.height(8.dp))
         RowGroup(rows = listOf {
             SwitchRow(Icons.Rounded.Info, stringResource(R.string.phone_buttons_line_title), line, TileTone.BLUE,
@@ -330,3 +334,21 @@ private fun DrawnPart(
     }
 }
 
+/**
+ * HN-1: where a button taught "Navigate home" goes: an address or "lat,lng", saved as typed (the
+ * car side reads it at each press). Empty: the car says to set it here.
+ */
+@Composable
+private fun HomeAddressField(settings: net.prototux.aare.Settings) {
+    var address by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(settings.myplayHomeAddress) }
+    androidx.compose.material3.OutlinedTextField(
+        address, { v -> address = v.take(200); settings.myplayHomeAddress = address },
+        singleLine = true,
+        label = { androidx.compose.material3.Text(stringResource(R.string.phone_home_address_title)) },
+        supportingText = { androidx.compose.material3.Text(stringResource(R.string.phone_home_address_hint)) },
+        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(focusedBorderColor = PhoneColors.Accent, unfocusedBorderColor = PhoneColors.Border),
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag(HOME_ADDRESS_TAG),
+    )
+}
+
+internal const val HOME_ADDRESS_TAG = "phone_home_address"

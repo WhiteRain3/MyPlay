@@ -24,6 +24,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.performTouchInput
 import net.prototux.aare.ui.car.CarActions
 import net.prototux.aare.ui.car.CarAppEntry
 import net.prototux.aare.ui.car.CarLayout
@@ -614,6 +616,69 @@ class OrbitHomeTest {
             android.graphics.Paint().apply { style = android.graphics.Paint.Style.STROKE; strokeWidth = 4f; color = android.graphics.Color.YELLOW })
         val dir = File("build/reports/myplay-screens").apply { mkdirs() }
         File(dir, "orbit_free_area_centred.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /**
+     * AR-1 (the owner: the album art sometimes an oval): wide (16:9) and tall (9:16) art, with a
+     * title long enough to fill the corner, is still a true circle: the ring and the art square,
+     * the art cropped, never stretched. On the narrower 1200 wide screen too.
+     */
+    @Test @Config(qualifiers = "w1200dp-h720dp-land-mdpi")
+    fun theArtIsAlwaysACircle() {
+        val state = show()
+        val long = "A Very Long Song Title That Goes On And On Past The Corner (Extended Remix)"
+        for ((w, h) in listOf(1600 to 900, 900 to 1600, 640 to 640)) {
+            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).apply { eraseColor(0xFF3D7BFF.toInt()) }
+            rule.runOnIdle { state.nowPlaying = NowPlaying("music", long, "The Synthwaves", bmp, playing = true, positionMs = 95_000, durationMs = 240_000, updatedAtMs = android.os.SystemClock.elapsedRealtime()) }
+            rule.waitForIdle()
+            for (tag in listOf(OrbitSkin.SONG_ART_TAG, OrbitSkin.SONG_RING_TAG)) {
+                val b = rule.onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+                org.junit.Assert.assertEquals("$tag ${w}x$h $b", b.width, b.height, 0.5f)
+            }
+            val ring = rule.onNodeWithTag(OrbitSkin.SONG_RING_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+            // Its full size, not a squeezed one (152 dp at ORBIT's scale for this screen).
+            org.junit.Assert.assertEquals(152f * OrbitSkin.scale(1200, 720), ring.width, 1f)
+        }
+        // The turn's disc likewise beside a long road name.
+        rule.runOnIdle { state.phoneGuidance = net.prototux.aare.notify.PhoneGuidance("k", "mock.maps", "Maps", "300 m", long, "", null, null, "") }
+        rule.waitForIdle()
+        val turn = rule.onNodeWithTag(STOP_TURN).fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("turn $turn", turn.height >= 132f * OrbitSkin.scale(1200, 720) - 1f)
+    }
+
+    /**
+     * HN-2: the hints round the hub (the owner's A, C, E, F): a touch wakes them; the pad's
+     * directions that open something and the taught button (up-left) show as icons, left of the
+     * map's free area; a remap redraws them; they fade after the panel time.
+     */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theHintsShowWhatTheControlsDo() {
+        val state = show(speed = SpeedReading(48, SpeedReading.From.CAR, LimitShown.Known(50), over = false))
+        rule.runOnIdle {
+            state.homePad = net.prototux.aare.ui.car.myplay.HomePad.DEFAULT
+            state.learnedActions = listOf(net.prototux.aare.car.ButtonAction.NAVIGATE_HOME)
+        }
+        rule.waitForIdle()
+        rule.onNodeWithTag(OrbitHints.TAG_UP).assertDoesNotExist()
+        rule.onNodeWithTag(ENGINE_TAG).performTouchInput { click(center) }
+        rule.waitForIdle()
+        for (tag in listOf(OrbitHints.TAG_UP, OrbitHints.TAG_LEFT, OrbitHints.TAG_RIGHT, OrbitHints.cornerTag(0))) {
+            val b = rule.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
+            org.junit.Assert.assertTrue("$tag $b left of the free area", b.right <= 288f)
+            org.junit.Assert.assertTrue("$tag $b on screen", b.left >= 0f && b.bottom <= 720f)
+        }
+        // Down opens nothing: no hint.
+        rule.onNodeWithTag(OrbitHints.TAG_DOWN).assertDoesNotExist()
+        val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap()
+        File(File("build/reports/myplay-screens").apply { mkdirs() }, "orbit_hints.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        // F: the owner's remap shows at once.
+        rule.runOnIdle { state.homePad = net.prototux.aare.ui.car.myplay.HomePad.DEFAULT + (net.prototux.aare.ui.car.myplay.HomePadKey.DOWN to net.prototux.aare.ui.car.myplay.HomePadAction.CALLS) }
+        rule.onNodeWithTag(OrbitHints.TAG_DOWN).assertExists()
+        // C: they fade after the panel time without input.
+        rule.mainClock.advanceTimeBy(30_000)
+        rule.waitForIdle()
+        rule.onNodeWithTag(OrbitHints.TAG_UP).assertDoesNotExist()
+        rule.onNodeWithTag(OrbitHints.cornerTag(0)).assertDoesNotExist()
     }
 
     /** A picture of the screen as it is now. */

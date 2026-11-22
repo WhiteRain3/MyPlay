@@ -30,6 +30,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
@@ -277,7 +279,7 @@ object OrbitSkin : MyPlaySkin {
                     }
                 }
                 Spacer(Modifier.width(22.dp))
-                Column {
+                Column(Modifier.weight(1f, fill = false)) {
                     turn.distance?.let { Text(it, style = Orbit.Type.hero.floating(g.text), maxLines = 1) }
                     turn.road?.let { Text(it, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 2, overflow = TextOverflow.Ellipsis) }
                 }
@@ -353,6 +355,12 @@ object OrbitSkin : MyPlaySkin {
                 }
             }
         }
+    }
+
+    /** HN-2: the hints round the hub (OrbitHints.kt). */
+    @Composable
+    override fun PadHints(hints: net.prototux.aare.ui.car.myplay.PadHints, modifier: Modifier) = Box(modifier) {
+        Scaled { OrbitPadHints(hints, hints.speedShown, LocalSkinTokens.current.night, Modifier) }
     }
 
     /** O8: the speed (and the limit) is in the hub, with the trip, not a part of its own. */
@@ -446,7 +454,9 @@ object OrbitSkin : MyPlaySkin {
             }
             val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
             Row(Modifier.carPart(CarPart.OrbitSong), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.widthIn(max = 392.dp), horizontalAlignment = Alignment.End) {
+                // AR-1: the text takes what room is left after the art's circle (a long title used to
+                // squeeze the circle into an oval in the 40 % wide corner).
+                Column(Modifier.weight(1f, fill = false).widthIn(max = 392.dp), horizontalAlignment = Alignment.End) {
                     Text(song.title, style = Orbit.Type.name.floating(g.text), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
                     Text(song.subtitle, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
                 }
@@ -456,7 +466,7 @@ object OrbitSkin : MyPlaySkin {
                     val art = song.art
                     if (art != null) {
                         val image = remember(art) { art.asImageBitmap() }
-                        Image(image, null, Modifier.size(126.dp).clip(CircleShape).testTag(SONG_ART_TAG), contentScale = ContentScale.Crop)
+                        Image(image, null, Modifier.requiredSize(126.dp).aspectRatio(1f).clip(CircleShape).testTag(SONG_ART_TAG), contentScale = ContentScale.Crop)
                     } else {
                         // No artwork from the player: the sheet's gradient with a note.
                         Box(Modifier.size(126.dp).clip(CircleShape).background(ART).testTag(SONG_ART_FALLBACK_TAG), contentAlignment = Alignment.Center) {
@@ -726,7 +736,7 @@ object OrbitSkin : MyPlaySkin {
             }
         }
         val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
-        Box(modifier.size(320.dp).orbitFocusRounded(on, accent, g.halo, 78.dp).clip(shape)) {
+        Box(modifier.requiredSize(320.dp).orbitFocusRounded(on, accent, g.halo, 78.dp).clip(shape)) {
             val art = song.art
             if (art != null) {
                 val image = remember(art) { art.asImageBitmap() }
@@ -974,7 +984,7 @@ object OrbitSkin : MyPlaySkin {
                 .border(3.dp, if (on) accent else g.edge, shape).padding(start = 14.dp, end = 24.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(22.dp),
         ) {
-            Box(Modifier.size(76.dp).clip(CircleShape).background(if (on) accent else g.track), contentAlignment = Alignment.Center) {
+            Box(Modifier.requiredSize(76.dp).clip(CircleShape).background(if (on) accent else g.track), contentAlignment = Alignment.Center) {
                 if (bitmap != null) {
                     val image = remember(bitmap) { bitmap.asImageBitmap() }
                     Image(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)

@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.prototux.aare.DiagLog
+import net.prototux.aare.car.myplayHomeAddress
 import net.prototux.aare.R
 import net.prototux.aare.Settings
 import net.prototux.aare.host.templates.myplayDebugMapAreas
@@ -599,6 +600,23 @@ class CarRuntime(
         ui.activeNavAppId = nav.id
         ui.screen = CarScreen.App(nav.id)
         return true
+    }
+
+    /**
+     * HN-1: the car's maps app to the home address set on the phone; without one (or without a maps
+     * app), a short notice says what to do instead. Returns whether a route was asked for.
+     */
+    fun navigateHome(): Boolean {
+        val address = settings.myplayHomeAddress
+        if (address.isEmpty()) {
+            DiagLog.add("navigate home: no home address set")
+            notice(context.getString(R.string.myplay_nav_home_title), context.getString(R.string.myplay_nav_home_unset))
+            return false
+        }
+        val ok = navigateTo(address)
+        DiagLog.add("navigate home: " + if (ok) "asked the maps app" else "no maps app")
+        if (!ok) notice(context.getString(R.string.myplay_nav_home_title), context.getString(R.string.myplay_nav_home_no_maps))
+        return ok
     }
 
     /** Phone calls for the car's call card: polled, as no telephony listener needs fewer permissions. */

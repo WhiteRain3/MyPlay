@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -51,7 +52,8 @@ fun OrbitDisc(
 ) {
     val g = Orbit.glass(night)
     Box(
-        modifier.size(size).clip(CircleShape).background(fill ?: g.glass).border(edgeWidth, edge ?: g.edge, CircleShape),
+        // AR-1: always a true circle: a row short of room cannot squeeze it into an oval.
+        modifier.requiredSize(size).clip(CircleShape).background(fill ?: g.glass).border(edgeWidth, edge ?: g.edge, CircleShape),
         contentAlignment = Alignment.Center,
         content = content,
     )
@@ -71,8 +73,10 @@ fun OrbitRing(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit = {},
 ) {
-    Box(modifier.size(size), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.size(size)) {
+    // AR-1 (the owner: the art sometimes an oval): always its full square size, whatever room the
+    // row beside it leaves; the text gives way instead.
+    Box(modifier.requiredSize(size), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.requiredSize(size)) {
             val w = stroke.toPx()
             val inset = w / 2
             val arcSize = Size(this.size.width - w, this.size.height - w)
