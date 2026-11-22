@@ -58,6 +58,68 @@
     <string name="next_reset_done_label" translatable="false">Page reset</string>
     <string name="next_undo_label" translatable="false">Undo</string>
 
+    <!-- Home -->
+    <string name="next_home_connected_label" translatable="false">Connected</string>
+    <string name="next_home_connecting_label" translatable="false">Connecting to %1$s…</string>
+    <string name="next_home_connecting_any_label" translatable="false">Connecting…</string>
+    <string name="next_home_not_connected_label" translatable="false">Not connected</string>
+    <string name="next_home_bt_off_help" translatable="false">Bluetooth is off</string>
+    <string name="next_home_turn_on_bt_label" translatable="false">Turn on Bluetooth</string>
+    <string name="next_home_wifi_off_help" translatable="false">Wi-Fi is off</string>
+    <string name="next_home_turn_on_wifi_label" translatable="false">Turn on Wi-Fi</string>
+    <string name="next_home_wireless_off_help" translatable="false">Wireless is off in MyPlay</string>
+    <string name="next_home_turn_on_wireless_label" translatable="false">Turn on wireless</string>
+    <string name="next_home_or_usb_help" translatable="false">Or plug in a USB cable</string>
+    <string name="next_home_waiting_help" translatable="false">Plug in USB or start the car</string>
+    <string name="next_home_failed_label" translatable="false">Couldn\'t connect</string>
+    <string name="next_home_try_again_label" translatable="false">Try again</string>
+    <string name="next_home_what_happened_label" translatable="false">What happened</string>
+    <string name="next_home_car_check_label" translatable="false">Run a car check</string>
+    <string name="next_home_log_label" translatable="false">Connection log</string>
+    <string name="next_home_trust_label" translatable="false">New car — trust it?</string>
+    <string name="next_home_trust_changed_label" translatable="false">Car changed — trust it?</string>
+    <string name="next_home_new_car_label" translatable="false">New car</string>
+    <string name="next_home_fingerprint_label" translatable="false">SHA-256 %1$s</string>
+    <string name="next_home_fingerprint_info" translatable="false">The certificate this car showed, by its SHA-256 fingerprint: %1$s. Trust it only if you are sitting in this car now.</string>
+    <string name="next_home_trust_warn_help" translatable="false">Only trust the car you are in now</string>
+    <string name="next_home_trust_button_label" translatable="false">Trust</string>
+    <string name="next_home_not_now_label" translatable="false">Not now</string>
+    <string name="next_home_then_reconnects_help" translatable="false">Then MyPlay reconnects</string>
+    <string name="next_home_details_label" translatable="false">Details</string>
+    <string name="next_home_video_label" translatable="false">Video</string>
+    <string name="next_home_certificate_label" translatable="false">Certificate</string>
+    <string name="next_home_link_label" translatable="false">Connected by</string>
+    <string name="next_home_usb_label" translatable="false">USB</string>
+    <string name="next_home_wireless_label" translatable="false">Wireless</string>
+    <string name="next_home_car_screen_label" translatable="false">Car screen</string>
+    <string name="next_home_preview_label" translatable="false">Preview</string>
+    <string name="next_home_preview_car_label" translatable="false">Preview the car screen</string>
+    <string name="next_home_disconnect_label" translatable="false">Disconnect</string>
+    <string name="next_home_cancel_label" translatable="false">Cancel</string>
+    <string name="next_design_orbit_label" translatable="false">ORBIT</string>
+    <string name="next_design_deck_label" translatable="false">DECK</string>
+    <string name="next_design_older_label" translatable="false">Older layout</string>
+
+    <!-- Home: what needs attention -->
+    <string name="next_att_update_label" translatable="false">MyPlay %1$s is ready</string>
+    <string name="next_att_update_help" translatable="false">You have %1$s</string>
+    <string name="next_att_install_label" translatable="false">Install</string>
+    <string name="next_att_whats_new_label" translatable="false">What\'s new</string>
+    <string name="next_att_dismiss_label" translatable="false">Dismiss</string>
+    <string name="next_att_cert_expired_label" translatable="false">Certificate expired</string>
+    <string name="next_att_cert_expiring_label" translatable="false">Certificate expires soon</string>
+    <string name="next_att_cert_help" translatable="false">%1$s · %2$s</string>
+    <string name="next_att_setup_label" translatable="false">Finish setup</string>
+    <string name="next_att_setup_left_label" translatable="false">%1$d left</string>
+    <string name="next_att_setup_perms_label" translatable="false">Permissions to connect</string>
+    <string name="next_att_setup_notif_label" translatable="false">Notification access</string>
+    <string name="next_att_setup_audio_label" translatable="false">Car audio</string>
+    <string name="next_att_set_up_label" translatable="false">Set up</string>
+    <string name="next_att_deck_label" translatable="false">Using DECK</string>
+    <string name="next_att_older_label" translatable="false">Using an older layout</string>
+    <string name="next_att_archived_help" translatable="false">Kept as it was. Not updated any more.</string>
+    <string name="next_att_more_label" translatable="false">%1$d more</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_old_app_label" translatable="false">Back to the old app</string>

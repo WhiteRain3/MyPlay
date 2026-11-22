@@ -12,6 +12,7 @@ import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.android.resources.Density
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
 import org.junit.Rule
 import org.junit.Test
 
@@ -43,5 +44,56 @@ class NextShellMockups {
 
     @Test fun parts() = paparazzi.snapshot {
         androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.background(NextColors.Bg)) { NextPartsGallery() }
+    }
+
+    private val noTaps = object : HomeActions {
+        override fun trust(hero: Hero.Trust) = Unit
+        override fun notNow(hero: Hero.Trust) = Unit
+        override fun cancel() = Unit
+        override fun disconnect() = Unit
+        override fun tryAgain() = Unit
+        override fun fix(why: Why) = Unit
+        override fun preview() = Unit
+        override fun setUp(item: SetupItem) = Unit
+        override fun dismissUpdate() = Unit
+        override fun dismissCertificate() = Unit
+    }
+
+    @Composable
+    private fun Home(inputs: HomeInputs) {
+        val owner = object : OnBackPressedDispatcherOwner {
+            private val life = LifecycleRegistry.createUnsafe(this as LifecycleOwner).apply { currentState = Lifecycle.State.RESUMED }
+            override val lifecycle: Lifecycle get() = life
+            override val onBackPressedDispatcher = OnBackPressedDispatcher()
+        }
+        CompositionLocalProvider(LocalOnBackPressedDispatcherOwner provides owner) {
+            NextApp(start = "home", badges = if (inputs.update != null) setOf(NextTab.MORE) else emptySet()) {
+                NextHomeContent(inputs, noTaps) {
+                    net.prototux.aare.ui.phone.CarPicture("Car screen", androidx.compose.ui.Modifier.fillMaxWidth(), onPart = null)
+                }
+            }
+        }
+    }
+
+    @Test fun homeConnected() = paparazzi.snapshot {
+        Home(HomeInputs(Hero.Connected("Sedan", Link.USB, "1080p · 60 fps", "MyPlay's"), emptySet(), DesignInUse.ORBIT))
+    }
+
+    @Test fun homeTrust() = paparazzi.snapshot {
+        Home(HomeInputs(Hero.Trust("k", "4f2a9c1e07b3d5a8aa", false, Link.USB), emptySet(), DesignInUse.ORBIT))
+    }
+
+    @Test fun homeNotConnected() = paparazzi.snapshot {
+        Home(HomeInputs(Hero.NotConnected(Why.BLUETOOTH_OFF), setOf(Attention.FINISH_SETUP), DesignInUse.ORBIT,
+            setupLeft = listOf(SetupItem.NOTIFICATION_ACCESS, SetupItem.CAR_AUDIO)))
+    }
+
+    @Test fun homeUpdate() = paparazzi.snapshot {
+        Home(HomeInputs(Hero.Connected("Sedan", Link.USB, "1080p · 60 fps", "MyPlay's"), setOf(Attention.UPDATE), DesignInUse.ORBIT,
+            update = net.prototux.aare.UpdateChecker.Update("2.4", "")))
+    }
+
+    @Test fun homeFailed() = paparazzi.snapshot {
+        Home(HomeInputs(Hero.Failed("The car stopped the video. Code 4"), setOf(Attention.ARCHIVED), DesignInUse.DECK, errorAt = 0L))
     }
 }

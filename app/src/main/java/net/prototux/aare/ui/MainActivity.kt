@@ -195,7 +195,7 @@ import net.prototux.aare.ui.phone.BehindTheScenesTiles
 import net.prototux.aare.ui.phone.PhonePartsSample
 import net.prototux.aare.ui.phone.KEY_NEW_PHONE_APP
 import net.prototux.aare.ui.phone.myplayNewPhoneApp
-import net.prototux.aare.ui.phone.next.NextApp
+import net.prototux.aare.ui.phone.next.NextAppHost
 import net.prototux.aare.ui.phone.next.NextDeepLink
 import net.prototux.aare.ui.phone.next.rememberSetting
 import rikka.shizuku.Shizuku
@@ -220,7 +220,7 @@ class MainActivity : ComponentActivity() {
                         BackHandler { showParts = false }
                         PhonePartsSample { showParts = false }
                     } else if (newApp) {
-                        NextApp(deepLink = route, onDeepLinkUsed = { route = null },
+                        NextAppHost(route, onDeepLinkUsed = { route = null },
                             onOldApp = { Settings(this@MainActivity).myplayNewPhoneApp = false })
                     } else Home()
                 }

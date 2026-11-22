@@ -1,6 +1,7 @@
 package net.prototux.aare.ui.phone.next
 
 import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
 import net.prototux.aare.R
 
 /** Each route's title, and the pages a placeholder lists so every route can be reached while they are built. */
@@ -70,4 +71,13 @@ object NextPages {
         "more/archive/layouts" to R.string.next_more_layouts_label,
         "more/about" to R.string.next_more_about_label,
     )
+}
+
+/** The page for [route]: the built ones, then a placeholder for the rest. */
+@Composable
+fun NextPage(route: String, onOldApp: () -> Unit) {
+    when (route) {
+        "home" -> NextHome()
+        else -> NextPlaceholder(route, onOldApp)
+    }
 }

@@ -128,6 +128,7 @@ fun NextApp(
     start: String? = null,
     onDeepLinkUsed: () -> Unit = {},
     onOldApp: () -> Unit = {},
+    badges: Set<NextTab> = emptySet(),
     page: @Composable (String) -> Unit = { NextPlaceholder(it, onOldApp) },
 ) {
     var nav by rememberSaveable(stateSaver = NavStateSaver) { mutableStateOf(start?.let { NavState().deepLink(it) } ?: NavState()) }
@@ -203,7 +204,7 @@ fun NextApp(
             }
             NextSnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp))
         }
-        NextTabBar(nav.tab) { tab ->
+        NextTabBar(nav.tab, badges) { tab ->
             if (tab == nav.tab && nav.atRoot) {
                 scrollTop = scrollTop.copyOf().also { it[tab.ordinal]++ }
             } else {
