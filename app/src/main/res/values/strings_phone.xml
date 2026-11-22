@@ -431,7 +431,7 @@
     <string name="phone_info_home_hint" translatable="false">The home never shows the knob\'s ring: the pad and the taught buttons do everything. Needs a pad key set to The dial or Apps, so the car\'s settings stay reachable; without one the ring stays.</string>
     <string name="phone_youtube_app_title" translatable="false">YouTube app on the car screen</string>
     <string name="phone_youtube_app_action" translatable="false">Put it on</string>
-    <string name="phone_youtube_app_hint" translatable="false">The real YouTube app, as a phone app on the car screen: parked only, with root or Shizuku. Turning it on also turns on phone apps on the car screen. To keep only the app, hide the YouTube website entry with the browser above.</string>
+    <string name="phone_youtube_app_hint" translatable="false">The real YouTube app, as a phone app on the car screen: parked only, with root or Shizuku. Turning it on also turns on phone apps on the car screen. While it is on, the car leaves out the YouTube website entry, so there is only one YouTube.</string>
     <string name="phone_youtube_app_needs_root" translatable="false">The real YouTube app, as a phone app on the car screen: parked only. Needs root or Shizuku, which this phone does not give MyPlay yet.</string>
     <string name="phone_youtube_app_also" translatable="false">This also turns on phone apps on the car screen, with any other apps chosen below.</string>
 </resources>
