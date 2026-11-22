@@ -53,6 +53,17 @@ class CarCheckLogTest {
     }
 
     @Test
+    fun alertTextsStayOnlyWhenTheOwnerTicksIt() {
+        val line = "nav alert com.waze: id 7, title \"Police reported\", subtitle \"On Main St\", 8000 ms"
+        assertEquals(line, CarCheckLog.withoutPrivate(line, alertTexts = true))
+        assertTrue(CarCheckLog.shareText(emptyList(), emptyList(), listOf(line), alertTexts = true).contains("Police reported"))
+        assertFalse(CarCheckLog.shareText(emptyList(), emptyList(), listOf(line)).contains("Police reported"))
+        // Other private details go either way.
+        assertEquals("nav alert com.waze: id 7, title \"call [number]\", 8000 ms",
+            CarCheckLog.withoutPrivate("nav alert com.waze: id 7, title \"call +44 20 7946 0958\", 8000 ms", alertTexts = true))
+    }
+
+    @Test
     fun phoneNumbersWrittenInGroupsAreTakenOut() {
         assertEquals("from [number]", CarCheckLog.withoutPrivate("from 06 12 34 56 78"))
         assertEquals("from [number]", CarCheckLog.withoutPrivate("from 555-123-4567"))

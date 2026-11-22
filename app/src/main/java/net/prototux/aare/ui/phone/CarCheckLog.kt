@@ -54,8 +54,9 @@ object CarCheckLog {
     }
 
     /** [line] with names, addresses, e-mails, phone numbers and VINs replaced by what they were. */
-    fun withoutPrivate(line: String): String {
-        var out = navAlert(navText(line))
+    fun withoutPrivate(line: String, alertTexts: Boolean = false): String {
+        // The alert texts stay only when the owner ticks it at share time (the radar design needs them).
+        var out = navText(line).let { if (alertTexts) it else navAlert(it) }
         for ((pattern, replacement) in NAMES) out = out.replace(pattern, replacement)
         if (out.contains("wireless: ")) out = out.replace(QUOTED, "\"[network]\"")
         return out
@@ -77,7 +78,7 @@ object CarCheckLog {
      * The text to share: [summary] and [report] first (short, always whole), then the newest lines
      * of [log] that fit in [maxChars], all without private details.
      */
-    fun shareText(summary: List<String>, report: List<String>, log: List<String>, maxChars: Int = MAX_CHARS): String {
+    fun shareText(summary: List<String>, report: List<String>, log: List<String>, maxChars: Int = MAX_CHARS, alertTexts: Boolean = false): String {
         val head = buildString {
             appendLine("MyPlay car check")
             summary.forEach { appendLine(withoutPrivate(it)) }
@@ -91,7 +92,7 @@ object CarCheckLog {
         val kept = ArrayDeque<String>()
         var size = 0
         for (line in log.asReversed()) {
-            val clean = withoutPrivate(line)
+            val clean = withoutPrivate(line, alertTexts)
             if (size + clean.length + 1 > room) break
             kept.addFirst(clean)
             size += clean.length + 1

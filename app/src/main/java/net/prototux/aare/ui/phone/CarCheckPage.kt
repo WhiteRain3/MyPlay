@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -163,8 +164,14 @@ fun CarCheckPage(inputs: Flow<CheckInput>, report: List<String>, log: () -> List
             }
         })
         Spacer(Modifier.height(14.dp))
+        // Off each time the page opens: the maps app's alert texts can name streets.
+        var alertTexts by remember { mutableStateOf(false) }
+        Row(Modifier.fillMaxWidth().clickable { alertTexts = !alertTexts }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            androidx.compose.material3.Checkbox(alertTexts, { alertTexts = it })
+            Text(stringResource(R.string.phone_check_alert_texts), color = PhoneColors.Text, fontSize = 14.sp)
+        }
         WideButton(stringResource(R.string.phone_check_share), Icons.Rounded.Share) {
-            val text = CarCheckLog.shareText(checkSummary(captures.toMap(), { titles.getValue(it) }, now()), report, log())
+            val text = CarCheckLog.shareText(checkSummary(captures.toMap(), { titles.getValue(it) }, now()), report, log(), alertTexts = alertTexts)
             val send = Intent(Intent.ACTION_SEND).setType("text/plain")
                 .putExtra(Intent.EXTRA_SUBJECT, "MyPlay car check").putExtra(Intent.EXTRA_TEXT, text)
             ctx.startActivity(Intent.createChooser(send, null))
