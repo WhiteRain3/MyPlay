@@ -156,4 +156,10 @@ class NextShellMockups {
     @Test fun screenLooks() = paparazzi.snapshot { Page("screen/looks") { NextLooksPage() } }
     @Test fun screenColours() = paparazzi.snapshot { Page("screen/colours") { NextColoursPage() } }
     @Test fun screenOwnColours() = paparazzi.snapshot { Page("screen/colours/own") { NextOwnColoursPage() } }
+
+    @Test fun carRootPage() = paparazzi.snapshot { Page("car") { NextCarRoot() } }
+    @Test fun carButtons() = paparazzi.snapshot { Page("car/buttons") { NextButtonsPage() } }
+    @Test fun carPad() = paparazzi.snapshot { Page("car/buttons/pad-shortcuts") { NextPadShortcutsPage() } }
+    @Test fun carTiming() = paparazzi.snapshot { Page("car/buttons/timing") { NextTimingPage() } }
+    @Test fun carTeach() = paparazzi.snapshot { Page("car/buttons/teach") { NextTeachPage() } }
 }

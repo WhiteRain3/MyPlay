@@ -252,6 +252,55 @@
     <string name="next_looks_older_label" translatable="false">Older-layout settings</string>
     <string name="next_looks_use_it_label" translatable="false">Use it</string>
 
+    <!-- Car -->
+    <string name="next_car_select_label" translatable="false">Press what has the highlight</string>
+    <string name="next_car_default_label" translatable="false">Default</string>
+    <string name="next_car_changed_count_label" translatable="false">%1$d changed</string>
+    <string name="next_car_off_label" translatable="false">Off</string>
+    <string name="next_car_best_label" translatable="false">Best</string>
+    <string name="next_car_set_up_label" translatable="false">Set up</string>
+    <string name="next_car_banners_on_label" translatable="false">Banners on</string>
+    <string name="next_car_same_as_phone_label" translatable="false">Same as the phone</string>
+    <string name="next_car_last_used_label" translatable="false">Last used</string>
+    <string name="next_car_always_ask_label" translatable="false">Always ask</string>
+    <string name="next_car_passenger_label" translatable="false">Passenger mode</string>
+    <string name="next_car_passenger_warn_help" translatable="false">The driver must not use the screen</string>
+    <string name="next_car_passenger_info" translatable="false">Lets the car screen be used while the car moves, for a passenger. The driver must never use it while driving.</string>
+    <string name="next_car_tap_control_help" translatable="false">Tap a control to change what it does</string>
+    <string name="next_car_pad_moves_label" translatable="false">Moves the highlight</string>
+    <string name="next_car_pad_moves_help" translatable="false">Always: up, down, left and right</string>
+    <string name="next_car_no_holds_help" translatable="false">This car doesn\'t send holds</string>
+    <string name="next_car_needs_holds_label" translatable="false">Needs holds</string>
+    <string name="next_car_taught_label" translatable="false">%1$d taught</string>
+    <string name="next_car_ms_label" translatable="false">%1$d ms</string>
+    <string name="next_car_line_label" translatable="false">Show what a button did</string>
+    <string name="next_car_home_address_label" translatable="false">Navigate home</string>
+    <string name="next_car_address_field_label" translatable="false">Home address</string>
+    <string name="next_car_address_help" translatable="false">An address or lat,lng, for Navigate home</string>
+    <string name="next_car_dash_knob_label" translatable="false">Dash knob</string>
+    <string name="next_car_knob_pad_label" translatable="false">Knob push · Pad</string>
+    <string name="next_car_wheel_label" translatable="false">Steering wheel</string>
+    <string name="next_car_pad_center_label" translatable="false">Knob push</string>
+    <string name="next_car_pad_up_label" translatable="false">Pad up</string>
+    <string name="next_car_pad_side_label" translatable="false">Pad left or right</string>
+    <string name="next_car_pad_down_label" translatable="false">Pad down</string>
+    <string name="next_car_info_home_label" translatable="false">Home: information only</string>
+    <string name="next_car_info_home_help" translatable="false">No ring on home; needs The dial or Apps</string>
+    <string name="next_car_pad_works_help" translatable="false">Works on ORBIT\'s home while the ring is hidden</string>
+    <string name="next_car_double_within_label" translatable="false">Double press within</string>
+    <string name="next_car_double_help" translatable="false">A single press waits this long first</string>
+    <string name="next_car_hold_longer_label" translatable="false">Hold is longer than</string>
+    <string name="next_car_not_used_label" translatable="false">Not used</string>
+    <string name="next_car_what_it_does_label" translatable="false">What it does</string>
+    <string name="next_car_teach_it_label" translatable="false">Teach it</string>
+    <string name="next_car_connect_first_help" translatable="false">Connect to the car first</string>
+    <string name="next_car_press_in_car_label" translatable="false">Press the button in the car</string>
+    <string name="next_car_will_do_help" translatable="false">It will do: %1$s</string>
+    <string name="next_car_seconds_left_help" translatable="false">Waiting %1$d more seconds</string>
+    <string name="next_car_taught_title_label" translatable="false">Buttons taught</string>
+    <string name="next_car_forget_label" translatable="false">Forget %1$s</string>
+    <string name="next_car_forgotten_label" translatable="false">Button forgotten</string>
+
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
     <string name="next_switch_on_label" translatable="false">New phone app on</string>

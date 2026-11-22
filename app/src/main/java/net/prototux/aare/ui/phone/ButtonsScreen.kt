@@ -129,7 +129,7 @@ internal fun actionName(a: ButtonAction): Int = when (a) {
     ButtonAction.NOTHING -> R.string.phone_action_nothing
 }
 
-private fun gestureName(g: Gesture): Int = when (g) {
+internal fun gestureName(g: Gesture): Int = when (g) {
     Gesture.PRESS -> R.string.phone_gesture_press
     Gesture.HOLD -> R.string.phone_gesture_hold
     Gesture.DOUBLE -> R.string.phone_gesture_double
@@ -137,7 +137,7 @@ private fun gestureName(g: Gesture): Int = when (g) {
     Gesture.TRIPLE -> R.string.phone_gesture_triple
 }
 
-private fun controlName(c: Control): Int = when (c) {
+internal fun controlName(c: Control): Int = when (c) {
     Control.KNOB_PUSH -> R.string.phone_control_knob
     Control.WHEEL_CLICK -> R.string.phone_control_wheel
     Control.MENU -> R.string.phone_control_menu
