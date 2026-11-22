@@ -1,6 +1,6 @@
 # MyPlay phone app: new information architecture (plan)
 
-Information architect, 2026-11-22. **Revision 2**, after the independent review
+Information architect, 2026-11-22. **Revision 3**: owner decisions folded in (§13). Revision 2 followed the independent review
 (`docs/plans/phone-app-review.md`, commit b4818e9); §15 answers each of its 24 findings.
 A plan only: no app code is changed. Built from reading the code on `claude/myplay`
 (`ui/MainActivity.kt`, `ui/MyPlayUpdateCheck.kt`, `ui/phone/*`, `Settings.kt`, `SettingsBackup.kt`,
@@ -11,8 +11,7 @@ Visual design is **not** part of this plan; a later session does it.
 The owner's verdict on today's app: too much text, things are hard to find (updates sit under
 Connection), Back loses the place on the main screen, and they want a new app rather than a patch.
 
-The owner's answers to the five questions in §13 are pending; where an answer changes the plan,
-the plan follows the answer.
+The owner's decisions on the five open questions are recorded in §13 and built into this plan.
 
 ---
 
@@ -60,7 +59,7 @@ Five destinations in a **bottom bar** (no sixth tab, ever; new features become r
 |---|---|---|
 | **Home** | Connection status, anything that needs attention, a small car screen picture, Preview and Disconnect | The first question is always "is it working, and is anything wrong?" |
 | **Screen** | How the car screen **looks**: design (ORBIT), looks, colours of app screens, wallpaper, map colours, size | Where the owner spends most time |
-| **Car** | What the car **does**: buttons and knob, maps, speed and limits, sound, messages and calls, voice, passenger mode | Everything that changes behaviour in the car. Named "Car", not "Drive", so Sound and Messages are not a guess (review 13); the owner is asked to confirm the name (§13 Q2) |
+| **Car** | What the car **does**: buttons and knob, maps, speed and limits, sound, messages and calls, voice, passenger mode | Everything that changes behaviour in the car. Named "Car", not "Drive", so Sound and Messages are not a guess (review 13); decided by the owner (§13) |
 | **Apps** | The car screen's app list itself: show/hide, order, and each special app (phone apps, phone screen, browser, YouTube, car data) with its ⚙ | Answers "what is on my car screen" in one look; new apps are new rows |
 | **More** | Updates, cars, backup, diagnostics, advanced, archive, about | Rare things, each one tap away |
 
@@ -272,8 +271,7 @@ automatically** (`check_updates`, one line: "Once a day, from GitHub"); **What's
 
 `check_updates` **keeps its default `false`** (review 7). The owner is asked **once** in Setup, and
 once in the first "What's new" after the rebuild for existing installs: "Check for updates
-automatically? Once a day, from GitHub." The answer writes the key. (If the owner's answer to §13
-Q3 says otherwise, follow it, still without changing the getter's default.)
+automatically? Once a day, from GitHub." The answer writes the key. Decided by the owner (§13).
 
 Removed: the Updates section from Connection, the tile that opened About, the second install button.
 
@@ -478,19 +476,19 @@ certificate, replace vehicles.json).
 
 ---
 
-## 13. Open questions for the owner
+## 13. Decisions (owner, 2026-11-22)
 
-Sent to the dispatcher before the review; numbering kept. Revised recommendations in **bold**.
+The five open questions are closed; the owner took every recommended default.
 
-1. **Bottom bar with five tabs, or one home page with big cards?** *Recommended: the bottom bar.*
-2. **Move settings ORBIT doesn't use to Archive?** The review settled which ones: clock, status
-   icons, bar side and items, dark bar, cards, map-behind layout and weather do nothing under ORBIT;
-   theme, accent, own colours and size **do** and stay in Screen. *Recommended: **yes, for that
-   confirmed list only.*** (Also please confirm the tab name **"Car"** rather than "Drive".)
-3. **Check for updates automatically?** *Recommended (revised): **keep it off by default and ask you
-   once** in Setup and in the first What's new; your answer is stored.*
-4. **Car screen picture on Home, Screen, or both?** *Recommended: both* (small on Home, large on Screen).
-5. **Developer tools visible at the bottom of Advanced, or hidden until unlocked?** *Recommended: visible.*
+| # | Question | Decision |
+|---|---|---|
+| 1 | Navigation model | **Bottom bar with five tabs**: Home, Screen, Car, Apps, More |
+| 2 | Settings ORBIT doesn't use | **Move the confirmed list to Archive › Older layouts**: clock, status icons, bar side and items, dark bar, dashboard cards, map-behind layout, weather. Theme, accent, own colours and size stay in Screen. The tab is named **"Car"** |
+| 3 | Automatic update checks | **Stay off by default** (`check_updates` = false); the app **asks once** in Setup and in the first What's new after the rebuild, and stores the answer |
+| 4 | Car screen picture | **Small on Home** (tap opens Screen) and **large and tappable on Screen** |
+| 5 | Developer tools | **Visible at the bottom of Advanced**, no unlock |
+
+The rest of this plan is written to these decisions; nothing in it is still open for the design session.
 
 ---
 
@@ -596,7 +594,7 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 
 | # | Finding (short) | Response |
 |---|---|---|
-| 1 | Blocker: theme, accent, own colours, text size do change ORBIT | **Accepted.** Verified in `CarRuntime` (theme wrap at line ~837, `textScale` at ~364). They stay in Screen › Colours (labelled "App screens") and Screen › Size; `car_control_size` stays in Size. §1, §6, §13 Q2, §14 updated. |
+| 1 | Blocker: theme, accent, own colours, text size do change ORBIT | **Accepted.** Verified in `CarRuntime` (theme wrap at line ~837, `textScale` at ~364). They stay in Screen › Colours (labelled "App screens") and Screen › Size; `car_control_size` stays in Size. §1, §6, §13, §14 updated. |
 | 2 | `rail_position` does nothing under ORBIT | **Accepted** (`OrbitSkin.appRail = false`). Archive › Older layouts. |
 | 3 | Weather misplaced; fetched while unseen | **Accepted.** Archive with its privacy line; code fix raised in §12. |
 | 4 | "Verify" where code answers | **Accepted.** Clock and status page removed from Screen; contents to Archive. |
@@ -608,7 +606,7 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 | 10 | Backup restores region but not file | **Accepted.** After-loading list and inline download row (§10). |
 | 11 | Inventory misses | **Accepted.** Monthly speed-file check → privacy line (§9.1); adb `hu_server` extra kept (§3.5, §14); vehicles.json Import confirms (§6); skipped-keys message (§10); permissions by feature (§10); translations (§9.2). |
 | 12 | `verbose_protocol_log` in two places | **Accepted.** Connection log only; Developer links. |
-| 13 | Apps root is a menu; Drive vague | **Accepted.** Apps root is the list itself; tab renamed **Car**, confirmation asked (§13 Q2); every root shows every page with a value. |
+| 13 | Apps root is a menu; Drive vague | **Accepted.** Apps root is the list itself; tab renamed **Car** (owner decided, §13); every root shows every page with a value. |
 | 14 | Maps settings spread | **Accepted.** Follow car lights → Car › Maps; Maps links to Map colours (which stays in Screen because looks include it). |
 | 15 | Two lists of cars | **Accepted.** One Cars list; Forget clears both after undo window; storage unchanged. |
 | 16 | Back/state cases open | **Accepted.** One owning tab per route, cross-tab rule, predictive back, save-as-you-type, observed settings, dialogs that survive rotation (§3.4). |
