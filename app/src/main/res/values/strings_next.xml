@@ -435,7 +435,7 @@
     <string name="next_car_place_name_label" translatable="false">Name</string>
     <string name="next_car_place_forgotten_label" translatable="false">Place forgotten</string>
     <string name="next_speed_warnings_label" translatable="false">Ice and hot-phone warnings</string>
-    <string name="next_speed_warnings_help" translatable="false">A small sign, and a line once per drive</string>
+    <string name="next_speed_warnings_help" translatable="false">Outside temperature, ice and hot-phone signs, limit pulse</string>
 
     <!-- More -->
     <string name="next_more_ready_label" translatable="false">%1$s ready</string>

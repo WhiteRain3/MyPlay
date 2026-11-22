@@ -336,7 +336,7 @@ fun NextSpeedPage() {
             }
         }
         item {
-            // Ideas 2026-11-22: the ice sign and the hot-phone line on the car screen (on by default).
+            // Ideas 2026-11-22: the outside temperature, the ice sign, the hot-phone line and the limit sign's pulse (on by default).
             NextCard {
                 NextSwitchRow(stringResource(R.string.next_speed_warnings_label), warnings, { settings.myplayDriveWarnings = it },
                     Icons.Outlined.AcUnit, note = RowNote.Help(stringResource(R.string.next_speed_warnings_help)), tag = { AlsoOnCarTag() })
