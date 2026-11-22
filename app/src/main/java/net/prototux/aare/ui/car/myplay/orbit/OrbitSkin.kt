@@ -353,9 +353,12 @@ object OrbitSkin : MyPlaySkin {
                 }
                 alert.actions.forEachIndexed { i, (label, _) ->
                     val id = net.prototux.aare.ui.car.myplay.mapAlertStop(i)
+                    // Polish: a long label (the app chooses it) is cut with "…" rather than squeezing the
+                    // alert's own title out of the pill.
                     Text(
                         label, style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1,
-                        modifier = stop(id).orbitFocusRounded(ringed == id, accent, g.halo, 24.dp)
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = stop(id).widthIn(max = ALERT_BUTTON_MAX).orbitFocusRounded(ringed == id, accent, g.halo, 24.dp)
                             .clip(androidx.compose.foundation.shape.RoundedCornerShape(24.dp)).background(g.track)
                             .padding(horizontal = 18.dp, vertical = 10.dp),
                     )
@@ -1340,6 +1343,8 @@ object OrbitSkin : MyPlaySkin {
 
     /** Test tags. */
     const val BATTERY_TAG = "orbit_battery"
+    /** The widest a map alert's button gets (its label is cut with "…" past it). */
+    val ALERT_BUTTON_MAX = 200.dp
     /** The clock's time, in its fixed-width box. */
     const val CLOCK_TAG = "orbit_clock"
     /** Polish #3: the battery's number, in its fixed-width box. */

@@ -171,6 +171,17 @@ class MyPlayAlertTest {
         java.io.File(dir, "orbit_alert_placed.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 
+    /** ORBIT polish: a long button label is cut, never wider than ALERT_BUTTON_MAX, so the alert's title keeps its room. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aLongAlertButtonIsCut() {
+        show(skin = net.prototux.aare.ui.car.myplay.orbit.OrbitSkin)
+        rule.runOnIdle { appAlert = MapAlert(8, "In 380 m", "Police reported", null, listOf("Thanks, I can see it clearly ahead of me" to { ran += "long" })) }
+        rule.waitForIdle()
+        val button = rule.onNodeWithTag(mapAlertStop(0)).fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("button $button", button.width <= 200f + 1f)
+        rule.onNodeWithTag(SLOT_MAP_ALERT).assertExists()
+    }
+
     @Test fun thePillsPlaceIsWorkedOut() {
         val hub = FocusGraph.Box(44f, 464f, 256f, 676f)
         val song = FocusGraph.Box(886f, 524f, 1236f, 676f)
