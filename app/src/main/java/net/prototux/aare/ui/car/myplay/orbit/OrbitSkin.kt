@@ -554,7 +554,14 @@ object OrbitSkin : MyPlaySkin {
                                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 Icon(batteryIcon(s.battery, s.charging), null, Modifier.size(30.dp), tint = colour)
-                                Text("${s.battery}%", style = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold).floating(colour))
+                                // Polish #3: the number keeps the width of "100%" (figures of one width), so the
+                                // column, and the map's free area with it, never shifts as the level changes.
+                                val numberStyle = TextStyle(fontSize = 28.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontFeatureSettings = "tnum")
+                                val measurer = rememberTextMeasurer()
+                                val widest = remember(measurer) { measurer.measure("100%", numberStyle).size.width }
+                                Box(Modifier.width(with(LocalDensity.current) { widest.toDp() }), contentAlignment = Alignment.CenterEnd) {
+                                    Text("${s.battery}%", style = numberStyle.floating(colour), maxLines = 1, modifier = Modifier.testTag(BATTERY_NUMBER_TAG))
+                                }
                             }
                         }
                     }
@@ -1279,6 +1286,8 @@ object OrbitSkin : MyPlaySkin {
 
     /** Test tags. */
     const val BATTERY_TAG = "orbit_battery"
+    /** Polish #3: the battery's number, in its fixed-width box. */
+    const val BATTERY_NUMBER_TAG = "orbit_battery_number"
     /** Drive warnings: the ice sign beside the battery. */
     const val ICE_TAG = "orbit_ice"
     /** DW-1: the ice sign's place, kept whether it shows or not. */
