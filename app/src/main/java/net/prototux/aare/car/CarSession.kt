@@ -757,7 +757,7 @@ class CarSession(
 
     private val gestures = GestureEngine(
         timings = { settings.gestureTimings },
-        doubleCapable = { buttonTable.doubleCapable(it) },
+        doubleCapable = { !plainPushes() && buttonTable.doubleCapable(it) },
         clock = object : GestureEngine.Clock {
             override fun now() = SystemClock.uptimeMillis()
             override fun after(delayMs: Long, task: () -> Unit): () -> Unit {
@@ -767,8 +767,17 @@ class CarSession(
             }
         },
         emit = ::onGesture,
-        tripleCapable = { buttonTable.tripleCapable(it) },
+        tripleCapable = { !plainPushes() && buttonTable.tripleCapable(it) },
     )
+
+    /**
+     * MyPlay (G-4, the Reviewer): while a call rings or is on, or a notice with buttons, a map alert
+     * or the music panel holds the knob, a push must act at once: no double or triple, no wait.
+     */
+    private fun plainPushes(): Boolean {
+        val ui = runtime.ui
+        return ui.call != null || ui.notices.any { it.actions.isNotEmpty() } || ui.knobBusy
+    }
 
     private fun gestureTurn(steps: Int) = gestures.onTurn(steps, buttonTable::turnCapable)
 

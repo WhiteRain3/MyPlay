@@ -16,6 +16,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import net.prototux.aare.ui.car.CarActions
@@ -79,6 +80,25 @@ class MyPlayAlertTest {
         // Gone, the pad's shortcuts are back.
         rule.onNodeWithTag(ENGINE_TAG).performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+    }
+
+    /** G-4: while the alert or the music panel holds the knob, the car side takes a push as a plain press. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theAlertAndThePanelMakeThePushPlain() {
+        val state = show()
+        org.junit.Assert.assertFalse(state.knobBusy)
+        rule.runOnIdle { appAlert = alert() }
+        rule.waitForIdle()
+        org.junit.Assert.assertTrue(state.knobBusy)
+        rule.runOnIdle { appAlert = null }
+        rule.waitForIdle()
+        org.junit.Assert.assertFalse(state.knobBusy)
+        rule.onNodeWithTag(STOP_SONG).performClick()
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        org.junit.Assert.assertTrue(state.knobBusy)
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        rule.waitForIdle()
+        org.junit.Assert.assertFalse(state.knobBusy)
     }
 
     /** AL-2: after the alert, the ring is back on the stop it was on. */

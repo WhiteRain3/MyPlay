@@ -47,7 +47,8 @@ internal object MapGeometry {
             val f = (r.height / r.width) / mapShape
             val area = r.area * kotlin.math.sqrt(minOf(f, 1f / f))
             if (area < bestArea) continue
-            if (obs.any { it.intersect(r) != null }) continue
+            // MA-3: an overlap test with no allocation.
+            if (obs.any { o -> o.left < r.right && r.left < o.right && o.top < r.bottom && r.top < o.bottom }) continue
             val off = kotlin.math.abs((r.left + r.right) / 2 - cx) + kotlin.math.abs((r.top + r.bottom) / 2 - cy)
             if (area > bestArea || off < bestOff) { best = r; bestArea = area; bestOff = off }
         }
@@ -55,7 +56,7 @@ internal object MapGeometry {
     }
 
     /** More obstacles than this: the greedy cut below (never on MyPlay's screens). */
-    private const val MAX_EXACT = 16
+    private const val MAX_EXACT = 10
 
     /**
      * Greedy cut: for each obstacle (largest first) keep the biggest of the four slices of the
