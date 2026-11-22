@@ -50,6 +50,18 @@ class FileSpeedLimits(context: Context) : SpeedLimits {
         }
     }.getOrDefault(LimitFile.NO_FILE)
 
+    override fun describe(): String = runCatching {
+        val region = settings.myplaySpeedLimitRegion
+        if (region.isEmpty()) return@runCatching "speed limits: car side: no region chosen"
+        val f = SpeedLimitFiles.file(app.filesDir, region)
+        val built = runCatching { net.prototux.aare.ui.phone.SpeedLimitDownload.kept(app, region)?.built }.getOrNull()
+        when {
+            !f.exists() -> "speed limits: car side: no $region file at ${f.parentFile?.name}/${f.name}"
+            !f.isFile || f.length() == 0L -> "speed limits: car side: the $region file is empty or not a file (${f.length()} bytes)"
+            else -> "speed limits: car side sees the $region file, ${f.length()} bytes" + (built?.let { ", of $it" } ?: "")
+        }
+    }.getOrElse { "speed limits: car side could not look at the file (${it.javaClass.simpleName})" }
+
     override fun lookup(fix: PhoneFix, onResult: (LimitShown) -> Unit) {
         runCatching {
             worker.execute {

@@ -946,7 +946,10 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
         value = LimitFile.NO_FILE
         if (limits == null || state.speedSource != SpeedSourceMode.AUTO) return@produceState
         while (true) {
-            value = withContext(Dispatchers.IO) { limits.file() }
+            val (file, line) = withContext(Dispatchers.IO) { limits.file() to limits.describe() }
+            value = file
+            // SL-13: what the car side sees, in the connection log when it changes (and once per connection).
+            if (line != null && line != SpeedLimitDiag.fileLine) { SpeedLimitDiag.fileLine = line; net.prototux.aare.DiagLog.add(line) }
             delay(LIMITS_RECHECK_MS)
         }
     }
@@ -978,6 +981,8 @@ private const val SPEED_TICK_MS = 1_000L
 /** N20: the speed limit's last reason (while a speed is on the screen), for the Car world's line. */
 internal object SpeedLimitDiag {
     var why by mutableStateOf<LimitWhy?>(null)
+    /** SL-13: the last line logged about the file the car side sees. */
+    var fileLine: String? = null
 }
 private const val LIMITS_RECHECK_MS = 60_000L
 private const val WHY_LOG_AFTER_MS = 10_000L

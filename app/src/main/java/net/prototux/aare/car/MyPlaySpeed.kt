@@ -185,6 +185,8 @@ interface SpeedLimits {
     fun available(): Boolean
     /** Why not, when not ([available] may touch the disk, so may this). */
     fun file(): LimitFile = if (available()) LimitFile.READY else LimitFile.NO_FILE
+    /** SL-13: what the car side sees of the file, one line for the connection log (no position); null: nothing to say. */
+    fun describe(): String? = null
     fun lookup(fix: PhoneFix, onResult: (LimitShown) -> Unit)
     fun close()
 }

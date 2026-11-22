@@ -116,6 +116,11 @@ class CarRuntime(
 ) : HostEnvironment {
 
     val ui = CarUiState()
+
+    init {
+        // MyPlay (SL-13): a new connection logs once again what the car side sees of the speed limit file.
+        net.prototux.aare.ui.car.myplay.SpeedLimitDiag.fileLine = null
+    }
     val icons = IconLoader(context, this)
     private val main = Handler(Looper.getMainLooper())
 
