@@ -522,6 +522,25 @@ class MyPlayEngineTest {
         rule.onNodeWithTag(STOP_TURN).assertIsSelected()
     }
 
+    /** O11: the info-only home: no ring ever; the pad still opens things; a notice still takes the knob. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theInfoOnlyHomeHasNoRing() {
+        val state = show(guidance = true)
+        rule.runOnIdle { state.homePad = HomePad.DEFAULT; state.infoHome = true }
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        // Turns and the unbound key do nothing; the push is still the music panel.
+        repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNodeWithTag(STOP_HUB).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        // A tap still works on any part.
+        rule.onNodeWithTag(STOP_TURN).performClick()
+        assertEquals("app:maps", asked.last())
+    }
+
     @Test fun theHomePadsMappingIsStoredAndDefaulted() {
         assertEquals(HomePad.DEFAULT, HomePad.decode(null))
         assertEquals(HomePad.DEFAULT, HomePad.decode("junk;up=nonsense"))

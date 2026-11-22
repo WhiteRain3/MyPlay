@@ -64,6 +64,8 @@
     <!-- O11-1: on the car screen while a button is being taught from the phone -->
     <string name="myplay_teach_title" translatable="false">Teach a button</string>
     <string name="myplay_teach_text" translatable="false">Press the car button for: %1$s (within 30 s)</string>
+    <!-- O11: the Settings world's row for the info-only home -->
+    <string name="myplay_setting_info_home" translatable="false">Home: information only (no ring)</string>
     <!-- O2b: the Settings world's row for a full-screen maps app going home when untouched -->
     <string name="myplay_setting_maps_idle_home" translatable="false">Maps full screen: home when untouched</string>
     <string name="myplay_setting_maps_idle_home_after" translatable="false">After %1$d min</string>

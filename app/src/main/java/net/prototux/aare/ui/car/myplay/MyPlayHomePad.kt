@@ -56,6 +56,15 @@ object HomePad {
     fun active(m: Map<HomePadKey, HomePadAction>) = m.values.any { it != HomePadAction.NOTHING }
 }
 
+/**
+ * O11: the info-only home: ORBIT's home shows information only, with no knob ring at all; the pad
+ * ([myplayHomePad]) and the buttons taught in the car open everything. Off by default. Backed up.
+ */
+const val KEY_INFO_HOME = "myplay_info_home"
+var Settings.myplayInfoHome: Boolean
+    get() = prefs.getBoolean(KEY_INFO_HOME, false)
+    set(v) = prefs.edit { putBoolean(KEY_INFO_HOME, v) }
+
 /** O6: the home pad's mapping. Backed up. */
 const val KEY_HOME_PAD = "myplay_home_pad"
 var Settings.myplayHomePad: Map<HomePadKey, HomePadAction>

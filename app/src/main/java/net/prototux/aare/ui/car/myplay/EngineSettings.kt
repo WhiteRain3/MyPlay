@@ -96,6 +96,8 @@ internal class CarSettingsSource(private val context: Context, private val state
             },
             settings.myplayMapsIdleHome.toString(),
         ) { settings.myplayMapsIdleHome = it.toInt() },
+        // O11: the info-only home (ORBIT, with the home pad on).
+        SettingItem.Toggle("info_home", s(R.string.myplay_setting_info_home), settings.myplayInfoHome) { settings.myplayInfoHome = it },
         SettingItem.Toggle("gesture_line", s(R.string.myplay_setting_gesture_line), settings.myplayGestureLine) { settings.myplayGestureLine = it },
         SettingItem.Toggle("banners", s(R.string.setup_switch_message_notifications), settings.messageBanners) { settings.messageBanners = it },
         SettingItem.Toggle("read_aloud", s(R.string.msg_toggle_read_aloud_title), settings.readMessagesAloud) { settings.readMessagesAloud = it },
