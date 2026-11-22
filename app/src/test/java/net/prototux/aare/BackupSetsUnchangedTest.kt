@@ -25,6 +25,6 @@ class BackupSetsUnchangedTest {
         assertEquals("backup sets changed:\n" + lines().sorted().joinToString("\n"), FINGERPRINT, fingerprint())
 
     private companion object {
-        const val FINGERPRINT = "110d910a5699bf4eda01d8cee13556e969f552b3760718f5d9e688053ef3145a"
+        const val FINGERPRINT = "1b1492d28a00732a3d3605b7d5f42d12ef3b4d4027b156c014a74934e98ce114"
     }
 }
