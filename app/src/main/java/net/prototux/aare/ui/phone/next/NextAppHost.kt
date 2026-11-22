@@ -38,7 +38,8 @@ fun NextAppHost(deepLink: String?, onDeepLinkUsed: () -> Unit, onOldApp: () -> U
     val update by UpdateChecker.available.collectAsState()
     NextApp(
         deepLink = deepLink ?: "more/whats-new".takeIf { whatsNew },
-        onDeepLinkUsed = { if (deepLink != null) onDeepLinkUsed() else whatsNew = false },
+        // Either way What's new is done: a notification's page wins over it (review UP-1).
+        onDeepLinkUsed = { whatsNew = false; if (deepLink != null) onDeepLinkUsed() },
         onOldApp = onOldApp,
         // An update waiting: the dot on More (plan §4).
         badges = if (update != null) setOf(NextTab.MORE) else emptySet(),

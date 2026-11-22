@@ -73,3 +73,7 @@ object NextUpdateCheck {
 /** The newest [versions] first, numbers compared as numbers ("0.1.10" after "0.1.9"). */
 fun newestFirst(versions: List<String>): List<String> =
     versions.sortedWith { a, b -> if (UpdateChecker.isNewer(a, b)) -1 else if (UpdateChecker.isNewer(b, a)) 1 else 0 }
+
+/** The update to offer: a Check now answer wins, even "nothing newer" (review UP-2); else the daily check's. */
+fun foundUpdate(check: NextUpdateCheck.Result?, daily: UpdateChecker.Update?): UpdateChecker.Update? =
+    if (check is NextUpdateCheck.Result.Done) check.found else daily

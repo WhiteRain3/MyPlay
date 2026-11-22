@@ -58,6 +58,12 @@ class NextUpdatesTest {
         assertEquals(null, settings.updateLatestVersion)
     }
 
+    @Test fun checkNowWinsOverTheDailyAnswer() {
+        assertEquals(null, foundUpdate(NextUpdateCheck.Result.Done(1L, null), u))
+        assertEquals(u, foundUpdate(NextUpdateCheck.Result.Offline, u))
+        assertEquals(u, foundUpdate(null, u))
+    }
+
     @Test fun newestFirstComparesNumbers() =
         assertEquals(listOf("0.1.10", "0.1.9", "0.1.5"), newestFirst(listOf("0.1.5", "0.1.10", "0.1.9")))
 

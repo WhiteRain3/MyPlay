@@ -69,7 +69,7 @@ fun NextUpdatesPage() {
     val installing by NextUpdateCheck.installing.collectAsState()
     val automatic by rememberSetting("check_updates") { checkUpdates }
     val lastDaily by rememberSetting("update_last_check_ms") { updateLastCheckMs }
-    val found = (check as? NextUpdateCheck.Result.Done)?.found ?: daily
+    val found = foundUpdate(check, daily)
     val hero = updateHeroOf(install, found, installing, check == NextUpdateCheck.Result.Checking)
     val actions = remember {
         object : UpdateActions {
