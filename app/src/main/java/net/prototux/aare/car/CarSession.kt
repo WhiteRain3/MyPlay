@@ -706,7 +706,13 @@ class CarSession(
     @Volatile private var buttonCodes: Set<Int> = buttonTable.allCodes
     private val buttonPrefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (isButtonTableKey(key)) main.post { buttonTable = settings.buttonTable; buttonCodes = buttonTable.allCodes }
+        // MyPlay (O11): the phone arms a button to teach, or changes the learned ones.
+        if (isLearnKey(key)) main.post { learned = settings.myplayLearnedButtons; learnArmed = settings.myplayLearnButton }
     }
+
+    /** MyPlay (O11): the learned buttons, and the action the next key will be taught (main thread). */
+    private var learned: Map<Int, ButtonAction> = settings.myplayLearnedButtons
+    private var learnArmed: ButtonAction? = settings.myplayLearnButton
 
     private val gestures = GestureEngine(
         timings = { settings.gestureTimings },
@@ -740,11 +746,16 @@ class CarSession(
                 forward = ((g as? GestureEngine.Gesture.HoldTurn)?.steps ?: 1) > 0, atMs = SystemClock.uptimeMillis(),
                 titleBefore = np?.title, playingBefore = np?.playing)
         }
+        perform(action, g.code, (g as? GestureEngine.Gesture.HoldTurn)?.steps ?: 0)
+    }
+
+    /** MyPlay (R3, O11): what a button's [action] does, for a gesture on [keyCode] (a hold and turn's [steps]). */
+    private fun perform(action: ButtonAction, keyCode: Int, steps: Int = 0) {
         when (action) {
             ButtonAction.SELECT -> {
                 // B1-1: a press of the ring's item, whatever button it was given to (Back or Menu
                 // sent as themselves would act as Back or Menu on the screen).
-                val code = ButtonAction.selectKeyFor(g.code)
+                val code = ButtonAction.selectKeyFor(keyCode)
                 val t = SystemClock.uptimeMillis()
                 dispatchCarKey(CarKey(code, true, downTime = t))
                 dispatchCarKey(CarKey(code, false, downTime = t))
@@ -757,7 +768,6 @@ class CarSession(
             ButtonAction.NEXT -> media.next()
             ButtonAction.PREVIOUS -> media.previous()
             ButtonAction.SKIP_SONGS -> {
-                val steps = (g as? GestureEngine.Gesture.HoldTurn)?.steps ?: 0
                 repeat(kotlin.math.abs(steps)) { if (steps > 0) media.next() else media.previous() }
             }
             ButtonAction.OPEN_NAVIGATION -> performCarKeyAction(CarKeyAction.OPEN_NAVIGATION)
@@ -795,6 +805,28 @@ class CarSession(
         // screen is up.
         if (display == null && code in MEDIA_KEYS) {
             if (!down) DiagLog.add("ignoring ${KeyEvent.keyCodeToString(code)} from the car: no car screen yet")
+            return
+        }
+        // MyPlay (O11): a button being taught: the next key that is not Back (or the knob's) is
+        // bound to the armed action, whatever its code, and does nothing else this time.
+        val teaching = learnArmed
+        val knobOrBack = buttonTable.control(code).let { it == ButtonTable.Control.KNOB_PUSH || it == ButtonTable.Control.BACK }
+        if (teaching != null && code !in LearnedButtons.NEVER && !knobOrBack) {
+            if (!down) {
+                learned = LearnedButtons.learn(learned, code, teaching)
+                settings.myplayLearnedButtons = learned
+                learnArmed = null
+                settings.myplayLearnButton = null
+                DiagLog.add("learned button ${KeyEvent.keyCodeToString(code)} ($code): ${teaching.id}")
+            }
+            return
+        }
+        // O11: a learned button does its action on release, and nothing else.
+        learned[code]?.let { action ->
+            if (!down) {
+                DiagLog.add("learned button ${KeyEvent.keyCodeToString(code)}: ${action.id}")
+                perform(action, code)
+            }
             return
         }
         // A user remap wins over the key's normal behaviour below (never over the guard above:

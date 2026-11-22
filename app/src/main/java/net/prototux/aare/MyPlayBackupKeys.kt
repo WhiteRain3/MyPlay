@@ -23,6 +23,7 @@ internal object MyPlayBackupKeys {
         "myplay_speed_source" to Type.STRING, // where the car screen's speed comes from (N3)
         "myplay_engine_language" to Type.STRING, // the new car screen's design language, ORBIT or DECK (N13)
         "myplay_maps_idle_home" to Type.INT, // minutes before a full-screen maps app goes home, 0 never (O2b)
+        "myplay_learned_buttons" to Type.STRING, // car buttons taught an action in the car, code to action (O11)
         "myplay_home_pad" to Type.STRING, // what ORBIT's home pad opens while the ring is hidden (O6)
         "myplay_panel_timeout" to Type.INT, // seconds before a panel over the map closes by itself, 0 never (O2)
         "myplay_speed_limit_margin" to Type.INT, // how far over the limit before the speed changes colour (N20)
