@@ -193,6 +193,10 @@ import net.prototux.aare.ui.phone.WallpaperPage
 import net.prototux.aare.ui.phone.BehindTile
 import net.prototux.aare.ui.phone.BehindTheScenesTiles
 import net.prototux.aare.ui.phone.PhonePartsSample
+import net.prototux.aare.ui.phone.KEY_NEW_PHONE_APP
+import net.prototux.aare.ui.phone.myplayNewPhoneApp
+import net.prototux.aare.ui.phone.next.NextApp
+import net.prototux.aare.ui.phone.next.rememberSetting
 import rikka.shizuku.Shizuku
 import java.text.DateFormat
 import kotlin.math.roundToInt
@@ -205,17 +209,26 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         applyDebugExtras(intent)
         showParts = intent?.getBooleanExtra(EXTRA_PHONE_PARTS, false) == true
+        // Only a fresh start follows the extra: after rotation or process death the saved place wins.
+        if (savedInstanceState == null) route = intent?.getStringExtra(EXTRA_ROUTE)
         setContent {
             MyPlayPhoneTheme {
                 Surface(Modifier.fillMaxSize()) {
+                    val newApp by rememberSetting(KEY_NEW_PHONE_APP) { myplayNewPhoneApp }
                     if (showParts) {
                         BackHandler { showParts = false }
                         PhonePartsSample { showParts = false }
+                    } else if (newApp) {
+                        NextApp(deepLink = route, onDeepLinkUsed = { route = null },
+                            onOldApp = { Settings(this@MainActivity).myplayNewPhoneApp = false })
                     } else Home()
                 }
             }
         }
     }
+
+    /** A page to open, from the [EXTRA_ROUTE] extra (plan §3.5); the new app clears it once shown. */
+    private var route by mutableStateOf<String?>(null)
 
     /** The sample page of every shared phone part, for screenshots ([EXTRA_PHONE_PARTS]). */
     private var showParts by mutableStateOf(false)
@@ -225,6 +238,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         if (intent.getBooleanExtra(EXTRA_PHONE_PARTS, false)) showParts = true
+        intent.getStringExtra(EXTRA_ROUTE)?.let { route = it }
         if (applyDebugExtras(intent)) {
             ProjectionService.startIdleIfEnabled(this)
             recreate() // the settings screen shows the new state
@@ -233,7 +247,10 @@ class MainActivity : ComponentActivity() {
 
     /** Debug builds only: lets ./headunit.sh switch the head unit server on over adb. Returns true if applied. */
     private fun applyDebugExtras(intent: Intent?): Boolean {
-        if (!net.prototux.aare.BuildConfig.DEBUG || intent?.hasExtra("hu_server") != true) return false
+        if (!net.prototux.aare.BuildConfig.DEBUG || intent == null) return false
+        // The hidden switch to the rebuilt phone app (plan §16); the screen follows the setting by itself.
+        if (intent.hasExtra(EXTRA_NEW_PHONE_APP)) Settings(this).myplayNewPhoneApp = intent.getBooleanExtra(EXTRA_NEW_PHONE_APP, false)
+        if (!intent.hasExtra("hu_server")) return false
         Settings(this).headUnitServer = intent.getBooleanExtra("hu_server", false)
         return true
     }
@@ -241,6 +258,12 @@ class MainActivity : ComponentActivity() {
 
 /** Intent extra (true) that opens the sample page of every shared phone part; it changes no setting. */
 private const val EXTRA_PHONE_PARTS = "phone_parts"
+
+/** Intent extra: a route of the new phone app (plan §3.5) to open, e.g. "more/advanced/certificates". */
+const val EXTRA_ROUTE = "route"
+
+/** Debug builds only: adb extra (true/false) that turns the hidden switch to the new phone app on or off. */
+private const val EXTRA_NEW_PHONE_APP = "new_phone_app"
 
 /** The settings pages, Android Auto style: one per topic, opened from the home page. */
 private enum class Page(val titleRes: Int, val subtitleRes: Int, val icon: ImageVector) {
@@ -1620,11 +1643,17 @@ private fun LogCard() {
 
 @Composable
 private fun LicenceLine() {
+    val ctx = LocalContext.current
+    // Seven taps on the version line turn on the rebuilt phone app (plan §16); no ripple, it is hidden.
+    var taps by remember { mutableIntStateOf(0) }
     Column(Modifier.fillMaxWidth().padding(8.dp)) {
         HorizontalDivider()
         Spacer(Modifier.height(8.dp))
         Text(stringResource(R.string.setup_about_text, net.prototux.aare.BuildConfig.VERSION_NAME),
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.clickable(interactionSource = null, indication = null) {
+                if (++taps >= 7) { taps = 0; Settings(ctx).myplayNewPhoneApp = true }
+            })
     }
 }
 
