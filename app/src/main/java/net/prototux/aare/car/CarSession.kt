@@ -1316,7 +1316,7 @@ class CarSession(
         closed = true
         DriveSummary.end(System.currentTimeMillis())?.let(DiagLog::add) // MyPlay: how the speed and its limit did
         // MyPlay (#11): where the car stopped, if turned on (on the phone only; never logged).
-        runCatching { ParkedHere.driveEnded(context, settings, runtime.carLocation, DashboardInfo.phoneLocation(context)) }
+        runCatching { ParkedHere.driveEnded(context, settings, runtime.carLocation, DashboardInfo.phoneLocation(context), SpeedRules.carSpeed(CarData.state.value, System.currentTimeMillis())) }
         settings.unregisterListener(carKeyPrefsListener)
         settings.unregisterListener(buttonPrefsListener) // MyPlay (R3)
         // Session ending while music fed the car: pause it, so it doesn't jump to the phone speaker.

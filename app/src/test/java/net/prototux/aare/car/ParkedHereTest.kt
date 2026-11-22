@@ -6,6 +6,7 @@ import net.prototux.aare.Settings
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -35,12 +36,24 @@ class ParkedHereTest {
     @Test fun offByDefaultKeepsNothingAndTurningOffForgets() {
         val settings = Settings(RuntimeEnvironment.getApplication())
         assertFalse(settings.myplayParkedHere)
-        ParkedHere.driveEnded(RuntimeEnvironment.getApplication(), settings, fix(54.1, 25.1, 0), null, now)
+        ParkedHere.driveEnded(RuntimeEnvironment.getApplication(), settings, fix(54.1, 25.1, 0), null, nowMs = now)
         assertFalse(settings.prefs.contains(KEY_PARKED_SPOT))
         settings.myplayParkedHere = true
-        ParkedHere.driveEnded(RuntimeEnvironment.getApplication(), settings, fix(54.1, 25.1, 0), null, now)
+        ParkedHere.driveEnded(RuntimeEnvironment.getApplication(), settings, fix(54.1, 25.1, 0), null, nowMs = now)
         assertEquals(ParkedSpot(54.1, 25.1, now), ParkedHere.decode(settings.prefs.getString(KEY_PARKED_SPOT, null)))
         settings.myplayParkedHere = false
+        assertFalse(settings.prefs.contains(KEY_PARKED_SPOT))
+    }
+
+    @Test fun notWhenTheSessionEndedMidDrive() {
+        assertTrue(ParkedHere.stillMoving(13.9f, null, null, now))
+        assertFalse(ParkedHere.stillMoving(0.3f, null, null, now))
+        val moving = fix(54.1, 25.1, 2_000).apply { speed = 15f }
+        assertTrue(ParkedHere.stillMoving(null, moving, null, now))
+        assertFalse(ParkedHere.stillMoving(null, fix(54.1, 25.1, 2_000), null, now))
+        val settings = Settings(RuntimeEnvironment.getApplication())
+        settings.myplayParkedHere = true
+        ParkedHere.driveEnded(RuntimeEnvironment.getApplication(), settings, fix(54.1, 25.1, 0), null, carSpeedMps = 20f, nowMs = now)
         assertFalse(settings.prefs.contains(KEY_PARKED_SPOT))
     }
 

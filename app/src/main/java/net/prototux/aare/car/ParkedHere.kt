@@ -38,7 +38,8 @@ object ParkedHere {
     /** A fix older than this when the drive ends is not where the car stopped. */
     const val MAX_FIX_AGE_MS = 5L * 60 * 1000
     const val NOTIFICATION_ID = 11
-    const val CHANNEL = "myplay_parked"
+    /** PK-1: not "myplay_…": that prefix is for settings keys. */
+    const val CHANNEL = "parked_spot_channel"
     const val GOOGLE_MAPS = "com.google.android.apps.maps"
 
     /** The spot from [car] (preferred) or [phone], if one is fresh at [nowMs]. */
@@ -67,9 +68,19 @@ object ParkedHere {
         return (if (usable) walk else Intent(Intent.ACTION_VIEW, geoUri(s))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
-    /** The drive ended: keep the spot and offer the way back, if turned on. Main thread. */
-    fun driveEnded(context: Context, settings: Settings, car: Location?, phone: Location?, nowMs: Long = System.currentTimeMillis()) {
+    /** PK-2: faster than this (m/s, about 5 km/h) the car was still moving: the session was lost mid-drive, not parked. */
+    const val MOVING_MPS = 1.4f
+
+    /** Whether the session ended with the car still moving (by its own fresh speed, else the fix's). */
+    fun stillMoving(carSpeedMps: Float?, car: Location?, phone: Location?, nowMs: Long): Boolean =
+        carSpeedMps?.let { it > MOVING_MPS }
+            ?: listOfNotNull(car, phone).firstOrNull { nowMs - it.time in 0..10_000 && it.hasSpeed() }?.let { it.speed > MOVING_MPS }
+            ?: false
+
+    /** The drive ended: keep the spot and offer the way back, if turned on and the car had stopped. Main thread. */
+    fun driveEnded(context: Context, settings: Settings, car: Location?, phone: Location?, carSpeedMps: Float? = null, nowMs: Long = System.currentTimeMillis()) {
         if (!settings.myplayParkedHere) return
+        if (stillMoving(carSpeedMps, car, phone, nowMs)) return
         val spot = pick(car, phone, nowMs) ?: return
         settings.prefs.edit { putString(KEY_PARKED_SPOT, encode(spot)) }
         runCatching { notify(context, spot) }
