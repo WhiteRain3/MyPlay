@@ -47,6 +47,44 @@ internal object NavTextCheck {
                 if (speeds.isEmpty()) "" else "; looks like a speed: ${speeds.joinToString(", ")}"
         }
 
+    /**
+     * AL-4 (the dispatcher, for radars, police and average-speed zones): an alert's whole structure,
+     * one line, while the check is on. Alert titles and subtitles are the app's generic words
+     * ("In 380 m", "Reduced speed", "Police reported"), so they are written in full; turn and trip
+     * texts stay hidden as before. No position is in an alert.
+     */
+    fun alertStructure(app: String, a: Alert): String = buildString {
+        append("nav alert $app: id ${a.id}")
+        append(", title \"").append(text(a.title) ?: "").append('"')
+        text(a.subtitle)?.let { append(", subtitle \"").append(it).append('"') }
+        a.icon?.let { i ->
+            append(", icon type ${i.type}")
+            i.icon?.let { ic -> append(" (${iconKind(ic)})") }
+            i.tint?.let { append(", tinted") }
+        }
+        if (a.actions.isNotEmpty()) append(", actions [").append(a.actions.joinToString(", ") { act -> "\"${text(act.title) ?: "?"}\"" }).append(']')
+        append(", ${a.durationMillis} ms")
+        a.callbackDelegate?.let { append(", has callback") }
+    }
+
+    private fun iconKind(ic: androidx.core.graphics.drawable.IconCompat): String = runCatching {
+        when (ic.type) {
+            androidx.core.graphics.drawable.IconCompat.TYPE_RESOURCE -> "resource ${ic.resPackage}:${ic.resId}"
+            androidx.core.graphics.drawable.IconCompat.TYPE_BITMAP, androidx.core.graphics.drawable.IconCompat.TYPE_ADAPTIVE_BITMAP -> "bitmap"
+            androidx.core.graphics.drawable.IconCompat.TYPE_URI -> "uri"
+            else -> "kind ${ic.type}"
+        }
+    }.getOrDefault("unknown")
+
+    /** AL-4: logs [alertStructure] once per distinct line, while [on]. Never throws. */
+    fun noteAlert(app: String, a: Alert) {
+        if (!on) return
+        runCatching {
+            val line = alertStructure(app, a)
+            synchronized(seen) { if (seen.size < MAX_LINES && seen.add(line)) DiagLog.add(line) }
+        }
+    }
+
     /** The texts of an alert. */
     fun alertTexts(a: Alert): List<String> = listOfNotNull(text(a.title), text(a.subtitle))
 

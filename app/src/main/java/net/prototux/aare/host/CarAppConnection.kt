@@ -504,6 +504,7 @@ class CarAppConnection(
         override fun showAlert(alertBundle: Bundleable) {
             val a = runCatching { alertBundle.get() as Alert }.getOrNull() ?: return
             NavTextCheck.note(info.packageName, "alert") { NavTextCheck.alertTexts(a) } // MyPlay (N3 check)
+            NavTextCheck.noteAlert(info.packageName, a) // MyPlay (AL-4): the alert's structure, for radars and zones
             main.post { alert = a }
         }
 
