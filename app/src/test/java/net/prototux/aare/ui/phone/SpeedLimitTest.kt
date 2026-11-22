@@ -77,7 +77,7 @@ class SpeedLimitTest {
     fun everyStateHasWordsOrNone() {
         assertNull(speedLimitStatus(SpeedLimitDownload.State.Idle))
         listOf(SpeedLimitDownload.State.Checking, SpeedLimitDownload.State.Downloading(5), SpeedLimitDownload.State.UpToDate,
-            SpeedLimitDownload.State.Done, SpeedLimitDownload.State.NeedsWifi, SpeedLimitDownload.State.Failed, SpeedLimitDownload.State.NotPublished).forEach {
+            SpeedLimitDownload.State.Done, SpeedLimitDownload.State.NeedsWifi, SpeedLimitDownload.State.Failed, SpeedLimitDownload.State.NotPublished, SpeedLimitDownload.State.NoInternet).forEach {
             assertTrue(speedLimitStatus(it) != null)
         }
     }

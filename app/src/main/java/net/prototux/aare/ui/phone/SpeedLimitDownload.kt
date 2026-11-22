@@ -33,6 +33,8 @@ object SpeedLimitDownload {
         data object Failed : State
         /** MyPlay's release page has no file for the region (yet). */
         data object NotPublished : State
+        /** On a network with no working internet (the head unit's Wi-Fi during a drive). */
+        data object NoInternet : State
     }
 
     private class NotFound : Exception()
@@ -40,6 +42,7 @@ object SpeedLimitDownload {
     private val _state = MutableStateFlow<State>(State.Idle)
     val state: StateFlow<State> = _state.asStateFlow()
     private val busy = AtomicBoolean(false)
+    private val waitingLogged = AtomicBoolean(false)
 
     /** Whether the phone is on a network that is not metered (Wi-Fi, usually). */
     fun unmetered(context: Context): Boolean {
@@ -93,7 +96,11 @@ object SpeedLimitDownload {
     suspend fun checkIfDue(context: Context) {
         val settings = Settings(context)
         if (!SpeedLimitCheck.due(settings.myplaySpeedLimitRegion, settings.myplaySpeedLimitChecked, System.currentTimeMillis())) return
-        if (!mayDownload(context)) { DiagLog.add("speed limits: monthly look due, waiting for a network with internet"); return }
+        if (!mayDownload(context)) {
+            // Said once per app start, not on every open (SL-17).
+            if (waitingLogged.compareAndSet(false, true)) DiagLog.add("speed limits: monthly look due, waiting for a network with internet")
+            return
+        }
         DiagLog.add("speed limits: monthly look")
         update(context, force = false)
     }
@@ -103,7 +110,7 @@ object SpeedLimitDownload {
         val settings = Settings(context)
         val region = settings.myplaySpeedLimitRegion
         if (region.isEmpty()) return
-        if (!mayDownload(context)) { if (force) _state.value = State.NeedsWifi; return }
+        if (!mayDownload(context)) { if (force) _state.value = if (hasInternet(context)) State.NeedsWifi else State.NoInternet; return }
         if (!busy.compareAndSet(false, true)) return
         try {
             _state.value = State.Checking

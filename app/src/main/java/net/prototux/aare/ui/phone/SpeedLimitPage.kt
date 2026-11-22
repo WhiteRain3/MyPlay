@@ -43,6 +43,7 @@ fun speedLimitStatus(state: SpeedLimitDownload.State): Int? = when (state) {
     SpeedLimitDownload.State.NeedsWifi -> R.string.phone_speed_needs_wifi
     SpeedLimitDownload.State.Failed -> R.string.phone_speed_failed
     SpeedLimitDownload.State.NotPublished -> R.string.phone_speed_not_published
+    SpeedLimitDownload.State.NoInternet -> R.string.phone_speed_no_internet
 }
 
 /**
