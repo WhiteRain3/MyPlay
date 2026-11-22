@@ -264,3 +264,69 @@ IA closely. It is **not ready to build from yet**:
 Several key screens are also missing, Trust, Sound and Developer warnings first (12). The second
 pass should fix those, use one neutral interaction accent with world colours for identity only,
 and add the missing batch. After that, this can be a polished design that will last.
+
+---
+
+## Second pass (e397ccb)
+
+I checked the second pass against the 14 findings and against the code on `claude/myplay`, looking
+at the new frames 04, 08, 09, 13, 18, 20, 22, 29, 34, 37, 39, 53, 59, 63, 67 and 77, the
+style sheet's contrast table, and index.md.
+
+### The 14 findings
+
+| # | Status | Checked |
+|---|---|---|
+| 1 | **Closed** | *Home when maps untouched* (29/30) and *Maximum resolution* (63/64) now open picker sheets. Panel time, the speed margin and density are pickers too. |
+| 2 | **Closed** | The 8 themes and the accents ("Theme's", 6 colours, "Use the phone's colours") match the code. So do the 5 built-in looks, Default/Larger/Largest, density Auto or Fixed (120/160/200/213/240, = `DENSITY_CHOICES`), the knob turns, and the four real developer sub-switches. |
+| 3 | **Closed, with overrides** | The drawing has the dash knob, the pad, Menu, Back and the wheel. Hold + turn, *Show what a button did*, Timing and Reset are back. **Overrides accepted:** triple press exists on `claude/myplay` (`ButtonTable.Gesture.TRIPLE`, knob triple press = previous song), so it is real, not invented. Showing holds disabled with "This car doesn't send holds" is a good honest state. |
+| 4 | **Closed** | *Home: information only* is on top. The name follows the code; the plan route should become `car/buttons/pad-shortcuts` (index.md says so). |
+| 5 | **Closed** | Two cards (37). Notification access covers banners, groups, read aloud and auto-reply; calls and contacts cover the phone speaker. Rows stay readable, and the disabled controls are dashed. |
+| 6 | **Closed** | One neutral interaction colour (`int` #DCE3EF) on every tab. World colours are for identity only. Caution is orange (#FF9A57), a hue no tab uses. "Next connection" is a neutral tag with an icon. |
+| 7 | **Closed** | "Changed" is a hollow ring plus a brighter value. Filled dots mean attention only. |
+| 8 | **Closed** | The off switch has an outline (5.8:1 on surface). The build now checks non-text parts at ≥ 3:1 (slider rail 3.7, dashed ring 4.8, focus, changed mark). Disabled rows no longer fade their text. |
+| 9 | **Closed** | Colours previews an app screen (Now playing / Up next), labelled "App screens · live", and the preview stays at the top. Wallpaper and Map colours have their own previews. |
+| 10 | **Closed** | The picture is clean (08). Part rings appear only while it's pressed (09). The speed opens Car › Speed. Design is the first row. |
+| 11 | **Closed** | Home is a house, Car is a car, and the tab has no connected cue. |
+| 12 | **Closed** | Every screen and state I listed is drawn, including Trust (04), Sound (34/35), Developer warnings (67), 200 % font size (21) and the large screen (76). |
+| 13 | **Closed** | Passenger mode, Phone apps and the head unit server carry a `warn` line with an icon, and the reason in ⓘ. |
+| 14 | **Closed** | Neutral card borders. One Home layout, with cards below the hero. Distinct icons (knob, limit sign, car). "Reorder" is a text button. Each saved look has a menu. "Midnight (changed)". Forget on taught buttons. Roboto Flex. |
+
+**Override on "Include alert texts": accepted.** It exists on `claude/myplay`: `CarCheckLog` keeps
+alert texts only when ticked at share time, and `CarCheckPage` sets it off each time the page
+opens. Drawn as an unticked check box with "May contain street names" (59), it is the safe form.
+
+### What's left (all minor; fix while building)
+
+1. **Bring the plan in line with the design.** These are text edits to `phone-app.md`, not open
+   questions:
+   - §4: no connected cue on the tab; Home is a house.
+   - §10: the hero states use a "What happened" row.
+   - §3.3: the route is `car/buttons/pad-shortcuts`.
+   - §6 and §14: *Phone's Bluetooth address* now lives in More › Connection (53), not Advanced ›
+     Car fixes.
+   - §9.3: the Sound value. See point 2.
+2. **Sound uses jargon outside Advanced.** The Car root value and the Sound status say "Shizuku or
+   root" (20, 34). That breaks content rule 8, and plan §9.3 gives the root value as Best / All
+   sound / Music only / Set up / Off. *Fix:* show "Best" (or the right word) on the Car root and in
+   the status line. Keep the method names on the Sound page's method rows, with Shizuku and root
+   explained in ⓘ. The switch says "Phone audio in the car" while the plan says "Sound to the car";
+   pick one wording.
+3. **Trust (04):** the sub-line says "Head unit · USB". Use the car's name, or "New car · USB"
+   (rule 9: "car", not "head unit"). Consider making Trust and Not now equal-weight buttons: the
+   safe choice shouldn't look secondary in the one security decision.
+4. **"Allow localhost" (67)** lets any app on the phone connect, but it has no warning line. Give
+   it one, like its siblings ("Any app on this phone can connect").
+5. **Wording:** "Press what has the ring" (22) should say "highlight" (rule 9).
+6. **Accent swatches (13)** are colour-only. Check that each carries a TalkBack name (Amber, Red,
+   …). index.md says icon-only controls do, so add the swatches to that check.
+7. Frame 09 cuts the Screen list after Looks, while frame 08 shows all six rows. Re-render it so
+   the two frames match.
+
+### Verdict
+
+**Ready to build.** Every finding is closed or settled by an override that matches the shipped
+code, the colour system is now coherent and passes its own text and non-text contrast checks, and
+the screen set covers every page and state in the plan. The seven items above are small. Do item
+1 (the plan text) before the build starts so the builder has one source of truth; the rest can be
+fixed in the code as each page is built.
