@@ -30,11 +30,12 @@ object Moves {
         is Place.InWorld -> p
     }
 
-    /** A turn of [steps] clicks: moves the chooser's choice, wrapping round; elsewhere nothing here. */
-    fun turn(p: Place, steps: Int): Place = when (p) {
+    /** A turn of [steps] clicks: moves the chooser's choice among [worlds], wrapping round; elsewhere nothing here. */
+    fun turn(p: Place, steps: Int, worlds: List<World> = World.entries): Place = when (p) {
         is Place.Chooser -> {
-            val n = World.entries.size
-            Place.Chooser(World.entries[((p.selected.ordinal + steps) % n + n) % n])
+            val n = worlds.size
+            val i = worlds.indexOf(p.selected).coerceAtLeast(0)
+            Place.Chooser(worlds[((i + steps) % n + n) % n])
         }
         else -> p
     }
@@ -71,6 +72,8 @@ object AppsPages {
 class MyPlayScreenModel(
     /** N13: the skin's hand (DECK), or null for the hub and its dial (ORBIT). */
     val hand: List<World>? = null,
+    /** O7: the dial's worlds (ORBIT: four, one per pad direction), or null for all six. */
+    val dial: List<World>? = null,
 ) {
     var place by mutableStateOf<Place>(Place.Home)
     /** The world last entered, where the chooser opens next time. */
@@ -86,18 +89,27 @@ class MyPlayScreenModel(
     }
 
     fun push() {
-        val next = Moves.push(place, last)
+        // O7: the dial opens on the world last entered when it is on the dial, else on its first.
+        val next = Moves.push(place, if (dial == null || last in dial) last else dial.first())
         if (next is Place.InWorld) last = next.world
         place = next
     }
 
-    fun turn(steps: Int) { place = Moves.turn(place, steps) }
+    fun turn(steps: Int) { place = Moves.turn(place, steps, dial ?: World.entries) }
+
+    /** O7: open [world] from the dial (a pad direction), as a push on it would. */
+    fun choose(world: World) {
+        last = world
+        place = Place.InWorld(world)
+    }
 
     /** True when Back was used here. */
     fun back(): Boolean {
         val p = place
         // N13: with a hand there is no dial: a world goes straight home, its card in front.
         if (hand != null && p is Place.InWorld) { front = p.world; place = Place.Home; return true }
+        // O7: a world not on the dial (Music, opened from the home pad) goes straight home.
+        if (dial != null && p is Place.InWorld && p.world !in dial) { place = Place.Home; return true }
         place = Moves.back(place) ?: return false
         return true
     }

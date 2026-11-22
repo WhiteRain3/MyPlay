@@ -266,7 +266,13 @@ interface MyPlaySkin {
 
     /** The speed, or null when none is known (show a dash, never a guess). */
     @Composable fun Speed(reading: SpeedReading?, modifier: Modifier) = Unit
-    /** The six worlds, [selected] ringed. */
+    /**
+     * O7: the dial's worlds, clockwise from the top, one per pad direction (up, right, down, left):
+     * a press of a direction opens that world. Null: all six worlds round the dial (a turn moves).
+     */
+    val dial: List<World>? get() = null
+
+    /** The dial's worlds ([dial], or all six), [selected] ringed. */
     @Composable fun Chooser(selected: World, modifier: Modifier)
     /** N6: how many apps one page of the Apps world holds. */
     val appsPerPage: Int get() = 10

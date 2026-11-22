@@ -173,6 +173,12 @@ object OrbitSkin : MyPlaySkin {
     /** O3: an app takes the whole screen, grown out of its stop; no rail. */
     override val appRail get() = false
 
+    /**
+     * O7 (the owner): the dial holds four worlds, one per pad direction: up Calls, right Apps,
+     * down Settings, left Car. Navigate and Music are on the home pad (O6).
+     */
+    override val dial get() = listOf(World.CALLS, World.APPS, World.SETTINGS, World.CAR)
+
     /** The sheet's screen; sizes scale from it. */
     private const val SHEET_W = 1280f
     private const val SHEET_H = 720f
@@ -480,7 +486,7 @@ object OrbitSkin : MyPlaySkin {
         Scaled {
             val g = glass()
             val night = LocalSkinTokens.current.night
-            val worlds = World.entries
+            val worlds = dial ?: World.entries
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.size(DIAL), contentAlignment = Alignment.Center) {
                     worlds.forEachIndexed { i, w ->
@@ -497,7 +503,7 @@ object OrbitSkin : MyPlaySkin {
                     }
                     WorldDisc(selected, night)
                 }
-                Text(stringResource(R.string.myplay_dial_hint), style = TextStyle(fontSize = 24.sp).floating(g.secondary))
+                // O7: no line under the dial any more (the owner): each world is a pad direction.
             }
         }
     }

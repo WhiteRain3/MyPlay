@@ -116,7 +116,7 @@ internal fun MyPlayEngineShell(
     remember(skin.id) { if (memory.skinId != skin.id || state.engineHomeAsked || !keeps) memory.reset(skin.id); true }
     // N13: a new language starts afresh (a hand has no dial to be in).
     val hand = skin.hand
-    val model = remember(skin.id) { memory.model(hand) }
+    val model = remember(skin.id) { memory.model(hand, skin.dial) }
     val tokens = skin.tokens(state.night)
     val context = LocalContext.current
     val timeFormat = remember(context) { DateFormat.getTimeFormat(context) }
@@ -574,7 +574,11 @@ internal fun MyPlayEngineShell(
             Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> { actionsOf[ring]?.invoke(); true }
             else -> false
         }
-        is Place.Chooser -> when (key) {
+        // O7: a dial with a world on each pad direction: one press opens that world.
+        is Place.Chooser -> if (skin.dial != null && dialIndex(key) != null) {
+            skin.dial!!.getOrNull(dialIndex(key)!!)?.let { w -> model.choose(w); freshWorld(w) }
+            true
+        } else when (key) {
             Key.Tab -> { model.turn(if (shift) -1 else 1); true }
             Key.DirectionLeft, Key.DirectionUp -> { model.turn(-1); true }
             Key.DirectionRight, Key.DirectionDown -> { model.turn(1); true }
@@ -1006,5 +1010,14 @@ internal fun padKeyOf(key: Key): HomePadKey? = when (key) {
     Key.DirectionUp -> HomePadKey.UP
     Key.DirectionDown -> HomePadKey.DOWN
     Key.DirectionLeft, Key.DirectionRight -> HomePadKey.SIDE
+    else -> null
+}
+
+/** O7: the dial's world index for a pad direction: up, right, down, left (clockwise from the top). */
+internal fun dialIndex(key: Key): Int? = when (key) {
+    Key.DirectionUp -> 0
+    Key.DirectionRight -> 1
+    Key.DirectionDown -> 2
+    Key.DirectionLeft -> 3
     else -> null
 }

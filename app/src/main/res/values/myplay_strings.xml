@@ -34,7 +34,6 @@
     <string name="myplay_world_apps" translatable="false">Apps</string>
     <string name="myplay_world_car" translatable="false">Car</string>
     <string name="myplay_world_settings" translatable="false">Settings</string>
-    <string name="myplay_dial_hint" translatable="false">turn: choose · push: open · Back: back</string>
     <string name="myplay_world_not_yet" translatable="false">Not drawn yet. Back to return.</string>
     <string name="myplay_speed_unit_kmh" translatable="false">km/h</string>
     <string name="myplay_hub_menu" translatable="false">Menu</string>

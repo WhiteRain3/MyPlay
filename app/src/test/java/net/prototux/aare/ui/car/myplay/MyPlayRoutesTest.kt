@@ -120,9 +120,11 @@ class MyPlayRoutesTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun orbitWithNoMapsAppNavigateIsTheAppsWorld() {
         show("orbit", maps = false, guidance = false)
+        // O6, O7: Navigate is the home pad's up (it left the dial).
+        rule.runOnIdle { state.homePad = HomePad.DEFAULT }
+        rule.waitForIdle()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
-        engine.performKeyInput { pressKey(Key.DirectionCenter) } // the dial, on Navigate
-        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
         rule.onNodeWithTag(SLOT_APPS).assertExists()
         inMyPlay("Navigate with no maps app")
     }

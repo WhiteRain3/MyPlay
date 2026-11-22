@@ -70,11 +70,10 @@ class MyPlayOpeningTest {
     private val engine get() = rule.onNodeWithTag(ENGINE_TAG)
     private fun key(k: Key) = engine.performKeyInput { pressKey(k) }
 
-    /** The dial (on Navigate), three turns on to Apps, in. */
+    /** The dial, then right: Apps (O7). */
     private fun toApps() {
         key(Key.DirectionCenter)
-        repeat(3) { key(Key.Tab) }
-        key(Key.DirectionCenter)
+        key(Key.DirectionRight)
         rule.onNodeWithTag(SLOT_APPS).assertExists()
     }
 

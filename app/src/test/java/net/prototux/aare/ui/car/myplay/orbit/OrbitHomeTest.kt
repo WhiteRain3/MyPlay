@@ -250,10 +250,12 @@ class OrbitHomeTest {
         rule.onNodeWithTag(STOP_HUB).assertIsSelected()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
-        // The chosen world: on the dial and in the middle disc.
-        assertEquals(2, rule.onAllNodesWithText("Navigate").fetchSemanticsNodes().size)
-        repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
-        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        // The chosen world: on the dial and in the middle disc. O7: the dial holds four worlds,
+        // opening on its first (Calls); Navigate and Music are on the home pad, not here.
+        assertEquals(2, rule.onAllNodesWithText("Calls").fetchSemanticsNodes().size)
+        assertTrue(rule.onAllNodesWithText("Navigate").fetchSemanticsNodes().isEmpty())
+        // O7: one press of a direction opens its world: right, Apps.
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
         // N6: the Apps world, the first app ringed; a push opens it.
         rule.onNodeWithTag(SLOT_APPS).assertExists()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
@@ -267,8 +269,7 @@ class OrbitHomeTest {
         rule.runOnIdle { addApps(state) }
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
-        repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
-        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
         val apps = state.launcherApps
         assertEquals(14, apps.size)
         rule.onNodeWithTag(appTag(apps[0])).assertIsSelected()
@@ -326,6 +327,41 @@ class OrbitHomeTest {
         assertEquals(Icons.Rounded.Battery0Bar, OrbitSkin.batteryIcon(5, false))
         assertEquals(Icons.Rounded.Battery3Bar, OrbitSkin.batteryIcon(50, false))
         assertEquals(Icons.Rounded.BatteryChargingFull, OrbitSkin.batteryIcon(5, true))
+    }
+
+    /** O7: the dial's four worlds, one press of a pad direction each; Back from a world is the dial on it. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theDialsDirectionsOpenTheirWorlds() {
+        show()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        fun back() { rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }; rule.waitForIdle() }
+        for ((k, slot) in listOf(Key.DirectionUp to net.prototux.aare.ui.car.myplay.SLOT_PHONE, Key.DirectionRight to net.prototux.aare.ui.car.myplay.SLOT_APPS,
+            Key.DirectionDown to net.prototux.aare.ui.car.myplay.SLOT_SETTINGS, Key.DirectionLeft to net.prototux.aare.ui.car.myplay.SLOT_CAR)) {
+            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+            engine.performKeyInput { pressKey(k) }
+            rule.onNodeWithTag(slot).assertExists()
+            back()
+            rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+            back()
+            rule.onNodeWithTag(SLOT_CHOOSER).assertDoesNotExist()
+        }
+        // No line under the dial any more.
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        assertTrue(rule.onAllNodesWithText("push: open", substring = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test fun theDialHoldsFourWorldsClockwiseFromTheTop() {
+        assertEquals(listOf(net.prototux.aare.ui.car.myplay.World.CALLS, net.prototux.aare.ui.car.myplay.World.APPS,
+            net.prototux.aare.ui.car.myplay.World.SETTINGS, net.prototux.aare.ui.car.myplay.World.CAR), OrbitSkin.dial)
+        // A world not on the dial (Music, from the home pad) goes straight home on Back.
+        val m = net.prototux.aare.ui.car.myplay.MyPlayScreenModel(dial = OrbitSkin.dial)
+        m.enter(net.prototux.aare.ui.car.myplay.World.MUSIC)
+        m.back()
+        assertEquals(net.prototux.aare.ui.car.myplay.Place.Home, m.place)
+        // The dial opens on its first world when the last one is not on it.
+        m.push()
+        assertEquals(net.prototux.aare.ui.car.myplay.Place.Chooser(net.prototux.aare.ui.car.myplay.World.CALLS), m.place)
     }
 
     /** O8: the speed is in the hub with the trip, and the limit is a sign with its number; no separate speed part. */
@@ -439,9 +475,9 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun bellNight() = picture("orbit-bell-1280x720-night", night = true, bell = 1)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun noticeListNight() = picture("orbit-notice-list-1280x720-night", night = true, bell = 2)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun noticeList901x543Day() = picture("orbit-notice-list-901x543-day", night = false, bell = 2)
-    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun settingsNight() = picture("orbit-settings-1280x720-night", night = true, world = 5)
-    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun settings901x543Day() = picture("orbit-settings-901x543-day", night = false, world = 5)
-    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun carNight() = picture("orbit-car-1280x720-night", night = true, world = 4)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun settingsNight() = picture("orbit-settings-1280x720-night", night = true, world = 2)
+    @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun settings901x543Day() = picture("orbit-settings-901x543-day", night = false, world = 2)
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun carNight() = picture("orbit-car-1280x720-night", night = true, world = 3)
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun appsNight() = picture("orbit-apps-1280x720-night", night = true, apps = true)
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun apps901x543Day() = picture("orbit-apps-901x543-day", night = false, apps = true)
 
@@ -450,6 +486,7 @@ class OrbitHomeTest {
         if (world >= 0) {
             val engine = rule.onNodeWithTag(ENGINE_TAG)
             engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            // O7: [world] turns round the dial from Calls (2 Settings, 3 Car), then a push.
             repeat(world) { engine.performKeyInput { pressKey(Key.Tab) } }
             engine.performKeyInput { pressKey(Key.DirectionCenter) }
             engine.performKeyInput { pressKey(Key.DirectionDown) }
@@ -479,8 +516,7 @@ class OrbitHomeTest {
         if (calls) {
             val engine = rule.onNodeWithTag(ENGINE_TAG)
             engine.performKeyInput { pressKey(Key.DirectionCenter) }
-            repeat(2) { engine.performKeyInput { pressKey(Key.Tab) } }
-            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            engine.performKeyInput { pressKey(Key.DirectionUp) }
             engine.performKeyInput { pressKey(Key.DirectionDown) }
             rule.mainClock.advanceTimeBy(1_000)
         }
@@ -495,9 +531,9 @@ class OrbitHomeTest {
                     upNext = listOf(UpNextItem(7, "Midnight Run", "Blue Harbor"), UpNextItem(8, "Glass Roads", "Kite & Co."), UpNextItem(9, "Slow Harbour", "Lumen")))
             }
             val engine = rule.onNodeWithTag(ENGINE_TAG)
-            engine.performKeyInput { pressKey(Key.DirectionCenter) }
-            engine.performKeyInput { pressKey(Key.Tab) }
-            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            // O7: Music is not on the dial; the car runtime's way in (as the home pad's would be).
+            rule.runOnIdle { state.engineOpenWorld = net.prototux.aare.ui.car.myplay.World.MUSIC.id }
+            rule.waitForIdle()
             if (library) {
                 rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.MUSIC_LIBRARY).performClick()
                 engine.performKeyInput { pressKey(Key.DirectionDown) }
@@ -517,8 +553,7 @@ class OrbitHomeTest {
             rule.runOnIdle { addApps(state) }
             val engine = rule.onNodeWithTag(ENGINE_TAG)
             engine.performKeyInput { pressKey(Key.DirectionCenter) }
-            repeat(3) { engine.performKeyInput { pressKey(Key.Tab) } }
-            engine.performKeyInput { pressKey(Key.DirectionCenter) }
+            engine.performKeyInput { pressKey(Key.DirectionRight) }
             engine.performKeyInput { pressKey(Key.Tab) }
             rule.mainClock.advanceTimeBy(1_000)
         }
