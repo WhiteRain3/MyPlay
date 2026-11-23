@@ -74,6 +74,13 @@ internal fun suPresent(): Boolean =
     listOf("/system/bin", "/system/xbin", "/sbin", "/su/bin", "/debug_ramdisk", "/system_ext/bin")
         .any { runCatching { java.io.File(it, "su").exists() }.getOrDefault(false) }
 
+/**
+ * Review PH-3: root was refused at the su prompt, or the owner chose Shizuku instead. Then the Shizuku
+ * steps show. For this run of the app only: the next start offers root again.
+ */
+internal var rootDeclined by androidx.compose.runtime.mutableStateOf(false)
+internal var rootRefusedAtPrompt by androidx.compose.runtime.mutableStateOf(false)
+
 /** Tests set this: a computer running them may have its own su. */
 internal var suPresentCheck: () -> Boolean = ::suPresent
 
@@ -85,7 +92,7 @@ internal fun shizukuStepNow(ctx: Context): ShizukuStep {
     val preV11 = running && runCatching { Shizuku.isPreV11() }.getOrDefault(false)
     return shizukuStep(installed, running, allowed,
         android12 = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S,
-        rootGranted = CaptureMethods.rootAvailable(ctx), suPresent = suPresentCheck(), preV11 = preV11)
+        rootGranted = CaptureMethods.rootAvailable(ctx), suPresent = suPresentCheck() && !rootDeclined, preV11 = preV11)
 }
 
 /** Re-reads the step on resume and when Shizuku answers the Allow question. */
@@ -100,7 +107,7 @@ internal fun rememberShizukuStep(): ShizukuStep {
         runCatching { Shizuku.addRequestPermissionResultListener(l) }
         onDispose { runCatching { Shizuku.removeRequestPermissionResultListener(l) } }
     }
-    return remember(resumed, answered, rootAnswered) { shizukuStepNow(ctx) }
+    return remember(resumed, answered, rootAnswered, rootDeclined) { shizukuStepNow(ctx) }
 }
 
 internal fun askShizuku() { runCatching { Shizuku.requestPermission(SHIZUKU_REQUEST) } }
@@ -151,12 +158,17 @@ fun ShizukuCard(step: ShizukuStep) {
             NextCard(warn = true, modifier = Modifier.testTag("next-shizuku-card")) {
                 NextRow(stringResource(R.string.next_shz_root_allow_title_label), icon = Icons.Outlined.Lock, disc = DiscTone.WARN,
                     note = RowNote.Help(stringResource(R.string.next_shz_root_allow_help)))
-                Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp)) {
+                Row(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     NextButton(stringResource(R.string.next_shz_root_allow_label), {
                         CaptureMethods.checkRoot { granted ->
-                            android.os.Handler(android.os.Looper.getMainLooper()).post { if (granted) net.prototux.aare.Settings(ctx).rootAudio = true }
+                            android.os.Handler(android.os.Looper.getMainLooper()).post {
+                                if (granted) net.prototux.aare.Settings(ctx).rootAudio = true
+                                else { rootRefusedAtPrompt = true; rootDeclined = true }
+                            }
                         }
-                    }, Modifier.fillMaxWidth(), small = true)
+                    }, Modifier.weight(1f), small = true)
+                    NextButton(stringResource(R.string.next_shz_use_shizuku_label), { rootDeclined = true }, Modifier.weight(1f),
+                        ButtonKind.GHOST, small = true)
                 }
             }
             return
@@ -177,7 +189,8 @@ fun ShizukuCard(step: ShizukuStep) {
     }
     NextCard(warn = true, modifier = Modifier.testTag("next-shizuku-card")) {
         NextRow(stringResource(R.string.next_apps_needs_root_label), icon = Icons.Outlined.Lock, disc = DiscTone.WARN,
-            note = RowNote.Help(stringResource(R.string.next_apps_needs_root_help)))
+            note = if (rootRefusedAtPrompt) RowNote.Warn(stringResource(R.string.next_shz_root_refused_help))
+                else RowNote.Help(stringResource(R.string.next_apps_needs_root_help)))
         Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 4.dp)) {
             SHORT_STEPS.forEachIndexed { i, (s, text) -> StepLine(i + 1, stringResource(text), s.ordinal.compareTo(step.ordinal)) }
         }

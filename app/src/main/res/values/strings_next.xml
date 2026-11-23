@@ -711,4 +711,6 @@
     <string name="next_prev_speed_off_label" translatable="false">Off</string>
     <string name="next_prev_speed_label" translatable="false">%1$d km/h</string>
     <string name="next_prev_cannot_help" translatable="false">Not pretended: outside temperature, car night mode, car data</string>
+    <string name="next_shz_use_shizuku_label" translatable="false">Use Shizuku</string>
+    <string name="next_shz_root_refused_help" translatable="false">Root was refused; Shizuku works too</string>
 </resources>
