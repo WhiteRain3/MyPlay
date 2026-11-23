@@ -167,3 +167,51 @@ Add one count step to the workflow and run it once. It needs no code change to t
 
 That gives the exact share of each road class with and without a limit. It confirms the size
 estimate and shows how much option A would add.
+
+## Option A as built (2026-11-23): the defaults and what they assume
+
+The builder (`speedlimit/`, `LithuaniaRules.defaultLimit`, `Settlements`) gives a road with no
+limit tagged, and none implied by its kind or zone, a default from the rules of the road. Every
+default is marked DEFAULTED ("probably"), and the car draws it as an estimate. A limit tagged on
+the road always wins.
+
+**The rule for every default: when in doubt, the lower one.** The file must never show a limit
+higher than the real one may be. A default that is too low only colours the speed too early; one
+that is too high tells the driver that a speed is fine when it is not.
+
+| Road, nothing tagged | Default | Why |
+|---|---|---|
+| Inside a settlement | 50 | KET's limit in settlements. |
+| Outside a settlement, paved | 90 | KET's limit outside settlements. |
+| Outside a settlement, unpaved (`surface`=gravel, dirt, compacted, ground and so on) | 70 | KET's limit on gravel. |
+| `highway=residential`, anywhere | 50 | A residential street is assumed to be inside the town signs, even where no settlement is mapped around it. |
+| Motorway or motorway link | 110 | The lowest a motorway has (its winter limit); 130 only when tagged. |
+| Expressway (`motorroad=yes`) outside settlements | 110 | The lowest an expressway has (winter); 120 only when tagged. |
+| Service roads (parking aisles, driveways) | none | No sensible default. |
+
+**What counts as a settlement:** a point inside
+- an area tagged `place=city/town/village/hamlet`, or `landuse=residential/commercial/retail/industrial`
+  (each area with its holes outside); or
+- within a radius of a settlement mapped only as a point (most Lithuanian villages are): 700 m round
+  a hamlet or village, 1.5 km round a town, 3 km round a city. The radii are generous on purpose:
+  inside means 50, the lower guess.
+
+The test is made at the middle of each piece of road (a piece is at most about 10 km and 32 points),
+so a road leaving a town changes from 50 to 90 at a piece boundary, not exactly at the sign.
+
+**Known limits of the estimate:**
+- At a town's edge the change from 50 to 90 can be a few hundred metres off the sign.
+- A village mapped neither as an area nor as a point gets 90 on its roads. The coverage table in the
+  build log, and car drives, will show how often this happens.
+- Industrial or retail areas beside a rural road give 50 where the sign may say 90. That is too low,
+  the safe direction.
+- Signed 70 or 80 stretches outside towns that are not tagged get 90. Only the map (a tag) can fix
+  these, so the estimate is drawn as one.
+
+The build prints a coverage table by road class (signed, from the road's kind or zone, from these
+defaults, none), and the release notes say that limits on untagged roads are estimates.
+
+**Two files (SL-5).** The file with these estimates is published as `speed-limits-<region>-v2.bin`
+(and its `-v2.json`), beside `speed-limits-<region>.bin` built as before (signed and kind limits
+only), so an app that does not draw estimates never downloads one. The format is the same (1);
+only the name differs. Apps that draw the "probably" sign fetch the `-v2` file.
