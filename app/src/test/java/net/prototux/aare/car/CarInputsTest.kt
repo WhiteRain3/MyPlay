@@ -151,6 +151,17 @@ class CarInputsTest {
         assertEquals(KeyEvent.KEYCODE_MENU, codes[ButtonTable.Control.MENU])
     }
 
+    @Test fun onlyAPreviewRuntimeCanPretendASpeed() {
+        val preview = CarRuntime(context, CoroutineScope(Dispatchers.Unconfined), settings, media, ownsMedia = false, primary = false)
+        preview.pretendSpeed(72.4f)
+        assertEquals(72, preview.ui.pretendSpeed?.kmh)
+        preview.pretendSpeed(null)
+        assertEquals(null, preview.ui.pretendSpeed?.kmh)
+        val session = CarRuntime(context, CoroutineScope(Dispatchers.Unconfined), settings, media, ownsMedia = false, primary = true)
+        session.pretendSpeed(50f)
+        assertEquals(null, session.ui.pretendSpeed)
+    }
+
     @Test fun aClosedHostRunsNoGestureLeftWaiting() {
         tap(KeyEvent.KEYCODE_DPAD_CENTER)
         host.closed = true

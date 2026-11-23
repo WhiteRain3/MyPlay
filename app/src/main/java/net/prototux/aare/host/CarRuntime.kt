@@ -129,6 +129,19 @@ class CarRuntime(
     val icons = IconLoader(context, this)
     private val main = Handler(Looper.getMainLooper())
 
+    init {
+        // MyPlay (Preview): only the phone's Preview (not the car session's runtime) can pretend a speed.
+        if (!primary) ui.pretendSpeed = net.prototux.aare.car.PretendSpeed(main)
+    }
+
+    /**
+     * MyPlay (Preview): pretend the car drives at [kmh] (null: stop), for the Preview's speed and its
+     * colours. A source of its own (never CarData) and never saved; does nothing in a car session.
+     */
+    fun pretendSpeed(kmh: Float?) {
+        ui.pretendSpeed?.set(kmh?.let { Math.round(it) })
+    }
+
     /** Hosted car app connections by entry id. */
     private val connections = mutableStateMapOf<String, CarAppConnection>()
     /** Apps that finished themselves: only an explicit open ([connection]) starts them again, not the composition. */
@@ -458,6 +471,7 @@ class CarRuntime(
 
     fun stop() {
         running.remove(this)
+        ui.pretendSpeed?.stop() // MyPlay (Preview)
         runCatching { context.unregisterReceiver(packageReceiver) }
         settings.unregisterListener(settingsListener)
         connections.values.forEach { it.release() }
