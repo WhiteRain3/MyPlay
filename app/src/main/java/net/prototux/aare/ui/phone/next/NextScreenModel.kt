@@ -28,6 +28,18 @@ fun routeForPart(part: CarPart?, design: DesignInUse): String? {
 fun lookInUse(all: Map<String, *>, saved: List<Look>): String? =
     (MyPlayLooks.BUILT_IN + saved).firstOrNull { MyPlayLooks.isCurrent(all, it) }?.name
 
+/**
+ * The look the screen is closest to, for the Screen row (design "Midnight (changed)"): the one in
+ * use exactly (changed = false), else the one that differs in at most [near] parts (changed = true),
+ * else null. Ties go to the first in the list, built-in looks first.
+ */
+fun lookNearest(all: Map<String, *>, saved: List<Look>, near: Int = 2): Pair<String, Boolean>? {
+    val looks = MyPlayLooks.BUILT_IN + saved
+    looks.firstOrNull { MyPlayLooks.isCurrent(all, it) }?.let { return it.name to false }
+    val best = looks.map { it to lookChanges(all, it).size }.filter { it.second in 1..near }.minByOrNull { it.second } ?: return null
+    return best.first.name to true
+}
+
 /** Map colours' value: a preset's key, "custom", or "none" when the filter changes nothing. */
 fun mapColoursKind(filter: MapColourFilter): String {
     val c = filter.clamped()

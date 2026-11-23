@@ -668,4 +668,5 @@
     <string name="next_syn_certificates_info" translatable="false">trust, security, PKCS#12, PEM, Google</string>
     <string name="next_syn_developer_info" translatable="false">DHU, adb, head unit server, debug</string>
     <string name="next_syn_resolution_info" translatable="false">quality, 1080p, 720p, video, sharp</string>
+    <string name="next_scr_look_changed_label" translatable="false">%1$s (changed)</string>
 </resources>

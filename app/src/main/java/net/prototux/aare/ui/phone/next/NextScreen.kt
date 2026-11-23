@@ -136,7 +136,7 @@ fun NextScreenRoot() {
     val language by rememberSetting(KEY_ENGINE_LANGUAGE) { myplayEngineLanguage }
     val design = designInUse(preview, language)
     // Looks, colours and wallpaper depend on many keys: any change re-reads them.
-    val look by rememberSetting { lookInUse((prefs.all as Map<String, *>?).orEmpty(), myplayLooks) }
+    val look by rememberSetting { lookNearest((prefs.all as Map<String, *>?).orEmpty(), myplayLooks) }
     val theme by rememberSetting("style_theme", "car_style") { carThemeId }
     val ownColours by rememberSetting("myplay_look_colours") { myplayLookColours.isNotBlank() }
     val wallpaper by rememberSetting("wallpaper") { wallpaper }
@@ -158,7 +158,12 @@ fun NextScreenRoot() {
         item {
             NextGroup(listOf(
                 { NextValueRow(stringResource(R.string.next_screen_design_label), designWord(design), Icons.Outlined.Layers) { nav.open("screen/design") } },
-                { NextValueRow(stringResource(R.string.next_screen_looks_label), look ?: stringResource(R.string.next_scr_not_saved_label), Icons.Outlined.AutoAwesome) { nav.open("screen/looks") } },
+                {
+                    NextValueRow(stringResource(R.string.next_screen_looks_label),
+                        look?.let { (name, changed) -> if (changed) stringResource(R.string.next_scr_look_changed_label, name) else name }
+                            ?: stringResource(R.string.next_scr_not_saved_label),
+                        Icons.Outlined.AutoAwesome, changed = look?.second == true) { nav.open("screen/looks") }
+                },
                 {
                     NextValueRow(
                         stringResource(R.string.next_screen_colours_label),

@@ -57,6 +57,9 @@ class NextScreenTest {
         assertEquals("MyPlay", lookInUse(emptyMap<String, Any>(), emptyList()))
         assertEquals("Midnight", lookInUse(MyPlayLooks.BUILT_IN[1].values, emptyList()))
         assertEquals(null, lookInUse(mapOf("style_accent" to "pink"), emptyList()))
+        // "Midnight (changed)": one part away from a look names it, with the changed mark.
+        assertEquals("Midnight" to false, lookNearest(MyPlayLooks.BUILT_IN[1].values, emptyList()))
+        assertEquals("Midnight" to true, lookNearest(MyPlayLooks.BUILT_IN[1].values + ("style_accent" to "pink"), emptyList()))
         assertEquals("none", mapColoursKind(MapColourFilter()))
         assertEquals("muted", mapColoursKind(MapColourFilter.PRESETS.getValue("muted")))
         assertEquals("custom", mapColoursKind(MapColourFilter(hueShift = 33)))
