@@ -198,9 +198,9 @@ object Pieces {
         val cls = LithuaniaRules.roadClass(way.tags["highway"]) ?: return emptyList()
         if (rules.isEmpty()) {
             if (settlements == null) return emptyList()
-            // DEFAULTED: the car draws it as an estimate (a dashed sign), and leaves it out when the
-            // owner's "Fill in standard limits" is off.
-            val flags = SpeedLimitFormat.DEFAULTED or LithuaniaRules.oneway(way.tags)
+            // GUESSED (with DEFAULTED, for readers that know only that bit): an estimate, unlike the
+            // legally defined zone and kind defaults; the car draws it dashed and can leave it out.
+            val flags = SpeedLimitFormat.DEFAULTED or SpeedLimitFormat.GUESSED or LithuaniaRules.oneway(way.tags)
             return chunks(way).mapNotNull { (la, lo) ->
                 val mid = la.size / 2
                 val limit = LithuaniaRules.defaultLimit(way.tags, settlements.contains(la[mid], lo[mid])) ?: return@mapNotNull null

@@ -18,6 +18,8 @@ class BuildTest {
         // A motorway with no tag: 110 (the lower guess: its winter limit), one way.
         assertEquals(listOf(LithuaniaRules.Rule(110, 0, SpeedLimitFormat.DEFAULTED or SpeedLimitFormat.FORWARD_ONLY)), rules("highway" to "motorway"))
         assertEquals(listOf(LithuaniaRules.Rule(20, 0, SpeedLimitFormat.DEFAULTED)), rules("highway" to "living_street"))
+        // Zone and kind defaults are legally defined: DEFAULTED, never GUESSED.
+        assertEquals(0, rules("highway" to "secondary", "maxspeed:type" to "LT:rural").single().flags and SpeedLimitFormat.GUESSED)
         // Unknown: no guess.
         assertTrue(rules("highway" to "residential").isEmpty())
         assertTrue(rules("highway" to "primary", "maxspeed" to "signals").isEmpty())
@@ -63,13 +65,13 @@ class BuildTest {
         val outside = Opl.Way(mapOf("highway" to "tertiary"), intArrayOf(5402000, 5403000), intArrayOf(2400500, 2400500))
         assertEquals(listOf(50), Pieces.of(inside, town).map { it.limit })
         assertEquals(listOf(90), Pieces.of(outside, town).map { it.limit })
-        assertTrue(Pieces.of(inside, town).all { it.flags and SpeedLimitFormat.DEFAULTED != 0 })
+        assertTrue(Pieces.of(inside, town).all { it.flags and SpeedLimitFormat.DEFAULTED != 0 && it.flags and SpeedLimitFormat.GUESSED != 0 })
         // Without the areas (the old build), no guess.
         assertTrue(Pieces.of(outside, null).isEmpty())
         // A signed limit always wins.
         val signed = Opl.Way(mapOf("highway" to "tertiary", "maxspeed" to "70"), intArrayOf(5400200, 5400800), intArrayOf(2400500, 2400500))
         assertEquals(listOf(70), Pieces.of(signed, town).map { it.limit })
-        assertEquals(0, Pieces.of(signed, town).single().flags and SpeedLimitFormat.DEFAULTED)
+        assertEquals(0, Pieces.of(signed, town).single().flags and (SpeedLimitFormat.DEFAULTED or SpeedLimitFormat.GUESSED))
         // Service roads stay out.
         assertTrue(Pieces.of(Opl.Way(mapOf("highway" to "service"), intArrayOf(5400200, 5400800), intArrayOf(2400500, 2400500)), town).isEmpty())
     }
