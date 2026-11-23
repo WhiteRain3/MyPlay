@@ -286,6 +286,16 @@ interface MyPlaySkin {
     @Composable fun Status(modifier: Modifier)
 
     /**
+     * Look C (35, the owner's option C): on the home the status (the clock, the outside temperature
+     * and ice, the battery) is drawn with the song in its corner ([Song]), and with no song by
+     * [NoSong]; the corner across the top is left to the map. Inside a world, [Status] as before.
+     */
+    val statusInSong: Boolean get() = false
+
+    /** Look C (35): the song's corner with nothing playing, the status alone ([statusInSong] only). */
+    @Composable fun NoSong(modifier: Modifier) = Unit
+
+    /**
      * N3: whether this skin shows the speed (under the status). Only while it is drawn does the
      * engine read a speed at all; the phone's location is used only then (car/MyPlaySpeed.kt).
      */

@@ -50,6 +50,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AcUnit
@@ -130,6 +131,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -728,20 +730,22 @@ object OrbitSkin : MyPlaySkin {
         }
     }
 
+    override val statusInSong get() = true
+
+    /**
+     * Look C (35, the owner's option C): the song's corner carries the status. The art in its ring,
+     * the time as a badge on the ring's top, the outside temperature (and the ice sign) and the
+     * battery (only when low or charging) as pills at its left side. The song's name is not in the
+     * corner any more (the sheet draws none); the music panel and the Music world still show it.
+     */
     @Composable
     override fun Song(song: SongSlot, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            Row(Modifier.carPart(CarPart.OrbitSong), verticalAlignment = Alignment.CenterVertically) {
-                // AR-1: the text takes what room is left after the art's circle (a long title used to
-                // squeeze the circle into an oval in the 40 % wide corner).
-                Column(Modifier.weight(1f, fill = false).widthIn(max = 392.dp), horizontalAlignment = Alignment.End) {
-                    Text(song.title, style = Orbit.Type.name.floating(g.text), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
-                    Text(song.subtitle, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
-                }
-                Spacer(Modifier.width(10.dp))
-                val musicColour = Orbit.accent(World.MUSIC, LocalSkinTokens.current.night)
-                SongRing(song, musicColour, g.track, Modifier.coversMap().testTag(SONG_RING_TAG).orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
+            val musicColour = Orbit.accent(World.MUSIC, LocalSkinTokens.current.night)
+            StatusCorner(badge = true, Modifier.carPart(CarPart.OrbitSong)) {
+                SongRing(song, musicColour, g.track, Modifier.testTag(SONG_RING_TAG).orbitFocus(LocalStopRinged.current, musicColour, g.halo)
+                    .semantics { contentDescription = listOf(song.title, song.subtitle).filter { it.isNotBlank() }.joinToString(", ") }) {
                     val art = song.art
                     if (art != null) {
                         val image = remember(art) { art.asImageBitmap() }
@@ -754,6 +758,130 @@ object OrbitSkin : MyPlaySkin {
                     }
                 }
             }
+        }
+    }
+
+    /** Look C (35, 35-status-c-nomusic): nothing playing: the empty ring with the time in its middle, the pills beside it. */
+    @Composable
+    override fun NoSong(modifier: Modifier) = Box(modifier) {
+        Scaled {
+            val g = glass()
+            StatusCorner(badge = false, Modifier) {
+                OrbitRing(null, SONG_RING, 7.dp, g.track, g.track, Modifier.testTag(NO_SONG_TAG)) {
+                    OrbitDisc(126.dp, LocalSkinTokens.current.night) {
+                        ClockText(TextStyle(fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 40.sp), Alignment.Center)
+                    }
+                }
+            }
+        }
+    }
+
+    /** The song's ring, as the sheet. */
+    private val SONG_RING = 152.dp
+    /**
+     * Look C (35): the status corner's fixed size: the ring, the badge over its top, the pills' room
+     * at its left. SC-1: 208 wide, no wider than the clock column it replaced reached in (the free area
+     * is centred, so every dp here is taken from the left side too); a wide pill may reach a little
+     * past its left edge, over the map.
+     */
+    private val CORNER_W = 208.dp
+    private val CORNER_H = SONG_RING + 26.dp
+    /** Where the pills' middles are: a little left of the ring's edge, above and below its middle (the sheet). */
+    private val PILL_X = CORNER_W - SONG_RING - 6.dp
+    private val TEMP_Y = 26.dp + SONG_RING / 2 - 34.dp
+    private val BATTERY_Y = 26.dp + SONG_RING / 2 + 40.dp
+    private val PILL_H = 42.dp
+
+    /**
+     * Look C (35): the corner's parts. Always [CORNER_W] by [CORNER_H] whatever shows (the badge,
+     * a pill or none), so the map's free area never moves when the battery or the temperature comes
+     * or goes; that whole box is what covers the map.
+     */
+    @Composable
+    private fun StatusCorner(badge: Boolean, modifier: Modifier, ring: @Composable () -> Unit) {
+        val g = glass()
+        val night = LocalSkinTokens.current.night
+        Box(modifier.size(CORNER_W, CORNER_H).coversMap().testTag(STATUS_CORNER_TAG)) {
+            Box(Modifier.align(Alignment.BottomEnd)) { ring() }
+            if (badge) {
+                Box(Modifier.align(Alignment.TopEnd).width(SONG_RING), contentAlignment = Alignment.TopCenter) {
+                    StatusPill(52.dp, Modifier.testTag(CLOCK_BADGE_TAG)) {
+                        ClockText(TextStyle(fontSize = 34.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 34.sp), Alignment.Center)
+                    }
+                }
+            }
+            // The temperature and the ice sign, at the ring's left. DW-1: its place is kept (empty when warm).
+            val outside = LocalOutsideTemp.current
+            val ice = LocalRoadIce.current
+            PillPlace(TEMP_Y, Modifier.testTag(ICE_SLOT_TAG)) {
+                if (ice || outside.degrees != null) {
+                    val colour = if (ice) Orbit.warning(night) else g.text
+                    StatusPill(PILL_H) {
+                        if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(22.dp).testTag(ICE_TAG), tint = colour)
+                        outside.degrees?.let {
+                            Text("$it°", style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"),
+                                maxLines = 1, modifier = Modifier.testTag(OUTSIDE_TEMP_TAG))
+                        }
+                    }
+                }
+            }
+            // The battery, only when low (red) or charging. N5-3: never when the phone does not tell it.
+            val battery = rememberPhoneStatus()?.takeIf { it.batteryKnown && batteryShown(it.battery, it.charging) }
+            battery?.let { b ->
+                val colour = if (batteryLow(b.battery, b.charging)) Orbit.warning(night) else Orbit.accent(World.NAVIGATE, night)
+                PillPlace(BATTERY_Y) {
+                    StatusPill(PILL_H, Modifier.testTag(BATTERY_TAG).carPart(CarPart.Status)) {
+                        Icon(batteryIcon(b.battery, b.charging), null, Modifier.size(24.dp), tint = colour)
+                        Text("${b.battery}%", style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"),
+                            maxLines = 1, modifier = Modifier.testTag(BATTERY_NUMBER_TAG))
+                    }
+                }
+            }
+        }
+    }
+
+    /** A pill's place: centred on ([PILL_X], [y]); a wider pill grows both ways. */
+    @Composable
+    private fun BoxScope.PillPlace(y: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+        Box(
+            modifier.align(Alignment.TopStart).offset(y = y - PILL_H / 2).width(PILL_X * 2).height(PILL_H)
+                .wrapContentWidth(Alignment.CenterHorizontally, unbounded = true),
+            contentAlignment = Alignment.Center,
+        ) { content() }
+    }
+
+    /** Look C (35): a small dark pill with the glass's edge, its parts in a row. */
+    @Composable
+    private fun StatusPill(height: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier, content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+        val g = glass()
+        val shape = RoundedCornerShape(50)
+        Row(
+            modifier.height(height).clip(shape).background(g.glass.copy(alpha = 1f)).border(2.dp, g.edge, shape).padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp), content = content,
+        )
+    }
+
+    /**
+     * The time, ticking on the minute; it keeps the width of "88:88" (figures of one width), so the
+     * badge never changes size at 9:59 -> 10:00.
+     */
+    @Composable
+    private fun ClockText(style: TextStyle, align: Alignment) {
+        val g = glass()
+        val context = LocalContext.current
+        var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+        LaunchedEffect(Unit) {
+            while (true) {
+                delay(1_000 - now % 1_000 + 5)
+                now = System.currentTimeMillis()
+            }
+        }
+        val time = DateFormat.format(if (DateFormat.is24HourFormat(context)) "H:mm" else "h:mm", now).toString()
+        val clockStyle = style.copy(color = g.text, fontFeatureSettings = "tnum")
+        val measurer = rememberTextMeasurer()
+        val width = remember(measurer, clockStyle) { measurer.measure("88:88", clockStyle).size.width }
+        Box(Modifier.width(with(LocalDensity.current) { width.toDp() }), contentAlignment = align) {
+            Text(time, style = clockStyle, maxLines = 1, modifier = Modifier.carPart(CarPart.Clock).testTag(CLOCK_TAG))
         }
     }
 
@@ -866,6 +994,9 @@ object OrbitSkin : MyPlaySkin {
     const val BATTERY_LOW = 20
 
     fun batteryLow(level: Int, charging: Boolean) = !charging && level <= BATTERY_LOW
+
+    /** Look C (35): the corner shows the battery only when it matters: low, or charging. */
+    fun batteryShown(level: Int, charging: Boolean) = charging || level <= BATTERY_LOW
 
     /** The battery icon with as many bars as the level (0 to 6, full at 95 % and up). */
     fun batteryIcon(level: Int, charging: Boolean): ImageVector = when {
@@ -1527,70 +1658,73 @@ object OrbitSkin : MyPlaySkin {
         }
     }
 
-    /** The honeycomb's rows (the sheet: 3, 4, 3), for [appsPerPage] apps. */
-    private val ROWS = listOf(3, 4, 3)
+    /** Look C (33): eight apps round the ring, a page at a time. */
+    const val APPS_ON_RING = 8
 
-    override val appsPerPage get() = ROWS.sum()
+    override val appsPerPage get() = APPS_ON_RING
 
+    /** Look C (33): the ring's disc, and the circle the apps sit on (the sheet's 1280x720). */
+    private val APPS_DISC = 600.dp
+    private val APPS_RADIUS = 220.dp
+    private val APP_SIZE = 96.dp
+    private val APP_RINGED = 120.dp
+
+    /** Where app [index] of a page sits on the ring, in degrees (0 = right, clockwise; the first at the top). */
+    fun appAngleDeg(index: Int): Float = -90f + 360f / APPS_ON_RING * index
+
+    /**
+     * Look C (33-apps-ring): the page's apps round a glass disc in the middle of the map, clockwise
+     * from the top, as the knob goes; the ringed one larger in the Apps colour's ring, its name in
+     * the middle with "Push to open", and the pages as dots under it. The map stays clear round it.
+     */
     @Composable
     override fun AppsWorld(apps: List<CarAppEntry>, ringed: Int, page: Int, pages: Int, tile: (Int) -> Modifier, modifier: Modifier) {
         val night = LocalSkinTokens.current.night
         val g = Orbit.glass(night)
         val accent = Orbit.accent(World.APPS, night)
-        // The map stays behind, dimmed, as the sheet draws it.
-        Box(modifier.background(g.halo.copy(alpha = 0.7f)).orbitRipple(0.5f, 0.5f)) {
+        Box(modifier.orbitRipple(0.5f, 0.5f), contentAlignment = Alignment.Center) {
             Scaled {
-                Column(Modifier.padding(start = 60.dp, top = 40.dp)) {
-                    Text(worldName(World.APPS), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
-                    Text(stringResource(R.string.myplay_apps_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
-                }
-            }
-            Box(Modifier.align(Alignment.Center)) {
-                Scaled {
+                Box(Modifier.requiredSize(APPS_DISC).testTag(APPS_RING_TAG), contentAlignment = Alignment.Center) {
+                    OrbitDisc(APPS_DISC, night)
                     if (apps.isEmpty()) {
                         Text(stringResource(R.string.myplay_apps_none), style = Orbit.Type.secondary.copy(color = g.secondary))
-                        return@Scaled
+                        return@Box
                     }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        var i = 0
-                        for (size in ROWS) {
-                            if (i >= apps.size) break
-                            Row(horizontalArrangement = Arrangement.spacedBy(44.dp)) {
-                                repeat(size) {
-                                    val index = i
-                                    apps.getOrNull(index)?.let { app -> AppDisc(app, index == ringed, accent, night, tile(index)) }
-                                    i++
+                    apps.take(APPS_ON_RING).forEachIndexed { i, app ->
+                        val a = Math.toRadians(appAngleDeg(i).toDouble())
+                        val on = i == ringed
+                        Box(
+                            Modifier.offset(x = APPS_RADIUS * cos(a).toFloat(), y = APPS_RADIUS * sin(a).toFloat()),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            OrbitDisc(
+                                if (on) APP_RINGED else APP_SIZE, night,
+                                tile(i).orbitFocus(on, accent, g.halo).graphicsLayer { alpha = if (on) 1f else 0.85f }.semantics { contentDescription = app.label },
+                                edge = if (on) accent else null, edgeWidth = 3.dp,
+                            ) { AppIcon(app, if (on) 72 else 58) }
+                        }
+                    }
+                    Column(Modifier.width(280.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        apps.getOrNull(ringed)?.let { app ->
+                            Text(app.label, style = TextStyle(fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, color = g.text),
+                                maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.testTag(APPS_RING_NAME_TAG))
+                        }
+                        Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Box(Modifier.size(22.dp).border(2.5.dp, g.secondary, CircleShape), contentAlignment = Alignment.Center) {
+                                Box(Modifier.size(7.dp).clip(CircleShape).background(g.secondary))
+                            }
+                            Text(stringResource(R.string.myplay_apps_ring_push), style = TextStyle(fontSize = 20.sp, color = g.secondary), maxLines = 1)
+                        }
+                        if (pages > 1) {
+                            Row(Modifier.padding(top = 18.dp).testTag(APPS_PAGES_TAG), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                repeat(pages) { p ->
+                                    Box(Modifier.height(12.dp).width(if (p == page) 30.dp else 12.dp).clip(CircleShape).background(if (p == page) accent else g.track))
                                 }
                             }
                         }
                     }
                 }
             }
-            if (pages > 1) {
-                Row(Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    repeat(pages) { p ->
-                        Box(Modifier.size(12.dp).clip(CircleShape).background(if (p == page) accent else g.edge))
-                    }
-                }
-            }
-        }
-    }
-
-    /** One app in the honeycomb: a disc with its icon, its name under it; the ringed one lit in the Apps colour. */
-    @Composable
-    private fun AppDisc(app: CarAppEntry, on: Boolean, accent: Color, night: Boolean, modifier: Modifier) {
-        val g = Orbit.glass(night)
-        Column(modifier.width(160.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            OrbitDisc(
-                128.dp, night, Modifier.orbitFocus(on, accent, g.halo),
-                fill = if (on) accent.copy(alpha = 0.22f).compositeOver(g.glass) else null,
-                edge = if (on) accent else null, edgeWidth = 3.dp,
-            ) { AppIcon(app, 64) }
-            Text(
-                app.label, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center,
-                style = TextStyle(fontSize = 25.sp, fontWeight = if (on) androidx.compose.ui.text.font.FontWeight.ExtraBold else androidx.compose.ui.text.font.FontWeight.SemiBold).floating(if (on) g.text else g.secondary),
-                modifier = Modifier.padding(top = 6.dp),
-            )
         }
     }
 
@@ -1612,6 +1746,16 @@ object OrbitSkin : MyPlaySkin {
     const val SONG_ART_FALLBACK_TAG = "orbit_song_art_fallback"
     const val TRIP_RING_TAG = "orbit_trip_ring"
     const val SONG_RING_TAG = "orbit_song_ring"
+    /** Look C (33): the Apps world's ring, the ringed app's name in its middle, and its page dots. */
+    const val APPS_RING_TAG = "orbit_apps_ring"
+    const val APPS_RING_NAME_TAG = "orbit_apps_ring_name"
+    const val APPS_PAGES_TAG = "orbit_apps_pages"
+    /** Look C (35): the song's corner with the status (fixed size; what covers the map). */
+    const val STATUS_CORNER_TAG = "orbit_status_corner"
+    /** Look C (35): the time's badge on the song's ring. */
+    const val CLOCK_BADGE_TAG = "orbit_clock_badge"
+    /** Look C (35): the empty ring with nothing playing. */
+    const val NO_SONG_TAG = "orbit_no_song"
 
     /** A ring's progress for accessibility (and the tests); nothing when it is not known. */
     private fun Modifier.progressSemantics(p: Float?): Modifier =

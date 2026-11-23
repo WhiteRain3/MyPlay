@@ -824,7 +824,8 @@ private fun EngineShellThemed(
                 skin.Backdrop(if (hand != null) BackdropParts(turn = true, song = true)
                     else BackdropParts(turn = turnShown, song = songShown,
                         turnBox = boxes[STOP_TURN].takeIf { turnShown }, songBox = boxes[STOP_SONG].takeIf { songShown },
-                        statusBox = statusBox, soft = state.orbitShadeSoft),
+                        // Look C (35): with the status in the song's corner, the song's plate is the status's too.
+                        statusBox = statusBox.takeIf { !(skin.statusInSong && songShown && hand == null) }, soft = state.orbitShadeSoft),
                     Modifier.fillMaxSize())
                 @Composable
                 fun Modifier.slot(slot: Slot): Modifier = if (skin.coversMap(slot)) coversMap() else this
@@ -849,14 +850,17 @@ private fun EngineShellThemed(
                         slots.trip?.let { skin.Trip(it, Modifier.slot(Slot.TURN).testTag(SLOT_TRIP)) }
                     }
                 } else if (home) slots.turn?.let { ringed(STOP_TURN) { skin.Turn(it, edge.align(Alignment.TopStart).slot(Slot.TURN).stop(STOP_TURN)) } }
-                Column(edge.align(Alignment.TopEnd).onGloballyPositioned { c -> c.boundsInRoot().let { statusBox = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } },
+                // Drive warnings: the skin's ice sign beside the clock.
+                val carNow by net.prototux.aare.car.CarData.state.collectAsState()
+                val outside = OutsideTemp.of(state.driveWarnings && !sources.picture,
+                    carNow.has(aap_protobuf.service.sensorsource.message.SensorTypeOuterClass.SensorType.SENSOR_ENVIRONMENT_DATA),
+                    carNow.environment?.value?.temperatureC)
+                val roadIce = state.driveWarnings && state.iceRisk
+                // Look C (35): on the home the status is in the song's corner; the top corner is the map's.
+                val statusInSong = skin.statusInSong && home && hand == null
+                Column(edge.align(Alignment.TopEnd).onGloballyPositioned { c -> if (!statusInSong) c.boundsInRoot().let { statusBox = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } },
                     horizontalAlignment = Alignment.End) {
-                    // Drive warnings: the skin's ice sign beside the clock.
-                    val carNow by net.prototux.aare.car.CarData.state.collectAsState()
-                    val outside = OutsideTemp.of(state.driveWarnings && !sources.picture,
-                        carNow.has(aap_protobuf.service.sensorsource.message.SensorTypeOuterClass.SensorType.SENSOR_ENVIRONMENT_DATA),
-                        carNow.environment?.value?.temperatureC)
-                    CompositionLocalProvider(LocalRoadIce provides (state.driveWarnings && state.iceRisk), LocalOutsideTemp provides outside) {
+                    if (!statusInSong) CompositionLocalProvider(LocalRoadIce provides roadIce, LocalOutsideTemp provides outside) {
                         skin.Status(Modifier.slot(Slot.STATUS).testTag(SLOT_STATUS))
                     }
                     if (STOP_BELL in actionsOf) {
@@ -930,6 +934,14 @@ private fun EngineShellThemed(
                         Modifier.align(Alignment.BottomCenter).padding(bottom = with(density) { place.bottom.toDp() })
                             .widthIn(max = with(density) { place.maxWidth.toDp() }).slot(Slot.SONG).testTag(SLOT_MAP_ALERT))
                 }
+                if (statusInSong && slots.song == null) {
+                    // Look C (35): nothing playing: the song's corner holds the status alone.
+                    CompositionLocalProvider(LocalRoadIce provides roadIce, LocalOutsideTemp provides outside) {
+                        skin.NoSong(edge.align(Alignment.BottomEnd)
+                            .onGloballyPositioned { c -> c.boundsInRoot().let { statusBox = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                            .slot(Slot.STATUS).testTag(SLOT_STATUS))
+                    }
+                }
                 if (home && hand == null) slots.song?.let { song ->
                     // O1: the music panel opens above the song, in the same corner.
                     Column(edge.align(Alignment.BottomEnd), horizontalAlignment = Alignment.End) {
@@ -943,7 +955,9 @@ private fun EngineShellThemed(
                                     .testTag(id)
                             }, Modifier.slot(Slot.SONG).testTag(SLOT_MUSIC_PANEL))
                         }
-                        ringed(STOP_SONG) { skin.Song(song, Modifier.slot(Slot.SONG).stop(STOP_SONG)) }
+                        CompositionLocalProvider(LocalRoadIce provides roadIce, LocalOutsideTemp provides outside) {
+                            ringed(STOP_SONG) { skin.Song(song, Modifier.slot(Slot.SONG).stop(STOP_SONG)) }
+                        }
                     }
                 }
                 when (val p = model.place) {
