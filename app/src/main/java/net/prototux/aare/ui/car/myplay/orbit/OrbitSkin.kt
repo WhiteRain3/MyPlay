@@ -443,6 +443,12 @@ object OrbitSkin : MyPlaySkin {
                             val colour = if (speed?.over == true) Orbit.caution(night) else g.text
                             Text(speed?.kmh?.toString() ?: "–", style = TextStyle(fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"), maxLines = 1)
                             Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, lineHeight = 20.sp, color = g.secondary), maxLines = 1)
+                            // SP-1: where the speed comes from, in the picture and with the Developer check.
+                            if (net.prototux.aare.ui.car.myplay.LocalSpeedSourceMark.current && speed != null) {
+                                Text(stringResource(if (speed.from == SpeedReading.From.CAR) R.string.myplay_speed_from_car else R.string.myplay_speed_from_gps), maxLines = 1,
+                                    style = TextStyle(fontSize = 12.sp, lineHeight = 14.sp, fontWeight = FontWeight.Bold, color = g.secondary),
+                                    modifier = Modifier.testTag(SPEED_SOURCE_TAG))
+                            }
                             // O8-1 (the Reviewer: "arrival · time left" got too small to read at a glance):
                             // one value only, the time left (else the distance, else the arrival), larger.
                             (trip?.timeLeft ?: trip?.distanceLeft ?: trip?.arrival)?.let {
@@ -498,6 +504,7 @@ object OrbitSkin : MyPlaySkin {
     val LIMIT_FILL_NIGHT = Color(0xFFD9D9D9)
 
     const val HUB_SPEED_TAG = "orbit_hub_speed"
+    const val SPEED_SOURCE_TAG = "orbit_speed_source"
     const val LIMIT_SIGN_TAG = "orbit_limit_sign"
 
     @Composable

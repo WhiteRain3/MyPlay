@@ -93,10 +93,12 @@ class MyPlaySpeedTest {
         feed.update(inputs.copy(car = carAt(10f, now)))
         assertFalse(phone.on)
         assertEquals(SpeedReading(36, SpeedReading.From.CAR), feed.reading)
-        // The car stops sending: the phone again.
+        // The car stops sending: the phone is listened to again at once, but SP-1 the car's last
+        // speed still shows for CAR_HOLD_MS (many cars send it only on change).
         now += SpeedRules.CAR_FRESH_MS + 1
         feed.update(inputs.copy(car = carAt(10f, now - SpeedRules.CAR_FRESH_MS - 1)))
         assertTrue(phone.on)
+        assertEquals(SpeedReading.From.CAR, feed.reading?.from)
 
         // The car disconnects, and the speed leaves the screen.
         feed.update(inputs.copy(car = CarData.State()))
@@ -288,5 +290,43 @@ class MyPlaySpeedTest {
         val none = SpeedFeed(FakeFixes()) { now }
         none.update(inputs)
         assertNull(none.why)
+    }
+
+    /** SP-1: the car's speed is held for CAR_HOLD_MS after it came, then the phone's; each switch is logged. */
+    @org.junit.Test fun theCarsSpeedIsHeldAndSwitchesAreLogged() {
+        var now = 1_000_000L
+        val lines = mutableListOf<String>()
+        val phone = object : PhoneFixes {
+            var cb: ((PhoneFix) -> Unit)? = null
+            override fun start(onFix: (PhoneFix) -> Unit): Boolean { cb = onFix; return true }
+            override fun stop() { cb = null }
+        }
+        val feed = SpeedFeed(phone, clock = { now }, log = { lines += it })
+        fun car(mps: Float, at: Long) = CarData.State(connected = true, speed = CarData.Timed(CarData.Speed(mps, null, null), at))
+        val base = SpeedFeed.Inputs(SpeedSourceMode.AUTO, shown = true, mapsRunning = true, car = car(10f, now))
+        feed.update(base)
+        assertEquals(SpeedReading.From.CAR, feed.reading?.from)
+        // 8 s with no new car speed (a steady speed): still the car's.
+        now += 8_000
+        phone.cb?.invoke(PhoneFix(20f, 0.0, 0.0, null, 5f, now))
+        feed.update(base)
+        assertEquals(SpeedReading(36, SpeedReading.From.CAR), feed.reading)
+        // Past the hold: the phone's.
+        now += SpeedRules.CAR_HOLD_MS
+        phone.cb?.invoke(PhoneFix(20f, 0.0, 0.0, null, 5f, now))
+        feed.update(base)
+        assertEquals(SpeedReading.From.PHONE, feed.reading?.from)
+        // The car again.
+        feed.update(base.copy(car = car(15f, now)))
+        assertEquals(SpeedReading(54, SpeedReading.From.CAR), feed.reading)
+        assertEquals(2, feed.switches)
+        assertEquals(listOf("speed source: car to phone (switch 1)", "speed source: phone to car (switch 2)"), lines)
+    }
+
+    /** SP-1: GPS speeds close in time are eased, a far one is taken as it is. */
+    @org.junit.Test fun phoneSpeedIsSmoothed() {
+        assertEquals(16f, SpeedRules.smoothed(10f, 0L, 20f, 1_000L), 0.01f)
+        assertEquals(20f, SpeedRules.smoothed(10f, 0L, 20f, 10_000L), 0.01f)
+        assertEquals(20f, SpeedRules.smoothed(null, null, 20f, 1_000L), 0.01f)
     }
 }

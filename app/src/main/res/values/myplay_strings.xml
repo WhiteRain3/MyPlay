@@ -130,4 +130,7 @@
     <!-- LP-1: the limit sign's pulse on its own switch -->
     <string name="myplay_setting_limit_pulse" translatable="false">Limit sign pulse</string>
     <string name="phone_limit_pulse_hint" translatable="false">The speed limit sign grows a little once when the limit changes. No sound.</string>
+    <!-- SP-1: where the speed comes from (the phone's picture and the Developer check only). -->
+    <string name="myplay_speed_from_car" translatable="false">CAR</string>
+    <string name="myplay_speed_from_gps" translatable="false">GPS</string>
 </resources>
