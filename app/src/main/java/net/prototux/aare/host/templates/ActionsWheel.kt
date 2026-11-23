@@ -56,8 +56,9 @@ import net.prototux.aare.R
  * full-screen map under ORBIT, Waze's action strip and map buttons are not drawn; they are one
  * press away in a wheel. The rule (the dispatcher, 2026-11-23; the box never sends holds):
  * - the pad's centre (the knob's push) opens the wheel;
- * - Back opens the wheel; Back with the wheel open closes it;
- * - a second Back within [SECOND_BACK_MS] of closing it goes to MyPlay's home (K3: Back never traps);
+ * - Back opens the wheel; Back twice quickly (within [SECOND_BACK_MS], the wheel untouched) goes to
+ *   MyPlay's home (K3: Back never traps), as "Back twice for home" says;
+ * - a later Back with the wheel open closes it; another within [SECOND_BACK_MS] of that goes home too;
  * - "MyPlay home" is also the wheel's last row.
  * A push runs the ringed action and closes the wheel; "Move map" (Action.PAN) starts moving the map.
  *

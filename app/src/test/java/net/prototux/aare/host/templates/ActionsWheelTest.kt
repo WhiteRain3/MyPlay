@@ -131,26 +131,41 @@ class ActionsWheelTest {
         assertEquals(0, homes)
     }
 
-    /** K3: Back opens the wheel, closes it, and a second Back within 2 s goes home; later, it opens it again. */
+    /** K3: Back twice quickly goes home; a later Back with the wheel open closes it, and one more soon after goes home. */
     @Test fun backNeverTraps() {
         show(wheel = true)
         back()
         rule.onNodeWithTag(ACTIONS_WHEEL_TAG).assertExists()
-        back()
-        rule.onNodeWithTag(ACTIONS_WHEEL_TAG).assertDoesNotExist()
-        clock += 1_500
+        clock += 800
         back()
         assertEquals(1, homes)
-        // A Back long after closing opens the wheel again; its last row is MyPlay home.
+        rule.onNodeWithTag(ACTIONS_WHEEL_TAG).assertDoesNotExist()
+        // Later: Back opens it, a slow Back closes it, a quick third goes home.
+        clock += 10_000
+        back()
+        clock += 3_000
+        back()
+        rule.onNodeWithTag(ACTIONS_WHEEL_TAG).assertDoesNotExist()
+        assertEquals(1, homes)
+        clock += 1_500
+        back()
+        assertEquals(2, homes)
+        // Turning in the wheel means it is in use: a quick Back then only closes it.
         clock += 10_000
         back()
         val wheel = rule.onNodeWithTag(ACTIONS_WHEEL_TAG)
-        wheel.assertExists()
-        repeat(5) { wheel.performKeyInput { pressKey(Key.DirectionDown) } }
-        rule.onNodeWithTag(wheelRowTag(WHEEL_HOME)).assertIsSelected()
-        wheel.performKeyInput { pressKey(Key.DirectionCenter) }
-        rule.waitForIdle()
+        wheel.performKeyInput { pressKey(Key.DirectionDown) }
+        back()
+        rule.onNodeWithTag(ACTIONS_WHEEL_TAG).assertDoesNotExist()
         assertEquals(2, homes)
+        // Its last row is MyPlay home.
+        clock += 10_000
+        back()
+        repeat(5) { rule.onNodeWithTag(ACTIONS_WHEEL_TAG).performKeyInput { pressKey(Key.DirectionDown) } }
+        rule.onNodeWithTag(wheelRowTag(WHEEL_HOME)).assertIsSelected()
+        rule.onNodeWithTag(ACTIONS_WHEEL_TAG).performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.waitForIdle()
+        assertEquals(3, homes)
         // The app's own Back is never asked for on its map.
         assertEquals(emptyList<String>(), ran)
     }
