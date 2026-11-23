@@ -295,9 +295,12 @@ object OrbitSkin : MyPlaySkin {
                 if (turn.lanes.isNotEmpty()) Lanes(turn.lanes, nav, g, Modifier.padding(top = 10.dp))
               }
                 Spacer(Modifier.width(22.dp))
-                Column(Modifier.weight(1f, fill = false)) {
+                // LN-1: the text stays centred on the disc; the lanes reach below it without moving it.
+                Box(Modifier.weight(1f, fill = false).height(132.dp), contentAlignment = Alignment.CenterStart) {
+                  Column {
                     turn.distance?.let { Text(it, style = Orbit.Type.hero.floating(g.text), maxLines = 1) }
                     turn.road?.let { Text(it, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                  }
                 }
             }
         }
