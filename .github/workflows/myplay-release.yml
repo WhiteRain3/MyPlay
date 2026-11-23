@@ -115,12 +115,31 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+      # Maven Central sometimes answers 429 (too many requests) to the release machines: keep what
+      # was downloaded. The Gradle cache is written from this branch too (it is not the default
+      # branch, whose runs alone write it otherwise), and Robolectric's Android jars, which it
+      # fetches itself while the tests run, are kept by version.
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6
         if: env.PUBLISH == 'true'
+        with:
+          cache-read-only: false
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        if: env.PUBLISH == 'true'
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-${{ hashFiles('gradle/libs.versions.toml') }}
+          restore-keys: robolectric-
 
+      # Up to three tries a minute apart: a download refused by the server fails the step the
+      # first time only. A test that fails fails every time, so it is still caught.
       - name: Protocol, app, head unit and host shims tests
         if: env.PUBLISH == 'true'
-        run: ./gradlew --no-daemon :aap:test :app:testDebugUnitTest :headunit:test :xposed:testDebugUnitTest
+        run: |
+          for try in 1 2 3; do
+            ./gradlew --no-daemon :aap:test :app:testDebugUnitTest :headunit:test :xposed:testDebugUnitTest && exit 0
+            [ "$try" = 3 ] || { echo "::warning::tests attempt $try failed, trying again in 60 s"; sleep 60; }
+          done
+          exit 1
 
       # app/build.gradle.kts reads the key from AARE_KEYSTORE (a file path), AARE_KEYSTORE_PASSWORD,
       # AARE_KEY_ALIAS and AARE_KEY_PASSWORD, so the MyPlay secrets are handed over under those names.
