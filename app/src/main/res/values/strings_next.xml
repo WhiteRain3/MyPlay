@@ -406,7 +406,7 @@
     <string name="next_apps_up_label" translatable="false">Move %1$s up</string>
     <string name="next_apps_down_label" translatable="false">Move %1$s down</string>
     <string name="next_apps_needs_root_label" translatable="false">Needs root or Shizuku</string>
-    <string name="next_apps_needs_root_help" translatable="false">Set one up in Car › Sound, then come back</string>
+    <string name="next_apps_needs_root_help" translatable="false">To open your phone\'s apps in the car</string>
     <string name="next_apps_open_sound_label" translatable="false">Open Sound</string>
     <string name="next_apps_launch_label" translatable="false">Launch phone apps on the car</string>
     <string name="next_apps_parked_warn_help" translatable="false">Use them only when parked</string>
@@ -671,4 +671,29 @@
     <string name="next_syn_resolution_info" translatable="false">quality, 1080p, 720p, video, sharp</string>
     <string name="next_scr_look_changed_label" translatable="false">%1$s (changed)</string>
     <string name="next_speed_stop_label" translatable="false">Stop</string>
+    <string name="next_car_sound_voice_help" translatable="false">Also the maps app\'s voice</string>
+    <string name="next_car_sound_needs_help" translatable="false">Needs setting up: More › Advanced › Sound</string>
+    <string name="next_car_sound_info" translatable="false">Sends the phone\'s music and the maps app\'s spoken directions to the car through MyPlay. Off: they play where the phone sends them, for example over the car\'s own Bluetooth. How the sound is captured is in More › Advanced › Sound.</string>
+    <string name="next_adv_sound_label" translatable="false">How sound reaches the car</string>
+    <string name="next_shz_step_install_label" translatable="false">Install Shizuku</string>
+    <string name="next_shz_step_start_label" translatable="false">Open Shizuku and tap Start</string>
+    <string name="next_shz_step_allow_label" translatable="false">Come back and tap Allow</string>
+    <string name="next_shz_get_label" translatable="false">Get Shizuku</string>
+    <string name="next_shz_open_label" translatable="false">Open Shizuku</string>
+    <string name="next_shz_how_label" translatable="false">How to set up</string>
+    <string name="next_shz_dev_label" translatable="false">Developer options</string>
+    <string name="next_shz_title_label" translatable="false">Set up Shizuku</string>
+    <string name="next_shz_ready_label" translatable="false">Shizuku is running and allowed</string>
+    <string name="next_shz_h1_label" translatable="false">Install Shizuku</string>
+    <string name="next_shz_h1_help" translatable="false">Free, from Google Play or its own site</string>
+    <string name="next_shz_h2_label" translatable="false">Turn on Developer options</string>
+    <string name="next_shz_h2_help" translatable="false">About phone › tap Build number 7 times</string>
+    <string name="next_shz_h3_label" translatable="false">Pair Shizuku once</string>
+    <string name="next_shz_h3_help" translatable="false">On Wi-Fi: Shizuku › Pairing, then Wireless debugging</string>
+    <string name="next_shz_h4_label" translatable="false">Tap Start in Shizuku</string>
+    <string name="next_shz_h4_help" translatable="false">It says when it is running</string>
+    <string name="next_shz_h5_label" translatable="false">Come back and tap Allow</string>
+    <string name="next_shz_h5_help" translatable="false">MyPlay asks Shizuku once</string>
+    <string name="next_shz_restart_help" translatable="false">After a phone restart, open Shizuku and tap Start again</string>
+    <string name="next_shz_root_help" translatable="false">On a rooted phone none of this is needed</string>
 </resources>

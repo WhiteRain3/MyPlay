@@ -408,7 +408,7 @@ fun NextSoundPage() {
     }
     val methods = remember(recheck, resumed, state.audioCapture) { soundMethods(ctx, state.audioCapture) }
     val best = methods.best
-    Page("car/sound") {
+    Page("more/advanced/sound") {
         item {
             NextCard {
                 NextSwitchRow(stringResource(R.string.next_sound_switch_label), on, { settings.carAudio = it }, Icons.AutoMirrored.Outlined.VolumeUp)

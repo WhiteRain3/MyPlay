@@ -55,6 +55,15 @@ class NextCarMoreTest {
         rule.onNodeWithText("Limit from Waze").assertExists()
     }
 
+    @Test fun soundLivesInAdvancedButItsSwitchStaysOnCar() {
+        // The owner's car plays over its own Bluetooth: the page moved; the switch carries the maps voice too, so it stays.
+        rule.setContent { NextApp(start = "car") { r -> when (r) { "car" -> NextCarRoot(); "more/advanced" -> NextAdvancedPage(); else -> NextPlaceholder(r) {} } } }
+        rule.onNode(hasText("Sound to the car") and isToggleable()).assertExists()
+        rule.onNodeWithText("Needs setting up: More › Advanced › Sound").assertExists() // no capture method in the test
+        assertFalse(NextRoutes.isKnown("car/sound"))
+        assertEquals(NextTab.MORE, NextRoutes.tabOf("more/advanced/sound"))
+    }
+
     @Test fun soundSaysNoMethodNamesOutsideItsRows() {
         rule.setContent { NextSoundPage() }
         // On a phone with nothing set up: the status is words only.

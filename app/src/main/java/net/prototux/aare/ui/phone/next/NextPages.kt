@@ -52,11 +52,11 @@ object NextPages {
         "car/buttons/teach" to R.string.next_car_teach_label,
         "car/maps" to R.string.next_car_maps_label,
         "car/speed" to R.string.next_car_speed_label,
-        "car/sound" to R.string.next_car_sound_label,
         "car/messages" to R.string.next_car_messages_label,
         "car/voice" to R.string.next_car_voice_label,
         "apps" to R.string.next_tab_apps_label,
         "apps/phone-apps" to R.string.next_apps_phone_apps_label,
+        "apps/phone-apps/shizuku" to R.string.next_shz_title_label,
         "apps/phone-screen" to R.string.next_apps_phone_screen_label,
         "apps/browser" to R.string.next_apps_browser_label,
         "more" to R.string.next_tab_more_label,
@@ -70,6 +70,7 @@ object NextPages {
         "more/diagnostics/car-data" to R.string.next_more_car_data_label,
         "more/diagnostics/log" to R.string.next_more_log_label,
         "more/advanced" to R.string.next_more_advanced_label,
+        "more/advanced/sound" to R.string.next_car_sound_label,
         "more/advanced/certificates" to R.string.next_more_certificates_label,
         "more/advanced/developer" to R.string.next_more_developer_label,
         "more/advanced/developer/parts" to R.string.next_dev_parts_label,
@@ -106,11 +107,11 @@ fun NextPage(route: String, onOldApp: () -> Unit) {
         "car/buttons/teach" -> NextTeachPage()
         "car/maps" -> NextMapsPage()
         "car/speed" -> NextSpeedPage()
-        "car/sound" -> NextSoundPage()
         "car/messages" -> NextMessagesPage()
         "car/voice" -> NextVoicePage()
         "apps" -> NextAppsRoot()
         "apps/phone-apps" -> NextPhoneAppsPage()
+        "apps/phone-apps/shizuku" -> NextShizukuHelpPage()
         "apps/phone-screen" -> NextPhoneScreenPage()
         "apps/browser" -> NextBrowserPage()
         "more" -> NextMoreRoot()
@@ -122,6 +123,7 @@ fun NextPage(route: String, onOldApp: () -> Unit) {
         "more/diagnostics/car-data" -> NextCarDataPage()
         "more/diagnostics/log" -> NextLogPage()
         "more/advanced" -> NextAdvancedPage()
+        "more/advanced/sound" -> NextSoundPage()
         "more/advanced/certificates" -> NextCertificatesPage()
         "more/advanced/developer" -> NextDeveloperPage()
         "more/archive" -> NextArchivePage()

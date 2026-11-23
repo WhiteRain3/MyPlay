@@ -154,7 +154,8 @@ fun NextHome() {
     val hero = heroOf(state, radios, wirelessConnecting, notNow)
     var errorAt by rememberSaveable { mutableLongStateOf(0L) }
     LaunchedEffect(state.lastError) { errorAt = if (state.lastError != null) System.currentTimeMillis() else 0L }
-    val setupLeft = remember(resumed, state.audioCapture) { setupLeft(ctx, state.audioCapture) }
+    val carAudioOn by rememberSetting("car_audio") { carAudio }
+    val setupLeft = remember(resumed, state.audioCapture, carAudioOn) { setupLeft(ctx, state.audioCapture) }
     val design = designInUse(preview, language)
     val carCheck = rememberCarCheckStatus()
     val attention = buildSet {
@@ -376,7 +377,7 @@ private fun AttentionCard(kind: Attention, inputs: HomeInputs, actions: HomeActi
                 NextGroup(inputs.setupLeft.map { item ->
                     @Composable {
                         NextRow(setupWord(item), onClick = {
-                            if (item == SetupItem.CAR_AUDIO) { open = false; nav.open("car/sound") } else actions.setUp(item)
+                            if (item == SetupItem.CAR_AUDIO) { open = false; nav.open("more/advanced/sound") } else actions.setUp(item)
                         }, role = Role.Button) { Text(stringResource(R.string.next_att_set_up_label), style = NextType.Button.copy(fontSize = NextType.Value.fontSize), color = NextColors.Int) }
                     }
                 }, inset = 16.dp)
@@ -522,7 +523,8 @@ private fun setupLeft(ctx: Context, audioCapture: Boolean): List<SetupItem> = bu
     val audio = runCatching {
         CaptureMethods.audioPolicyAvailable(ctx) || CaptureMethods.shizukuAvailable() || CaptureMethods.rootAvailable(ctx)
     }.getOrDefault(false) || audioCapture
-    if (!audio) add(SetupItem.CAR_AUDIO)
+    // Only while "Sound to the car" is on: a car that plays over its own Bluetooth never needs it.
+    if (!audio && Settings(ctx).carAudio) add(SetupItem.CAR_AUDIO)
 }
 
 /**

@@ -317,7 +317,8 @@ fun NextPhoneAppsPage() {
     val allowed by rememberSetting("standalone_app_pkgs") { standaloneAppPackages }
     val turns by rememberSetting("myplay_mirror_turns") { myplayMirrorTurns }
     val resumed = rememberResumeTicks()
-    val available = remember(resumed) { runCatching { AppLauncher.available(ctx) }.getOrDefault(false) }
+    val shizuku = rememberShizukuStep()
+    val available = remember(resumed, shizuku) { runCatching { AppLauncher.available(ctx) }.getOrDefault(false) }
     val youTube = remember { runCatching { ctx.packageManager.getApplicationInfo(CarRuntime.YOUTUBE_PACKAGE, 0) }.isSuccess }
     val apps by produceState<List<Triple<String, String, Bitmap?>>?>(null) { value = withContext(Dispatchers.IO) { launchable(ctx) } }
     var adding by rememberSaveable { mutableStateOf(false) }
@@ -328,15 +329,9 @@ fun NextPhoneAppsPage() {
         state = rememberNextListState(),
         contentPadding = PaddingValues(start = NextSpace.Gutter, end = NextSpace.Gutter, bottom = 24.dp),
     ) {
-        if (!available) item {
-            NextCard(warn = true) {
-                NextRow(stringResource(R.string.next_apps_needs_root_label), icon = Icons.Outlined.Lock, disc = DiscTone.WARN,
-                    note = RowNote.Help(stringResource(R.string.next_apps_needs_root_help)))
-                Box(Modifier.padding(start = 16.dp, bottom = 14.dp)) {
-                    NextButton(stringResource(R.string.next_apps_open_sound_label), { nav.open("car/sound") }, kind = ButtonKind.GHOST, small = true,
-                        icon = Icons.AutoMirrored.Outlined.OpenInNew)
-                }
-            }
+        // Only while neither root nor a running, allowed Shizuku is there: then say exactly what to do.
+        if (!available && shizuku != ShizukuStep.READY) item {
+            ShizukuCard(shizuku)
             Spacer(Modifier.height(12.dp))
         }
         item {

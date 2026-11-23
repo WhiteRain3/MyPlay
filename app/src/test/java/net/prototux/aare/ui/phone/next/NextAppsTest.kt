@@ -1,5 +1,6 @@
 package net.prototux.aare.ui.phone.next
 
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasText
@@ -72,5 +73,23 @@ class NextAppsTest {
         rule.setContent { NextPhoneAppsPage() }
         rule.onNodeWithText("Needs root or Shizuku").assertExists()
         rule.onNode(hasText("Launch phone apps on the car") and isToggleable()).assertIsNotEnabled()
+        // Shizuku isn't installed here: the first step is the one to do, with its button.
+        rule.onNodeWithText("Get Shizuku").assertExists()
+        rule.onNodeWithText("Come back and tap Allow").assertExists()
+    }
+
+    @Test fun howToSetUpOpensTheHelpPage() {
+        rule.setContent { NextApp(start = "apps/phone-apps") { r -> if (r == "apps/phone-apps") NextPhoneAppsPage() else NextShizukuHelpPage() } }
+        rule.onNodeWithText("How to set up").performClick()
+        rule.waitForIdle()
+        rule.onNodeWithTag("next-page-apps/phone-apps/shizuku").assertExists()
+        rule.onNodeWithText("Pair Shizuku once").assertExists()
+    }
+
+    @Test fun shizukuSteps() {
+        assertEquals(ShizukuStep.INSTALL, shizukuStep(installed = false, running = false, allowed = false))
+        assertEquals(ShizukuStep.START, shizukuStep(installed = true, running = false, allowed = false))
+        assertEquals(ShizukuStep.ALLOW, shizukuStep(installed = true, running = true, allowed = false))
+        assertEquals(ShizukuStep.READY, shizukuStep(installed = true, running = true, allowed = true))
     }
 }

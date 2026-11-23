@@ -188,12 +188,13 @@ fun NextCarRoot() {
                         Icons.Outlined.Speed) { nav.open("car/speed") }
                 },
                 {
-                    // The words only (plan §9.3, review "Second pass" item 2): the method names stay on Sound's own rows.
-                    NextValueRow(stringResource(R.string.next_car_sound_label), stringResource(when {
-                        !carAudio -> R.string.next_car_off_label
-                        audioReady -> R.string.next_car_best_label
-                        else -> R.string.next_car_set_up_label
-                    }), Icons.AutoMirrored.Outlined.VolumeUp) { nav.open("car/sound") }
+                    // The Sound page lives in More › Advanced (the owner's car plays over its own Bluetooth);
+                    // this switch stays here because it also carries the maps app's voice (guidance channel).
+                    NextSwitchRow(stringResource(R.string.next_sound_switch_label), carAudio, { settings.carAudio = it },
+                        Icons.AutoMirrored.Outlined.VolumeUp,
+                        note = if (carAudio && !audioReady) RowNote.Warn(stringResource(R.string.next_car_sound_needs_help))
+                            else RowNote.Help(stringResource(R.string.next_car_sound_voice_help)),
+                        info = stringResource(R.string.next_car_sound_info), tag = { NextConnectionTag() })
                 },
                 {
                     NextValueRow(stringResource(R.string.next_car_messages_label),

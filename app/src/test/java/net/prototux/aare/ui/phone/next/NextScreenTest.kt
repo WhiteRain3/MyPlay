@@ -37,7 +37,7 @@ class NextScreenTest {
     @Test fun orbitsPartsOpenWhatTheyShow() {
         val o = DesignInUse.ORBIT
         assertEquals("screen/design", routeForPart(CarPart.OrbitHub, o))
-        assertEquals("car/sound", routeForPart(CarPart.OrbitSong, o))
+        assertEquals("car", routeForPart(CarPart.OrbitSong, o))
         assertEquals("car/maps", routeForPart(CarPart.OrbitTurn, o))
         assertEquals("car/speed", routeForPart(CarPart.OrbitSpeed, o))
         assertEquals("screen/wallpaper", routeForPart(CarPart.Wallpaper, o))

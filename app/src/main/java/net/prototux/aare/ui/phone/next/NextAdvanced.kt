@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Subject
+import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.CropFree
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -81,6 +83,12 @@ fun NextAdvancedPage() {
     val fps60 by rememberSetting("prefer_60fps") { prefer60fps }
     val h264 by rememberSetting("force_h264") { forceH264 }
     val cbr by rememberSetting("constant_bitrate_video") { constantBitrateVideo }
+    val carAudio by rememberSetting("car_audio") { carAudio }
+    val capture = ProjectionService.state.collectAsState().value.audioCapture
+    val audioReady = remember(capture) {
+        runCatching { net.prototux.aare.audio.CaptureMethods.audioPolicyAvailable(ctx) || net.prototux.aare.audio.CaptureMethods.shizukuAvailable() || net.prototux.aare.audio.CaptureMethods.rootAvailable(ctx) }
+            .getOrDefault(false) || capture
+    }
     var certCount by remember { mutableIntStateOf(-1) }
     LaunchedEffect(Unit) { certCount = withContext(Dispatchers.IO) { runCatching { CertificateStore(ctx).entries().size }.getOrDefault(0) } }
     Page("more/advanced") {
@@ -98,6 +106,17 @@ fun NextAdvancedPage() {
                 { NextSwitchRow(stringResource(R.string.next_adv_cbr_label), cbr, { settings.constantBitrateVideo = it }, changed = cbr,
                     info = stringResource(R.string.setup_toggle_constant_bitrate_subtitle)) },
             ), inset = 16.dp)
+        }
+        item { NextSection(stringResource(R.string.next_car_sound_label)) }
+        item {
+            // Moved from the Car tab (owner's car plays over its own Bluetooth); the on/off switch stays on Car.
+            NextCard {
+                NextValueRow(stringResource(R.string.next_adv_sound_label), stringResource(when {
+                    !carAudio -> R.string.next_car_off_label
+                    audioReady -> R.string.next_car_best_label
+                    else -> R.string.next_car_set_up_label
+                }), Icons.AutoMirrored.Outlined.VolumeUp) { nav.open("more/advanced/sound") }
+            }
         }
         item { NextSection(stringResource(R.string.next_adv_security_label)) }
         item {

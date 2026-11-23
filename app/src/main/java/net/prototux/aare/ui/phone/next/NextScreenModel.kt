@@ -15,7 +15,7 @@ fun routeForPart(part: CarPart?, design: DesignInUse): String? {
     return when (part) {
         null -> null
         CarPart.OrbitHub -> if (design == DesignInUse.ORBIT) "screen/design" else archived
-        CarPart.OrbitSong -> if (design == DesignInUse.ORBIT) "car/sound" else "more/archive/layouts"
+        CarPart.OrbitSong -> if (design == DesignInUse.ORBIT) "car" else "more/archive/layouts"
         CarPart.OrbitTurn -> if (design == DesignInUse.ORBIT) "car/maps" else null
         CarPart.OrbitSpeed -> "car/speed"
         CarPart.Wallpaper -> "screen/wallpaper"
