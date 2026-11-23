@@ -232,7 +232,7 @@ internal fun MyPlayAppFrame(
                                     sources.notifications.dismiss(n)
                                 }
                             }
-                                .onGloballyPositioned { c -> c.boundsInRoot().let { noticeBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                                .onGloballyPositioned { c -> c.boundsInRoot().let { noticeBoxes.putIfChanged(id, FocusGraph.Box(it.left, it.top, it.right, it.bottom)) } }
                                 .semantics { selected = noticeKnob && id == noticeRing }
                                 .testTag(id)
                         },
@@ -247,7 +247,7 @@ internal fun MyPlayAppFrame(
                     skin.Ringing(call!!, canEnd, callRing, { id ->
                         Modifier
                             .pointerInput(id) { detectTapGestures { callChosen = id; currentCallActions[id]?.invoke() } }
-                            .onGloballyPositioned { c -> c.boundsInRoot().let { callBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                            .onGloballyPositioned { c -> c.boundsInRoot().let { callBoxes.putIfChanged(id, FocusGraph.Box(it.left, it.top, it.right, it.bottom)) } }
                             .semantics { selected = id == callRing }
                             .testTag(id)
                     }, Modifier.fillMaxSize().testTag(SLOT_CALL)
