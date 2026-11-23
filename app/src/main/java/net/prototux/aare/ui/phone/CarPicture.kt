@@ -178,6 +178,7 @@ internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: C
     ui.night = pictureNight(settings.carTheme)
     ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
         .withCustomColours(CustomColours.decode(settings.myplayLookColours))
+    ui.orbitThemed = net.prototux.aare.host.orbitThemed(settings) // TH-1c: the picture in the car's colours too
     ui.layout = CarLayout.byId(settings.carLayoutId)
     ui.layoutSpec = settings.myplayLayoutSpec
     ui.darkBar = settings.darkBar

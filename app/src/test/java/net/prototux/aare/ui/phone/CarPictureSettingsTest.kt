@@ -44,3 +44,20 @@ class CarPictureLanguageTest {
         assertEquals("DECK", engineLanguageName("deck"))
     }
 }
+
+/** TH-1c: the phone's picture takes the owner's theme on ORBIT, as the car does. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35])
+class CarPictureThemeTest {
+    @Test
+    fun thePictureTakesTheChosenTheme() {
+        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val s = Settings(ctx)
+        val ui = CarUiState()
+        applyPictureSettings(ui, s, ctx)
+        assertEquals(false, ui.orbitThemed)
+        s.carThemeId = "retro"
+        applyPictureSettings(ui, s, ctx)
+        assertTrue(ui.orbitThemed)
+    }
+}
