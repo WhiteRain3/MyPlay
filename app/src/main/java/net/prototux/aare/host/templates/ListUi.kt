@@ -128,7 +128,8 @@ internal fun ItemListView(
     val pad = if (inCard) 12.dp else 24.dp
     // Look C, step 3: on a wheel (a maps app under ORBIT), the focused row is kept in the middle and
     // the others fade, shrink and bend left with their distance from it, as ORBIT's own lists turn.
-    val wheel = LocalWheelLists.current && !inCard
+    // On the map templates' cards too (Waze's destinations, its routes); not in the dashboard's small map card.
+    val wheel = LocalWheelLists.current && !LocalCompactMap.current
     androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxSize()) {
     val ends = if (wheel) (maxHeight / 2 - WheelLook.ROW / 2).coerceAtLeast(0.dp) else 0.dp
     androidx.compose.runtime.CompositionLocalProvider(

@@ -55,13 +55,13 @@ class WheelListsTest {
         override fun mapClick(x: Float, y: Float) = Unit
     }
 
-    private fun show(wheel: Boolean) {
+    private fun show(wheel: Boolean, inCard: Boolean = false) {
         val items = ItemList.Builder().apply {
             for (i in 1..12) addItem(Row.Builder().setTitle("Place $i").setOnClickListener { }.build())
         }.build()
         rule.setContent {
             CarTheme(night = true, theme = CarThemes.byId("aare")) {
-                CompositionLocalProvider(LocalTemplateHost provides host, LocalWheelLists provides wheel) {
+                CompositionLocalProvider(LocalTemplateHost provides host, LocalWheelLists provides wheel, LocalInCard provides inCard) {
                     Box(Modifier.fillMaxSize().testTag("list")) {
                         ItemListView(listOf(ListSection(null, items)), androidx.car.app.constraints.ConstraintManager.CONTENT_LIMIT_TYPE_LIST)
                     }
@@ -73,8 +73,13 @@ class WheelListsTest {
 
     private fun middleOf(tag: String) = rule.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot.center.y
 
-    @Test fun theFocusedRowComesToTheMiddle() {
-        show(wheel = true)
+    @Test fun theFocusedRowComesToTheMiddle() = focusedRowInTheMiddle(inCard = false)
+
+    /** Waze's destinations and routes are lists on a map template's card: the wheel's look there too. */
+    @Test fun onAMapTemplatesCardToo() = focusedRowInTheMiddle(inCard = true)
+
+    private fun focusedRowInTheMiddle(inCard: Boolean) {
+        show(wheel = true, inCard = inCard)
         val middle = middleOf("list")
         // The first row starts in the middle (space above it lets it).
         val first = rule.onNodeWithText("Place 1").fetchSemanticsNode().boundsInRoot.center.y
