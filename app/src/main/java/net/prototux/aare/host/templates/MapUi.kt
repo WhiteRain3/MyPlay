@@ -45,7 +45,16 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -126,6 +135,8 @@ internal fun MapScaffold(
     panModeDelegate: PanModeDelegate?,
     modifier: Modifier = Modifier,
     inCompact: Boolean = false,
+    /** Look C: the template whose strips go into the actions wheel when MyPlay provides one (navigation). */
+    wheel: Boolean = false,
     overlay: @Composable BoxWithConstraintsScope.() -> Unit,
 ) {
     if (LocalCompactMap.current) {
@@ -154,7 +165,41 @@ internal fun MapScaffold(
         onDispose { if (panState.value) delegate?.let { d -> safeCall("onPanModeChanged") { d.sendPanModeChanged(false, host.done) } } }
     }
 
-    Box(modifier.fillMaxSize().onGloballyPositioned { registry.map = it.boundsInRoot() }) {
+    // Look C (steps 1, 2): under ORBIT, no strips on the map; Waze's actions in a wheel instead.
+    val wheelHost = LocalActionsWheel.current?.takeIf { wheel }
+    var wheelOpen by remember { mutableStateOf(false) }
+    var wheelRing by remember { mutableIntStateOf(0) }
+    var wheelClosedAt by remember { mutableLongStateOf(Long.MIN_VALUE / 2) }
+    var moveAsked by remember { mutableIntStateOf(0) }
+    val mapFocus = remember { FocusRequester() }
+    val entries = if (wheelHost == null) emptyList() else wheelEntries(actionStrip, mapActionStrip, wheelHost,
+        click = { a -> host.click(a.onClickDelegate) }, movePan = { moveAsked++ })
+    fun closeWheel() {
+        wheelOpen = false
+        wheelClosedAt = wheelHost?.now?.invoke() ?: 0L
+        runCatching { mapFocus.requestFocus() }
+    }
+    fun openWheel() { wheelRing = 0; wheelOpen = true }
+    // Declared before the map's own (move mode's), so moving the map keeps Back while it lasts.
+    BackHandler(enabled = wheelHost != null && !panMode && !wheelHost.held()) {
+        val w = wheelHost ?: return@BackHandler
+        when {
+            wheelOpen -> closeWheel()
+            w.now() - wheelClosedAt <= ActionsWheelHost.SECOND_BACK_MS -> w.home()
+            else -> openWheel()
+        }
+    }
+
+    Box(
+        modifier.fillMaxSize().onGloballyPositioned { registry.map = it.boundsInRoot() }
+            // The pad's centre opens the wheel (the map stop passes it on while the wheel is in use).
+            .onKeyEvent { e ->
+                if (wheelHost == null || wheelOpen || panMode || wheelHost.held()) return@onKeyEvent false
+                val push = e.key == Key.Enter || e.key == Key.DirectionCenter || e.key == Key.NumPadEnter
+                if (push && e.type == KeyEventType.KeyDown) openWheel()
+                push
+            },
+    ) {
         // The app's map surface itself is behind this, drawn by CarAppScreen (it must outlive templates).
         Box(Modifier.fillMaxSize().mapGestures(host, canPan = { canPan }) { onMapDrag() })
         CompositionLocalProvider(
@@ -167,17 +212,22 @@ internal fun MapScaffold(
                 // nothing, so its old position would never be updated or removed).
                 if (!panMode) {
                     overlay()
-                    if (!actionStrip?.actions.isNullOrEmpty()) {
+                    if (wheelHost == null && !actionStrip?.actions.isNullOrEmpty()) {
                         ActionStripView(actionStrip, ActionLook.MapStrip, vertical = false, Modifier.align(Alignment.TopEnd).obstructsMap())
                     }
                 }
-                if (!mapActionStrip?.actions.isNullOrEmpty()) {
+                if (wheelHost == null && !mapActionStrip?.actions.isNullOrEmpty()) {
                     ActionStripView(mapActionStrip, ActionLook.MapStrip, vertical = true, Modifier.align(Alignment.BottomEnd).obstructsMap())
                 }
             }
         }
         // MyPlay (R5): the map as the knob's last stop here, and moving it with the knob (MapMoveMode.kt).
-        MapMoveStop(host, panOffered, { panState.value }, setPan)
+        MapMoveStop(host, panOffered, { panState.value }, setPan, pushEnters = wheelHost == null, moveAsked = moveAsked, focus = mapFocus)
+        if (wheelOpen && entries.isNotEmpty()) {
+            ActionsWheelView(entries, wheelRing.coerceIn(0, entries.lastIndex),
+                move = { d -> wheelRing = (wheelRing + d).coerceIn(0, entries.lastIndex) },
+                run = { val e = entries[wheelRing.coerceIn(0, entries.lastIndex)]; closeWheel(); e.run() })
+        }
         MapAreaOutline(registry.toldVisible, registry.toldStable) // MyPlay
     }
     ReportAreas(registry, panState)

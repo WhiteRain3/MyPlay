@@ -179,7 +179,7 @@ internal fun applyPictureSettings(ui: CarUiState, settings: Settings, context: C
     ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
         .withCustomColours(CustomColours.decode(settings.myplayLookColours))
     // TH-1c: ORBIT takes the chosen colours as the car does (the same rule as CarRuntime's).
-    ui.orbitThemed = settings.carThemeId != "aare" || settings.carAccent != "theme" || !CustomColours.decode(settings.myplayLookColours).isEmpty
+    ui.orbitThemed = net.prototux.aare.host.orbitThemed(settings)
     ui.layout = CarLayout.byId(settings.carLayoutId)
     ui.layoutSpec = settings.myplayLayoutSpec
     ui.darkBar = settings.darkBar

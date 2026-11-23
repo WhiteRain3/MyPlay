@@ -372,7 +372,7 @@ class CarRuntime(
         ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
             .withCustomColours(CustomColours.decode(settings.myplayLookColours)) // MyPlay (F3)
         // TH-1: ORBIT keeps its own colours until the owner chooses a theme, an accent or own colours.
-        ui.orbitThemed = settings.carThemeId != "aare" || settings.carAccent != "theme" || !CustomColours.decode(settings.myplayLookColours).isEmpty
+        ui.orbitThemed = orbitThemed(settings)
         ui.layout = CarLayout.byId(settings.carLayoutId)
         ui.layoutSpec = settings.myplayLayoutSpec // MyPlay (M3)
         ui.statusStyle = settings.statusStyle // MyPlay (F4)
@@ -1066,3 +1066,10 @@ class CarRuntime(
         val active: CarRuntime? get() = running.lastOrNull { it.primary } ?: running.lastOrNull()
     }
 }
+
+/**
+ * TH-1: whether ORBIT takes the owner's theme (a theme other than the default, its accent, or own
+ * colours). TH-1c: the car and the phone's picture of it both use this.
+ */
+internal fun orbitThemed(settings: Settings): Boolean =
+    settings.carThemeId != "aare" || settings.carAccent != "theme" || !CustomColours.decode(settings.myplayLookColours).isEmpty

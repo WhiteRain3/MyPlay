@@ -314,6 +314,12 @@ interface MyPlaySkin {
      */
     val dialCentre: World? get() = null
 
+    /**
+     * Look C: the maps app's full-screen map draws no action strip or map buttons; the pad's centre
+     * or Back opens them as a wheel (host/templates/ActionsWheel.kt).
+     */
+    val actionsWheel: Boolean get() = false
+
     /** The dial's worlds ([dial], or all six), [selected] ringed. */
     @Composable fun Chooser(selected: World, modifier: Modifier)
     /** N6: how many apps one page of the Apps world holds. */

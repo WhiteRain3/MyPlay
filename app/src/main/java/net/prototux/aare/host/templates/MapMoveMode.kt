@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -17,6 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -78,7 +81,14 @@ internal object MapMoveKeys {
  * already turned on ([panning]) is left on when move mode ends.
  */
 @Composable
-internal fun BoxScope.MapMoveStop(host: TemplateHost, panOffered: Boolean, panning: () -> Boolean, setPan: (Boolean) -> Unit) {
+internal fun BoxScope.MapMoveStop(
+    host: TemplateHost, panOffered: Boolean, panning: () -> Boolean, setPan: (Boolean) -> Unit,
+    /** Look C: false when the push is the actions wheel's (move mode then starts only from [moveAsked]). */
+    pushEnters: Boolean = true,
+    /** Look C: each new value (above 0) starts move mode, as "Move map" in the actions wheel. */
+    moveAsked: Int = 0,
+    focus: FocusRequester? = null,
+) {
     var moving by remember { mutableStateOf(false) }
     var size by remember { mutableStateOf(IntSize.Zero) }
     /** Whether entering move mode turned the app's pan mode on (so leaving turns it off again). */
@@ -94,11 +104,15 @@ internal fun BoxScope.MapMoveStop(host: TemplateHost, panOffered: Boolean, panni
         panTurnedOn = false
     }
     BackHandler(enabled = moving) { leave() }
+    LaunchedEffect(moveAsked) {
+        if (moveAsked > 0) { focus?.let { runCatching { it.requestFocus() } }; enter() }
+    }
     Box(
         Modifier.fillMaxSize().onSizeChanged { size = it }
             .onFocusChanged { if (!it.isFocused && moving) leave() }
             .onKeyEvent { e ->
                 if (e.type != KeyEventType.KeyDown) return@onKeyEvent moving && MapMoveKeys.action(e.key, e.isShiftPressed, true) != null
+                if (!moving && !pushEnters) return@onKeyEvent false
                 when (val a = MapMoveKeys.action(e.key, e.isShiftPressed, moving) ?: return@onKeyEvent false) {
                     MapMoveKeys.Action.Enter -> enter()
                     MapMoveKeys.Action.Leave -> leave()
@@ -107,6 +121,7 @@ internal fun BoxScope.MapMoveStop(host: TemplateHost, panOffered: Boolean, panni
                 }
                 true
             }
+            .then(if (focus != null) Modifier.focusRequester(focus) else Modifier)
             .focusable().carFocusHighlight(MaterialTheme.shapes.large),
     )
     if (moving) {

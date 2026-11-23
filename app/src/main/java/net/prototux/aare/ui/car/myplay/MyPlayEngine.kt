@@ -432,7 +432,12 @@ private fun EngineShellThemed(
     var settingsVersion by remember { mutableStateOf(0) }
     val inSettings = model.place == Place.InWorld(World.SETTINGS)
     // S-3: also read again when the car starts or stops (passenger mode's note follows at once).
-    val settingItems = remember(inSettings, settingsVersion, sources.settings, state.drivingRestricted) { if (inSettings) sources.settings.items() else emptyList() }
+    // CR-1 (the dispatcher): a skin whose dial leaves Car out (ORBIT) offers it as Settings' first row.
+    val carRowTitle = stringResource(R.string.myplay_world_car)
+    val carRow = skin.dial?.takeIf { World.CAR !in it }?.let { SettingItem.Open(SETTING_CAR, carRowTitle) { model.enterFrom(World.CAR); carChosen = null } }
+    val settingItems = remember(inSettings, settingsVersion, sources.settings, state.drivingRestricted, carRow != null) {
+        if (inSettings) listOfNotNull(carRow) + sources.settings.items() else emptyList()
+    }
     var settingChosen by remember { mutableStateOf<String?>(null) }
     val settingIndex = settingItems.indexOfFirst { it.id == settingChosen }.takeIf { it >= 0 } ?: 0
     val currentSettings by rememberUpdatedState(settingItems)
@@ -442,6 +447,7 @@ private fun EngineShellThemed(
             // S-1: a switch that cannot be turned on now (passenger mode while moving) stays off.
             is SettingItem.Toggle -> if (item.on || item.canTurnOn) item.set(!item.on) else return
             is SettingItem.Choice -> if (item.options.isNotEmpty()) item.select(item.next)
+            is SettingItem.Open -> { item.open(); return }
             null -> return
         }
         settingsVersion++
@@ -963,6 +969,7 @@ private fun EngineShellThemed(
                             when (it) {
                                 is SettingItem.Toggle -> SettingRow(it.title, if (it.on) on else off, switch = true, on = it.on, note = it.note)
                                 is SettingItem.Choice -> SettingRow(it.title, it.label, switch = false, on = false)
+                                is SettingItem.Open -> SettingRow(it.title, it.value.orEmpty(), switch = false, on = false)
                             }
                         }
                         skin.SettingsWorld(SettingsPage(rows), settingIndex, { i ->
@@ -1155,6 +1162,8 @@ internal const val SLOT_CHOOSER = "slot_chooser"
 internal const val SLOT_WORLD = "slot_world"
 internal const val SLOT_APPS = "slot_apps"
 internal const val SLOT_MUSIC = "slot_music"
+/** CR-1: the Car row's id in the Settings world. */
+internal const val SETTING_CAR = "open_car"
 /** O1: the music panel over the home. */
 internal const val SLOT_MUSIC_PANEL = "slot_music_panel"
 /** AL-1: the maps app's alert on the home. */
