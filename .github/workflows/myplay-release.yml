@@ -164,7 +164,12 @@ jobs:
           export AARE_KEYSTORE="$RUNNER_TEMP/myplay-release.keystore"
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$AARE_KEYSTORE"
           trap 'rm -f "$AARE_KEYSTORE"' EXIT
-          ./gradlew --no-daemon :app:assembleRelease :xposed:assembleRelease -PversionName="$VERSION" -PversionCode="$VERSION_CODE"
+          # RL-1: packageRelease failed twice (0.1.52, 0.1.60) in its worker with no cause shown, right
+          # after lintVital, then passed on a re-run. Likely the 2 GB heap gradle.properties keeps for
+          # small machines, shared by lint and packaging; the runner has 16 GB. More heap here only,
+          # and the stack trace, so a failure that still happens says why.
+          ./gradlew --no-daemon --stacktrace -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g -Dfile.encoding=UTF-8" \
+            :app:assembleRelease :xposed:assembleRelease -PversionName="$VERSION" -PversionCode="$VERSION_CODE"
           APK=app/build/outputs/apk/release/app-release.apk
           if [ ! -f "$APK" ]; then
             echo "::error::No signed APK at $APK (an unsigned one means the signing key was not used)"
