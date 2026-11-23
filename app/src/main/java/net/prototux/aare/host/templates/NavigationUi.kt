@@ -204,8 +204,17 @@ private fun routingLoading(info: RoutingInfo): Boolean = info.isLoading || info.
 @Composable
 private fun MessageToSkin(info: androidx.car.app.navigation.model.NavigationTemplate.NavigationInfo?, sink: (net.prototux.aare.ui.car.myplay.NavMessage?) -> Unit) {
     val host = LocalTemplateHost.current
-    // Remembered per template info, so the same message (and its icon) is handed over once.
-    val message = remember(info) { when (info) {
+    // NM-1: keyed on what the message says (not the info object, which every resend of the template
+    // makes new), so a resend neither decodes the icon again nor hands the skin a new message.
+    // The image's key is worked out once per image object (a bitmap's is a hash of its pixels).
+    val image = (info as? MessageInfo)?.image
+    val imageKey = remember(image?.let { Same(it) }, host.night) { image?.let { contentKey(it, host.night) ?: Same(it) } }
+    val key: Any? = when (info) {
+        is MessageInfo -> listOf("message", info.title?.toString(), info.text?.toString(), imageKey)
+        is RoutingInfo -> if (routingLoading(info)) "loading" else null
+        else -> null
+    }
+    val message = remember(key) { when (info) {
         is MessageInfo -> {
             val icon = info.image?.let { host.loadIcon(it, 168) }
             net.prototux.aare.ui.car.myplay.NavMessage(
