@@ -37,6 +37,12 @@ object SpeedLimitFormat {
     const val BACKWARD_ONLY = 2
     /** The limit comes from the road's kind or zone, not a sign tagged on it. */
     const val DEFAULTED = 4
+    /**
+     * Option A (docs/ideas/speed-limits.md): no limit is tagged at all; this one is Lithuania's
+     * standard for the road's type and whether it is in a settlement, a best guess. Always set
+     * with [DEFAULTED]. A reader that does not know the bit treats it as defaulted.
+     */
+    const val GUESSED = 8
 }
 
 /** One stretch of road with one limit; points in 1e-5 degrees. */

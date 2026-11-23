@@ -45,11 +45,38 @@ object LithuaniaRules {
     /** One limit for one direction of a way (flags as [SpeedLimitFormat]). */
     data class Rule(val limit: Int, val winter: Int, val flags: Int)
 
-    /** The limits of a way with [tags], one per direction it applies to; empty when not known. */
-    fun rules(tags: Map<String, String>): List<Rule> {
+    /** Option A: KET's standard limits (cars): in a settlement, outside one, outside on an unpaved road, an expressway. */
+    const val URBAN = 50
+    const val RURAL = 90
+    const val RURAL_UNPAVED = 70
+    const val EXPRESSWAY = 120
+    private val UNPAVED = setOf("unpaved", "gravel", "fine_gravel", "compacted", "dirt", "earth", "ground", "grass", "sand", "mud", "pebblestone", "woodchips")
+
+    /**
+     * Option A: the standard limit for a road with no limit tagged at all, or null (a service road:
+     * parking aisles and driveways would only add noise). [inSettlement] is asked only when needed.
+     */
+    fun standard(tags: Map<String, String>, inSettlement: () -> Boolean): Int? {
+        val highway = tags["highway"]?.removeSuffix("_link") ?: return null
+        if (highway == "service" || roadClass(highway) == null) return null
+        if (tags["motorroad"] == "yes") return EXPRESSWAY
+        // A residential street outside any mapped area is still most likely inside the town signs.
+        if (highway == "residential") return URBAN
+        if (inSettlement()) return URBAN
+        return if (tags["surface"]?.lowercase() in UNPAVED) RURAL_UNPAVED else RURAL
+    }
+
+    /**
+     * The limits of a way with [tags], one per direction it applies to; empty when not known.
+     * [fill] (option A): a road with nothing tagged gets its [standard] limit, marked GUESSED.
+     */
+    fun rules(tags: Map<String, String>, fill: Boolean = false, inSettlement: () -> Boolean = { false }): List<Rule> {
         val highway = tags["highway"]
         val cls = roadClass(highway) ?: return emptyList()
         var defaulted = false
+        var guessed = false
+        val forward = parse(tags["maxspeed:forward"])
+        val backward = parse(tags["maxspeed:backward"])
         val main = parse(tags["maxspeed"]) ?: listOf("maxspeed:type", "source:maxspeed", "zone:maxspeed")
             .firstNotNullOfOrNull { parse(tags[it]) }?.also { defaulted = true }
             ?: when (highway) {
@@ -57,11 +84,10 @@ object LithuaniaRules {
                 "living_street" -> 20
                 else -> null
             }?.also { defaulted = true }
-        val forward = parse(tags["maxspeed:forward"])
-        val backward = parse(tags["maxspeed:backward"])
+            ?: (if (fill && forward == null && backward == null) standard(tags, inSettlement) else null)?.also { defaulted = true; guessed = true }
         val winterTag = winterFrom(tags["maxspeed:conditional"])
         fun winterOf(limit: Int): Int = winterTag ?: if (cls <= 1 && limit > WINTER_FAST_ROADS) WINTER_FAST_ROADS else 0
-        val base = if (defaulted) SpeedLimitFormat.DEFAULTED else 0
+        val base = (if (defaulted) SpeedLimitFormat.DEFAULTED else 0) or (if (guessed) SpeedLimitFormat.GUESSED else 0)
         if (forward != null || backward != null) {
             return listOfNotNull(
                 (forward ?: main)?.let { Rule(it, winterOf(it), SpeedLimitFormat.FORWARD_ONLY or if (forward == null) base else 0) },
@@ -133,8 +159,12 @@ object Opl {
 
 /** Cuts a way into [Piece]s short enough for the file: at most MAX_POINTS points, within MAX_SPAN_E5. */
 object Pieces {
-    fun of(way: Opl.Way): List<Piece> {
-        val rules = LithuaniaRules.rules(way.tags)
+    /** [settlements] (option A): fill in standard limits, urban where the way's middle is inside one; null: as before, tagged limits only. */
+    fun of(way: Opl.Way, settlements: Settlements? = null): List<Piece> {
+        val rules = LithuaniaRules.rules(way.tags, fill = settlements != null) {
+            val m = way.lats.size / 2
+            settlements?.contains(way.lats[m], way.lons[m]) == true
+        }
         if (rules.isEmpty()) return emptyList()
         val cls = LithuaniaRules.roadClass(way.tags["highway"]) ?: return emptyList()
         // Long straight segments get points in between, so no piece outgrows its tile.
@@ -170,20 +200,147 @@ object Pieces {
 }
 
 /**
- * The CI job's tool: `myplay-speedlimit <region> <roads.opl> <out dir> [built yyyy-mm-dd]` writes
- * `speed-limits-<region>.bin` and its `.json` (what the phone checks before it keeps the file).
+ * Option A: settlement areas (place=city|town|village|hamlet, administrative settlement boundaries,
+ * landuse=residential|commercial|retail|industrial), from `osmium export -f geojsonseq`: each line
+ * a feature with a Polygon or MultiPolygon. Only outer rings count (a hole in a town is rare and
+ * still most likely inside its signs). Points are 1e-5 degrees, as everywhere here. Indexed by
+ * tile, so a lookup tests only the rings whose box touches its tile.
+ */
+class Settlements(rings: List<Ring>) {
+    class Ring(val lats: IntArray, val lons: IntArray) {
+        val minLat = lats.min(); val maxLat = lats.max(); val minLon = lons.min(); val maxLon = lons.max()
+
+        /** Ray casting; on the edge counts either way. */
+        fun contains(lat: Int, lon: Int): Boolean {
+            if (lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) return false
+            var inside = false
+            var j = lats.size - 1
+            for (i in lats.indices) {
+                val yi = lats[i].toLong(); val yj = lats[j].toLong(); val xi = lons[i].toLong(); val xj = lons[j].toLong()
+                if ((yi > lat) != (yj > lat)) {
+                    // x of the edge at lat, compared without dividing: (lon - xi) * (yj - yi) < (xj - xi) * (lat - yi)
+                    val lhs = (lon - xi) * (yj - yi); val rhs = (xj - xi) * (lat - yi)
+                    if (if (yj > yi) lhs < rhs else lhs > rhs) inside = !inside
+                }
+                j = i
+            }
+            return inside
+        }
+    }
+
+    private val tiles = HashMap<Long, MutableList<Ring>>()
+    val size = rings.size
+
+    init {
+        for (r in rings) for (t in tilesOf(r.minLat, r.maxLat, r.minLon, r.maxLon)) tiles.getOrPut(t) { ArrayList() } += r
+    }
+
+    fun contains(lat: Int, lon: Int): Boolean = tiles[key(lat / TILE, lon / TILE)]?.any { it.contains(lat, lon) } == true
+
+    private fun tilesOf(minLat: Int, maxLat: Int, minLon: Int, maxLon: Int) = buildList {
+        for (r in minLat / TILE..maxLat / TILE) for (c in minLon / TILE..maxLon / TILE) add(key(r, c))
+    }
+
+    private fun key(r: Int, c: Int) = (r.toLong() shl 32) or (c.toLong() and 0xFFFFFFFFL)
+
+    companion object {
+        /** 0.02 degrees. */
+        const val TILE = 2_000
+
+        /** The outer rings of one GeoJSON feature line (a Polygon or MultiPolygon); none for anything else. */
+        fun ringsOf(line: String): List<Ring> {
+            val at = line.indexOf("\"coordinates\"")
+            if (at < 0) return emptyList()
+            val multi = line.indexOf("\"MultiPolygon\"") >= 0
+            val poly = multi || line.indexOf("\"Polygon\"") >= 0
+            if (!poly) return emptyList()
+            // Walk the nested arrays: a polygon is depth 1 in a Polygon, 2 in a MultiPolygon; its rings
+            // are one deeper and their points one deeper again. A polygon's first ring is its outer one.
+            val polyDepth = if (multi) 2 else 1
+            val ringDepth = polyDepth + 1
+            val out = ArrayList<Ring>()
+            var depth = 0
+            var ringIndex = -1
+            val lats = ArrayList<Int>(); val lons = ArrayList<Int>()
+            var i = line.indexOf('[', at)
+            while (i in line.indices) {
+                when (line[i]) {
+                    '[' -> {
+                        depth++
+                        when (depth) {
+                            polyDepth -> ringIndex = -1
+                            ringDepth -> { ringIndex++; lats.clear(); lons.clear() }
+                            ringDepth + 1 -> {
+                                val end = line.indexOf(']', i)
+                                val nums = line.substring(i + 1, end).split(',')
+                                val lon = nums.getOrNull(0)?.trim()?.toDoubleOrNull(); val lat = nums.getOrNull(1)?.trim()?.toDoubleOrNull()
+                                if (lon != null && lat != null && ringIndex == 0) { lats += Math.round(lat * 1e5).toInt(); lons += Math.round(lon * 1e5).toInt() }
+                                depth--
+                                i = end
+                            }
+                        }
+                    }
+                    ']' -> {
+                        if (depth == ringDepth && ringIndex == 0 && lats.size >= 4) out += Ring(lats.toIntArray(), lons.toIntArray())
+                        depth--
+                        if (depth == 0) break
+                    }
+                }
+                i++
+            }
+            return out
+        }
+
+        fun read(file: File): Settlements = Settlements(file.bufferedReader().useLines { lines -> lines.flatMap { ringsOf(it) }.toList() })
+    }
+}
+
+/** Option A: how many ways of each class have a tagged limit, a defaulted one, a guessed one, or none, for the CI log. */
+class Coverage {
+    private val counts = Array(6) { IntArray(4) }
+
+    fun add(cls: Int?, rules: List<LithuaniaRules.Rule>) {
+        if (cls == null) return
+        val f = rules.firstOrNull()?.flags
+        val col = when {
+            f == null -> 3
+            f and SpeedLimitFormat.GUESSED != 0 -> 2
+            f and SpeedLimitFormat.DEFAULTED != 0 -> 1
+            else -> 0
+        }
+        counts[cls][col]++
+    }
+
+    fun table(): String = buildString {
+        append("class        tagged  default  guessed     none\n")
+        val names = listOf("motorway", "trunk", "primary", "secondary", "tertiary", "other")
+        for ((c, row) in counts.withIndex()) append("%-10s %8d %8d %8d %8d\n".format(names[c], row[0], row[1], row[2], row[3]))
+    }
+}
+
+/**
+ * The CI job's tool: `myplay-speedlimit <region> <roads.opl> <out dir> [built yyyy-mm-dd] [settlements.geojsonseq]`
+ * writes `speed-limits-<region>.bin` and its `.json` (what the phone checks before it keeps the file).
+ * With the settlements file (option A), roads with no tagged limit get Lithuania's standard one,
+ * marked GUESSED; without it, as before. A per-class coverage table goes to the log.
  */
 fun main(args: Array<String>) {
-    require(args.size >= 3) { "usage: myplay-speedlimit <region> <roads.opl> <out dir> [built yyyy-mm-dd]" }
+    require(args.size >= 3) { "usage: myplay-speedlimit <region> <roads.opl> <out dir> [built yyyy-mm-dd] [settlements.geojsonseq]" }
     val region = args[0]
     require(region.matches(Regex("[a-z0-9_-]+"))) { "not a region id" }
+    val settlements = args.getOrNull(4)?.let { Settlements.read(File(it)) }
+    settlements?.let { println("$region: ${it.size} settlement rings") }
     val pieces = ArrayList<Piece>()
+    val coverage = Coverage()
     var ways = 0
     File(args[1]).bufferedReader().useLines { lines ->
         for (line in lines) {
             val way = Opl.way(line) ?: continue
             ways++
-            pieces += Pieces.of(way)
+            val wayPieces = Pieces.of(way, settlements)
+            pieces += wayPieces
+            val cls = LithuaniaRules.roadClass(way.tags["highway"])
+            coverage.add(cls, if (wayPieces.isEmpty()) emptyList() else listOf(LithuaniaRules.Rule(0, 0, wayPieces.first().flags)))
         }
     }
     val bytes = SpeedLimitWriter.write(pieces)
@@ -192,6 +349,7 @@ fun main(args: Array<String>) {
     val built = args.getOrNull(3) ?: LocalDate.now().toString()
     File(out, "speed-limits-$region.json").writeText(Manifest.json(region, built, bytes))
     println("$region: $ways ways, ${pieces.size} pieces, ${bytes.size} bytes")
+    print(coverage.table())
 }
 
 /** The .json beside a file, as the phone reads it (SpeedLimitManifest). */
