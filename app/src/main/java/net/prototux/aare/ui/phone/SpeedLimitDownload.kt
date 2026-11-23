@@ -47,6 +47,7 @@ object SpeedLimitDownload {
     /**
      * Stops a download under way (the new phone app's Stop). The part already fetched is thrown
      * away; the file kept before stays as it was, since it is only replaced once a new one is checked.
+     * It counts as this month's look (SD-1): the file comes again only from Download or next month's look.
      */
     fun cancel() { if (busy.get()) stop.set(true) }
     private val waitingLogged = AtomicBoolean(false)
@@ -123,8 +124,9 @@ object SpeedLimitDownload {
         try {
             _state.value = State.Checking
             val result = withContext(Dispatchers.IO) { fetch(context, region) }
-            // A failed try (a timeout, Wi-Fi lost midway) is tried again next time the app opens.
-            if (SpeedLimitCheck.counts(result)) settings.myplaySpeedLimitChecked = System.currentTimeMillis()
+            // A failed try (a timeout, Wi-Fi lost midway) is tried again next time the app opens. A stop
+            // (SD-1) counts as this month's look: no download by itself until Download or the next month.
+            if (SpeedLimitCheck.counts(result, stopped = result == State.Idle && stop.get())) settings.myplaySpeedLimitChecked = System.currentTimeMillis()
             // #5: every outcome in the connection log (downloads and failures already say more).
             DiagLog.add("speed limits: look for the $region file ended: ${result.javaClass.simpleName}")
             _state.value = result

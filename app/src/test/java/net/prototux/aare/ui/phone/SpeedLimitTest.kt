@@ -99,6 +99,9 @@ class SpeedLimitTest {
         assertTrue(SpeedLimitCheck.counts(SpeedLimitDownload.State.Done))
         assertTrue(SpeedLimitCheck.counts(SpeedLimitDownload.State.UpToDate))
         assertTrue(SpeedLimitCheck.counts(SpeedLimitDownload.State.NotPublished))
+        // SD-1: a download the owner stopped counts as this month's look, so it does not start again by itself.
+        assertTrue(SpeedLimitCheck.counts(SpeedLimitDownload.State.Idle, stopped = true))
+        assertFalse(SpeedLimitCheck.counts(SpeedLimitDownload.State.Idle))
         assertFalse(SpeedLimitCheck.counts(SpeedLimitDownload.State.Failed))
     }
 }

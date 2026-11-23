@@ -103,7 +103,7 @@ object SpeedLimitCheck {
         !haveFile || local == null || remote.built > local.built
 
     /** Whether a try counts as the month's look: it reached the release page and got an answer. */
-    fun counts(state: SpeedLimitDownload.State): Boolean = state == SpeedLimitDownload.State.Done ||
+    fun counts(state: SpeedLimitDownload.State, stopped: Boolean = false): Boolean = stopped || state == SpeedLimitDownload.State.Done ||
         state == SpeedLimitDownload.State.UpToDate || state == SpeedLimitDownload.State.NotPublished
 
     /** Whether [head] starts as a file of this format. */
