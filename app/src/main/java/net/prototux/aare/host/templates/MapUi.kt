@@ -170,6 +170,8 @@ internal fun MapScaffold(
     var wheelOpen by remember { mutableStateOf(false) }
     var wheelRing by remember { mutableIntStateOf(0) }
     var wheelClosedAt by remember { mutableLongStateOf(Long.MIN_VALUE / 2) }
+    /** When Back opened the wheel (and nothing has been done in it since): a second Back soon after goes home. */
+    var wheelBackAt by remember { mutableLongStateOf(Long.MIN_VALUE / 2) }
     var moveAsked by remember { mutableIntStateOf(0) }
     val mapFocus = remember { FocusRequester() }
     val entries = if (wheelHost == null) emptyList() else wheelEntries(actionStrip, mapActionStrip, wheelHost,
@@ -179,14 +181,17 @@ internal fun MapScaffold(
         wheelClosedAt = wheelHost?.now?.invoke() ?: 0L
         runCatching { mapFocus.requestFocus() }
     }
-    fun openWheel() { wheelRing = 0; wheelOpen = true }
+    fun openWheel() { wheelRing = 0; wheelOpen = true; wheelBackAt = Long.MIN_VALUE / 2 }
     // Declared before the map's own (move mode's), so moving the map keeps Back while it lasts.
     BackHandler(enabled = wheelHost != null && !panMode && !wheelHost.held()) {
         val w = wheelHost ?: return@BackHandler
+        val now = w.now()
         when {
+            // (b), the dispatcher: Back twice quickly goes home, from the map as anywhere.
+            wheelOpen && now - wheelBackAt <= ActionsWheelHost.SECOND_BACK_MS -> { wheelOpen = false; w.home() }
             wheelOpen -> closeWheel()
-            w.now() - wheelClosedAt <= ActionsWheelHost.SECOND_BACK_MS -> w.home()
-            else -> openWheel()
+            now - wheelClosedAt <= ActionsWheelHost.SECOND_BACK_MS -> w.home()
+            else -> { openWheel(); wheelBackAt = now }
         }
     }
 
@@ -225,7 +230,7 @@ internal fun MapScaffold(
         MapMoveStop(host, panOffered, { panState.value }, setPan, pushEnters = wheelHost == null, moveAsked = moveAsked, focus = mapFocus)
         if (wheelOpen && entries.isNotEmpty()) {
             ActionsWheelView(entries, wheelRing.coerceIn(0, entries.lastIndex),
-                move = { d -> wheelRing = (wheelRing + d).coerceIn(0, entries.lastIndex) },
+                move = { d -> wheelRing = (wheelRing + d).coerceIn(0, entries.lastIndex); wheelBackAt = Long.MIN_VALUE / 2 },
                 run = { val e = entries[wheelRing.coerceIn(0, entries.lastIndex)]; closeWheel(); e.run() })
         }
         MapAreaOutline(registry.toldVisible, registry.toldStable) // MyPlay
