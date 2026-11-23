@@ -45,6 +45,7 @@ class ActionsWheelTest {
     private val ran = ArrayList<String>()
     private var clock = 10_000L
     private var homes = 0
+    private var held = false
 
     private val host = object : TemplateHost {
         override val driving = false
@@ -72,7 +73,7 @@ class ActionsWheelTest {
 
     private fun show(wheel: Boolean) = rule.setContent {
         CarTheme(night = true, theme = CarThemes.byId("aare")) {
-            val w = if (wheel) ActionsWheelHost({ homes++ }, "MyPlay home", "Move map", now = { clock }) else null
+            val w = if (wheel) ActionsWheelHost({ homes++ }, "MyPlay home", "Move map", now = { clock }, held = { held }) else null
             CompositionLocalProvider(LocalTemplateHost provides host, LocalActionsWheel provides w) {
                 MapScaffold(strip, mapStrip, panModeDelegate = null, wheel = true) { }
             }
@@ -115,6 +116,19 @@ class ActionsWheelTest {
         wheel.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.waitForIdle()
         rule.onNodeWithText(rule.activity.getString(R.string.myplay_map_move_hint)).assertExists()
+    }
+
+    /** While a call or a notice holds the knob, Back and the push are not the wheel's. */
+    @Test fun aNoticeHoldingTheKnobKeepsBack() {
+        held = true
+        show(wheel = true)
+        back()
+        rule.onNodeWithTag(ACTIONS_WHEEL_TAG).assertDoesNotExist()
+        val stop = rule.onNode(isFocusable())
+        stop.requestFocus()
+        stop.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(ACTIONS_WHEEL_TAG).assertDoesNotExist()
+        assertEquals(0, homes)
     }
 
     /** K3: Back opens the wheel, closes it, and a second Back within 2 s goes home; later, it opens it again. */

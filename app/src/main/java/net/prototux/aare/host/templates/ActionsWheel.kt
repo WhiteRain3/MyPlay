@@ -68,6 +68,8 @@ internal class ActionsWheelHost(
     val homeTitle: String,
     val moveMapTitle: String,
     val now: () -> Long = { android.os.SystemClock.uptimeMillis() },
+    /** True while something over the app holds the knob (a ringing call, a notice with buttons): Back and the push are its. */
+    val held: () -> Boolean = { false },
 ) {
     companion object {
         const val SECOND_BACK_MS = 2_000L

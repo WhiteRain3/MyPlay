@@ -181,7 +181,7 @@ internal fun MapScaffold(
     }
     fun openWheel() { wheelRing = 0; wheelOpen = true }
     // Declared before the map's own (move mode's), so moving the map keeps Back while it lasts.
-    BackHandler(enabled = wheelHost != null && !panMode) {
+    BackHandler(enabled = wheelHost != null && !panMode && !wheelHost.held()) {
         val w = wheelHost ?: return@BackHandler
         when {
             wheelOpen -> closeWheel()
@@ -194,7 +194,7 @@ internal fun MapScaffold(
         modifier.fillMaxSize().onGloballyPositioned { registry.map = it.boundsInRoot() }
             // The pad's centre opens the wheel (the map stop passes it on while the wheel is in use).
             .onKeyEvent { e ->
-                if (wheelHost == null || wheelOpen || panMode) return@onKeyEvent false
+                if (wheelHost == null || wheelOpen || panMode || wheelHost.held()) return@onKeyEvent false
                 val push = e.key == Key.Enter || e.key == Key.DirectionCenter || e.key == Key.NumPadEnter
                 if (push && e.type == KeyEventType.KeyDown) openWheel()
                 push

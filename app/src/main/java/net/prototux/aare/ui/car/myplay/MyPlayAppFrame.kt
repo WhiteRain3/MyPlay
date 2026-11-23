@@ -210,8 +210,10 @@ internal fun MyPlayAppFrame(
                 // Look C: a maps app under ORBIT gets the actions wheel in place of its strips.
                 val wheelHome = stringResource(R.string.myplay_wheel_home)
                 val wheelMove = stringResource(R.string.myplay_wheel_move_map)
+                // A ringing call or a notice with buttons keeps Back (it dismisses the notice), not the wheel.
+                val heldNow by rememberUpdatedState(modal)
                 val wheel = remember(skin.actionsWheel && isMaps, wheelHome, wheelMove) {
-                    if (skin.actionsWheel && isMaps) net.prototux.aare.host.templates.ActionsWheelHost(actions::goHome, wheelHome, wheelMove) else null
+                    if (skin.actionsWheel && isMaps) net.prototux.aare.host.templates.ActionsWheelHost(actions::goHome, wheelHome, wheelMove, held = { heldNow }) else null
                 }
                 CompositionLocalProvider(net.prototux.aare.host.templates.LocalActionsWheel provides wheel) {
                     ContentArea(state, actions, appContent, navMap,
