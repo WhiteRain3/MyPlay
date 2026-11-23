@@ -183,7 +183,8 @@ internal fun MyPlayAppFrame(
         return true
     }
 
-    CompositionLocalProvider(LocalSkinTokens provides tokens) {
+    // Look C (design 10): parked search in a hosted app types on the skin's letter ring, when it has one.
+    CompositionLocalProvider(LocalSkinTokens provides tokens, LocalLetterRing provides skin.letterRing) {
         BoxWithConstraints(
             Modifier.fillMaxSize().background(tokens.background).then(modifier).testTag(FRAME_TAG)
                 .onFocusChanged { frameHasFocus = it.hasFocus }

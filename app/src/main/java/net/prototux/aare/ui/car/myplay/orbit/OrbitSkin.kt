@@ -1,5 +1,18 @@
 package net.prototux.aare.ui.car.myplay.orbit
 
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.material.icons.rounded.SpaceBar
+import androidx.compose.material.icons.automirrored.rounded.Backspace
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.pluralStringResource
 import net.prototux.aare.host.templates.coversMap
 import androidx.compose.ui.graphics.toArgb
 
@@ -465,6 +478,126 @@ object OrbitSkin : MyPlaySkin {
             contentAlignment = Alignment.Center,
         ) { content() }
     }
+
+    /** Look C (design 10): parked search typed on the letter ring. */
+    override val letterRing: (@Composable (net.prototux.aare.ui.car.myplay.LetterRingInput, Modifier) -> Unit)
+        get() = { input, modifier -> LetterRingView(input, modifier) }
+
+    /**
+     * Look C (design 10): a ring of letters (A to Z, then space, delete and Search) round the text
+     * typed so far. Turn the knob (or left and right) to a key, push to type it; down or Search
+     * searches, Back closes it. A tap types the key tapped. The middle shows the text, the key the
+     * knob is on, and how many places the app has found so far.
+     */
+    @Composable
+    private fun LetterRingView(input: net.prototux.aare.ui.car.myplay.LetterRingInput, modifier: Modifier) {
+        val keys = net.prototux.aare.ui.car.myplay.LetterRing.KEYS
+        var at by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+        val focus = remember { androidx.compose.ui.focus.FocusRequester() }
+        LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+        androidx.activity.compose.BackHandler { input.hide() }
+        fun press(i: Int) { at = i; net.prototux.aare.ui.car.myplay.LetterRing.press(keys[i], input) }
+        Box(
+            modifier.fillMaxSize().testTag(LETTER_RING_TAG).focusRequester(focus).focusable()
+                .onPreviewKeyEvent { e ->
+                    if (e.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onPreviewKeyEvent when (e.key) {
+                        Key.Tab, Key.DirectionLeft, Key.DirectionRight, Key.DirectionCenter, Key.Enter, Key.NumPadEnter, Key.DirectionDown -> true
+                        else -> false
+                    }
+                    when (e.key) {
+                        Key.Tab -> { at = net.prototux.aare.ui.car.myplay.LetterRing.move(at, if (e.isShiftPressed) -1 else 1); true }
+                        Key.DirectionRight -> { at = net.prototux.aare.ui.car.myplay.LetterRing.move(at, 1); true }
+                        Key.DirectionLeft -> { at = net.prototux.aare.ui.car.myplay.LetterRing.move(at, -1); true }
+                        Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> { press(at); true }
+                        Key.DirectionDown -> { input.submit(); true }
+                        else -> false
+                    }
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Scaled {
+                val night = LocalSkinTokens.current.night
+                val g = Orbit.glass(night)
+                val accent = Orbit.accent(World.NAVIGATE, night)
+                val onAccent = Orbit.onAccent(night)
+                Box(Modifier.size(LETTER_RING).clip(CircleShape).background(g.glass).border(2.dp, g.edge, CircleShape), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(400.dp).border(2.dp, g.edge, CircleShape))
+                    keys.forEachIndexed { i, key ->
+                        val a = Math.toRadians(net.prototux.aare.ui.car.myplay.LetterRing.angleDeg(i).toDouble())
+                        val on = i == at
+                        val disc = when {
+                            on -> 76.dp
+                            key is net.prototux.aare.ui.car.myplay.LetterRing.Key.Letter -> 52.dp
+                            else -> 48.dp
+                        }
+                        val fill = when {
+                            on || key == net.prototux.aare.ui.car.myplay.LetterRing.Key.Search -> accent
+                            key is net.prototux.aare.ui.car.myplay.LetterRing.Key.Letter -> Color.Transparent
+                            else -> g.track
+                        }
+                        val content = if (on || key == net.prototux.aare.ui.car.myplay.LetterRing.Key.Search) onAccent else g.text
+                        Box(
+                            Modifier.offset((LETTER_RADIUS.value * kotlin.math.cos(a)).dp, (LETTER_RADIUS.value * kotlin.math.sin(a)).dp)
+                                .size(disc).let { if (on) it.orbitFocus(true, accent, g.halo) else it }
+                                .clip(CircleShape).background(fill).testTag(letterKeyTag(i)).clickable { press(i) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            when (key) {
+                                is net.prototux.aare.ui.car.myplay.LetterRing.Key.Letter ->
+                                    Text(key.c.toString(), style = TextStyle(fontSize = if (on) 38.sp else 28.sp, fontWeight = FontWeight.ExtraBold, color = content), maxLines = 1)
+                                net.prototux.aare.ui.car.myplay.LetterRing.Key.Space ->
+                                    Icon(Icons.Rounded.SpaceBar, stringResource(R.string.myplay_letter_ring_space), Modifier.size(if (on) 38.dp else 26.dp), tint = content)
+                                net.prototux.aare.ui.car.myplay.LetterRing.Key.Delete ->
+                                    Icon(Icons.AutoMirrored.Rounded.Backspace, stringResource(R.string.myplay_letter_ring_delete), Modifier.size(if (on) 34.dp else 24.dp), tint = content)
+                                net.prototux.aare.ui.car.myplay.LetterRing.Key.Search ->
+                                    Icon(Icons.Rounded.Search, stringResource(R.string.myplay_letter_ring_search), Modifier.size(if (on) 38.dp else 26.dp), tint = content)
+                            }
+                        }
+                    }
+                    Column(Modifier.width(320.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(
+                            Modifier.fillMaxWidth().height(60.dp).clip(RoundedCornerShape(30.dp)).background(g.glass).border(2.dp, accent, RoundedCornerShape(30.dp))
+                                .padding(horizontal = 18.dp).testTag(LETTER_RING_TEXT_TAG),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(Icons.Rounded.Search, null, Modifier.size(26.dp), tint = g.secondary)
+                            Spacer(Modifier.width(10.dp))
+                            if (input.query.isEmpty()) Text(input.hint, style = TextStyle(fontSize = 26.sp, color = g.secondary), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            else Text(input.query + "|", style = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1, overflow = TextOverflow.StartEllipsis)
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        when (val k = keys[at]) {
+                            is net.prototux.aare.ui.car.myplay.LetterRing.Key.Letter ->
+                                Text(k.c.toString(), style = TextStyle(fontSize = 96.sp, lineHeight = 100.sp, fontWeight = FontWeight.ExtraBold, color = accent), maxLines = 1)
+                            else -> Icon(
+                                when (k) {
+                                    net.prototux.aare.ui.car.myplay.LetterRing.Key.Space -> Icons.Rounded.SpaceBar
+                                    net.prototux.aare.ui.car.myplay.LetterRing.Key.Delete -> Icons.AutoMirrored.Rounded.Backspace
+                                    else -> Icons.Rounded.Search
+                                }, null, Modifier.size(84.dp).padding(vertical = 8.dp), tint = accent,
+                            )
+                        }
+                        Text(stringResource(R.string.myplay_letter_ring_push), style = TextStyle(fontSize = 20.sp, color = g.secondary), maxLines = 1)
+                        input.found?.let { n ->
+                            Text(
+                                pluralStringResource(R.plurals.myplay_letter_ring_found, n, n),
+                                style = TextStyle(fontSize = 20.sp, color = g.secondary), maxLines = 1,
+                                modifier = Modifier.padding(top = 6.dp).testTag(LETTER_RING_FOUND_TAG),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Look C (design 10): the ring's size and the letters' radius, in the design's pixels. */
+    val LETTER_RING = 620.dp
+    val LETTER_RADIUS = 252.dp
+    const val LETTER_RING_TAG = "orbit_letter_ring"
+    const val LETTER_RING_TEXT_TAG = "orbit_letter_ring_text"
+    const val LETTER_RING_FOUND_TAG = "orbit_letter_ring_found"
+    fun letterKeyTag(i: Int) = "orbit_letter_key_$i"
 
     /** Look C: the countdown ring round an alert's icon (design 20's 84 px ring, less the pill's padding). */
     val ALERT_RING = 66.dp
