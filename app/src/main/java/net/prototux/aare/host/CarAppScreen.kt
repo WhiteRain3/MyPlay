@@ -139,6 +139,8 @@ fun CarAppScreen(conn: CarAppConnection, runtime: CarRuntime, modifier: Modifier
 private fun AlertToSkin(alert: Alert?, conn: CarAppConnection, host: TemplateHost, sink: (net.prototux.aare.ui.car.myplay.MapAlert?) -> Unit) {
     if (alert != null) AlertTimeout(alert, conn, host)
     val okLabel = stringResource(R.string.common_ok)
+    // Look C (design 20): when it appeared, for the countdown round its icon (AlertTimeout starts with it).
+    val shownAt = remember(alert) { android.os.SystemClock.uptimeMillis() }
     DisposableEffect(alert) {
         sink(alert?.let { a ->
             net.prototux.aare.ui.car.myplay.MapAlert(
@@ -150,6 +152,7 @@ private fun AlertToSkin(alert: Alert?, conn: CarAppConnection, host: TemplateHos
                         conn.dismissAlert()
                     }
                 },
+                durationMs = a.durationMillis.coerceAtLeast(0), shownAtMs = shownAt,
             )
         })
         onDispose { sink(null) }

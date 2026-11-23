@@ -96,6 +96,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -404,10 +407,14 @@ object OrbitSkin : MyPlaySkin {
                     .padding(start = 14.dp, end = 18.dp, top = 12.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Box(Modifier.size(52.dp).clip(CircleShape).background(caution.copy(alpha = 0.22f)), contentAlignment = Alignment.Center) {
-                    val icon = alert.icon
-                    if (icon != null) Image(icon, null, Modifier.size(34.dp), contentScale = ContentScale.Fit)
-                    else Icon(Icons.Rounded.Warning, null, Modifier.size(32.dp), tint = caution)
+                // Look C (design 20): the alert's time left runs as a ring round its icon, so the driver
+                // sees it will go by itself; none for an alert with no time limit.
+                AlertCountdown(alert, caution, g.track) {
+                    Box(Modifier.size(52.dp).clip(CircleShape).background(caution.copy(alpha = 0.22f)), contentAlignment = Alignment.Center) {
+                        val icon = alert.icon
+                        if (icon != null) Image(icon, null, Modifier.size(34.dp), contentScale = ContentScale.Fit)
+                        else Icon(Icons.Rounded.Warning, null, Modifier.size(32.dp), tint = caution)
+                    }
                 }
                 Column(Modifier.weight(1f, fill = false)) {
                     Text(alert.title, style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -430,6 +437,38 @@ object OrbitSkin : MyPlaySkin {
             }
         }
     }
+
+    /**
+     * Look C (design 20): [content] (the alert's icon) inside a ring that empties, clockwise from the
+     * top, over the alert's time left. The time is read only where the arc is drawn, so the pill is
+     * not composed again while it runs. An alert with no time limit gets no ring.
+     */
+    @Composable
+    private fun AlertCountdown(alert: net.prototux.aare.ui.car.myplay.MapAlert, colour: Color, track: Color, content: @Composable () -> Unit) {
+        val start = net.prototux.aare.ui.car.myplay.alertTimeLeft(alert, SystemClock.uptimeMillis())
+        if (start == null) { content(); return }
+        val left = remember(alert.key) { androidx.compose.animation.core.Animatable(start) }
+        LaunchedEffect(alert.key) {
+            val from = net.prototux.aare.ui.car.myplay.alertTimeLeft(alert, SystemClock.uptimeMillis()) ?: return@LaunchedEffect
+            left.snapTo(from)
+            left.animateTo(0f, androidx.compose.animation.core.tween((from * alert.durationMs).toInt(), easing = androidx.compose.animation.core.LinearEasing))
+        }
+        Box(
+            Modifier.size(ALERT_RING).testTag(ALERT_COUNTDOWN_TAG).drawBehind {
+                val w = 5.dp.toPx()
+                val inset = w / 2
+                val arc = androidx.compose.ui.geometry.Size(size.width - w, size.height - w)
+                drawArc(track, 0f, 360f, false, Offset(inset, inset), arc, style = Stroke(w))
+                val v = left.value
+                if (v > 0f) drawArc(colour, -90f, 360f * v, false, Offset(inset, inset), arc, style = Stroke(w, cap = StrokeCap.Round))
+            },
+            contentAlignment = Alignment.Center,
+        ) { content() }
+    }
+
+    /** Look C: the countdown ring round an alert's icon (design 20's 84 px ring, less the pill's padding). */
+    val ALERT_RING = 66.dp
+    const val ALERT_COUNTDOWN_TAG = "orbit_alert_countdown"
 
     /** HN-2: the hints round the hub (OrbitHints.kt). */
     @Composable

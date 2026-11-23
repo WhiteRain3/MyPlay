@@ -15,7 +15,18 @@ data class MapAlert(
     val subtitle: String?,
     val icon: ImageBitmap?,
     val actions: List<Pair<String, () -> Unit>>,
+    /** Look C (design 20): how long the alert shows before it goes by itself (the app's durationMillis); 0: until dismissed. */
+    val durationMs: Long = 0,
+    /** When it was first shown (SystemClock.uptimeMillis), so its countdown is right even if it is drawn later. */
+    val shownAtMs: Long = 0,
 )
+
+/**
+ * Look C (design 20): the share of [alert]'s time still to run at [nowMs] (1 when it appears, 0
+ * when it goes); null for an alert with no time limit, which has no countdown.
+ */
+fun alertTimeLeft(alert: MapAlert, nowMs: Long): Float? =
+    if (alert.durationMs <= 0) null else (1f - (nowMs - alert.shownAtMs).toFloat() / alert.durationMs).coerceIn(0f, 1f)
 
 /**
  * Where the home's map hands its app's alert (null: none now). Provided by the engine round the

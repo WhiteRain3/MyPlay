@@ -182,6 +182,28 @@ class MyPlayAlertTest {
         rule.onNodeWithTag(SLOT_MAP_ALERT).assertExists()
     }
 
+    /** Look C (design 20): a timed alert's icon sits in a ring that counts its time down; an untimed one has none. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aTimedAlertCountsDownRoundItsIcon() {
+        show(skin = net.prototux.aare.ui.car.myplay.orbit.OrbitSkin)
+        rule.runOnIdle { appAlert = alert().copy(durationMs = 8_000, shownAtMs = android.os.SystemClock.uptimeMillis()) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.orbit.OrbitSkin.ALERT_COUNTDOWN_TAG).assertExists()
+        rule.runOnIdle { appAlert = alert().copy(key = 9) }
+        rule.waitForIdle()
+        rule.onNodeWithTag(SLOT_MAP_ALERT).assertExists()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.orbit.OrbitSkin.ALERT_COUNTDOWN_TAG).assertDoesNotExist()
+    }
+
+    @Test fun theTimeLeftRunsFromOneToNothing() {
+        val a = alert().copy(durationMs = 10_000, shownAtMs = 1_000)
+        assertEquals(1f, alertTimeLeft(a, 1_000)!!, 0f)
+        assertEquals(0.75f, alertTimeLeft(a, 3_500)!!, 0.0001f)
+        assertEquals(0f, alertTimeLeft(a, 20_000)!!, 0f)
+        assertEquals(1f, alertTimeLeft(a, 500)!!, 0f)
+        assertEquals(null, alertTimeLeft(alert(), 5_000))
+    }
+
     @Test fun thePillsPlaceIsWorkedOut() {
         val hub = FocusGraph.Box(44f, 464f, 256f, 676f)
         val song = FocusGraph.Box(886f, 524f, 1236f, 676f)
