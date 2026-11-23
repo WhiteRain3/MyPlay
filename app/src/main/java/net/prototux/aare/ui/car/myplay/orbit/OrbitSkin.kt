@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -296,7 +297,7 @@ object OrbitSkin : MyPlaySkin {
               }
                 Spacer(Modifier.width(22.dp))
                 // LN-1: the text stays centred on the disc; the lanes reach below it without moving it.
-                Box(Modifier.weight(1f, fill = false).height(132.dp), contentAlignment = Alignment.CenterStart) {
+                Box(Modifier.weight(1f, fill = false).heightIn(min = 132.dp), contentAlignment = Alignment.CenterStart) {
                   Column {
                     turn.distance?.let { Text(it, style = Orbit.Type.hero.floating(g.text), maxLines = 1) }
                     turn.road?.let { Text(it, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 2, overflow = TextOverflow.Ellipsis) }
