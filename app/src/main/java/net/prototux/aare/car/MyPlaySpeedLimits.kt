@@ -93,7 +93,9 @@ class FileSpeedLimits(context: Context) : SpeedLimits {
         val m = matcher ?: return LimitShown.Unknown
         val month = Calendar.getInstance().apply { timeInMillis = fix.atMillis }.get(Calendar.MONTH) + 1
         return when (val r = m.match(fix.lat, fix.lon, fix.bearingDeg, fix.accuracyM, month)) {
-            is Matcher.Result.Known -> LimitShown.Known(r.limit, r.defaulted)
+            // Option A: the owner's "Fill in standard limits" (on by default); off, a limit that is not
+            // a sign tagged on the road (a default for the road's kind or place) shows as not known.
+            is Matcher.Result.Known -> if (r.defaulted && !settings.myplayFillStandardLimits) LimitShown.Unknown else LimitShown.Known(r.limit, r.defaulted)
             Matcher.Result.Unknown -> LimitShown.Unknown
         }
     }
@@ -106,3 +108,12 @@ class FileSpeedLimits(context: Context) : SpeedLimits {
         const val TAG = "MyPlaySpeedLimits"
     }
 }
+
+/**
+ * Option A (docs/ideas/speed-limits.md): show limits that are Lithuania's default for the road
+ * (not a sign tagged on it), marked as an estimate. On by default. Backed up.
+ */
+const val KEY_FILL_STANDARD_LIMITS = "myplay_fill_standard_limits"
+var Settings.myplayFillStandardLimits: Boolean
+    get() = prefs.getBoolean(KEY_FILL_STANDARD_LIMITS, true)
+    set(v) = prefs.edit().putBoolean(KEY_FILL_STANDARD_LIMITS, v).apply()

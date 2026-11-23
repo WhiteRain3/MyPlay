@@ -637,6 +637,20 @@ class OrbitHomeTest {
         assertTrue("sign $sign on the hub $hub", sign.overlaps(hub))
     }
 
+    /** Option A, SL-1: a defaulted limit (no sign tagged) is a dashed sign, not the solid one. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aGuessedLimitIsADashedSign() {
+        show(speed = SpeedReading(64, SpeedReading.From.CAR, LimitShown.Known(50, defaulted = true), over = true))
+        rule.onNodeWithTag(OrbitSkin.LIMIT_SIGN_GUESSED_TAG, useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(OrbitSkin.LIMIT_SIGN_TAG, useUnmergedTree = true).assertDoesNotExist()
+        rule.onNodeWithText("50", useUnmergedTree = true).assertExists()
+        picture2("orbit-limit-guessed-1280x720-night")
+        // The over-limit colour is softer than for a signed limit.
+        val night = true
+        org.junit.Assert.assertNotEquals(Orbit.caution(night), OrbitSkin.overColour(LimitShown.Known(50, true), night, Orbit.glass(night, null).text))
+        assertEquals(Orbit.caution(night), OrbitSkin.overColour(LimitShown.Known(50), night, Orbit.glass(night, null).text))
+    }
+
     /** O4: the corners' shades only behind the parts shown: none without a route, none without a song. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theShadesFollowTheParts() {

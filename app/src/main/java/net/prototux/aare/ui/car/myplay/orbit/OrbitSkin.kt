@@ -114,6 +114,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -667,7 +668,8 @@ object OrbitSkin : MyPlaySkin {
                 OrbitDisc(192.dp, night, Modifier.align(Alignment.BottomStart).carPart(CarPart.OrbitHub).orbitFocus(LocalStopRinged.current, nav, g.halo)) {
                     OrbitRing(trip?.progress, 184.dp, 9.dp, nav, g.track, Modifier.testTag(TRIP_RING_TAG).progressSemantics(trip?.progress)) {
                         Column(Modifier.testTag(HUB_SPEED_TAG).carPart(CarPart.OrbitSpeed), horizontalAlignment = Alignment.CenterHorizontally) {
-                            val colour = if (speed?.over == true) Orbit.caution(night) else g.text
+                            // Option A: over an estimated limit, the caution colour is softer (never stronger than a sign's).
+                            val colour = if (speed?.over == true) overColour(speed.limit, night, g.text) else g.text
                             Text(speed?.kmh?.toString() ?: "–", style = TextStyle(fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"), maxLines = 1)
                             Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, lineHeight = 20.sp, color = g.secondary), maxLines = 1)
                             // SP-1: where the speed comes from, in the picture and with the Developer check.
@@ -694,13 +696,29 @@ object OrbitSkin : MyPlaySkin {
     private fun LimitSign(limit: LimitShown, night: Boolean, modifier: Modifier) {
         val known = limit as? LimitShown.Known
         val ring = if (known != null) Color(0xFFD32F2F) else Orbit.glass(night).secondary
+        // Option A, SL-1: a defaulted limit (the road's kind or place, no sign tagged) in a dashed ring: an estimate, not a sign.
+        val guessed = known?.defaulted == true
         Box(
             modifier.limitPulse(known?.kmh).size(84.dp).shadow(6.dp, CircleShape).clip(CircleShape).background(limitSignFill(night))
-                .border(9.dp, ring, CircleShape).testTag(LIMIT_SIGN_TAG),
+                .then(if (guessed) Modifier.dashedRing(9.dp, ring) else Modifier.border(9.dp, ring, CircleShape))
+                .testTag(if (guessed) LIMIT_SIGN_GUESSED_TAG else LIMIT_SIGN_TAG),
             contentAlignment = Alignment.Center,
         ) {
             Text(known?.kmh?.toString() ?: "–", style = TextStyle(fontSize = if ((known?.kmh ?: 0) >= 100) 28.sp else 34.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF111111)), maxLines = 1)
         }
+    }
+
+    /** The speed's colour over the limit: the caution amber, or halfway to the text colour when the limit is an estimate (never stronger). */
+    fun overColour(limit: LimitShown?, night: Boolean, text: Color): Color =
+        if ((limit as? LimitShown.Known)?.defaulted == true) androidx.compose.ui.graphics.lerp(Orbit.caution(night), text, 0.45f) else Orbit.caution(night)
+
+    /** Option A: a ring of dashes [width] wide inside the edge, for an estimated limit. */
+    private fun Modifier.dashedRing(width: androidx.compose.ui.unit.Dp, colour: Color): Modifier = drawWithContent {
+        drawContent()
+        val w = width.toPx()
+        val r = size.minDimension / 2 - w / 2
+        val dash = (2 * Math.PI.toFloat() * r) / 16f
+        drawCircle(colour, r, center, style = Stroke(w, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(dash * 0.6f, dash * 0.4f))))
     }
 
     /**
@@ -733,6 +751,8 @@ object OrbitSkin : MyPlaySkin {
     const val HUB_SPEED_TAG = "orbit_hub_speed"
     const val SPEED_SOURCE_TAG = "orbit_speed_source"
     const val LIMIT_SIGN_TAG = "orbit_limit_sign"
+    /** Option A, SL-1: the limit sign when the limit is an estimate (DEFAULTED: dashed ring). */
+    const val LIMIT_SIGN_GUESSED_TAG = "orbit_limit_sign_guessed"
 
     @Composable
     override fun Hub(trip: TripSlot?, modifier: Modifier) = Box(modifier) {
@@ -1076,7 +1096,7 @@ object OrbitSkin : MyPlaySkin {
                 OrbitDisc(104.dp, night, Modifier.padding(top = 12.dp).carPart(CarPart.OrbitSpeed)) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         // N20: over the limit by more than the margin, the number turns a calm amber; no sound.
-                        val colour = if (reading?.over == true) Orbit.caution(night) else g.text
+                        val colour = if (reading?.over == true) overColour(reading.limit, night, g.text) else g.text
                         Text(reading?.kmh?.toString() ?: "–", style = Orbit.Type.name.copy(color = colour, lineHeight = 36.sp, fontFeatureSettings = "tnum"), maxLines = 1)
                         Text(stringResource(R.string.myplay_speed_unit_kmh), style = TextStyle(fontSize = 18.sp, color = g.secondary), maxLines = 1)
                     }
@@ -1094,14 +1114,20 @@ object OrbitSkin : MyPlaySkin {
     private fun SpeedLimit(limit: LimitShown, night: Boolean) {
         val g = Orbit.glass(night)
         Column(Modifier.padding(top = 8.dp).widthIn(max = 170.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            OrbitDisc(60.dp, night, Modifier.limitPulse((limit as? LimitShown.Known)?.kmh).border(3.dp, g.secondary, CircleShape)) {
+            val guessed = (limit as? LimitShown.Known)?.defaulted == true
+            OrbitDisc(60.dp, night, Modifier.limitPulse((limit as? LimitShown.Known)?.kmh)
+                .then(if (guessed) Modifier.dashedRing(3.dp, g.secondary) else Modifier.border(3.dp, g.secondary, CircleShape))) {
                 Text(
                     (limit as? LimitShown.Known)?.kmh?.toString() ?: "–",
                     style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold, color = g.text), maxLines = 1,
                 )
             }
             Text(
-                stringResource(if (limit is LimitShown.Known) R.string.myplay_speed_limit_map_data else R.string.myplay_speed_limit_unknown),
+                stringResource(when {
+                    guessed -> R.string.myplay_speed_limit_guessed
+                    limit is LimitShown.Known -> R.string.myplay_speed_limit_map_data
+                    else -> R.string.myplay_speed_limit_unknown
+                }),
                 // SL-10: as large as the speed's unit, the smallest text ORBIT draws there.
                 style = TextStyle(fontSize = 18.sp, lineHeight = 20.sp, textAlign = TextAlign.Center).floating(g.secondary),
                 maxLines = 2, modifier = Modifier.padding(top = 4.dp),
