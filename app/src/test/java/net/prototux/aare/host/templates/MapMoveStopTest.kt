@@ -46,6 +46,7 @@ class MapMoveStopTest {
 
     private val scrolls = ArrayList<Pair<Float, Float>>()
     private val scales = ArrayList<Float>()
+    private val foci = ArrayList<Pair<Float, Float>>()
     private val clicks = ArrayList<Pair<Float, Float>>()
 
     private val host = object : TemplateHost {
@@ -62,7 +63,7 @@ class MapMoveStopTest {
         override fun setStableArea(left: Int, top: Int, right: Int, bottom: Int) = Unit
         override fun mapScroll(dx: Float, dy: Float) { scrolls += dx to dy }
         override fun mapFling(vx: Float, vy: Float) = Unit
-        override fun mapScale(focusX: Float, focusY: Float, factor: Float) { scales += factor }
+        override fun mapScale(focusX: Float, focusY: Float, factor: Float) { scales += factor; foci += focusX to focusY }
         override fun mapClick(x: Float, y: Float) { clicks += x to y }
     }
 
@@ -123,5 +124,25 @@ class MapMoveStopTest {
         rule.onNodeWithTag(MAP_MOVE_PILL_TAG).assertExists()
         val bmp = rule.onRoot().captureToImage().asAndroidBitmap()
         java.io.File(java.io.File("build/reports/myplay-screens").apply { mkdirs() }, "map-move-orbit-1280x720.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** MM-1: with the visible area's middle given, turning zooms round it, not the map's middle. */
+    @Test fun zoomsRoundTheVisibleAreasMiddle() {
+        rule.setContent {
+            CarTheme(night = true, theme = CarThemes.byId("aare")) {
+                CompositionLocalProvider(LocalTemplateHost provides host) {
+                    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
+                        MapMoveStop(host, panOffered = false, panning = { false }, setPan = { }, orbitLook = true,
+                            focusPoint = { androidx.compose.ui.geometry.Offset(300f, 200f) })
+                    }
+                }
+            }
+        }
+        val stop = rule.onNode(isFocusable())
+        stop.requestFocus()
+        stop.performKeyInput { pressKey(Key.DirectionCenter) }
+        stop.performKeyInput { pressKey(Key.Tab) }
+        assertEquals(listOf(300f to 200f), foci)
+        rule.onNodeWithTag(MAP_MOVE_CROSS_TAG).assertExists()
     }
 }

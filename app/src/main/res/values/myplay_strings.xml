@@ -11,7 +11,7 @@
     <string name="myplay_home_maps_ask" translatable="false">Always ask</string>
     <string name="myplay_map_move_hint" translatable="false">Moving the map: the pad moves it, turning zooms. Push or Back to stop.</string>
     <string name="myplay_map_move_pad" translatable="false">Pad moves · turn zooms</string>
-    <string name="myplay_map_move_back" translatable="false">Back to finish</string>
+    <string name="myplay_map_move_back" translatable="false">Push or Back to finish</string>
     <string name="myplay_gesture_line_next" translatable="false">Next song</string>
     <string name="myplay_gesture_line_previous" translatable="false">Previous song</string>
     <string name="myplay_gesture_line_playing" translatable="false">Playing</string>

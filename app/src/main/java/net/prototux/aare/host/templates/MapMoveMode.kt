@@ -10,6 +10,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -94,6 +95,11 @@ internal fun BoxScope.MapMoveStop(
     focus: FocusRequester? = null,
     /** Look C (design 17): ORBIT's look while moving: a glass hint pill at the top and a crosshair, no buttons. */
     orbitLook: Boolean = false,
+    /**
+     * MM-1: the middle of the area the app was told is visible (map px), or null: the map's middle.
+     * Turning zooms round it, and ORBIT's crosshair sits on it.
+     */
+    focusPoint: () -> androidx.compose.ui.geometry.Offset? = { null },
 ) {
     var moving by remember { mutableStateOf(false) }
     var size by remember { mutableStateOf(IntSize.Zero) }
@@ -123,7 +129,10 @@ internal fun BoxScope.MapMoveStop(
                     MapMoveKeys.Action.Enter -> enter()
                     MapMoveKeys.Action.Leave -> leave()
                     is MapMoveKeys.Action.Pan -> safeCall("mapScroll") { host.mapScroll(a.dx * size.width, a.dy * size.height) }
-                    is MapMoveKeys.Action.Zoom -> safeCall("mapScale") { host.mapScale(size.width / 2f, size.height / 2f, a.factor) }
+                    is MapMoveKeys.Action.Zoom -> {
+                        val f = focusPoint()
+                        safeCall("mapScale") { host.mapScale(f?.x ?: (size.width / 2f), f?.y ?: (size.height / 2f), a.factor) }
+                    }
                 }
                 true
             }
@@ -131,7 +140,7 @@ internal fun BoxScope.MapMoveStop(
             .focusable().carFocusHighlight(MaterialTheme.shapes.large),
     )
     if (moving && orbitLook) {
-        MapMoveOrbitLook()
+        MapMoveOrbitLook(focusPoint, size)
     } else if (moving) {
         Text(
             stringResource(R.string.myplay_map_move_hint),
@@ -144,7 +153,7 @@ internal fun BoxScope.MapMoveStop(
 
 /** Look C (design 17): the hint pill at the top and the crosshair with its four arrows in the middle. */
 @Composable
-private fun BoxScope.MapMoveOrbitLook() {
+private fun BoxScope.MapMoveOrbitLook(focusPoint: () -> androidx.compose.ui.geometry.Offset?, box: IntSize) {
     val scheme = MaterialTheme.colorScheme
     val pill = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
     androidx.compose.foundation.layout.Row(
@@ -161,7 +170,14 @@ private fun BoxScope.MapMoveOrbitLook() {
             modifier = Modifier.padding(start = 12.dp))
     }
     // The crosshair: a ring in the middle, an arrow each way.
-    androidx.compose.foundation.Canvas(Modifier.align(Alignment.Center).size(170.dp).testTag(MAP_MOVE_CROSS_TAG)) {
+    // MM-1: on the visible area's middle (where turning zooms), else the map's.
+    androidx.compose.foundation.Canvas(
+        Modifier.align(Alignment.Center).offset {
+            val f = focusPoint()
+            if (f == null || box == IntSize.Zero) androidx.compose.ui.unit.IntOffset.Zero
+            else androidx.compose.ui.unit.IntOffset((f.x - box.width / 2f).toInt(), (f.y - box.height / 2f).toInt())
+        }.size(170.dp).testTag(MAP_MOVE_CROSS_TAG),
+    ) {
         val c = center
         val white = androidx.compose.ui.graphics.Color.White
         val halo = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.45f)

@@ -228,7 +228,8 @@ internal fun MapScaffold(
             }
         }
         // MyPlay (R5): the map as the knob's last stop here, and moving it with the knob (MapMoveMode.kt).
-        MapMoveStop(host, panOffered, { panState.value }, setPan, pushEnters = wheelHost == null, moveAsked = moveAsked, focus = mapFocus, orbitLook = wheelHost != null)
+        MapMoveStop(host, panOffered, { panState.value }, setPan, pushEnters = wheelHost == null, moveAsked = moveAsked, focus = mapFocus, orbitLook = wheelHost != null,
+            focusPoint = { registry.toldVisible?.takeIf { it.size == 4 }?.let { r -> androidx.compose.ui.geometry.Offset((r[0] + r[2]) / 2f, (r[1] + r[3]) / 2f) } })
         if (wheelOpen && entries.isNotEmpty()) {
             ActionsWheelView(entries, wheelRing.coerceIn(0, entries.lastIndex),
                 move = { d -> wheelRing = (wheelRing + d).coerceIn(0, entries.lastIndex); wheelBackAt = Long.MIN_VALUE / 2 },
