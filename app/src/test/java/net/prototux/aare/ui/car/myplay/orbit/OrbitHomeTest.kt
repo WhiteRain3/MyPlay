@@ -775,6 +775,7 @@ class OrbitHomeTest {
         org.junit.Assert.assertEquals(360f, (free.top + free.bottom) / 2, 0.5f)
         // Look C (35): the top right corner is the map's now, so the area is at least as large as it was
         // with the clock there (left 288, top 43.2).
+        // SC-1: the song's corner (208 wide) reaches in no further than the clock did (a 220 wide one gave 296).
         org.junit.Assert.assertTrue("left $free", free.left <= 289f)
         org.junit.Assert.assertTrue("top $free", free.top <= 44.2f)
         // Clear of the discs, the hub and the song's corner with the clock.

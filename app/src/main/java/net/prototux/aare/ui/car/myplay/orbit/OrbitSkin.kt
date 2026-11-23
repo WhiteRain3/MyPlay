@@ -776,8 +776,13 @@ object OrbitSkin : MyPlaySkin {
 
     /** The song's ring, as the sheet. */
     private val SONG_RING = 152.dp
-    /** Look C (35): the status corner's fixed size: the ring, the badge over its top, the pills' room at its left. */
-    private val CORNER_W = 220.dp
+    /**
+     * Look C (35): the status corner's fixed size: the ring, the badge over its top, the pills' room
+     * at its left. SC-1: 208 wide, no wider than the clock column it replaced reached in (the free area
+     * is centred, so every dp here is taken from the left side too); a wide pill may reach a little
+     * past its left edge, over the map.
+     */
+    private val CORNER_W = 208.dp
     private val CORNER_H = SONG_RING + 26.dp
     /** Where the pills' middles are: a little left of the ring's edge, above and below its middle (the sheet). */
     private val PILL_X = CORNER_W - SONG_RING - 6.dp
