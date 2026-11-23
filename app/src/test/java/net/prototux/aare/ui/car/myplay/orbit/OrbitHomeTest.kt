@@ -77,6 +77,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.unit.dp
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -409,6 +411,28 @@ class OrbitHomeTest {
         rule.onNodeWithTag(SLOT_APPS).assertExists()
         rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_STATUS).assertExists()
         rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    /** SC-3: ice with a long reading ("-12°") is a pill that stays inside the corner, never over the map. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aLongPillStaysInsideTheCorner() {
+        rule.setContent {
+            CarTheme(night = true, theme = net.prototux.aare.ui.theme.CarThemes.byId("aare")) {
+                CompositionLocalProvider(
+                    net.prototux.aare.ui.car.myplay.LocalSkinTokens provides Orbit.tokens(true),
+                    net.prototux.aare.ui.car.myplay.LocalRoadIce provides true,
+                    net.prototux.aare.ui.car.myplay.LocalOutsideTemp provides net.prototux.aare.ui.car.myplay.OutsideTemp(true, -12),
+                ) {
+                    Box(androidx.compose.ui.Modifier.padding(start = 200.dp, top = 200.dp)) { OrbitSkin.NoSong(androidx.compose.ui.Modifier) }
+                }
+            }
+        }
+        rule.waitForIdle()
+        val corner = rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val pill = rule.onNodeWithTag(OrbitSkin.TEMP_PILL_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertTrue("pill $pill corner $corner", pill.left >= corner.left - 0.5f)
+        rule.onNodeWithTag(OrbitSkin.ICE_TAG, useUnmergedTree = true).assertExists()
+        rule.onNodeWithText("-12°").assertExists()
     }
 
     @Test fun theBatteryShowsOnlyWhenLowOrCharging() {
