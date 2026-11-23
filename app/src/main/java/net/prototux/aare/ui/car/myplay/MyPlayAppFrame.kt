@@ -25,6 +25,7 @@ import androidx.compose.runtime.key
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -88,6 +89,9 @@ internal fun MyPlayAppFrame(
     val appKey = (state.screen as? net.prototux.aare.ui.car.CarScreen.App)?.appId ?: "launcher"
     val grow = remember(appKey) { Animatable(if (grows && !sources.picture) 0f else 1f) }
     LaunchedEffect(appKey) { grow.animateTo(1f, tween(APP_OPEN_MS, easing = FastOutSlowInEasing)) }
+    // SM-2: whether the reveal is still running, read through derivedStateOf: reading grow.value here
+    // composed the whole frame (the app, the rail, the call layer) again on every frame of the opening.
+    val revealing by remember(grow) { derivedStateOf { grow.value < 1f } }
     if (grows) SideEffect { memory.returning = true }
     val hint = remember(appKey) { grows && !sources.picture && state.homeHints < HOME_HINT_TIMES }
     // O2b: a maps app full screen goes home after the driver's chosen minutes without input (off by default).
@@ -208,7 +212,7 @@ internal fun MyPlayAppFrame(
                 if (state.railOnRight) rail()
             }
             // O3-3: the app shows through a window growing out of its stop (over any surface view).
-            if (grows && grow.value < 1f) RevealCover(memory.origin, { grow.value }, tokens.background, Modifier.matchParentSize())
+            if (grows && revealing) RevealCover(memory.origin, { grow.value }, tokens.background, Modifier.matchParentSize())
             overlay(Modifier.align(Alignment.BottomCenter))
             // O3: the way home, the first few times in a drive (there is no rail to show it).
             if (hint) key(appKey) { HomeHint(true, Modifier.align(Alignment.BottomCenter).padding(bottom = 28.dp)) }
