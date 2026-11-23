@@ -613,7 +613,21 @@ fun NextVoicePage() {
     }
     val phoneDefault = remember { runCatching { Assistants.phoneDefault(ctx) }.getOrNull() }
     val defaultLabel = phoneDefault?.let { pkg -> choices.firstOrNull { it.packageName == pkg }?.label ?: Assistants.label(ctx, pkg) ?: pkg }
+    val ticks = rememberResumeTicks()
+    val micOk = remember(ticks) { micGranted(ctx) }
+    val askMic = rememberMicPermission()
     Page("car/voice") {
+        // Review CH-1: voice search in car apps (Waze's microphone, the assistant) needs it, and nothing
+        // else in the app asks for it. Asked here, in context (plan §10).
+        if (!micOk) item {
+            NextCard(warn = true) {
+                NextRow(stringResource(R.string.next_voice_mic_label), icon = Icons.Rounded.Mic, disc = DiscTone.WARN,
+                    note = RowNote.Help(stringResource(R.string.next_voice_mic_help))) {
+                    NextButton(stringResource(R.string.next_upd_allow_button_label), askMic, small = true)
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
         item {
             NextCard {
                 NextRow(
@@ -634,6 +648,32 @@ fun NextVoicePage() {
                 }
             }
         }
+    }
+}
+
+internal fun micGranted(ctx: android.content.Context): Boolean =
+    androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+/** Asks for the microphone; refused for good, MyPlay's system settings open instead (today's rule, permissionBlocked). */
+@Composable
+internal fun rememberMicPermission(): () -> Unit {
+    val ctx = LocalContext.current
+    val activity = ctx as? android.app.Activity
+    val settings = remember { Settings(ctx) }
+    var before by remember { mutableStateOf(false) }
+    var asked by remember { mutableStateOf(false) }
+    val p = android.Manifest.permission.RECORD_AUDIO
+    fun rationale() = activity != null && androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(activity, p)
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+        if (!ok && activity != null && net.prototux.aare.ui.permissionBlocked(before, rationale(), asked)) {
+            ctx.startSafely(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", ctx.packageName, null)))
+        }
+    }
+    return {
+        before = rationale()
+        asked = p in settings.requestedPermissions
+        settings.requestedPermissions = settings.requestedPermissions + p
+        launcher.launch(p)
     }
 }
 

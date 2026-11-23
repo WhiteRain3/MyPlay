@@ -697,4 +697,7 @@
     <string name="next_shz_old_shizuku_help" translatable="false">This Shizuku is too old; version 11 or newer works</string>
     <string name="next_scr_fits_orbit_help" translatable="false">Changes the app screens; ORBIT fits itself to the car</string>
     <string name="next_scr_wallpaper_orbit_help" translatable="false">On ORBIT it shows when no map is on the home screen</string>
+    <string name="next_voice_mic_label" translatable="false">Allow the microphone</string>
+    <string name="next_voice_mic_help" translatable="false">For the assistant and the maps app\'s voice search</string>
+    <string name="next_voice_mic_off_help" translatable="false">Microphone not allowed</string>
 </resources>
