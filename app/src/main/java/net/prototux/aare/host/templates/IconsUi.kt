@@ -183,7 +183,7 @@ private fun rememberCarIconBitmap(icon: CarIcon, sizePx: Int, key: Any? = null):
  * A key that is equal for equal icon content across deserializations, or null if unknown.
  * Resources resolve differently by day and night, so [night] is part of their key.
  */
-private fun contentKey(icon: CarIcon, night: Boolean): String? = runCatching {
+internal fun contentKey(icon: CarIcon, night: Boolean): String? = runCatching {
     val ic = icon.icon ?: return null
     when (ic.type) {
         IconCompat.TYPE_RESOURCE -> "res:${ic.resPackage}:${ic.resId}:${if (night) "night" else "day"}"
@@ -222,7 +222,7 @@ private fun pixelHash(b: Bitmap): Int {
 private const val FULL_HASH_PIXELS = 512 * 128
 
 /** Equal only for the same object: a remember or cache key that doesn't go through CarIcon.equals. */
-private class Same(private val value: Any) {
+internal class Same(private val value: Any) {
     override fun equals(other: Any?) = other is Same && other.value === value
     override fun hashCode() = System.identityHashCode(value)
 }
