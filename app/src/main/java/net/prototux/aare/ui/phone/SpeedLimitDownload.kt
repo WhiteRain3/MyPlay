@@ -97,10 +97,12 @@ object SpeedLimitDownload {
     /** The region's file description from the release page, for its size before a download (small, any network); null if unknown. */
     suspend fun lookUp(region: String): SpeedLimitManifest? = withContext(Dispatchers.IO) {
         val known = SpeedLimitFiles.known(region).ifEmpty { return@withContext null }
-        // SL-5: the "-v2" file first, the plain one while no "-v2" is published.
-        listOf(true, false).firstNotNullOfOrNull { v2 ->
-            runCatching { SpeedLimitManifest.parse(String(get(SpeedLimitFiles.manifestUrl(known, v2)), Charsets.UTF_8)) }.getOrNull()?.takeIf { it.region == region }
-        }
+        // SL-5: the "-v2" file first, the plain one only while no "-v2" is published (SL-9: a refused
+        // or timed-out "-v2" look is not a reason to show the plain file's size).
+        fun read(v2: Boolean) = SpeedLimitManifest.parse(String(get(SpeedLimitFiles.manifestUrl(known, v2)), Charsets.UTF_8))
+        runCatching {
+            try { read(v2 = true) } catch (e: NotFound) { read(v2 = false) }
+        }.getOrNull()?.takeIf { it.region == region }
     }
 
     /** The look a month after the last one (called when the app or the page opens); quiet when it is not due or not on Wi-Fi. */
