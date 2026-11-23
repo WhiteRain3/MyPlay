@@ -2,6 +2,10 @@ package net.prototux.aare.host.templates
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.material.icons.rounded.RadioButtonChecked
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.border
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -88,6 +92,8 @@ internal fun BoxScope.MapMoveStop(
     /** Look C: each new value (above 0) starts move mode, as "Move map" in the actions wheel. */
     moveAsked: Int = 0,
     focus: FocusRequester? = null,
+    /** Look C (design 17): ORBIT's look while moving: a glass hint pill at the top and a crosshair, no buttons. */
+    orbitLook: Boolean = false,
 ) {
     var moving by remember { mutableStateOf(false) }
     var size by remember { mutableStateOf(IntSize.Zero) }
@@ -124,7 +130,9 @@ internal fun BoxScope.MapMoveStop(
             .then(if (focus != null) Modifier.focusRequester(focus) else Modifier)
             .focusable().carFocusHighlight(MaterialTheme.shapes.large),
     )
-    if (moving) {
+    if (moving && orbitLook) {
+        MapMoveOrbitLook()
+    } else if (moving) {
         Text(
             stringResource(R.string.myplay_map_move_hint),
             style = MaterialTheme.typography.titleSmall,
@@ -133,3 +141,47 @@ internal fun BoxScope.MapMoveStop(
         )
     }
 }
+
+/** Look C (design 17): the hint pill at the top and the crosshair with its four arrows in the middle. */
+@Composable
+private fun BoxScope.MapMoveOrbitLook() {
+    val scheme = MaterialTheme.colorScheme
+    val pill = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+    androidx.compose.foundation.layout.Row(
+        Modifier.align(Alignment.TopCenter).padding(top = 40.dp).clip(pill).background(scheme.surface.copy(alpha = 0.92f))
+            .border(2.dp, scheme.outlineVariant, pill).padding(horizontal = 22.dp, vertical = 12.dp)
+            .testTag(MAP_MOVE_PILL_TAG),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(14.dp),
+    ) {
+        androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Rounded.RadioButtonChecked, null,
+            Modifier.padding(end = 0.dp).size(22.dp), tint = scheme.onSurfaceVariant)
+        Text(stringResource(R.string.myplay_map_move_pad), style = MaterialTheme.typography.titleMedium, color = scheme.onSurfaceVariant)
+        Text(stringResource(R.string.myplay_map_move_back), style = MaterialTheme.typography.titleMedium, color = scheme.onSurface,
+            modifier = Modifier.padding(start = 12.dp))
+    }
+    // The crosshair: a ring in the middle, an arrow each way.
+    androidx.compose.foundation.Canvas(Modifier.align(Alignment.Center).size(170.dp).testTag(MAP_MOVE_CROSS_TAG)) {
+        val c = center
+        val white = androidx.compose.ui.graphics.Color.White
+        val halo = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.45f)
+        drawCircle(halo, 13.dp.toPx(), c, style = androidx.compose.ui.graphics.drawscope.Stroke(6.dp.toPx()))
+        drawCircle(white, 11.dp.toPx(), c, style = androidx.compose.ui.graphics.drawscope.Stroke(3.dp.toPx()))
+        val d = 70.dp.toPx()
+        val a = 12.dp.toPx()
+        for ((dx, dy) in listOf(0f to -1f, 0f to 1f, -1f to 0f, 1f to 0f)) {
+            val tip = androidx.compose.ui.geometry.Offset(c.x + dx * (d + a), c.y + dy * (d + a))
+            val base = androidx.compose.ui.geometry.Offset(c.x + dx * d, c.y + dy * d)
+            val px = -dy * a
+            val py = dx * a
+            val path = androidx.compose.ui.graphics.Path().apply {
+                moveTo(tip.x, tip.y); lineTo(base.x + px, base.y + py); lineTo(base.x - px, base.y - py); close()
+            }
+            drawPath(path, halo, style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx()))
+            drawPath(path, white)
+        }
+    }
+}
+
+internal const val MAP_MOVE_PILL_TAG = "map_move_pill"
+internal const val MAP_MOVE_CROSS_TAG = "map_move_cross"

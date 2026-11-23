@@ -115,7 +115,11 @@ class ActionsWheelTest {
         rule.onNodeWithText("Move map").assertExists()
         wheel.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.waitForIdle()
-        rule.onNodeWithText(rule.activity.getString(R.string.myplay_map_move_hint)).assertExists()
+        // Look C (design 17): ORBIT's look: the hint pill and the crosshair, not the old line.
+        rule.onNodeWithTag(MAP_MOVE_PILL_TAG).assertExists()
+        rule.onNodeWithTag(MAP_MOVE_CROSS_TAG).assertExists()
+        rule.onNodeWithText(rule.activity.getString(R.string.myplay_map_move_back)).assertExists()
+        rule.onNodeWithText(rule.activity.getString(R.string.myplay_map_move_hint)).assertDoesNotExist()
     }
 
     /** While a call or a notice holds the knob, Back and the push are not the wheel's. */

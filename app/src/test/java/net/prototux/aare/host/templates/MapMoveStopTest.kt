@@ -11,6 +11,12 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTouchInput
@@ -98,5 +104,24 @@ class MapMoveStopTest {
         rule.onNodeWithText(hint).assertExists()
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         rule.onNodeWithText(hint).assertDoesNotExist()
+    }
+
+    /** Look C (design 17): a picture of ORBIT's move look (build/reports/myplay-screens). */
+    @Test @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun orbitMoveLookPicture() {
+        rule.setContent {
+            CarTheme(night = true, theme = CarThemes.byId("aare")) {
+                CompositionLocalProvider(LocalTemplateHost provides host) {
+                    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0xFF1B2A33))) {
+                        MapMoveStop(host, panOffered = false, panning = { false }, setPan = { }, pushEnters = false, moveAsked = 1, orbitLook = true)
+                    }
+                }
+            }
+        }
+        rule.waitForIdle()
+        rule.onNodeWithTag(MAP_MOVE_PILL_TAG).assertExists()
+        val bmp = rule.onRoot().captureToImage().asAndroidBitmap()
+        java.io.File(java.io.File("build/reports/myplay-screens").apply { mkdirs() }, "map-move-orbit-1280x720.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 }
