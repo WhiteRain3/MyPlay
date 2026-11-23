@@ -435,6 +435,33 @@ class OrbitHomeTest {
         rule.onNodeWithText("-12°").assertExists()
     }
 
+    /**
+     * SC-3, SC-4: each pill on its own (both FitText callers): the battery at 100 % charging and at
+     * 15 %, the temperature without ice. None crashes, and none is wider than its place (100 dp).
+     */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun everyPillDrawsAndFitsItsPlace() {
+        rule.setContent {
+            CarTheme(night = true, theme = net.prototux.aare.ui.theme.CarThemes.byId("aare")) {
+                CompositionLocalProvider(net.prototux.aare.ui.car.myplay.LocalSkinTokens provides Orbit.tokens(true)) {
+                    androidx.compose.foundation.layout.Column {
+                        Box(androidx.compose.ui.Modifier.testTag("charging")) { OrbitSkin.BatteryPill(100, charging = true) }
+                        Box(androidx.compose.ui.Modifier.testTag("low")) { OrbitSkin.BatteryPill(15, charging = false) }
+                        Box(androidx.compose.ui.Modifier.testTag("warm")) { OrbitSkin.TempPill(5, ice = false) }
+                    }
+                }
+            }
+        }
+        rule.waitForIdle()
+        for (tag in listOf("charging", "low", "warm")) {
+            val b = rule.onNodeWithTag(tag).fetchSemanticsNode().boundsInRoot
+            assertTrue("$tag $b", b.width in 1f..100.5f)
+        }
+        rule.onNodeWithText("100%").assertExists()
+        rule.onNodeWithText("15%").assertExists()
+        rule.onNodeWithText("5°").assertExists()
+    }
+
     @Test fun theBatteryShowsOnlyWhenLowOrCharging() {
         assertTrue(OrbitSkin.batteryShown(20, charging = false))
         assertTrue(OrbitSkin.batteryShown(80, charging = true))

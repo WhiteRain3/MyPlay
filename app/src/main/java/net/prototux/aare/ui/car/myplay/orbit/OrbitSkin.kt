@@ -189,6 +189,7 @@ import net.prototux.aare.ui.car.rememberPhoneStatus
 import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.isSpecified
 import net.prototux.aare.car.LimitShown
 
 /**
@@ -815,37 +816,48 @@ object OrbitSkin : MyPlaySkin {
             val outside = LocalOutsideTemp.current
             val ice = LocalRoadIce.current
             PillPlace(TEMP_Y, Modifier.testTag(ICE_SLOT_TAG)) {
-                if (ice || outside.degrees != null) {
-                    val colour = if (ice) Orbit.warning(night) else g.text
-                    StatusPill(PILL_H, Modifier.widthIn(max = PILL_MAX).testTag(TEMP_PILL_TAG), PILL_PAD) {
-                        if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(PILL_ICON).testTag(ICE_TAG), tint = colour)
-                        outside.degrees?.let {
-                            // SC-3: a long reading ("-12°" with the ice sign) is made smaller, never wider than the pill.
-                            Box(Modifier.testTag(OUTSIDE_TEMP_TAG)) {
-                                FitText("$it°", TextStyle(fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"),
-                                    PILL_MAX - PILL_PAD * 2 - if (ice) PILL_ICON + 6.dp else 0.dp)
-                            }
-                        }
-                    }
-                }
+                if (ice || outside.degrees != null) TempPill(outside.degrees, ice)
             }
             // The battery, only when low (red) or charging. N5-3: never when the phone does not tell it.
             val battery = rememberPhoneStatus()?.takeIf { it.batteryKnown && batteryShown(it.battery, it.charging) }
             battery?.let { b ->
-                val colour = if (batteryLow(b.battery, b.charging)) Orbit.warning(night) else Orbit.accent(World.NAVIGATE, night)
-                PillPlace(BATTERY_Y) {
-                    StatusPill(PILL_H, Modifier.widthIn(max = PILL_MAX).testTag(BATTERY_TAG).carPart(CarPart.Status), PILL_PAD) {
-                        Icon(batteryIcon(b.battery, b.charging), null, Modifier.size(PILL_ICON), tint = colour)
-                        // SC-3: "100%" while charging is made smaller, never wider than the pill.
-                        Box(Modifier.testTag(BATTERY_NUMBER_TAG)) {
-                            FitText("${b.battery}%", TextStyle(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"),
-                                PILL_MAX - PILL_PAD * 2 - PILL_ICON - 6.dp)
-                        }
-                    }
+                PillPlace(BATTERY_Y) { BatteryPill(b.battery, b.charging) }
+            }
+        }
+    }
+
+    /** Look C (35): the outside temperature, with the ice sign (and in the warning colour) when icy. */
+    @Composable
+    internal fun TempPill(degrees: Int?, ice: Boolean) {
+        val night = LocalSkinTokens.current.night
+        val colour = if (ice) Orbit.warning(night) else glass().text
+        StatusPill(PILL_H, Modifier.widthIn(max = PILL_MAX).testTag(TEMP_PILL_TAG), PILL_PAD) {
+            if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(PILL_ICON).testTag(ICE_TAG), tint = colour)
+            degrees?.let {
+                // SC-3: a long reading ("-12°" with the ice sign) is made smaller, never wider than the pill.
+                Box(Modifier.testTag(OUTSIDE_TEMP_TAG)) {
+                    FitText("$it°", PILL_TEXT.copy(fontSize = 24.sp, lineHeight = 24.sp, color = colour),
+                        PILL_MAX - PILL_PAD * 2 - if (ice) PILL_ICON + 6.dp else 0.dp)
                 }
             }
         }
     }
+
+    /** Look C (35): the battery, red when low; shown only when low or charging ([batteryShown]). */
+    @Composable
+    internal fun BatteryPill(level: Int, charging: Boolean) {
+        val night = LocalSkinTokens.current.night
+        val colour = if (batteryLow(level, charging)) Orbit.warning(night) else Orbit.accent(World.NAVIGATE, night)
+        StatusPill(PILL_H, Modifier.widthIn(max = PILL_MAX).testTag(BATTERY_TAG).carPart(CarPart.Status), PILL_PAD) {
+            Icon(batteryIcon(level, charging), null, Modifier.size(PILL_ICON), tint = colour)
+            // SC-3: "100%" while charging is made smaller, never wider than the pill.
+            Box(Modifier.testTag(BATTERY_NUMBER_TAG)) {
+                FitText("$level%", PILL_TEXT.copy(fontSize = 22.sp, lineHeight = 22.sp, color = colour), PILL_MAX - PILL_PAD * 2 - PILL_ICON - 6.dp)
+            }
+        }
+    }
+
+    private val PILL_TEXT = TextStyle(fontWeight = FontWeight.ExtraBold, fontFeatureSettings = "tnum")
 
     /**
      * A pill's place: centred on ([PILL_X], [y]), [PILL_MAX] wide. SC-3: a pill is never wider, so it
@@ -921,7 +933,11 @@ object OrbitSkin : MyPlaySkin {
         val room = with(LocalDensity.current) { width.toPx() }
         val needed = remember(text, style) { measurer.measure(text, style, maxLines = 1).size.width }
         val fit = if (needed > room && needed > 0) room / needed else 1f
-        Text(text, style = style.copy(fontSize = style.fontSize * fit, lineHeight = style.lineHeight * fit), maxLines = 1)
+        // SC-4: a style without a line height (or size) keeps it unspecified; Unspecified * fit throws.
+        Text(text, style = style.copy(
+            fontSize = if (style.fontSize.isSpecified) style.fontSize * fit else style.fontSize,
+            lineHeight = if (style.lineHeight.isSpecified) style.lineHeight * fit else style.lineHeight,
+        ), maxLines = 1)
     }
 
     /** The sheet's artwork stand-in when a song has none. */
