@@ -15,6 +15,11 @@ import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.requestFocus
@@ -105,6 +110,30 @@ class ActionsWheelTest {
         shadowOf(android.os.Looper.getMainLooper()).idle()
         rule.onNodeWithTag(ACTIONS_WHEEL_TAG).assertDoesNotExist()
         assertEquals(listOf("mute"), ran)
+    }
+
+    /** For the design comparison: the wheel open over a plain map, its first action ringed. */
+    @Test @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun theOpenWheelPicture() {
+        rule.setContent {
+            CarTheme(night = true, theme = CarThemes.byId("aare")) {
+                val w = ActionsWheelHost({ homes++ }, "MyPlay home", "Move map", now = { clock }, held = { held })
+                CompositionLocalProvider(LocalTemplateHost provides host, LocalActionsWheel provides w) {
+                    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0xFF0B1318))) {
+                        MapScaffold(strip, mapStrip, panModeDelegate = null, wheel = true) { }
+                    }
+                }
+            }
+        }
+        val stop = rule.onNode(isFocusable())
+        stop.requestFocus()
+        stop.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(ACTIONS_WHEEL_TAG).assertExists()
+        rule.onNodeWithTag(wheelRowTag("a0")).assertIsSelected()
+        rule.mainClock.advanceTimeBy(1_000)
+        val bmp = rule.onRoot().captureToImage().asAndroidBitmap()
+        val dir = java.io.File("build/reports/myplay-screens").apply { mkdirs() }
+        java.io.File(dir, "actions-wheel-1280x720-night.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     @Test fun moveMapStartsMovingTheMap() {

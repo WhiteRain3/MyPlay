@@ -12,6 +12,11 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.withKeyDown
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import net.prototux.aare.ui.car.myplay.orbit.OrbitSkin
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -114,6 +119,30 @@ class LetterRingTest {
         rule.waitForIdle()
         rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
         assertEquals(listOf("notice"), done)
+    }
+
+    /** For the design comparison: the ring at night with "Bah" typed, six places found, the knob turned to F. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun theRingPicture() {
+        text = "Bah"
+        rule.setContent {
+            net.prototux.aare.ui.theme.CarTheme(night = true, theme = net.prototux.aare.ui.theme.CarThemes.byId("aare")) {
+                androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0xFF0B1318))) {
+                    CompositionLocalProvider(LocalSkinTokens provides OrbitSkin.tokens(true)) {
+                        OrbitSkin.letterRing(input(6), Modifier.fillMaxSize())
+                    }
+                }
+            }
+        }
+        rule.waitForIdle()
+        val ring = rule.onNodeWithTag(OrbitSkin.LETTER_RING_TAG)
+        ring.performKeyInput { pressKey(Key.DirectionRight) }
+        rule.mainClock.advanceTimeBy(1_000)
+        rule.onNodeWithText("6 places so far").assertExists()
+        val bmp = rule.onRoot().captureToImage().asAndroidBitmap()
+        val dir = java.io.File("build/reports/myplay-screens").apply { mkdirs() }
+        java.io.File(dir, "orbit-letter-ring-1280x720-night.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")

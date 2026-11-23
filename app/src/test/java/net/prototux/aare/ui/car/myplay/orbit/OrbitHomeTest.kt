@@ -732,6 +732,63 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w901dp-h543dp-land-mdpi") fun ringing901x543Day() = picture("orbit-call-ringing-901x543-day", night = false, call = CarCall(true, "+370 612 34567", 1L))
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun inCallNight() = picture("orbit-call-in-call-1280x720-night", night = true, call = CarCall(false, "Anna K.", System.currentTimeMillis() - 133_000))
 
+    /** For the design comparison: navigating, nothing playing: the empty ring with the time in its middle, at night. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeNothingPlayingNight() {
+        val state = show(night = true)
+        rule.runOnIdle { state.nowPlaying = null }
+        rule.mainClock.advanceTimeBy(1_000)
+        rule.onNodeWithTag(OrbitSkin.NO_SONG_TAG, useUnmergedTree = true).assertExists()
+        picture2("orbit-home-nothing-playing-1280x720-night")
+    }
+
+    /**
+     * For the design comparison: ice on the road (-3° outside) and a low phone battery (12 %), at
+     * night. Robolectric's phone tells no battery, so the test gives it one (the sticky battery
+     * broadcast the app reads); the outside temperature comes from a car sensor batch.
+     */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun homeIceAndLowBatteryNight() {
+        @Suppress("DEPRECATION")
+        rule.activity.application.sendStickyBroadcast(android.content.Intent(android.content.Intent.ACTION_BATTERY_CHANGED)
+            .putExtra(android.os.BatteryManager.EXTRA_LEVEL, 12).putExtra(android.os.BatteryManager.EXTRA_SCALE, 100)
+            .putExtra(android.os.BatteryManager.EXTRA_PLUGGED, 0))
+        net.prototux.aare.car.CarData.update(aap_protobuf.service.sensorsource.message.SensorBatchOuterClass.SensorBatch.newBuilder()
+            .addEnvironmentData(aap_protobuf.service.sensorsource.message.EnvironmentDataOuterClass.EnvironmentData.newBuilder().setTemperatureE3(-3_000))
+            .build())
+        try {
+            val state = show(night = true)
+            rule.runOnIdle { state.driveWarnings = true; state.iceRisk = true }
+            rule.waitUntil(5_000) { rule.onAllNodes(hasTestTag(OrbitSkin.BATTERY_TAG), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+            rule.mainClock.advanceTimeBy(500)
+            rule.onNodeWithTag(OrbitSkin.ICE_TAG, useUnmergedTree = true).assertExists()
+            rule.onNodeWithText("12%", useUnmergedTree = true).assertExists()
+            picture2("orbit-home-ice-low-battery-1280x720-night")
+        } finally {
+            net.prototux.aare.car.CarData.reset()
+        }
+    }
+
+    /** For the design comparison: navigating with lanes: the turn card with its lane arrows under the disc, at night. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun navigatingWithLanesNight() {
+        fun lane(vararg dirs: Pair<Int, Boolean>) = androidx.car.app.navigation.model.Lane.Builder()
+            .apply { dirs.forEach { (s, r) -> addDirection(androidx.car.app.navigation.model.LaneDirection.create(s, r)) } }.build()
+        val step = Step.Builder("Turn right").setRoad("Hauptstraße")
+            .setManeuver(Maneuver.Builder(Maneuver.TYPE_TURN_NORMAL_RIGHT).build())
+            .addLane(lane(androidx.car.app.navigation.model.LaneDirection.SHAPE_NORMAL_LEFT to false))
+            .addLane(lane(androidx.car.app.navigation.model.LaneDirection.SHAPE_STRAIGHT to false))
+            .addLane(lane(androidx.car.app.navigation.model.LaneDirection.SHAPE_STRAIGHT to false, androidx.car.app.navigation.model.LaneDirection.SHAPE_NORMAL_RIGHT to true))
+            .addLane(lane(androidx.car.app.navigation.model.LaneDirection.SHAPE_NORMAL_RIGHT to true))
+            .build()
+        val trip = Trip.Builder()
+            .addStep(step, estimate(350.0, 40))
+            .addDestination(Destination.Builder().setName("Home").build(), estimate(9_400.0, 1_080))
+            .build()
+        val state = show(night = true)
+        rule.runOnIdle { state.trip = trip }
+        rule.mainClock.advanceTimeBy(1_000)
+        rule.onNodeWithTag(OrbitSkin.LANES_TAG, useUnmergedTree = true).assertExists()
+        picture2("orbit-navigating-lanes-1280x720-night")
+    }
+
     /** L-1: a level that lists the same id twice (a song twice in a playlist) draws, rather than crash. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun aLibraryWithARepeatedIdDraws() {

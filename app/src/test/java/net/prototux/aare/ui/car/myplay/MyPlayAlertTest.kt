@@ -195,6 +195,21 @@ class MyPlayAlertTest {
         rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.orbit.OrbitSkin.ALERT_COUNTDOWN_TAG).assertDoesNotExist()
     }
 
+    /** For the design comparison: ORBIT's timed alert, its countdown ring a quarter run, with a turn showing. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun orbitsTimedAlertPicture() {
+        val state = show(skin = net.prototux.aare.ui.car.myplay.orbit.OrbitSkin)
+        rule.mainClock.autoAdvance = false
+        rule.runOnIdle {
+            state.phoneGuidance = net.prototux.aare.notify.PhoneGuidance("k", "mock.maps", "Maps", "300 m", "Main Street", "", null, null, "")
+            appAlert = alert().copy(durationMs = 8_000, shownAtMs = android.os.SystemClock.uptimeMillis() - 2_000)
+        }
+        rule.mainClock.advanceTimeBy(1_000)
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.orbit.OrbitSkin.ALERT_COUNTDOWN_TAG).assertExists()
+        savePicture("orbit-alert-countdown-1280x720-night")
+        rule.mainClock.autoAdvance = true
+    }
+
     @Test fun theTimeLeftRunsFromOneToNothing() {
         val a = alert().copy(durationMs = 10_000, shownAtMs = 1_000)
         assertEquals(1f, alertTimeLeft(a, 1_000)!!, 0f)
