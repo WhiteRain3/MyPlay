@@ -256,4 +256,26 @@ class MyPlayAlertTest {
         val dir = java.io.File("build/reports/myplay-screens").apply { mkdirs() }
         java.io.File(dir, "$name.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
+
+    /**
+     * Look C (design 31): on ORBIT a call's pill sits at the bottom of the free area, so the turn and
+     * lanes stay clear; while a map alert takes that place, the pill goes back to the top.
+     */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theCallsPillIsAtTheBottomUnlessAnAlertIsThere() {
+        org.robolectric.Shadows.shadowOf(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()).grantPermissions(android.Manifest.permission.ANSWER_PHONE_CALLS)
+        val state = show(net.prototux.aare.ui.car.myplay.orbit.OrbitSkin)
+        rule.runOnIdle { state.call = net.prototux.aare.ui.car.CarCall(ringing = false, name = "Anna K.", sinceMs = System.currentTimeMillis()) }
+        rule.waitForIdle()
+        val pill = rule.onNodeWithTag(SLOT_IN_CALL_BELOW).fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("at the bottom: $pill", pill.top > 360f)
+        rule.onNodeWithTag(STOP_HANG_UP).assertExists()
+        // A map alert takes the bottom: the pill moves to the top, and both stay.
+        rule.runOnIdle { appAlert = alert() }
+        rule.waitForIdle()
+        rule.onNodeWithTag(SLOT_IN_CALL_BELOW).assertDoesNotExist()
+        rule.onNodeWithTag(SLOT_MAP_ALERT).assertExists()
+        val top = rule.onNodeWithTag(STOP_HANG_UP).fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("at the top: $top", top.bottom < 360f)
+    }
 }

@@ -320,6 +320,12 @@ interface MyPlaySkin {
      */
     val actionsWheel: Boolean get() = false
 
+    /**
+     * Look C (design 31): in a call, its pill sits at the bottom of the free area (the alert's place),
+     * so the turn and lanes stay clear; at the top while a map alert takes that place.
+     */
+    val callAtBottom: Boolean get() = false
+
     /** OW-2: lists on a wheel: a tap on a row not ringed only brings it to the middle; a second tap runs it. */
     val tapRingsFirst: Boolean get() = false
 

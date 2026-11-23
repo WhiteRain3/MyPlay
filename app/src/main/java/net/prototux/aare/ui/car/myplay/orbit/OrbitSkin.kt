@@ -221,6 +221,7 @@ object OrbitSkin : MyPlaySkin {
     override val dialCentre get() = World.APPS
     override val actionsWheel get() = true
     override val tapRingsFirst get() = true
+    override val callAtBottom get() = true
 
     /** The sheet's screen; sizes scale from it. */
     private const val SHEET_W = 1280f
@@ -1226,48 +1227,40 @@ object OrbitSkin : MyPlaySkin {
         val night = LocalSkinTokens.current.night
         val g = Orbit.glass(night)
         val calls = Orbit.accent(World.CALLS, night)
-        Box(modifier.background(g.halo.copy(alpha = 0.72f)).orbitRipple(0.5f, 0.4f), contentAlignment = Alignment.Center) {
+        // Look C (design 30): centred in the free area over the map, which stays (no dimming): while
+        // navigating the turn, lanes and hub stay readable. The caller's initials in Calls' green ring,
+        // the name, and two big discs: Answer (it holds the ring) and Decline a turn away.
+        Box(modifier, contentAlignment = Alignment.Center) {
             Scaled {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(Modifier.size(472.dp, 260.dp), contentAlignment = Alignment.Center) {
-                        // The sheet's soft rings around the caller.
-                        Canvas(Modifier.size(472.dp)) {
-                            drawCircle(calls.copy(alpha = 0.14f), 236.dp.toPx(), style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx()))
-                            drawCircle(calls.copy(alpha = 0.28f), 200.dp.toPx(), style = androidx.compose.ui.graphics.drawscope.Stroke(4.dp.toPx()))
-                        }
-                        Box(
-                            Modifier.size(240.dp).clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(Color(0xFF3B4A63), Color(0xFF1D2433))))
-                                .border(3.dp, calls, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            val letters = initials(call.name)
-                            if (letters != null) Text(letters, style = TextStyle(fontSize = 96.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = Color.White))
-                            else Icon(Icons.Rounded.Phone, null, Modifier.size(110.dp), tint = Color.White)
-                        }
+                    Box(Modifier.size(200.dp).border(6.dp, calls, CircleShape).padding(14.dp).clip(CircleShape).background(calls), contentAlignment = Alignment.Center) {
+                        val letters = initials(call.name)
+                        if (letters != null) Text(letters, style = TextStyle(fontSize = 64.sp, fontWeight = FontWeight.ExtraBold, color = Orbit.onAccent(night)))
+                        else Icon(Icons.Rounded.Phone, null, Modifier.size(80.dp), tint = Orbit.onAccent(night))
                     }
-                    Text(call.name, style = TextStyle(fontSize = 54.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold).floating(g.text),
-                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 900.dp))
-                    Text(stringResource(R.string.phone_incoming_call), style = TextStyle(fontSize = 28.sp).floating(g.secondary))
+                    Spacer(Modifier.height(20.dp))
+                    Text(call.name, style = TextStyle(fontSize = 46.sp, fontWeight = FontWeight.ExtraBold).floating(g.text),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 680.dp))
+                    Text(stringResource(R.string.phone_incoming_call), style = TextStyle(fontSize = 26.sp).floating(g.secondary))
                     Spacer(Modifier.height(28.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(212.dp)) {
-                        if (canEnd) CallButton(CALL_DECLINE, Icons.Rounded.Close, stringResource(R.string.phone_action_decline), Orbit.warning(night), ringed, calls, night, stop)
+                    Row(horizontalArrangement = Arrangement.spacedBy(80.dp)) {
                         CallButton(CALL_ANSWER, Icons.Rounded.Phone, stringResource(R.string.phone_action_answer), calls, ringed, calls, night, stop)
+                        if (canEnd) CallButton(CALL_DECLINE, Icons.Rounded.CallEnd, stringResource(R.string.phone_action_decline), Orbit.warning(night), ringed, calls, night, stop)
                     }
                 }
             }
         }
     }
 
-    /** A 128 dp call button filled in its colour, its word under it. */
+    /** A 112 dp call button filled in its colour, its word under it. */
     @Composable
     private fun CallButton(id: String, icon: ImageVector, label: String, fill: Color, ringed: String, ring: Color, night: Boolean, stop: (String) -> Modifier) {
         val g = Orbit.glass(night)
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            OrbitDisc(128.dp, night, stop(id).orbitFocus(ringed == id, ring, g.halo), fill = fill, edge = fill) {
-                Icon(icon, label, Modifier.size(56.dp), tint = Color(0xFF06120C))
+            OrbitDisc(112.dp, night, stop(id).orbitFocus(ringed == id, ring, g.halo), fill = fill, edge = fill) {
+                Icon(icon, label, Modifier.size(52.dp), tint = if (fill == ring) Orbit.onAccent(night) else Color.White)
             }
-            Text(label, style = TextStyle(fontSize = 24.sp).floating(g.secondary), modifier = Modifier.padding(top = 8.dp))
+            Text(label, style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold).floating(g.text), modifier = Modifier.padding(top = 8.dp))
         }
     }
 

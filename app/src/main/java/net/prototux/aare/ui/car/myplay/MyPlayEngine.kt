@@ -893,8 +893,10 @@ private fun EngineShellThemed(
                     } else skin.Hub(slots.trip, hubMod)
                 }
                 // N8: at the top of the home: in a call its strip, and a notice under it; their parts are home stops.
+                // Look C (design 31): a skin may put the call's pill at the bottom (the alert's place) instead.
+                val callBelow = skin.callAtBottom && homeAlert == null
                 Column(Modifier.align(Alignment.TopCenter).padding(top = tokens.edge), horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (model.place == Place.Home && call != null && !ringing) {
+                    if (model.place == Place.Home && call != null && !ringing && !callBelow) {
                         skin.InCall(call, canEnd, ring.takeIf { showRing }, { id -> Modifier.stop(id) }, Modifier)
                     }
                     if (notice != null && !ringing) {
@@ -907,6 +909,16 @@ private fun EngineShellThemed(
                     if (model.place == Place.Home) CompositionLocalProvider(net.prototux.aare.ui.car.LocalGestureLineDraw provides skin.gestureLine) { GestureLineOverlay(state, Modifier) }
                 }
                 // AL-1: the maps app's alert, in the skin's own place (never over the turn, the hub or the song).
+                if (home && callBelow && model.place == Place.Home && call != null && !ringing) {
+                    val density = LocalDensity.current
+                    val place = with(density) {
+                        alertPlace(maxWidth.toPx(), maxHeight.toPx(), boxes[STOP_HUB], boxes[STOP_SONG],
+                            net.prototux.aare.host.templates.MapGeometry.CENTRED_MIN_GUTTER_DP.dp.toPx())
+                    }
+                    skin.InCall(call, canEnd, ring.takeIf { showRing }, { id -> Modifier.stop(id) },
+                        Modifier.align(Alignment.BottomCenter).padding(bottom = with(density) { place.bottom.toDp() })
+                            .widthIn(max = with(density) { place.maxWidth.toDp() }).testTag(SLOT_IN_CALL_BELOW))
+                }
                 if (home && homeAlert != null) {
                     // MC-2: at the bottom of the free area, between the hub and the song, clear of the middle.
                     val density = LocalDensity.current
@@ -1184,6 +1196,8 @@ internal const val SLOT_MUSIC_PANEL = "slot_music_panel"
 /** AL-1: the maps app's alert on the home. */
 internal const val SLOT_MAP_ALERT = "slot_map_alert"
 internal const val SLOT_CALL = "slot_call"
+/** Look C (design 31): the call's pill at the bottom of the free area. */
+internal const val SLOT_IN_CALL_BELOW = "slot_in_call_below"
 internal const val SLOT_PHONE = "slot_phone"
 internal const val SLOT_NOTICES = "slot_notices"
 internal const val SLOT_SETTINGS = "slot_settings"
