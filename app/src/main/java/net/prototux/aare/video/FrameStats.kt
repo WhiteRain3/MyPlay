@@ -13,7 +13,8 @@ import android.view.Window
  * other bench lines); off, nothing is counted and no line is written.
  *
  * The frames are the car window's own (Window frame metrics), so only frames really drawn count:
- * a still screen adds nothing.
+ * a still screen adds nothing. The thresholds are 60 Hz and 30 Hz frames whatever the car's
+ * screen runs at (the projection is encoded at 30 or 60 frames a second).
  */
 internal object FrameStats {
     /** Set from the debug setting by the car runtime, with the maps text check. */
@@ -30,10 +31,11 @@ internal object FrameStats {
     /** One drawn frame of [totalNanos] (FrameMetrics.TOTAL_DURATION). */
     @Synchronized fun add(totalNanos: Long) {
         if (!on || totalNanos <= 0) return
-        val ms = totalNanos / 1_000_000
+        // FT-2: compared in nanoseconds, so a 16.9 ms frame counts as over 16 ms.
         frames++
-        if (ms > SLOW_MS) slow++
-        if (ms > JANK_MS) jank++
+        if (totalNanos > SLOW_MS * 1_000_000L) slow++
+        if (totalNanos > JANK_MS * 1_000_000L) jank++
+        val ms = (totalNanos + 999_999) / 1_000_000
         if (ms > worstMs) worstMs = ms
     }
 

@@ -24,6 +24,13 @@ class FrameStatsTest {
         assertEquals("frames: 6 drawn, 4 over 16 ms, 2 over 33 ms, slowest 120 ms", FrameStats.line())
     }
 
+    @Test fun aFractionOverCounts() {
+        FrameStats.on = true
+        FrameStats.reset()
+        FrameStats.add(16_900_000)
+        assertEquals("frames: 1 drawn, 1 over 16 ms, 0 over 33 ms, slowest 17 ms", FrameStats.line())
+    }
+
     @Test fun resetStartsAfresh() {
         FrameStats.on = true
         FrameStats.add(ms(40))
