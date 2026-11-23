@@ -76,6 +76,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertTextEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -245,7 +246,8 @@ class OrbitHomeTest {
         rule.onNodeWithText("350 m").assertExists()
         rule.onNodeWithText("Hauptstraße").assertExists()
         rule.onNodeWithText("18 min", substring = true).assertExists()
-        rule.onNodeWithText(PadWalkStates.SONG_TITLE).assertExists()
+        // Look C (35): the song's name is the ring's description (the corner draws no text for it).
+        rule.onNode(androidx.compose.ui.test.hasContentDescription(PadWalkStates.SONG_TITLE, substring = true), useUnmergedTree = true).assertExists()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         rule.onNodeWithTag(STOP_HUB).assertIsSelected()
         engine.performKeyInput { pressKey(Key.Tab) }
@@ -267,9 +269,9 @@ class OrbitHomeTest {
         assertEquals(listOf("app:maps"), asked)
     }
 
-    /** N6: more apps than a page holds: the knob goes on to the next page, the pad off the right edge too. */
+    /** Look C (33): eight apps a page round the ring; the knob goes on to the next page and back, the ringed one's name in the middle. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
-    fun theHoneycombPages() {
+    fun theAppsRingPages() {
         val state = show()
         rule.runOnIdle { addApps(state) }
         val engine = rule.onNodeWithTag(ENGINE_TAG)
@@ -277,14 +279,33 @@ class OrbitHomeTest {
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         val apps = state.launcherApps
         assertEquals(14, apps.size)
+        rule.onNodeWithTag(OrbitSkin.APPS_RING_TAG, useUnmergedTree = true).assertExists()
         rule.onNodeWithTag(appTag(apps[0])).assertIsSelected()
-        assertTrue(rule.onAllNodes(hasTestTag(appTag(apps[10]))).fetchSemanticsNodes().isEmpty())
-        repeat(10) { engine.performKeyInput { pressKey(Key.Tab) } }
-        rule.onNodeWithTag(appTag(apps[10])).assertIsSelected()
+        rule.onNodeWithTag(OrbitSkin.APPS_RING_NAME_TAG, useUnmergedTree = true).assertTextEquals(apps[0].label)
+        rule.onNodeWithTag(OrbitSkin.APPS_PAGES_TAG, useUnmergedTree = true).assertExists()
+        assertTrue(rule.onAllNodes(hasTestTag(appTag(apps[8]))).fetchSemanticsNodes().isEmpty())
+        repeat(8) { engine.performKeyInput { pressKey(Key.Tab) } }
+        rule.onNodeWithTag(appTag(apps[8])).assertIsSelected()
+        rule.onNodeWithTag(OrbitSkin.APPS_RING_NAME_TAG, useUnmergedTree = true).assertTextEquals(apps[8].label)
         assertTrue("page 1 is gone", rule.onAllNodes(hasTestTag(appTag(apps[0]))).fetchSemanticsNodes().isEmpty())
-        // Back a page with the pad off the left edge.
-        engine.performKeyInput { pressKey(Key.DirectionLeft) }
-        rule.onNodeWithTag(appTag(apps[9])).assertIsSelected()
+        // Back a step with the knob: the first page again, its last app.
+        engine.performKeyInput { keyDown(Key.ShiftLeft); pressKey(Key.Tab); keyUp(Key.ShiftLeft) }
+        rule.onNodeWithTag(appTag(apps[7])).assertIsSelected()
+        // The first app sits at the top of the ring, the ringed one larger than the rest.
+        val top = rule.onNodeWithTag(appTag(apps[0])).fetchSemanticsNode().boundsInRoot
+        val ringed = rule.onNodeWithTag(appTag(apps[7])).fetchSemanticsNode().boundsInRoot
+        val ring = rule.onNodeWithTag(OrbitSkin.APPS_RING_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(ring.center.x, top.center.x, 1f)
+        assertTrue("top $top ring $ring", top.center.y < ring.center.y - 150f)
+        assertTrue("ringed $ringed top $top", ringed.width > top.width + 10f)
+    }
+
+    @Test fun theAppsSitClockwiseFromTheTop() {
+        assertEquals(8, OrbitSkin.appsPerPage)
+        assertEquals(-90f, OrbitSkin.appAngleDeg(0), 0.01f)
+        assertEquals(0f, OrbitSkin.appAngleDeg(2), 0.01f)
+        assertEquals(90f, OrbitSkin.appAngleDeg(4), 0.01f)
+        assertEquals(225f, OrbitSkin.appAngleDeg(7), 0.01f)
     }
 
     /** Six more apps (14 in all, two pages); every app gets a plain coloured icon so the pictures show where icons go. */
@@ -331,6 +352,69 @@ class OrbitHomeTest {
         rule.waitForIdle()
         assertFalse(rule.onAllNodes(hasTestTag(OrbitSkin.ICE_SLOT_TAG), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
         assertTrue(rule.onAllNodes(hasTestTag(OrbitSkin.ICE_TAG), useUnmergedTree = true).fetchSemanticsNodes().isEmpty())
+    }
+
+    /** Look C (35): on the home the time is a badge on the song's ring; the top right corner holds no status. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theTimeIsABadgeOnTheSongsRing() {
+        show()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_STATUS).assertDoesNotExist()
+        assertEquals(1, rule.onAllNodes(hasTestTag(OrbitSkin.CLOCK_TAG), useUnmergedTree = true).fetchSemanticsNodes().size)
+        val badge = rule.onNodeWithTag(OrbitSkin.CLOCK_BADGE_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val ring = rule.onNodeWithTag(OrbitSkin.SONG_RING_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals("badge $badge ring $ring", ring.center.x, badge.center.x, 1f)
+        assertEquals("badge $badge ring $ring", ring.top, badge.center.y, 2f)
+        // In the bottom right, nothing of it in the top half.
+        val corner = rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertTrue("corner $corner", corner.top > 360f && corner.right > 1200f)
+    }
+
+    /** Look C (35-status-c-nomusic): nothing playing: the empty ring with the time in its middle, in the same place and size. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun withNoMusicTheRingShowsTheTime() {
+        val state = show()
+        val withSong = rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        rule.runOnIdle { state.nowPlaying = null }
+        rule.waitForIdle()
+        rule.onNodeWithTag(OrbitSkin.CLOCK_BADGE_TAG, useUnmergedTree = true).assertDoesNotExist()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_STATUS).assertExists()
+        val ring = rule.onNodeWithTag(OrbitSkin.NO_SONG_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val clock = rule.onNodeWithTag(OrbitSkin.CLOCK_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals(ring.center.x, clock.center.x, 2f)
+        assertEquals(ring.center.y, clock.center.y, 2f)
+        val alone = rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertEquals("the free area does not move", withSong, alone)
+    }
+
+    /** Look C (35): ice and the temperature as a pill at the ring's left; the corner keeps its size. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun iceShowsBesideTheRingWithoutMovingTheCorner() {
+        val state = show()
+        val before = rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        rule.runOnIdle { state.driveWarnings = true; state.iceRisk = true }
+        rule.waitForIdle()
+        val ice = rule.onNodeWithTag(OrbitSkin.ICE_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val ring = rule.onNodeWithTag(OrbitSkin.SONG_RING_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertTrue("ice $ice ring $ring", ice.center.x < ring.left && ice.center.y < ring.center.y)
+        assertEquals(before, rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot)
+    }
+
+    /** Look C (35): inside a world the status is at the top as before (no song's corner there). */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun insideAWorldTheStatusIsAtTheTop() {
+        show()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_STATUS).assertExists()
+        rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    @Test fun theBatteryShowsOnlyWhenLowOrCharging() {
+        assertTrue(OrbitSkin.batteryShown(20, charging = false))
+        assertTrue(OrbitSkin.batteryShown(80, charging = true))
+        assertFalse(OrbitSkin.batteryShown(21, charging = false))
     }
 
     @Test fun batteryIconsAndLow() {
@@ -448,8 +532,14 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theShadesHugThePartsOrAreNone() {
         val state = show()
-        rule.onNodeWithTag(OrbitSkin.SHADE_STATUS_TAG).assertExists()
+        // Look C (35): the clock is in the song's corner, under the song's plate; none of its own at the top.
+        rule.onNodeWithTag(OrbitSkin.SHADE_SONG_TAG).assertExists()
+        rule.onNodeWithTag(OrbitSkin.SHADE_STATUS_TAG).assertDoesNotExist()
         rule.onNodeWithTag(OrbitSkin.SHADE_TURN_TAG).assertExists()
+        // Nothing playing: the corner with the clock alone has its plate.
+        rule.runOnIdle { state.nowPlaying = null }
+        rule.mainClock.advanceTimeBy(1_000)
+        rule.onNodeWithTag(OrbitSkin.SHADE_STATUS_TAG).assertExists()
         rule.runOnIdle { state.orbitShadeSoft = false }
         rule.waitForIdle()
         for (t in listOf(OrbitSkin.SHADE_STATUS_TAG, OrbitSkin.SHADE_TURN_TAG, OrbitSkin.SHADE_SONG_TAG)) rule.onNodeWithTag(t).assertDoesNotExist()
@@ -683,10 +773,12 @@ class OrbitHomeTest {
         val free = freeArea()
         org.junit.Assert.assertEquals(640f, (free.left + free.right) / 2, 0.5f)
         org.junit.Assert.assertEquals(360f, (free.top + free.bottom) / 2, 0.5f)
-        org.junit.Assert.assertEquals("left $free", 288f, free.left, 1f)
-        org.junit.Assert.assertEquals("top $free", 43.2f, free.top, 1f)
-        // Clear of the discs, the hub and the clock; the song's title may lie over it.
-        for (tag in listOf(STOP_HUB, OrbitSkin.SONG_RING_TAG, net.prototux.aare.ui.car.myplay.SLOT_STATUS)) {
+        // Look C (35): the top right corner is the map's now, so the area is at least as large as it was
+        // with the clock there (left 288, top 43.2).
+        org.junit.Assert.assertTrue("left $free", free.left <= 289f)
+        org.junit.Assert.assertTrue("top $free", free.top <= 44.2f)
+        // Clear of the discs, the hub and the song's corner with the clock.
+        for (tag in listOf(STOP_HUB, OrbitSkin.SONG_RING_TAG, OrbitSkin.STATUS_CORNER_TAG, OrbitSkin.CLOCK_BADGE_TAG)) {
             val b = rule.onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
             org.junit.Assert.assertNull("$tag $b", net.prototux.aare.host.templates.MapGeometry.Box(b.left, b.top, b.right, b.bottom).intersect(free))
         }
