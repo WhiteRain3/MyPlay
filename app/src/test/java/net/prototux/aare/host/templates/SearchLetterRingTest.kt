@@ -59,7 +59,8 @@ class SearchLetterRingTest {
     private var ringInput: LetterRingInput? = null
     private val fakeRing: @androidx.compose.runtime.Composable (LetterRingInput, Modifier) -> Unit = { input, m ->
         ringInput = input
-        Box(m.testTag("fake_ring"))
+        // LR-5: m already carries SearchUi's tag (the first tag on a node wins): a child of our own.
+        Box(m) { Box(Modifier.testTag("fake_ring")) }
     }
 
     private fun show(driving: Boolean, ring: Boolean) {

@@ -498,7 +498,10 @@ object OrbitSkin : MyPlaySkin {
         LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
         // LR-2: while something over the app holds the knob (a ringing call, a notice with buttons), Back is its.
         androidx.activity.compose.BackHandler(enabled = !input.held()) { input.hide() }
-        fun press(i: Int) { at = i; net.prototux.aare.ui.car.myplay.LetterRing.press(keys[i], input) }
+        // LR-4: the taps' gesture coroutines keep the first lambda they saw; they reach the latest
+        // input (a new one comes with every key typed) through this.
+        val inputNow by androidx.compose.runtime.rememberUpdatedState(input)
+        fun press(i: Int) { at = i; net.prototux.aare.ui.car.myplay.LetterRing.press(keys[i], inputNow) }
         Box(
             modifier.fillMaxSize().testTag(LETTER_RING_TAG).focusRequester(focus).focusable()
                 .onPreviewKeyEvent { e ->
