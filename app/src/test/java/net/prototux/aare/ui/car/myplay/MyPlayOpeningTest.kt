@@ -70,10 +70,10 @@ class MyPlayOpeningTest {
     private val engine get() = rule.onNodeWithTag(ENGINE_TAG)
     private fun key(k: Key) = engine.performKeyInput { pressKey(k) }
 
-    /** The dial, then right: Apps (O7). */
+    /** The dial, then a second push: Apps (HN-3). */
     private fun toApps() {
         key(Key.DirectionCenter)
-        key(Key.DirectionRight)
+        key(Key.DirectionCenter)
         rule.onNodeWithTag(SLOT_APPS).assertExists()
     }
 
@@ -135,7 +135,7 @@ class MyPlayOpeningTest {
         assertTrue(!state.engineHomeAsked)
         rule.onNodeWithTag(SLOT_APPS).assertDoesNotExist()
         rule.onNodeWithTag(STOP_HUB).assertIsSelected()
-        // The dial opens on the world last entered: Apps.
+        // HN-3: the dial opens on its middle, Apps.
         key(Key.DirectionCenter)
         key(Key.DirectionCenter)
         rule.onNodeWithTag(SLOT_APPS).assertExists()

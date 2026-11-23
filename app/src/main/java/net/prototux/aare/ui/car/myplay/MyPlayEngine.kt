@@ -118,7 +118,7 @@ internal fun MyPlayEngineShell(
     remember(skin.id) { if (memory.skinId != skin.id || state.engineHomeAsked || !keeps) memory.reset(skin.id); true }
     // N13: a new language starts afresh (a hand has no dial to be in).
     val hand = skin.hand
-    val model = remember(skin.id) { memory.model(hand, skin.dial) }
+    val model = remember(skin.id) { memory.model(hand, skin.dial, skin.dialCentre) }
     val tokens = skin.tokens(state.night)
     val context = LocalContext.current
     val timeFormat = remember(context) { DateFormat.getTimeFormat(context) }
@@ -590,6 +590,8 @@ internal fun MyPlayEngineShell(
             HomePadAction.CALLS -> openCalls()
             HomePadAction.CALL_BACK -> actions.callBackLastMissed()
             HomePadAction.PLACES -> if (state.navPlaces.isEmpty()) { memory.origin = null; openMaps() } else { model.enter(World.NAVIGATE); freshWorld(World.NAVIGATE) }
+            HomePadAction.NEXT_SONG -> sources.music.next()
+            HomePadAction.NAVIGATE_HOME -> actions.navigateHome()
             HomePadAction.NOTHING -> Unit
         }
     }
@@ -662,7 +664,10 @@ internal fun MyPlayEngineShell(
         }
         // O7: a dial with a world on each pad direction: one press opens that world.
         is Place.Chooser -> if (skin.dial != null && dialIndex(key) != null) {
-            skin.dial!!.getOrNull(dialIndex(key)!!)?.let { w -> model.choose(w); freshWorld(w) }
+            skin.dial!!.getOrNull(dialIndex(key)!!)?.let { w ->
+                // HN-3: up is Navigate, the maps app itself (as a push on it is); the dial closes.
+                if (w == World.NAVIGATE) { model.back(); memory.origin = null; openMaps() } else { model.choose(w); freshWorld(w) }
+            }
             true
         } else when (key) {
             Key.Tab -> { model.turn(if (shift) -1 else 1); true }
@@ -846,7 +851,7 @@ internal fun MyPlayEngineShell(
                     // info-only home) and the taught buttons do, round the hub; only on the plain home.
                     val hubSpeed = skin.speedInHub && skin.showsSpeed && state.speedSource != SpeedSourceMode.OFF
                     val padNow = padHome && (!ringAwake || infoHome)
-                    val hints = PadHints.of(if (padNow) padMap else null, state.learnedActions).copy(speedShown = hubSpeed)
+                    val hints = PadHints.of(if (padNow) padMap else null).copy(speedShown = hubSpeed)
                     val hintsShown = hintsAwake && !hints.isEmpty && model.place == Place.Home && !panelOpen &&
                         homeAlert == null && call == null && notice == null
                     androidx.compose.animation.AnimatedVisibility(hintsShown, edge.align(Alignment.BottomStart),

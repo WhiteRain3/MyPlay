@@ -55,26 +55,24 @@ enum class Slot { TURN, STATUS, SPEED, HUB, SONG, CHOOSER, WORLD }
 
 /**
  * HN-2: the hints round the hub: what the pad's directions open on the home (null: nothing, not
- * drawn; PL-R: left and right each their own) and the actions of the buttons taught in the car ([corners],
- * in order; each drawn on a diagonal). No hold actions: the owner's car sends none.
+ * drawn; PL-R: left and right each their own). HN-3: no hints for taught buttons any more (the
+ * owner's corner buttons send pad up and down, so the pad's own hints already show them).
  */
 data class PadHints(
     val up: HomePadAction? = null,
     val down: HomePadAction? = null,
     val left: HomePadAction? = null,
     val right: HomePadAction? = null,
-    val corners: List<net.prototux.aare.car.ButtonAction> = emptyList(),
     /** The hub shows the speed (its box then holds the limit sign too: the disc sits lower in it). */
     val speedShown: Boolean = false,
 ) {
-    val isEmpty get() = up == null && down == null && left == null && right == null && corners.isEmpty()
+    val isEmpty get() = up == null && down == null && left == null && right == null
 
     companion object {
-        /** From the home pad's mapping (when the home pad is on) and the learned buttons' actions. */
-        fun of(pad: Map<HomePadKey, HomePadAction>?, learned: List<net.prototux.aare.car.ButtonAction>): PadHints {
+        /** From the home pad's mapping (when the home pad is on). */
+        fun of(pad: Map<HomePadKey, HomePadAction>?): PadHints {
             fun at(k: HomePadKey) = pad?.get(k)?.takeIf { it != HomePadAction.NOTHING }
-            return PadHints(at(HomePadKey.UP), at(HomePadKey.DOWN), at(HomePadKey.LEFT), at(HomePadKey.RIGHT),
-                learned.filter { it != net.prototux.aare.car.ButtonAction.NOTHING }.take(2))
+            return PadHints(at(HomePadKey.UP), at(HomePadKey.DOWN), at(HomePadKey.LEFT), at(HomePadKey.RIGHT))
         }
     }
 }
@@ -309,6 +307,12 @@ interface MyPlaySkin {
      * a press of a direction opens that world. Null: all six worlds round the dial (a turn moves).
      */
     val dial: List<World>? get() = null
+
+    /**
+     * HN-3: the world in the dial's middle, not on a direction: the dial opens on it and a push
+     * opens it (a knob turn moves onto the directions). Null: the dial opens on the last world.
+     */
+    val dialCentre: World? get() = null
 
     /** The dial's worlds ([dial], or all six), [selected] ringed. */
     @Composable fun Chooser(selected: World, modifier: Modifier)

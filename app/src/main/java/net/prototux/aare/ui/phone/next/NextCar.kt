@@ -5,6 +5,7 @@ import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Call
 import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -548,6 +549,8 @@ private fun padIcon(a: HomePadAction): androidx.compose.ui.graphics.vector.Image
     HomePadAction.APPS -> Icons.Outlined.Apps
     HomePadAction.CALLS, HomePadAction.CALL_BACK -> Icons.Outlined.Call
     HomePadAction.PLACES -> Icons.Outlined.Place
+    HomePadAction.NEXT_SONG -> Icons.Outlined.SkipNext
+    HomePadAction.NAVIGATE_HOME -> Icons.Outlined.Home
     else -> Icons.Outlined.Block
 }
 

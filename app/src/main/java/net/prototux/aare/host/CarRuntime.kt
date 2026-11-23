@@ -814,6 +814,7 @@ class CarRuntime(
             if (!this@CarRuntime.navigateTo(place)) notice(context.getString(R.string.notif_navigation_title), context.getString(R.string.notif_navigation_no_app_text))
         }
         override fun callBackLastMissed() = this@CarRuntime.callBackLastMissed()
+        override fun navigateHome() { this@CarRuntime.navigateHome() }
     }
 
     /** The chosen assistant's package, or the phone's default assistant. */

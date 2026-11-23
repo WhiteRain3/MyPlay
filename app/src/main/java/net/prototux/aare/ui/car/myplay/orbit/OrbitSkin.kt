@@ -193,10 +193,12 @@ object OrbitSkin : MyPlaySkin {
     override val appRail get() = false
 
     /**
-     * O7 (the owner): the dial holds four worlds, one per pad direction: up Calls, right Apps,
-     * down Settings, left Car. Navigate and Music are on the home pad (O6).
+     * HN-3 (the owner, 2026-11-23): the dial is strictly four ways: up Navigate (the maps app
+     * itself), right Calls, down Settings, left Music; Apps is in the middle, opened by pushing
+     * again. Car is not one of the owner's four, so ORBIT's dial no longer reaches it.
      */
-    override val dial get() = listOf(World.CALLS, World.APPS, World.SETTINGS, World.CAR)
+    override val dial get() = listOf(World.NAVIGATE, World.CALLS, World.SETTINGS, World.MUSIC)
+    override val dialCentre get() = World.APPS
 
     /** The sheet's screen; sizes scale from it. */
     private const val SHEET_W = 1280f

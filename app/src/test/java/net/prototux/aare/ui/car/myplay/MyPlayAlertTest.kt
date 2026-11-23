@@ -70,16 +70,16 @@ class MyPlayAlertTest {
         rule.runOnIdle { state.homePad = HomePad.DEFAULT; appAlert = alert() }
         rule.waitForIdle()
         rule.onNodeWithTag(SLOT_MAP_ALERT).assertExists()
-        // The ring on its button (Close), so the push answers the alert, not the home pad's music.
+        // The ring on its button (Close), so the push answers the alert, not the home pad's dial.
         rule.onNodeWithTag(mapAlertStop(0)).assertIsSelected()
         rule.onNodeWithTag(ENGINE_TAG).performKeyInput { pressKey(Key.DirectionCenter) }
         assertEquals(listOf("close"), ran)
         rule.waitForIdle()
         rule.onNodeWithTag(SLOT_MAP_ALERT).assertDoesNotExist()
-        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertDoesNotExist()
-        // Gone, the pad's shortcuts are back.
+        rule.onNodeWithTag(SLOT_CHOOSER).assertDoesNotExist()
+        // Gone, the pad's shortcuts are back: the centre opens the dial (HN-3).
         rule.onNodeWithTag(ENGINE_TAG).performKeyInput { pressKey(Key.DirectionCenter) }
-        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
     }
 
     private fun aNotice() = net.prototux.aare.ui.car.CarNotice("n1", "Anna K.", "Running late", null, listOf("Reply" to { ran += "reply" }))

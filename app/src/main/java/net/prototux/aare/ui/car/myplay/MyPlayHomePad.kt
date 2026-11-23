@@ -27,6 +27,10 @@ enum class HomePadAction(val id: String) {
     CALL_BACK("call_back"),
     /** MyPlay (#5): the Navigate world's list (the maps app, Home, the saved places); with none saved, the maps app. */
     PLACES("places"),
+    /** HN-3: the next song of the playing music app. */
+    NEXT_SONG("next_song"),
+    /** HN-3: the maps app to the home address set on the phone (a notice when none is set). */
+    NAVIGATE_HOME("navigate_home"),
     NOTHING("nothing"),
     ;
 
@@ -36,13 +40,16 @@ enum class HomePadAction(val id: String) {
 }
 
 object HomePad {
-    /** The owner's mapping (the dispatcher, 2026-11-21): centre music, up the maps app, the sides the dial. */
+    /**
+     * The owner's mapping (the dispatcher, 2026-11-23): centre the dial, up the next song, right the
+     * maps app, down home, left music. A mapping already stored keeps its own keys.
+     */
     val DEFAULT: Map<HomePadKey, HomePadAction> = mapOf(
-        HomePadKey.CENTER to HomePadAction.MUSIC,
-        HomePadKey.UP to HomePadAction.MAPS,
-        HomePadKey.LEFT to HomePadAction.DIAL,
-        HomePadKey.RIGHT to HomePadAction.DIAL,
-        HomePadKey.DOWN to HomePadAction.NOTHING,
+        HomePadKey.CENTER to HomePadAction.DIAL,
+        HomePadKey.UP to HomePadAction.NEXT_SONG,
+        HomePadKey.RIGHT to HomePadAction.MAPS,
+        HomePadKey.DOWN to HomePadAction.NAVIGATE_HOME,
+        HomePadKey.LEFT to HomePadAction.MUSIC,
     )
 
     /**

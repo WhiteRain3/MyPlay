@@ -31,6 +31,8 @@ val HOME_PAD_ACTION_NAMES: List<Pair<HomePadAction, Int>> = listOf(
     HomePadAction.CALLS to R.string.phone_home_pad_calls,
     HomePadAction.CALL_BACK to R.string.phone_action_call_back,
     HomePadAction.PLACES to R.string.phone_home_pad_places,
+    HomePadAction.NEXT_SONG to R.string.phone_action_next,
+    HomePadAction.NAVIGATE_HOME to R.string.phone_action_navigate_home,
     HomePadAction.NOTHING to R.string.phone_home_pad_nothing,
 )
 

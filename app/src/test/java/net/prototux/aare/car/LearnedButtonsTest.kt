@@ -38,22 +38,19 @@ class LearnedButtonsTest {
         // A clock that went back does not keep an arm forever.
         assertTrue(!LearnedButtons.stillArmed(50_000, 1_000))
     }
-    /** HN-2: the hints get the taught actions in the codes' order, each once, never nothing. */
-    @org.junit.Test fun theHintsGetTheTaughtActions() {
-        val m = mapOf(300 to ButtonAction.NAVIGATE_HOME, 200 to ButtonAction.NEXT, 250 to ButtonAction.NEXT)
-        org.junit.Assert.assertEquals(listOf(ButtonAction.NEXT, ButtonAction.NAVIGATE_HOME), learnedActions(m))
+    @org.junit.Test fun navigateHomeIsAButtonAction() {
         org.junit.Assert.assertEquals(ButtonAction.NAVIGATE_HOME, ButtonAction.byId("navigate_home"))
     }
 
-    /** HN-2: only what opens something is hinted; at most two taught buttons (the two left diagonals). */
+    /** HN-2, HN-3: only what opens something is hinted; the default pad's four directions all are. */
     @org.junit.Test fun padHintsLeaveOutNothing() {
-        val h = net.prototux.aare.ui.car.myplay.PadHints.of(net.prototux.aare.ui.car.myplay.HomePad.DEFAULT,
-            listOf(ButtonAction.NAVIGATE_HOME, ButtonAction.NEXT, ButtonAction.PREVIOUS))
-        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.MAPS, h.up)
-        org.junit.Assert.assertNull(h.down)
-        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.DIAL, h.left)
-        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.DIAL, h.right)
-        org.junit.Assert.assertEquals(listOf(ButtonAction.NAVIGATE_HOME, ButtonAction.NEXT), h.corners)
-        org.junit.Assert.assertTrue(net.prototux.aare.ui.car.myplay.PadHints.of(null, emptyList()).isEmpty)
+        val h = net.prototux.aare.ui.car.myplay.PadHints.of(net.prototux.aare.ui.car.myplay.HomePad.DEFAULT)
+        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.NEXT_SONG, h.up)
+        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.NAVIGATE_HOME, h.down)
+        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.MUSIC, h.left)
+        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.MAPS, h.right)
+        val none = net.prototux.aare.ui.car.myplay.HomePad.DEFAULT + (net.prototux.aare.ui.car.myplay.HomePadKey.DOWN to net.prototux.aare.ui.car.myplay.HomePadAction.NOTHING)
+        org.junit.Assert.assertNull(net.prototux.aare.ui.car.myplay.PadHints.of(none).down)
+        org.junit.Assert.assertTrue(net.prototux.aare.ui.car.myplay.PadHints.of(null).isEmpty)
     }
 }

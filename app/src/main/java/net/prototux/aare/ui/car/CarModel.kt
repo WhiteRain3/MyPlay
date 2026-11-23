@@ -146,11 +146,6 @@ class CarUiState {
     /** TH-1: the owner chose a theme, an accent or own colours, so ORBIT takes [theme]'s colours. */
     var orbitThemed by mutableStateOf(false)
 
-    /**
-     * HN-2: the actions of the buttons the owner taught in the car (their codes' order), for the
-     * hints by ORBIT's speed: a button with an action gets its icon, one with none nothing.
-     */
-    var learnedActions by mutableStateOf<List<net.prototux.aare.car.ButtonAction>>(emptyList())
     /** MyPlay (SH-1): soft plates behind ORBIT's parts (true), or none. */
     var orbitShadeSoft by mutableStateOf(true)
     /** MyPlay (drive warnings): quiet road and phone warnings wanted (myplay_drive_warnings). */
@@ -259,4 +254,6 @@ interface CarActions {
     fun navigateTo(place: String)
     /** MyPlay (#10): offer the last missed call on the car screen, to call back with one push. */
     fun callBackLastMissed() = Unit
+    /** HN-3: the maps app to the home address set on the phone; without one, a notice says so. */
+    fun navigateHome() = Unit
 }

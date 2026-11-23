@@ -90,6 +90,7 @@ class MyPlayEngineTest {
         override fun openLauncher() { asked += "launcher" }
         override fun openApp(app: CarAppEntry) { asked += "app:${app.id}" }
         override fun mediaNext() { asked += "next" }
+        override fun navigateHome() { asked += "home" }
         override fun mediaPrevious() { asked += "previous" }
         override fun mediaPlayPause() { asked += "playPause" }
         override fun mediaSeekTo(positionMs: Long) { asked += "seek:$positionMs" }
@@ -442,11 +443,36 @@ class MyPlayEngineTest {
         assertEquals(15, PanelTimeout.valid(15))
     }
 
+    /** The mapping before HN-3 (centre music, up maps, the sides the dial, down nothing), for the pad's workings. */
+    private val OLD_PAD = HomePad.decode("center=music;up=maps;down=nothing;left=dial;right=dial")
+
+    /** HN-3: the owner's default: centre the dial, up the next song, right the maps app, down home, left music. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theDefaultPadIsTheOwners() {
+        val state = show()
+        rule.runOnIdle { state.homePad = HomePad.DEFAULT }
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        fun back() { rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }; rule.waitForIdle() }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+        back()
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
+        back()
+        engine.performKeyInput { pressKey(Key.DirectionUp) }
+        assertEquals(listOf("next"), asked)
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        assertEquals(listOf("next", "home"), asked)
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        assertEquals(listOf("next", "home", "app:maps"), asked)
+    }
+
     /** O6: the home pad opens things while the ring is hidden; a turn shows the ring, which hides again. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theHomePadOpensThingsDirectly() {
         val state = show()
-        rule.runOnIdle { state.homePad = HomePad.DEFAULT }
+        rule.runOnIdle { state.homePad = OLD_PAD }
         rule.waitForIdle()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         fun back() { rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }; rule.waitForIdle() }
@@ -527,8 +553,9 @@ class MyPlayEngineTest {
         // Saved again, it is written with left and right, no "side".
         val saved = HomePad.encode(old)
         assertTrue(saved, "left=calls" in saved && "right=calls" in saved && "side" !in saved)
-        assertEquals(HomePadAction.DIAL, HomePad.DEFAULT[HomePadKey.LEFT])
-        assertEquals(HomePadAction.DIAL, HomePad.DEFAULT[HomePadKey.RIGHT])
+        // HN-3: the owner's default: left music, right the maps app.
+        assertEquals(HomePadAction.MUSIC, HomePad.DEFAULT[HomePadKey.LEFT])
+        assertEquals(HomePadAction.MAPS, HomePad.DEFAULT[HomePadKey.RIGHT])
     }
 
     /** O9-1: the maps app's turn card is left out only while the home shows a turn of its own. */
@@ -545,7 +572,7 @@ class MyPlayEngineTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun anUnboundPadKeyOnlyShowsTheRing() {
         val state = show(guidance = true)
-        rule.runOnIdle { state.homePad = HomePad.DEFAULT } // down: nothing
+        rule.runOnIdle { state.homePad = OLD_PAD } // down: nothing
         rule.waitForIdle()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         rule.onNodeWithTag(STOP_HUB).assertIsSelected()
@@ -561,7 +588,7 @@ class MyPlayEngineTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theInfoOnlyHomeHasNoRing() {
         val state = show(guidance = true)
-        rule.runOnIdle { state.homePad = HomePad.DEFAULT; state.infoHome = true }
+        rule.runOnIdle { state.homePad = OLD_PAD; state.infoHome = true }
         rule.waitForIdle()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         // Turns and the unbound key do nothing; the push is still the music panel.
@@ -592,7 +619,7 @@ class MyPlayEngineTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theInfoOnlyHomeNeverSwallowsTheShortcuts() {
         val state = show(guidance = true)
-        rule.runOnIdle { state.homePad = HomePad.DEFAULT }
+        rule.runOnIdle { state.homePad = OLD_PAD }
         rule.waitForIdle()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         engine.performKeyInput { pressKey(Key.Tab) } // the ring awake
@@ -607,7 +634,10 @@ class MyPlayEngineTest {
         assertEquals(HomePad.DEFAULT, HomePad.decode("junk;up=nonsense"))
         val m = HomePad.decode("up=calls")
         assertEquals(HomePadAction.CALLS, m[HomePadKey.UP])
-        assertEquals(HomePadAction.MUSIC, m[HomePadKey.CENTER])
+        assertEquals(HomePadAction.DIAL, m[HomePadKey.CENTER])
+        // HN-3: a mapping already stored (all five keys are always written) keeps its own actions.
+        val stored = "center=music;up=maps;down=nothing;left=dial;right=dial"
+        assertEquals(stored, HomePad.encode(HomePad.decode(stored)))
         assertEquals(m, HomePad.decode(HomePad.encode(m)))
         assertTrue(!HomePad.active(HomePadKey.entries.associateWith { HomePadAction.NOTHING }))
     }

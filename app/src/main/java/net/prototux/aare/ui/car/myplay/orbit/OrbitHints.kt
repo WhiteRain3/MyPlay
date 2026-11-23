@@ -9,21 +9,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.DonutLarge
-import androidx.compose.material.icons.rounded.FastForward
 import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Mic
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Phone
 import androidx.compose.material.icons.rounded.PhoneCallback
 import androidx.compose.material.icons.rounded.Place
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.RadioButtonChecked
 import androidx.compose.material.icons.rounded.SkipNext
-import androidx.compose.material.icons.rounded.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,7 +32,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import net.prototux.aare.car.ButtonAction
 import net.prototux.aare.ui.car.myplay.HomePadAction
 import net.prototux.aare.ui.car.myplay.PadHints
 import net.prototux.aare.ui.car.myplay.World
@@ -46,8 +39,7 @@ import net.prototux.aare.ui.car.myplay.World
 /**
  * HN-2 (the owner's hints A, E and F): small icon discs on a thin ring round the hub, one per pad
  * direction that opens something (up, down, left and right, each its own), in the colour
- * of what it opens; and the buttons taught in the car on the left diagonals (the first up-left, the
- * second down-left; the up-right one is the limit sign's). Icons only. Everything stays left of the
+ * of what it opens (HN-3: no taught-button hints on the diagonals any more). Icons only. Everything stays left of the
  * map's free area (MC-1): the right disc ends 20 dp short of it on a 1280x720 screen.
  */
 internal object OrbitHints {
@@ -62,10 +54,6 @@ internal object OrbitHints {
     const val TAG_DOWN = "orbit_hint_down"
     const val TAG_LEFT = "orbit_hint_left"
     const val TAG_RIGHT = "orbit_hint_right"
-    fun cornerTag(i: Int) = "orbit_hint_corner_$i"
-
-    /** Each hint's angle on the ring, in degrees (0 right, 90 down), for the diagonals of the taught buttons. */
-    val CORNER_DEGREES = listOf(225f, 135f)
 
     fun icon(a: HomePadAction): ImageVector = when (a) {
         HomePadAction.MUSIC -> Icons.Rounded.MusicNote
@@ -75,39 +63,19 @@ internal object OrbitHints {
         HomePadAction.CALLS -> Icons.Rounded.Phone
         HomePadAction.CALL_BACK -> Icons.Rounded.PhoneCallback
         HomePadAction.PLACES -> Icons.Rounded.Place
+        HomePadAction.NEXT_SONG -> Icons.Rounded.SkipNext
+        HomePadAction.NAVIGATE_HOME -> Icons.Rounded.Home
         HomePadAction.NOTHING -> Icons.Rounded.RadioButtonChecked
     }
 
     fun world(a: HomePadAction): World? = when (a) {
-        HomePadAction.MUSIC -> World.MUSIC
-        HomePadAction.MAPS, HomePadAction.PLACES -> World.NAVIGATE
+        HomePadAction.MUSIC, HomePadAction.NEXT_SONG -> World.MUSIC
+        HomePadAction.MAPS, HomePadAction.PLACES, HomePadAction.NAVIGATE_HOME -> World.NAVIGATE
         HomePadAction.APPS -> World.APPS
         HomePadAction.CALLS, HomePadAction.CALL_BACK -> World.CALLS
         else -> null
     }
 
-    fun icon(a: ButtonAction): ImageVector = when (a) {
-        ButtonAction.NAVIGATE_HOME -> Icons.Rounded.Home
-        ButtonAction.OPEN_NAVIGATION -> Icons.Rounded.Navigation
-        ButtonAction.OPEN_MEDIA -> Icons.Rounded.MusicNote
-        ButtonAction.OPEN_PHONE -> Icons.Rounded.Phone
-        ButtonAction.CALL_BACK -> Icons.Rounded.PhoneCallback
-        ButtonAction.PLAY_PAUSE -> Icons.Rounded.PlayArrow
-        ButtonAction.NEXT -> Icons.Rounded.SkipNext
-        ButtonAction.PREVIOUS -> Icons.Rounded.SkipPrevious
-        ButtonAction.SKIP_SONGS -> Icons.Rounded.FastForward
-        ButtonAction.ASSISTANT -> Icons.Rounded.Mic
-        ButtonAction.BACK -> Icons.Rounded.ArrowBack
-        ButtonAction.HOME, ButtonAction.HOME_OR_APPS -> Icons.Rounded.Dashboard
-        ButtonAction.SELECT, ButtonAction.NOTHING -> Icons.Rounded.RadioButtonChecked
-    }
-
-    fun world(a: ButtonAction): World? = when (a) {
-        ButtonAction.NAVIGATE_HOME, ButtonAction.OPEN_NAVIGATION -> World.NAVIGATE
-        ButtonAction.OPEN_MEDIA, ButtonAction.PLAY_PAUSE, ButtonAction.NEXT, ButtonAction.PREVIOUS, ButtonAction.SKIP_SONGS -> World.MUSIC
-        ButtonAction.OPEN_PHONE, ButtonAction.CALL_BACK -> World.CALLS
-        else -> null
-    }
 }
 
 /** The hints round the hub, in ORBIT's scale (inside OrbitSkin's Scaled). [speedShown]: the hub's box holds the limit sign too. */
@@ -121,15 +89,11 @@ internal fun OrbitPadHints(hints: PadHints, speedShown: Boolean, night: Boolean,
     val cy = box - half
     class Hint(val degrees: Float, val icon: ImageVector, val colour: Color, val tag: String)
     fun padColour(a: HomePadAction) = OrbitHints.world(a)?.let { Orbit.accent(it, night) } ?: g.text
-    fun keyColour(a: ButtonAction) = OrbitHints.world(a)?.let { Orbit.accent(it, night) } ?: g.text
     val all = buildList {
         hints.up?.let { add(Hint(270f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_UP)) }
         hints.down?.let { add(Hint(90f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_DOWN)) }
         hints.left?.let { add(Hint(180f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_LEFT)) }
         hints.right?.let { add(Hint(0f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_RIGHT)) }
-        hints.corners.forEachIndexed { i, a ->
-            OrbitHints.CORNER_DEGREES.getOrNull(i)?.let { add(Hint(it, OrbitHints.icon(a), keyColour(a), OrbitHints.cornerTag(i))) }
-        }
     }
     Box(modifier.size(box)) {
         // A thin arc of the ring by each hint (the ring is not drawn where nothing is).

@@ -141,6 +141,7 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
 
     /** O7 is ORBIT's: DECK (frozen, a hand, no dial) keeps all six. */
     override val dial: List<World>? get() = null
+    override val dialCentre: World? get() = null
 
     /** MC-1 is ORBIT's: DECK (frozen) keeps the largest free area, every slot counted. */
     override val mapAreaCentred get() = false

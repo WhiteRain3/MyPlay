@@ -716,7 +716,6 @@ class CarSession(
         // MyPlay (O11): the phone arms a button to teach, or changes the learned ones.
         if (isLearnKey(key)) main.post {
             learned = settings.myplayLearnedButtons
-            runtime.ui.learnedActions = learnedActions(learned)
             val wasAt = learnArmedAt
             learnArmed = settings.myplayLearnButton
             learnArmedAt = settings.myplayLearnButtonAtMs
@@ -730,7 +729,7 @@ class CarSession(
     }
 
     /** MyPlay (O11): the learned buttons, and the action the next key will be taught (main thread). */
-    private var learned: Map<Int, ButtonAction> = settings.myplayLearnedButtons.also { runtime.ui.learnedActions = learnedActions(it) }
+    private var learned: Map<Int, ButtonAction> = settings.myplayLearnedButtons
     private var learnArmed: ButtonAction? = settings.myplayLearnButton
     private var learnArmedAt: Long = settings.myplayLearnButtonAtMs
 

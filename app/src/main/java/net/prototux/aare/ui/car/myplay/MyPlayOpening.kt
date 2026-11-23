@@ -40,7 +40,8 @@ internal class EngineMemory {
 
     /** Where the engine is (home, the dial, a world); the engine's own, kept here. */
     private var model: MyPlayScreenModel? = null
-    fun model(hand: List<World>?, dial: List<World>? = null): MyPlayScreenModel = model ?: MyPlayScreenModel(hand, dial).also { model = it }
+    fun model(hand: List<World>?, dial: List<World>? = null, centre: World? = null): MyPlayScreenModel =
+        model ?: MyPlayScreenModel(hand, dial, centre).also { model = it }
 
     /** The engine's state that Back from an app comes back to (the engine reads and writes these). */
     val chosen = mutableStateOf(STOP_HUB)
