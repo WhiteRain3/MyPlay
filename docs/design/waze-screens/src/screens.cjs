@@ -512,4 +512,91 @@ add({
       { focusedIndex: 1, render: ([l, i, c], ring, h, mid) => `<div style="min-height:${h}px;box-sizing:border-box;border-radius:${h / 2}px;background:${ring ? t.rowFocus : t.row};padding:10px 26px 10px 14px;display:flex;align-items:center;gap:18px;${ring ? P.focus(t) : ''}">${appIcon(i, c, mid ? 80 : 60)}<div style="flex:1;font-size:${mid ? 34 : 27}px;font-weight:800">${l}</div>${ic('smartphone', 26, t.secondary)}</div>` }),
 });
 
+
+
+// ================================================================= the status column: four options
+// Today's top-right column (clock, outside temperature with the ice sign, phone battery) as four
+// ORBIT-like alternatives on the C navigating home. The arrival stays in the hub. Sample: 14:07,
+// 2 °C (ice: the warning red and the snowflake, at 4 °C or less), battery 82 % (or 18 %).
+
+/** Text along a circle's arc: centred at angle [deg] (0 = top, clockwise), on radius r round (cx, cy). */
+function arcText(id, cx, cy, r, deg, text, style, { below = false } = {}) {
+  // a path running clockwise over the top (or anticlockwise under the bottom, so text reads upright)
+  const rad = (d) => (d - 90) * Math.PI / 180;
+  const span = 70;
+  const a0 = below ? deg + span : deg - span, a1 = below ? deg - span : deg + span;
+  const p = (d) => `${cx + r * Math.cos(rad(d))} ${cy + r * Math.sin(rad(d))}`;
+  return `<path id="${id}" d="M ${p(a0)} A ${r} ${r} 0 0 ${below ? 0 : 1} ${p(a1)}" fill="none"/><text style="${style}" text-anchor="middle"><textPath href="#${id}" startOffset="50%">${text}</textPath></text>`;
+}
+/** A glass badge centred on (x, y), sitting on a ring and hiding it behind itself. */
+const badge = (t, x, y, inner, h = 46) => `<div style="position:absolute;left:${x}px;top:${y}px;transform:translate(-50%,-50%);height:${h}px;padding:0 14px;border-radius:${h / 2}px;background:${t.night ? '#0A0F17' : '#F4F6FA'};border:2px solid ${t.edge};display:flex;align-items:center;gap:6px;white-space:nowrap">${inner}</div>`;
+const iceBadge = (t) => `${ic('snowflake', 22, t.warning, 2.6)}<span style="font-size:24px;font-weight:800;color:${t.warning}">2°</span>`;
+/** Navigating in C without the status column (the clock, temperature and battery). */
+const navNoStatus = (t, { speed = true } = {}) => map(t, NAV) + turn(t, { lanes: LANES }) + hub(t, { trip: TRIP }) + (speed ? speedDisc(t) : '') + song(t);
+const iceStyle = (t) => `font:800 24px 'Roboto Flex',Inter,sans-serif;fill:${t.warning}`;
+const STATUS_FIELDS = 'clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate)';
+
+add({
+  slug: 'status-a-speed-ring', fileName: '35-status-a-speed-ring', group: 'status', section: 'Status',
+  title: 'Status option a · the speed ring', template: 'ORBIT Status → the speed disc', fields: STATUS_FIELDS,
+  desc: 'The speed disc grows a ring, like the hub and the song. The time is a badge set into the top of the ring, and the temperature with its ice sign a badge at the bottom. The battery is a thin arc on the ring’s right side that empties as the phone does, with no number until ≤ 20 % or charging. The top-right corner is map again.',
+  html: (t) => {
+    const cx = 136, cy = 356, R = 76;
+    const batt = 0.82, b0 = 30, b1 = 150; // the battery arc: 30°..150° (right side), filled from the bottom
+    const rad = (d) => (d - 90) * Math.PI / 180, pt = (d, r = R) => `${cx + r * Math.cos(rad(d))} ${cy + r * Math.sin(rad(d))}`;
+    const fillTo = b1 - (b1 - b0) * batt;
+    let svg = `<svg width="1280" height="720" style="position:absolute;left:0;top:0;overflow:visible">
+      <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="${t.track}" stroke-width="7"/>
+      <path d="M ${pt(b1)} A ${R} ${R} 0 0 0 ${pt(fillTo)}" fill="none" stroke="${t.secondary}" stroke-width="7" stroke-linecap="round"/>
+    </svg>`;
+    return navNoStatus(t, { speed: false }) + P.plate(t, -10, 220, 300, 280) +
+      `<div style="position:absolute;left:${cx - 64}px;top:${cy - 64}px;width:128px;height:128px;border-radius:50%;background:${t.glass};border:2px solid ${t.edge};display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:50px;font-weight:800;line-height:50px">48</div><div style="font-size:18px;color:${t.secondary}">km/h</div></div>` +
+      svg + badge(t, cx, cy - R, `<span style="font-size:32px;font-weight:800">14:07</span>`, 50) + badge(t, cx, cy + R, iceBadge(t), 42);
+  },
+});
+add({
+  slug: 'status-b-satellite', fileName: '35-status-b-satellite', group: 'status', section: 'Status',
+  title: 'Status option b · a satellite of the speed disc', template: 'ORBIT Status → a satellite pill', fields: STATUS_FIELDS,
+  desc: 'A small upright glass pill sits on a faint orbit round the speed disc, outside the free area. From the top: the time (big), the temperature with the ice sign, and the battery as a tiny bar with its number. Everything still reads in one glance, in one place, but no longer in a corner of its own.',
+  html: (t) => {
+    const cx = 136, cy = 400;
+    const orbit = `<svg width="1280" height="720" style="position:absolute;left:0;top:0"><circle cx="${cx}" cy="${cy}" r="108" fill="none" stroke="${t.secondary}" stroke-opacity=".35" stroke-width="2" stroke-dasharray="4 7"/></svg>`;
+    const sat = `<div style="position:absolute;left:186px;top:236px;width:96px;box-sizing:border-box;padding:12px 0 14px;border-radius:48px;background:${t.glass};border:2px solid ${t.edge};display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font-size:28px;font-weight:800;line-height:28px">14:07</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:22px;font-weight:800;color:${t.warning}">${ic('snowflake', 20, t.warning, 2.6)}2°</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:18px;color:${t.secondary}"><div style="width:26px;height:12px;border:2px solid ${t.secondary};border-radius:3px;padding:1px;box-sizing:content-box"><div style="width:82%;height:100%;background:${t.secondary};border-radius:1px"></div></div>82%</div></div>`;
+    return navNoStatus(t, { speed: false }) + P.plate(t, -10, 220, 320, 300) + orbit +
+      `<div style="position:absolute;left:${cx - 60}px;top:${cy - 60}px;width:120px;height:120px;border-radius:50%;background:${t.glass};border:2px solid ${t.edge};display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:46px;font-weight:800;line-height:46px">48</div><div style="font-size:18px;color:${t.secondary}">km/h</div></div>` + sat;
+  },
+});
+add({
+  slug: 'status-c-song-ring', fileName: '35-status-c-song-ring', group: 'status', section: 'Status',
+  title: 'Status option c · the time on the song’s ring', template: 'ORBIT Status → the song disc', fields: STATUS_FIELDS,
+  desc: 'The time is a badge set into the top of the song’s ring; the temperature and ice sign a badge on its left side. The battery is hidden until it matters: drawn here at 18 %, a red badge on the ring’s lower left. The top-right corner is map again, and the right side keeps one part, the song.',
+  html: (t) => {
+    const cx = 1164, cy = 604, R = 76;
+    return navNoStatus(t) + P.plate(t, 1000, 380, 300, 340) +
+      badge(t, cx, cy - R, `<span style="font-size:34px;font-weight:800">14:07</span>`, 52) +
+      badge(t, cx - R - 6, cy - 34, iceBadge(t), 42) +
+      badge(t, cx - R - 6, cy + 40, `<div style="width:24px;height:12px;border:2px solid ${t.warning};border-radius:3px;padding:1px;box-sizing:content-box"><div style="width:18%;height:100%;background:${t.warning}"></div></div><span style="font-size:22px;font-weight:800;color:${t.warning}">18%</span>`, 42);
+  },
+});
+add({
+  slug: 'status-d-corner-orb', fileName: '35-status-d-corner-orb', group: 'status', section: 'Status',
+  title: 'Status option d · a corner orb (mine)', template: 'ORBIT Status → a quarter disc in the corner', fields: STATUS_FIELDS,
+  desc: 'My idea: the top-right corner becomes a planet rising out of the screen’s edge, a quarter disc of glass, so every corner is now round (turn, orb, hub, song). The time is big inside it. Its rim is the battery ring, emptying from the bottom like the trip ring fills. The temperature and ice sign sit on the rim’s low end. It stays right of the free area (x ≥ 1010).',
+  html: (t) => {
+    const R = 250, cx = 1280, cy = 0, rr = R - 10;
+    const batt = 0.82;
+    // the rim runs from the left edge of the quarter (180°) to the bottom (90°), in screen angles
+    const pt = (a) => `${cx + rr * Math.cos(a * Math.PI / 180)} ${cy + rr * Math.sin(a * Math.PI / 180)}`;
+    const end = 90 + 90 * batt;
+    return navNoStatus(t) +
+      `<div style="position:absolute;left:${cx - R}px;top:${cy - R}px;width:${2 * R}px;height:${2 * R}px;border-radius:50%;background:${t.glass};border:2px solid ${t.edge}"></div>
+       <svg width="1280" height="720" style="position:absolute;left:0;top:0"><path d="M ${pt(180)} A ${rr} ${rr} 0 0 0 ${pt(90)}" fill="none" stroke="${t.track}" stroke-width="7"/><path d="M ${pt(90)} A ${rr} ${rr} 0 0 1 ${pt(end)}" fill="none" stroke="${t.secondary}" stroke-width="7" stroke-linecap="round"/></svg>
+       <div style="position:absolute;right:34px;top:34px;text-align:right"><div style="font-size:54px;font-weight:800;line-height:54px">14:07</div>
+         <div style="margin-top:12px;display:flex;justify-content:flex-end;align-items:center;gap:6px;font-size:26px;font-weight:800;color:${t.warning}">${ic('snowflake', 24, t.warning, 2.6)}2°</div>
+         <div style="margin-top:6px;font-size:20px;color:${t.secondary}">82%</div></div>`;
+  },
+});
 module.exports = { SCREENS, NIGHT, DAY };

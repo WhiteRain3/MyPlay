@@ -18,7 +18,7 @@ fs.mkdirSync(HTML, { recursive: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
   const files = [];
   for (const [i, s] of SCREENS.entries()) {
-    s.file = `${String(i + 1).padStart(2, '0')}-${s.slug}`;
+    s.file = s.fileName || `${String(i + 1).padStart(2, '0')}-${s.slug}`;
     const html = P.page(s.day ? DAY : NIGHT, s.html(s.day ? DAY : NIGHT));
     fs.writeFileSync(path.join(HTML, s.file + '.html'), html);
     await page.goto('file://' + path.join(HTML, s.file + '.html'));

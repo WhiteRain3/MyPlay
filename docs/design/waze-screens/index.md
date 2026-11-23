@@ -91,6 +91,23 @@ These are MyPlay's own screens, not templates. Their fields are the skin's data 
 | [33-apps-ring](33-apps-ring.png) | Apps: a ring of apps | `MyPlay · AppsWorld (CarAppEntry list, page / pages)` | CarAppEntry: label · icon · kind · ringed tile · page / pages | The grid becomes ORBIT’s dial: eight apps round a ring, the focused one bigger with the focus ring, its name in the middle. Turning goes round the ring; past the last app the next page turns in (the dots). |
 | [34-phone-apps](34-phone-apps.png) | Phone apps list | `MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)` | CarAppEntry: label · icon · kind | The phone’s own apps that the owner allowed on the car, on the wheel: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the same CarAppEntry list as the ring.) |
 
+## The status column: four options (35-status-*)
+
+The owner finds today's top-right column out of place in ORBIT. It shows the clock, the outside temperature (red with the snowflake at 4 °C or less) and the phone battery with its percentage. Four options, all on the C navigating home and all outside the free area. The arrival time stays in the hub.
+
+| PNG | Option | Notes |
+|---|---|---|
+| [35-status-a-speed-ring](35-status-a-speed-ring.png) | Status option a · the speed ring | The speed disc grows a ring, like the hub and the song. The time is a badge set into the top of the ring, and the temperature with its ice sign a badge at the bottom. The battery is a thin arc on the ring’s right side that empties as the phone does, with no number until ≤ 20 % or charging. The top-right corner is map again. |
+| [35-status-b-satellite](35-status-b-satellite.png) | Status option b · a satellite of the speed disc | A small upright glass pill sits on a faint orbit round the speed disc, outside the free area. From the top: the time (big), the temperature with the ice sign, and the battery as a tiny bar with its number. Everything still reads in one glance, in one place, but no longer in a corner of its own. |
+| [35-status-c-song-ring](35-status-c-song-ring.png) | Status option c · the time on the song’s ring | The time is a badge set into the top of the song’s ring; the temperature and ice sign a badge on its left side. The battery is hidden until it matters: drawn here at 18 %, a red badge on the ring’s lower left. The top-right corner is map again, and the right side keeps one part, the song. |
+| [35-status-d-corner-orb](35-status-d-corner-orb.png) | Status option d · a corner orb (mine) | My idea: the top-right corner becomes a planet rising out of the screen’s edge, a quarter disc of glass, so every corner is now round (turn, orb, hub, song). The time is big inside it. Its rim is the battery ring, emptying from the bottom like the trip ring fills. The temperature and ice sign sit on the rim’s low end. It stays right of the free area (x ≥ 1010). |
+
+The data is the same in every option: clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate).
+
+**Recommendation: (a), the speed ring.** The time, speed, temperature and battery become one round part in the left column, beside the turn and the hub, so every fact you glance at sits on one side and the top-right corner goes back to the map. The battery stays quiet as a thin arc until it matters (≤ 20 % or charging adds the number). (d) is the boldest and keeps the time biggest, but it adds a fifth large part. (c) puts the time on the music part, which is the wrong place when music is off. (b) reads well but is a small part of its own again.
+
+Labels are straight glass badges set into the rings, not text bent along them: on a ring this small, bent text was hard to read.
+
 ## Placement, in the car's pixels
 
 | Part | Where | Size |

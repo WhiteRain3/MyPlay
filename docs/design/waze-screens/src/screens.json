@@ -270,5 +270,37 @@
   "template": "MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)",
   "fields": "CarAppEntry: label · icon · kind",
   "desc": "The phone’s own apps that the owner allowed on the car, on the wheel: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the same CarAppEntry list as the ring.)"
+ },
+ {
+  "file": "35-status-a-speed-ring",
+  "title": "Status option a · the speed ring",
+  "group": "status",
+  "template": "ORBIT Status → the speed disc",
+  "fields": "clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate)",
+  "desc": "The speed disc grows a ring, like the hub and the song. The time is a badge set into the top of the ring, and the temperature with its ice sign a badge at the bottom. The battery is a thin arc on the ring’s right side that empties as the phone does, with no number until ≤ 20 % or charging. The top-right corner is map again."
+ },
+ {
+  "file": "35-status-b-satellite",
+  "title": "Status option b · a satellite of the speed disc",
+  "group": "status",
+  "template": "ORBIT Status → a satellite pill",
+  "fields": "clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate)",
+  "desc": "A small upright glass pill sits on a faint orbit round the speed disc, outside the free area. From the top: the time (big), the temperature with the ice sign, and the battery as a tiny bar with its number. Everything still reads in one glance, in one place, but no longer in a corner of its own."
+ },
+ {
+  "file": "35-status-c-song-ring",
+  "title": "Status option c · the time on the song’s ring",
+  "group": "status",
+  "template": "ORBIT Status → the song disc",
+  "fields": "clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate)",
+  "desc": "The time is a badge set into the top of the song’s ring; the temperature and ice sign a badge on its left side. The battery is hidden until it matters: drawn here at 18 %, a red badge on the ring’s lower left. The top-right corner is map again, and the right side keeps one part, the song."
+ },
+ {
+  "file": "35-status-d-corner-orb",
+  "title": "Status option d · a corner orb (mine)",
+  "group": "status",
+  "template": "ORBIT Status → a quarter disc in the corner",
+  "fields": "clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate)",
+  "desc": "My idea: the top-right corner becomes a planet rising out of the screen’s edge, a quarter disc of glass, so every corner is now round (turn, orb, hub, song). The time is big inside it. Its rim is the battery ring, emptying from the bottom like the trip ring fills. The temperature and ice sign sit on the rim’s low end. It stays right of the free area (x ≥ 1010)."
  }
 ]
