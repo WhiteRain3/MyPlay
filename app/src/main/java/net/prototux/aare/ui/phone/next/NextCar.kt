@@ -1,5 +1,10 @@
 package net.prototux.aare.ui.phone.next
 
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material.icons.outlined.Call
+import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -534,6 +539,44 @@ private val PAD_ROWS: List<Pair<HomePadKey, Int>> = listOf(
     HomePadKey.DOWN to R.string.next_car_pad_down_label,
 )
 
+private fun padIcon(a: HomePadAction): androidx.compose.ui.graphics.vector.ImageVector = when (a) {
+    HomePadAction.MUSIC -> Icons.Outlined.MusicNote
+    HomePadAction.MAPS -> Icons.Outlined.Map
+    HomePadAction.DIAL -> Icons.Outlined.RadioButtonChecked
+    HomePadAction.APPS -> Icons.Outlined.Apps
+    HomePadAction.CALLS, HomePadAction.CALL_BACK -> Icons.Outlined.Call
+    HomePadAction.PLACES -> Icons.Outlined.Place
+    else -> Icons.Outlined.Block
+}
+
+/**
+ * The pad drawn round (frame 24): the knob push in the middle, pad up above, down below, left or
+ * right beside, each with what it opens. A picture only: the rows below say the same for TalkBack.
+ */
+@Composable
+private fun PadDrawing(pad: Map<HomePadKey, HomePadAction>) {
+    val names = HOME_PAD_ACTION_NAMES.associate { (a, res) -> a to stringResource(res) }
+    val keyNames = PAD_ROWS.associate { (k, res) -> k to stringResource(res) }
+    @Composable
+    fun Spot(key: HomePadKey, modifier: Modifier) {
+        val a = pad[key] ?: HomePadAction.NOTHING
+        Column(modifier.width(120.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(Modifier.size(64.dp).clip(CircleShape).background(NextColors.Surface).border(2.dp, NextColors.Outline, CircleShape),
+                contentAlignment = Alignment.Center) { Icon(padIcon(a), null, tint = NextTab.CAR.world, modifier = Modifier.size(28.dp)) }
+            Text(names[a] ?: a.id, style = NextType.Label.copy(fontWeight = androidx.compose.ui.text.font.FontWeight(620)), color = NextColors.Text,
+                maxLines = 1, modifier = Modifier.padding(top = 4.dp))
+            Text(keyNames[key].orEmpty(), style = NextType.Help, color = NextColors.Text3, maxLines = 1)
+        }
+    }
+    Box(Modifier.fillMaxWidth().height(330.dp).clearAndSetSemantics {}, contentAlignment = Alignment.Center) {
+        Box(Modifier.size(270.dp).clip(CircleShape).border(1.dp, NextColors.Edge2, CircleShape))
+        Spot(HomePadKey.UP, Modifier.align(Alignment.TopCenter))
+        Spot(HomePadKey.CENTER, Modifier.align(Alignment.Center))
+        Spot(HomePadKey.SIDE, Modifier.align(Alignment.CenterEnd).padding(end = 8.dp))
+        Spot(HomePadKey.DOWN, Modifier.align(Alignment.BottomCenter))
+    }
+}
+
 /** Car › Buttons › ORBIT home: pad shortcuts (frame 24). */
 @Composable
 fun NextPadShortcutsPage() {
@@ -547,6 +590,10 @@ fun NextPadShortcutsPage() {
                 NextSwitchRow(stringResource(R.string.next_car_info_home_label), infoHome, { settings.myplayInfoHome = it }, Icons.Outlined.Info,
                     note = RowNote.Help(stringResource(R.string.next_car_info_home_help)), changed = infoHome)
             }
+            Spacer(Modifier.height(12.dp))
+        }
+        item {
+            PadDrawing(pad)
             Spacer(Modifier.height(12.dp))
         }
         item {
