@@ -21,6 +21,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -535,17 +536,6 @@ object OrbitSkin : MyPlaySkin {
     override fun Song(song: SongSlot, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            // The player's position is sampled on SystemClock.elapsedRealtime() (PlaybackInfo.sampledAtMs),
-            // so "now" must be on the same clock, not the wall clock.
-            var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
-            LaunchedEffect(song.playing, song.updatedAtMs) {
-                now = SystemClock.elapsedRealtime()
-                while (song.playing) {
-                    delay(1_000)
-                    now = SystemClock.elapsedRealtime()
-                }
-            }
-            val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
             Row(Modifier.carPart(CarPart.OrbitSong), verticalAlignment = Alignment.CenterVertically) {
                 // AR-1: the text takes what room is left after the art's circle (a long title used to
                 // squeeze the circle into an oval in the 40 % wide corner).
@@ -555,7 +545,7 @@ object OrbitSkin : MyPlaySkin {
                 }
                 Spacer(Modifier.width(10.dp))
                 val musicColour = Orbit.accent(World.MUSIC, LocalSkinTokens.current.night)
-                OrbitRing(progress, 152.dp, 7.dp, musicColour, g.track, Modifier.coversMap().testTag(SONG_RING_TAG).progressSemantics(progress).orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
+                SongRing(song, musicColour, g.track, Modifier.coversMap().testTag(SONG_RING_TAG).orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
                     val art = song.art
                     if (art != null) {
                         val image = remember(art) { art.asImageBitmap() }
@@ -569,6 +559,26 @@ object OrbitSkin : MyPlaySkin {
                 }
             }
         }
+    }
+
+    /**
+     * The song's ring with its progress. SM-3: the once-a-second clock lives here, so each tick
+     * composes only the ring again, not the whole song corner (the title, the artist, the art).
+     */
+    @Composable
+    private fun SongRing(song: SongSlot, colour: Color, track: Color, modifier: Modifier, content: @Composable BoxScope.() -> Unit) {
+        // The player's position is sampled on SystemClock.elapsedRealtime() (PlaybackInfo.sampledAtMs),
+        // so "now" must be on the same clock, not the wall clock.
+        var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+        LaunchedEffect(song.playing, song.updatedAtMs) {
+            now = SystemClock.elapsedRealtime()
+            while (song.playing) {
+                delay(1_000)
+                now = SystemClock.elapsedRealtime()
+            }
+        }
+        val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
+        OrbitRing(progress, 152.dp, 7.dp, colour, track, modifier.progressSemantics(progress), content)
     }
 
     /** One line of [text] in [style], made smaller when it is wider than [width]. */
@@ -860,15 +870,6 @@ object OrbitSkin : MyPlaySkin {
     private fun ArtBox(song: SongSlot, accent: Color, on: Boolean, night: Boolean, modifier: Modifier) {
         val g = Orbit.glass(night)
         val shape = androidx.compose.foundation.shape.RoundedCornerShape(78.dp)
-        var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
-        LaunchedEffect(song.playing, song.updatedAtMs) {
-            now = SystemClock.elapsedRealtime()
-            while (song.playing) {
-                delay(500)
-                now = SystemClock.elapsedRealtime()
-            }
-        }
-        val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
         Box(modifier.requiredSize(320.dp).orbitFocusRounded(on, accent, g.halo, 78.dp).clip(shape)) {
             val art = song.art
             if (art != null) {
@@ -886,13 +887,29 @@ object OrbitSkin : MyPlaySkin {
             ) {
                 Text(song.title, style = TextStyle(fontSize = 38.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = Color.White), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(song.subtitle, style = TextStyle(fontSize = 26.sp, color = Color(0xFFC4CBDC)), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (progress != null) {
-                    Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(6.dp).clip(CircleShape).background(Color(0x40FFFFFF))
-                        .testTag(MUSIC_PROGRESS_TAG).progressSemantics(progress)) {
-                        Box(Modifier.fillMaxWidth(progress).fillMaxSize().clip(CircleShape).background(Color.White))
-                    }
-                }
+                if (song.durationMs > 0) ArtProgress(song)
             }
+        }
+    }
+
+    /**
+     * The artwork's progress bar. SM-3: its twice-a-second clock lives here, so each tick composes
+     * only the bar again, not the artwork, the title and the artist.
+     */
+    @Composable
+    private fun ArtProgress(song: SongSlot) {
+        var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+        LaunchedEffect(song.playing, song.updatedAtMs) {
+            now = SystemClock.elapsedRealtime()
+            while (song.playing) {
+                delay(500)
+                now = SystemClock.elapsedRealtime()
+            }
+        }
+        val progress = mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now)
+        Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(6.dp).clip(CircleShape).background(Color(0x40FFFFFF))
+            .testTag(MUSIC_PROGRESS_TAG).progressSemantics(progress)) {
+            Box(Modifier.fillMaxWidth(progress).fillMaxSize().clip(CircleShape).background(Color.White))
         }
     }
 
