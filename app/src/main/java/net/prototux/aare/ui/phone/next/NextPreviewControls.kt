@@ -85,7 +85,8 @@ private fun KeyButton(label: String, icon: ImageVector?, text: String? = null, o
             Modifier.size(44.dp).clip(CircleShape).background(NextColors.Surface2).border(1.5.dp, NextColors.Outline, CircleShape)
                 .semantics { contentDescription = label; role = Role.Button }
                 .testTag("preview-key-$label")
-                .pointerInput(Unit) { detectTapGestures(onPress = { down(); tryAwaitRelease(); up() }) },
+                // PV-1: the up always follows, even when the bar leaves mid-press, so no key stays held.
+                .pointerInput(Unit) { detectTapGestures(onPress = { down(); try { tryAwaitRelease() } finally { up() } }) },
             contentAlignment = Alignment.Center,
         ) {
             if (icon != null) Icon(icon, null, tint = NextColors.Text, modifier = Modifier.size(22.dp))

@@ -35,6 +35,18 @@ class NextPreviewControlsTest {
         assertEquals(listOf("${KeyEvent.KEYCODE_DPAD_CENTER} down", "${KeyEvent.KEYCODE_DPAD_CENTER} up"), r.events)
     }
 
+    @Test fun aPressCutShortStillLetsGo() {
+        // Review PV-1: the bar hidden mid-press must not leave the key held in the car's input path.
+        val r = Recorder()
+        val shown = androidx.compose.runtime.mutableStateOf(true)
+        rule.setContent { if (shown.value) NextPreviewControls(r, learnedCodes = emptyList()) }
+        rule.onNodeWithContentDescription("Push").performTouchInput { down(center) }
+        rule.waitForIdle()
+        shown.value = false
+        rule.waitForIdle()
+        assertEquals(listOf("${KeyEvent.KEYCODE_DPAD_CENTER} down", "${KeyEvent.KEYCODE_DPAD_CENTER} up"), r.events)
+    }
+
     @Test fun theKnobTurnsAndCornersShowOnlyWhenTaught() {
         val r = Recorder()
         rule.setContent { NextPreviewControls(r, learnedCodes = listOf(KeyEvent.KEYCODE_F1)) }
