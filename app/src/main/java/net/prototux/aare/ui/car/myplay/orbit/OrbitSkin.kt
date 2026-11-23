@@ -211,7 +211,10 @@ object OrbitSkin : MyPlaySkin {
         val c = LocalConfiguration.current
         val d = LocalDensity.current
         val s = scale(c.screenWidthDp, c.screenHeightDp)
-        CompositionLocalProvider(LocalDensity provides Density(d.density * s, d.fontScale), content = content)
+        // TH-3: the owner's Control size makes ORBIT's discs and targets bigger or smaller; the text
+        // keeps the owner's Text size (the font scale is divided back), so the two do not stack.
+        val controls = net.prototux.aare.ui.theme.LocalCarControlScale.current.coerceIn(0.5f, 2f)
+        CompositionLocalProvider(LocalDensity provides Density(d.density * s * controls, d.fontScale / controls), content = content)
     }
 
     @Composable

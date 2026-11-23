@@ -26,4 +26,16 @@ class ScreenSettingKeysTest {
         val keyOf = mapOf("myplayEnginePreview" to "myplay_engine_preview", "myplayEngineLanguage" to KEY_ENGINE_LANGUAGE)
         for (p in read) assertTrue("$p is read on apply but its key is not listened to", keyOf[p] in CarRuntime.SCREEN_SETTING_KEYS)
     }
+
+    /** AP-1: every setting refreshApps reads from Settings changes the car's app list at once. */
+    @Test fun everyAppListSettingIsListened() {
+        val src = File("src/main/java/net/prototux/aare/host/CarRuntime.kt").readText()
+        val body = src.substringAfter("fun refreshApps()").substringBefore("\n    fun ")
+        val keyOf = mapOf("hiddenApps" to "hidden_apps", "phoneScreen" to "phone_screen", "browser" to "browser",
+            "carDataApp" to "car_data_app", "standaloneApps" to "standalone_apps", "standaloneAppPackages" to "standalone_app_pkgs",
+            "appOrder" to "app_order")
+        val read = Regex("""settings\.(\w+)""").findAll(body).map { it.groupValues[1] }.filter { it in keyOf }.toSet()
+        assertTrue("refreshApps reads the app list's settings: $read", read.containsAll(setOf("browser", "carDataApp", "standaloneApps", "standaloneAppPackages")))
+        for (p in read) assertTrue("$p is read by refreshApps but its key is not listened to", keyOf[p] in CarRuntime.APP_LIST_KEYS)
+    }
 }

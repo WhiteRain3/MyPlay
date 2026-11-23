@@ -72,6 +72,9 @@ import androidx.compose.material.icons.rounded.BatteryChargingFull
 import androidx.compose.material.icons.rounded.BatteryFull
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.testTag
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -693,6 +696,50 @@ class OrbitHomeTest {
         rule.onNodeWithTag(OrbitHints.TAG_UP).assertDoesNotExist()
         rule.onNodeWithTag(OrbitHints.cornerTag(0)).assertDoesNotExist()
     }
+
+    /**
+     * TH-1 (the owner: "our theming doesn't work"): a chosen theme colours ORBIT at once (its glass
+     * and Navigate's accent); the default theme keeps ORBIT's own colours.
+     */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun orbitTakesTheChosenTheme() {
+        val state = show()
+        assertEquals(Orbit.NIGHT, Orbit.glass(true))
+        val retro = net.prototux.aare.ui.theme.CarThemes.byId("retro")
+        rule.runOnIdle { state.theme = retro; state.orbitThemed = true }
+        rule.waitForIdle()
+        val themed = Orbit.Themed.from(retro)
+        assertEquals(themed.night, Orbit.glass(true))
+        assertEquals(retro.night.primary, Orbit.accent(net.prototux.aare.ui.car.myplay.World.NAVIGATE, true))
+        val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap()
+        File(File("build/reports/myplay-screens").apply { mkdirs() }, "orbit_themed_retro.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        // Back to the default: ORBIT's own colours.
+        rule.runOnIdle { state.orbitThemed = false }
+        rule.waitForIdle()
+        assertEquals(Orbit.NIGHT, Orbit.glass(true))
+        assertEquals(Color(0xFF6EE7A8), Orbit.accent(net.prototux.aare.ui.car.myplay.World.NAVIGATE, true))
+    }
+
+    /** TH-3: the owner's Control size makes ORBIT's parts bigger (the hub's disc here), live. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun controlSizeScalesOrbitsParts() {
+        var scale by androidx.compose.runtime.mutableStateOf(1f)
+        rule.setContent {
+            CarTheme(night = true, theme = net.prototux.aare.ui.theme.CarThemes.byId("aare")) {
+                CompositionLocalProvider(net.prototux.aare.ui.theme.LocalCarControlScale provides scale,
+                    net.prototux.aare.ui.car.myplay.LocalSkinTokens provides Orbit.tokens(true)) {
+                    OrbitSkin.Hub(null, androidx.compose.ui.Modifier.testTag("hub"))
+                }
+            }
+        }
+        val normal = rule.onNodeWithTag("hub").fetchSemanticsNode().boundsInRoot.width
+        rule.runOnIdle { scale = 1.3f }
+        rule.waitForIdle()
+        val bigger = rule.onNodeWithTag("hub").fetchSemanticsNode().boundsInRoot.width
+        assertEquals(normal * 1.3f, bigger, 2f)
+    }
+
+    @org.junit.After fun noThemeLeftOver() { Orbit.override = null }
 
     /** A picture of the screen as it is now. */
     private fun picture2(name: String) {
