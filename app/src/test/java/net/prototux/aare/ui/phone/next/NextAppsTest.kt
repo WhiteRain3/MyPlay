@@ -97,6 +97,18 @@ class NextAppsTest {
         } finally { suPresentCheck = { false } }
     }
 
+    @Test fun aRootedOwnerCanChooseShizukuInstead() {
+        // Review PH-3: root refused or not wanted, the Shizuku steps are still reachable.
+        suPresentCheck = { true }
+        try {
+            rule.setContent { NextPhoneAppsPage() }
+            rule.onNodeWithText("Use Shizuku").performClick()
+            rule.waitForIdle()
+            rule.onNodeWithText("Allow root").assertDoesNotExist()
+            rule.onNodeWithText("Get Shizuku").assertExists()
+        } finally { suPresentCheck = { false }; rootDeclined = false; rootRefusedAtPrompt = false }
+    }
+
     @Test fun shizukuSteps() {
         assertEquals(ShizukuStep.INSTALL, shizukuStep(installed = false, running = false, allowed = false))
         assertEquals(ShizukuStep.START, shizukuStep(installed = true, running = false, allowed = false))

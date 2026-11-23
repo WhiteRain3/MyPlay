@@ -85,7 +85,8 @@ private fun KeyButton(label: String, icon: ImageVector?, text: String? = null, o
             Modifier.size(44.dp).clip(CircleShape).background(NextColors.Surface2).border(1.5.dp, NextColors.Outline, CircleShape)
                 .semantics { contentDescription = label; role = Role.Button }
                 .testTag("preview-key-$label")
-                .pointerInput(Unit) { detectTapGestures(onPress = { down(); tryAwaitRelease(); up() }) },
+                // PV-1: the up always follows, even when the bar leaves mid-press, so no key stays held.
+                .pointerInput(Unit) { detectTapGestures(onPress = { down(); try { tryAwaitRelease() } finally { up() } }) },
             contentAlignment = Alignment.Center,
         ) {
             if (icon != null) Icon(icon, null, tint = NextColors.Text, modifier = Modifier.size(22.dp))
@@ -101,7 +102,11 @@ private fun KeyButton(label: String, icon: ImageVector?, text: String? = null, o
  * what the car would, and says what it cannot pretend.
  */
 @Composable
-fun NextPreviewControls(inputs: PreviewInputs, learnedCodes: List<Int>, modifier: Modifier = Modifier) {
+fun NextPreviewControls(
+    inputs: PreviewInputs, learnedCodes: List<Int>, modifier: Modifier = Modifier,
+    /** This car's code for a default one (the Buttons page's choice for the knob push, Back, Menu). */
+    codeFor: (Int) -> Int = { it },
+) {
     var speed by rememberSaveable { mutableFloatStateOf(0f) }
     Column(modifier.fillMaxWidth().background(NextColors.TabBar).padding(horizontal = 12.dp, vertical = 8.dp).testTag("preview-controls")) {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), verticalAlignment = Alignment.CenterVertically,
@@ -110,7 +115,8 @@ fun NextPreviewControls(inputs: PreviewInputs, learnedCodes: List<Int>, modifier
             KeyButton(stringResource(R.string.next_prev_turn_left_label), Icons.Rounded.RotateLeft, onDown = { inputs.rotary(-1) }, onUp = {})
             KeyButton(stringResource(R.string.next_prev_turn_right_label), Icons.Rounded.RotateRight, onDown = { inputs.rotary(1) }, onUp = {})
             PREVIEW_KEYS.forEach { k ->
-                KeyButton(stringResource(k.label), k.icon, onDown = { inputs.key(k.code, true) }, onUp = { inputs.key(k.code, false) })
+                val code = codeFor(k.code)
+                KeyButton(stringResource(k.label), k.icon, onDown = { inputs.key(code, true) }, onUp = { inputs.key(code, false) })
             }
             learnedCodes.take(2).forEachIndexed { i, code ->
                 KeyButton(stringResource(R.string.next_prev_corner_label, i + 1), null, "${i + 1}",
@@ -122,6 +128,9 @@ fun NextPreviewControls(inputs: PreviewInputs, learnedCodes: List<Int>, modifier
             if (speed < 1f) stringResource(R.string.next_prev_speed_off_label) else stringResource(R.string.next_prev_speed_label, speed.toInt()),
             speed, 0f..200f, { speed = it; inputs.pretendSpeed(if (it < 1f) null else it) },
         )
-        Text(stringResource(R.string.next_prev_cannot_help), style = NextType.Help, color = NextColors.Text3)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.next_prev_cannot_help), style = NextType.Help, color = NextColors.Text3, modifier = Modifier.weight(1f, fill = false))
+            NextInfoButton(stringResource(R.string.next_prev_cannot_help), stringResource(R.string.next_prev_cannot_info))
+        }
     }
 }
