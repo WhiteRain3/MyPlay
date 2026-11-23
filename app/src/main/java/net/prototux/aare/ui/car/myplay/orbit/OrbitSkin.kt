@@ -1196,26 +1196,21 @@ object OrbitSkin : MyPlaySkin {
         val night = LocalSkinTokens.current.night
         val g = Orbit.glass(night)
         val accent = Orbit.accent(World.CAR, night)
-        val list = androidx.compose.foundation.lazy.rememberLazyListState()
-        LaunchedEffect(ringed, lines.size) { if (lines.isNotEmpty()) list.animateScrollToItem((ringed - 1).coerceAtLeast(0)) }
         Box(modifier.background(g.halo.copy(alpha = 0.7f)).orbitRipple(0.5f, 0.5f)) {
             Scaled {
-                Column(Modifier.fillMaxSize().padding(start = 60.dp, top = 40.dp)) {
-                    Text(worldName(World.CAR), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
-                    if (lines.isEmpty()) {
-                        Text(stringResource(R.string.car_data_not_connected), style = Orbit.Type.secondary.floating(g.secondary), modifier = Modifier.padding(start = 80.dp, top = 40.dp))
-                        return@Column
-                    }
-                    Text(stringResource(R.string.myplay_car_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        state = list, modifier = Modifier.padding(start = 80.dp, top = 24.dp).width(880.dp),
-                        verticalArrangement = Arrangement.spacedBy(18.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
-                    ) {
-                        items(lines.size) { i ->
-                            val (label, value) = lines[i]
-                            Pill(label, "", Icons.Rounded.DirectionsCar, null, null, false, i == ringed, accent, night, row(i), trailing = value)
+                Box(Modifier.fillMaxSize()) {
+                    Column(Modifier.padding(start = 60.dp, top = 40.dp)) {
+                        Text(worldName(World.CAR), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
+                        if (lines.isEmpty()) {
+                            Text(stringResource(R.string.car_data_not_connected), style = Orbit.Type.secondary.floating(g.secondary), modifier = Modifier.padding(start = 80.dp, top = 40.dp))
+                            return@Column
                         }
+                        Text(stringResource(R.string.myplay_car_hint), style = TextStyle(fontSize = 24.sp, color = g.secondary))
+                    }
+                    // Look C, step 3: the orbit wheel.
+                    OrbitWheel(lines.size, ringed, accent, night) { i, on, place ->
+                        val (label, value) = lines[i]
+                        Pill(label, "", Icons.Rounded.DirectionsCar, null, null, false, on, accent, night, place.then(row(i)), trailing = value)
                     }
                 }
             }
@@ -1244,23 +1239,18 @@ object OrbitSkin : MyPlaySkin {
         val night = LocalSkinTokens.current.night
         val g = Orbit.glass(night)
         val accent = Orbit.accent(world, night)
-        val list = androidx.compose.foundation.lazy.rememberLazyListState()
-        LaunchedEffect(ringed, page.rows.size) { if (page.rows.isNotEmpty()) list.animateScrollToItem((ringed - 1).coerceAtLeast(0)) }
         Box(modifier.background(g.halo.copy(alpha = 0.7f)).orbitRipple(0.5f, 0.5f)) {
             Scaled {
-                Column(Modifier.fillMaxSize().padding(start = 60.dp, top = 40.dp)) {
-                    Text(worldName(world), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
-                    Text(hint, style = TextStyle(fontSize = 24.sp, color = g.secondary))
-                    androidx.compose.foundation.lazy.LazyColumn(
-                        state = list, modifier = Modifier.padding(start = 80.dp, top = 24.dp).width(880.dp),
-                        verticalArrangement = Arrangement.spacedBy(18.dp),
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 20.dp),
-                    ) {
-                        items(page.rows.size) { i ->
-                            val r = page.rows[i]
-                            Pill(r.title, r.note.orEmpty(), icon(i, r),
-                                if (r.switch && r.on) accent else null, null, false, i == ringed, accent, night, row(i), trailing = r.value)
-                        }
+                Box(Modifier.fillMaxSize()) {
+                    Column(Modifier.padding(start = 60.dp, top = 40.dp)) {
+                        Text(worldName(world), style = TextStyle(fontSize = 34.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = g.text))
+                        Text(hint, style = TextStyle(fontSize = 24.sp, color = g.secondary))
+                    }
+                    // Look C, step 3: the orbit wheel (the ringed row in the middle, one either side).
+                    OrbitWheel(page.rows.size, ringed, accent, night) { i, on, place ->
+                        val r = page.rows[i]
+                        Pill(r.title, r.note.orEmpty(), icon(i, r),
+                            if (r.switch && r.on) accent else null, null, false, on, accent, night, place.then(row(i)), trailing = r.value)
                     }
                 }
             }
