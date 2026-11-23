@@ -143,6 +143,7 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
     override val dial: List<World>? get() = null
     override val dialCentre: World? get() = null
     override val actionsWheel get() = false
+    override val tapRingsFirst get() = false
 
     /** MC-1 is ORBIT's: DECK (frozen) keeps the largest free area, every slot counted. */
     override val mapAreaCentred get() = false

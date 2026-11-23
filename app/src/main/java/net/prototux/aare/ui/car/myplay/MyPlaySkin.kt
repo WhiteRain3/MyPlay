@@ -320,6 +320,9 @@ interface MyPlaySkin {
      */
     val actionsWheel: Boolean get() = false
 
+    /** OW-2: lists on a wheel: a tap on a row not ringed only brings it to the middle; a second tap runs it. */
+    val tapRingsFirst: Boolean get() = false
+
     /** The dial's worlds ([dial], or all six), [selected] ringed. */
     @Composable fun Chooser(selected: World, modifier: Modifier)
     /** N6: how many apps one page of the Apps world holds. */

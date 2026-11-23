@@ -1,6 +1,6 @@
 package net.prototux.aare.ui.car.myplay.orbit
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
@@ -9,11 +9,15 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -78,7 +82,10 @@ internal fun OrbitWheel(
 ) {
     val g = Orbit.glass(night)
     val target = ringed.coerceIn(0, (count - 1).coerceAtLeast(0)).toFloat()
-    val at by animateFloatAsState(target, tween(180), label = "wheel")
+    // OW-1 (SM): the turn is read in layout and draw only; composition sees just which rows show.
+    val turn = remember { Animatable(target) }
+    LaunchedEffect(target) { turn.animateTo(target, tween(180)) }
+    val rows by remember(count) { derivedStateOf { OrbitWheelSpec.window(turn.value, count) } }
     Box(modifier.fillMaxSize().testTag(OrbitWheelSpec.TAG)) {
         // Where you are: a thin arc left of the rows, a dot at the ringed row's place in the list.
         if (count > 1) Canvas(Modifier.fillMaxSize()) {
@@ -88,7 +95,7 @@ internal fun OrbitWheel(
             val half = Math.toDegrees(asin((1.6f * OrbitWheelSpec.STEP.toPx() / r).toDouble())).toFloat()
             drawArc(g.track, -half, 2 * half, useCenter = false, topLeft = Offset(cx - r, cy - r),
                 size = androidx.compose.ui.geometry.Size(2 * r, 2 * r), style = Stroke(4.dp.toPx(), cap = StrokeCap.Round))
-            val f = at / (count - 1)
+            val f = turn.value / (count - 1)
             val a = Math.toRadians((-half + 2 * half * f).toDouble())
             drawCircle(accent, 9.dp.toPx(), Offset(cx + r * kotlin.math.cos(a).toFloat(), cy + r * kotlin.math.sin(a).toFloat()))
         }
@@ -99,16 +106,21 @@ internal fun OrbitWheel(
             modifier = Modifier.align(Alignment.TopStart).offset(OrbitWheelSpec.MIDDLE_X + 40.dp, OrbitWheelSpec.MIDDLE_Y - OrbitWheelSpec.STEP * 1.75f))
         if (below > 0) Text(stringResource(R.string.myplay_wheel_more, below), style = more,
             modifier = Modifier.align(Alignment.TopStart).offset(OrbitWheelSpec.MIDDLE_X + 40.dp, OrbitWheelSpec.MIDDLE_Y + OrbitWheelSpec.STEP * 1.5f))
-        for (i in OrbitWheelSpec.window(at, count)) {
-            val d = i - at
-            val dy = OrbitWheelSpec.STEP * d
-            val far = abs(d).coerceAtMost(1.5f)
+        for (i in rows) {
             val place = Modifier.align(Alignment.TopStart)
-                .offset(OrbitWheelSpec.MIDDLE_X - OrbitWheelSpec.arcX(dy), OrbitWheelSpec.MIDDLE_Y + dy - 52.dp)
+                .offset {
+                    val dy = OrbitWheelSpec.STEP * (i - turn.value)
+                    IntOffset((OrbitWheelSpec.MIDDLE_X - OrbitWheelSpec.arcX(dy)).roundToPx(), (OrbitWheelSpec.MIDDLE_Y + dy - 52.dp).roundToPx())
+                }
                 .requiredWidth(OrbitWheelSpec.ROW_WIDTH)
-                .scale(1f - OrbitWheelSpec.SHRINK * far)
-                .alpha((1f - OrbitWheelSpec.FADE * far).coerceAtLeast(0f))
-            row(i, i == ringed, place)
+                .graphicsLayer {
+                    val far = abs(i - turn.value).coerceAtMost(1.5f)
+                    val s = 1f - OrbitWheelSpec.SHRINK * far
+                    scaleX = s
+                    scaleY = s
+                    alpha = (1f - OrbitWheelSpec.FADE * far).coerceAtLeast(0f)
+                }
+            key(i) { row(i, i == ringed, place) }
         }
     }
 }

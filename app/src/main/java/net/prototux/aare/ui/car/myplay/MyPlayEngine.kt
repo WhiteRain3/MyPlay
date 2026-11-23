@@ -406,6 +406,9 @@ private fun EngineShellThemed(
     var phoneChosen by remember { mutableStateOf<String?>(null) }
     val phoneIndex = phoneKeys.indexOf(phoneChosen).takeIf { it >= 0 } ?: 0
     fun movePhone(to: Int) { phoneChosen = phoneKeys[to.coerceIn(0, phoneKeys.size - 1)] }
+    val phoneIndexNow by rememberUpdatedState(phoneIndex)
+    // OW-2: on a wheel (ORBIT), a tap on a row that is not ringed only brings it to the middle; a second tap runs it.
+    val tapRingsFirst = skin.tapRingsFirst
     val currentPhoneKeys by rememberUpdatedState(phoneKeys)
     val currentPhoneEntries by rememberUpdatedState(phoneEntries)
     /** Calls the entry with [key] as the screen shows it now (or opens the phone app). */
@@ -440,6 +443,7 @@ private fun EngineShellThemed(
     }
     var settingChosen by remember { mutableStateOf<String?>(null) }
     val settingIndex = settingItems.indexOfFirst { it.id == settingChosen }.takeIf { it >= 0 } ?: 0
+    val settingIndexNow by rememberUpdatedState(settingIndex)
     val currentSettings by rememberUpdatedState(settingItems)
     fun changeSetting(id: String) {
         settingChosen = id
@@ -591,6 +595,7 @@ private fun EngineShellThemed(
     val driving = state.drivingRestricted
     val listKeys: List<String> = notes.history.map { "n:${it.key}" } + CLEAR_ALL_KEY
     val listIndex = listKeys.indexOf(listChosen).takeIf { it >= 0 } ?: 0
+    val listIndexNow by rememberUpdatedState(listIndex)
     fun runListRow(key: String) {
         listChosen = key
         if (key == CLEAR_ALL_KEY) { notes.clearAll(); listOpen = false; return }
@@ -975,7 +980,7 @@ private fun EngineShellThemed(
                         skin.SettingsWorld(SettingsPage(rows), settingIndex, { i ->
                             val id = settingItems[i].id
                             Modifier
-                                .pointerInput(id) { detectTapGestures { changeSetting(id) } }
+                                .pointerInput(id, i) { detectTapGestures { if (tapRingsFirst && i != settingIndexNow) settingChosen = id else changeSetting(id) } }
                                 .semantics { selected = i == settingIndex }
                                 .testTag(settingRowTag(id))
                         }, Modifier.fillMaxSize().testTag(SLOT_SETTINGS))
@@ -986,7 +991,7 @@ private fun EngineShellThemed(
                         val ringed = placeRing.coerceIn(0, rows.size - 1)
                         skin.PlacesWorld(SettingsPage(rows), ringed, { i ->
                             Modifier
-                                .pointerInput(i) { detectTapGestures { goToPlace(i) } }
+                                .pointerInput(i) { detectTapGestures { if (tapRingsFirst && i != placeRing) placeRing = i else goToPlace(i) } }
                                 .semantics { selected = i == ringed }
                                 .testTag(placeRowTag(i))
                         }, Modifier.fillMaxSize().testTag(SLOT_PLACES))
@@ -999,7 +1004,12 @@ private fun EngineShellThemed(
                                     // P-2: keyed on the entry, and resolved by it when tapped.
                                     .let { m ->
                                         val key = phoneKeys[i]
-                                        m.pointerInput(key) { detectTapGestures { if (key in currentPhoneKeys) openPhone(key) } }
+                                        m.pointerInput(key, i) {
+                                            detectTapGestures {
+                                                if (key !in currentPhoneKeys) return@detectTapGestures
+                                                if (tapRingsFirst && i != phoneIndexNow) phoneChosen = key else openPhone(key)
+                                            }
+                                        }
                                     }
                                     .semantics { selected = i == phoneIndex }
                                     .testTag(phoneRowTag(i))
@@ -1047,7 +1057,12 @@ private fun EngineShellThemed(
                 skin.NoticeList(NoticeListPage(rows), listIndex, { i ->
                     val key = listKeys[i]
                     Modifier
-                        .pointerInput(key) { detectTapGestures { if (key in currentKeys) runListRow(key) } }
+                        .pointerInput(key, i) {
+                            detectTapGestures {
+                                if (key !in currentKeys) return@detectTapGestures
+                                if (tapRingsFirst && i != listIndexNow) listChosen = key else runListRow(key)
+                            }
+                        }
                         .semantics { selected = i == listIndex }
                         .testTag(noticeRowTag(i))
                 }, Modifier.fillMaxSize().testTag(SLOT_NOTICES)

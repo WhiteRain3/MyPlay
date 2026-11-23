@@ -368,6 +368,27 @@ class OrbitHomeTest {
         assertTrue(rule.onAllNodesWithText("push: open", substring = true).fetchSemanticsNodes().isEmpty())
     }
 
+    /** OW-2: on the wheel, a tap on a faded neighbour only brings it to the middle; a second tap changes it. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aTapOnANeighbourRingsItFirst() {
+        show()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        val colors = rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.settingRowTag("colors"))
+        rule.onNodeWithText("Dark").assertExists()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.settingRowTag(net.prototux.aare.ui.car.myplay.SETTING_CAR)).assertIsSelected()
+        colors.performClick()
+        rule.mainClock.advanceTimeBy(500)
+        colors.assertIsSelected()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_SETTINGS).assertExists()
+        // The first tap only rang it: still Dark.
+        rule.onNodeWithText("Dark").assertExists()
+        colors.performClick()
+        rule.mainClock.advanceTimeBy(500)
+        rule.onNodeWithText("Dark").assertDoesNotExist()
+    }
+
     /** CR-1: Car, off ORBIT's dial, is the Settings world's first row; Back from it is Settings, then the dial. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun carIsSettingsFirstRow() {

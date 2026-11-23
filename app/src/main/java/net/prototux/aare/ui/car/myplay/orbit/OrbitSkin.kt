@@ -202,6 +202,7 @@ object OrbitSkin : MyPlaySkin {
     override val dial get() = listOf(World.NAVIGATE, World.CALLS, World.SETTINGS, World.MUSIC)
     override val dialCentre get() = World.APPS
     override val actionsWheel get() = true
+    override val tapRingsFirst get() = true
 
     /** The sheet's screen; sizes scale from it. */
     private const val SHEET_W = 1280f
