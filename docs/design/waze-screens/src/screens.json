@@ -4,7 +4,7 @@
   "title": "Option A · Side column — destinations",
   "group": "option",
   "template": "MapWithContentTemplate › ListTemplate",
-  "desc": "A glass column on the driver’s side of the free area (x 288–708); Waze’s map stays visible to its right. Rows are ORBIT pills, the focused row carries the focus ring. Recommended.",
+  "desc": "A glass column on the driver’s side of the free area (x 288–708); Waze’s map stays visible to its right. Rows are ORBIT pills, the focused row carries the focus ring. The first recommendation; not chosen.",
   "look": "A"
  },
  {
@@ -33,112 +33,112 @@
  },
  {
   "file": "05-option-c-wheel-list",
-  "title": "Option C · Orbit wheel — destinations",
+  "title": "Option C · Orbit wheel — destinations (chosen)",
   "group": "option",
   "template": "MapWithContentTemplate › ListTemplate",
-  "desc": "The list turns like the dial: the focused place is always in the middle and biggest, its neighbours shrink and fade along an arc. No scrolling to think about, but only three places are seen at once.",
+  "desc": "The list turns like the dial: the focused place is always in the middle and biggest, one place either side, a position arc on the left. Chosen by the owner.",
   "look": "C"
  },
  {
   "file": "06-option-c-wheel-route",
-  "title": "Option C · Orbit wheel — route preview",
+  "title": "Option C · Orbit wheel — route preview (chosen)",
   "group": "option",
   "template": "RoutePreviewNavigationTemplate",
-  "desc": "Routes on the arc; “Go now” is a big accent disc to their right. Striking and very ORBIT, but the wheel and the disc are two places to look, and long lists only ever show three rows.",
+  "desc": "Routes on the arc; “Go now” is a big accent disc to their right and holds the focus. Chosen by the owner.",
   "look": "C"
  },
  {
   "file": "07-destinations",
   "title": "Destinations (Waze’s first screen)",
-  "group": "A",
+  "group": "C",
   "template": "MapWithContentTemplate › ListTemplate (or PlaceListNavigationTemplate)",
-  "fields": "header: Action.APP_ICON + title · header actionStrip (search) · itemList rows: image, title, texts (address, DistanceSpan), browsable · mapController.mapActionStrip",
-  "desc": "Opens with the first place focused. Five rows fit with no scrolling; “2 more” shows the list goes on. The distance (Waze’s DistanceSpan) is pulled to the row’s end so it can be read at a glance."
+  "fields": "header: Action.APP_ICON + title · header actionStrip (search) · itemList rows: image, title, texts (address, DistanceSpan), browsable · onItemVisibilityChangedDelegate",
+  "desc": "Opens on the first place, in the middle of the wheel. Turning moves the next place into the middle; the arc on the left shows where in the list the focus is. Search sits top right of the free area (the d-pad’s up reaches it)."
  },
  {
-  "file": "08-destinations-scrolled",
-  "title": "Destinations, turned to the end",
-  "group": "A",
+  "file": "08-destinations-turned",
+  "title": "Destinations, turned further",
+  "group": "C",
   "template": "MapWithContentTemplate › ListTemplate",
-  "fields": "itemList (as above) · onItemVisibilityChangedDelegate gets the rows now shown",
-  "desc": "Turning past the fifth row moves the list a row at a time, the focus stays one row from the edge, and “2 earlier” appears at the top."
+  "fields": "itemList (as above)",
+  "desc": "Four turns on: the dot has moved down the arc, and “3 more” above / “2 more” below say how far the list goes either way."
  },
  {
   "file": "09-search-driving",
   "title": "Search while driving",
-  "group": "A",
+  "group": "C",
   "template": "SearchTemplate",
   "fields": "headerAction (BACK) · searchHint · initialSearchText · itemList (rows: image, title, texts, DistanceSpan) · isLoading · showKeyboardByDefault (refused while driving)",
-  "desc": "Typing is refused while driving (as Android Auto), so the field shows the search text Waze sent, with a lock, and the focus goes straight to the first result."
+  "desc": "Typing is refused while driving, so the search text Waze sent sits in a locked field where the title goes, and the focus is on the first result in the wheel."
  },
  {
   "file": "10-search-parked-keyboard",
   "title": "Search while parked: the letter ring",
-  "group": "A",
+  "group": "C",
   "template": "SearchTemplate (our keyboard)",
   "fields": "searchHint · the text we own (sendSearchTextChanged on each letter, sendSearchSubmitted on Search) · itemList (its size, as you type)",
-  "desc": "Parked, the knob types on a ring of letters that fills the free area: turn to a letter, push to type it. Space, delete and Search close the ring. The text and the number of places Waze has found so far sit in the middle; Search (or the d-pad down) goes to the results list."
+  "desc": "Parked, the knob types on a ring of letters that fills the free area: turn to a letter, push to type it. Space, delete and Search close the ring. The text and the number of places found so far sit in the middle; Search (or the d-pad down) opens the results wheel."
  },
  {
   "file": "11-search-no-results",
   "title": "Search with no results",
-  "group": "A",
+  "group": "C",
   "template": "SearchTemplate",
   "fields": "itemList empty → itemList.noItemsMessage (else our “No results”)",
-  "desc": "The message Waze gives for an empty list, centred in the column; the focus falls back to Back so one push leaves."
+  "desc": "Where the wheel would be, one glass disc with Waze’s message for an empty list. The focus falls back to Back, so one push leaves."
  },
  {
   "file": "12-route-preview",
   "title": "Route preview",
-  "group": "A",
+  "group": "C",
   "template": "RoutePreviewNavigationTemplate",
-  "fields": "header / title + headerAction (BACK) · itemList rows (title = time, texts = via, distance) with onSelectedDelegate + selectedIndex · navigateAction (FLAG_PRIMARY) · actionStrip · mapActionStrip · panModeDelegate",
-  "desc": "“Go now” holds the focus when the screen opens: one push starts the drive. Turning the knob back moves through the routes (each is a radio row: a push picks it, Waze redraws the map). The map’s visible area is right of the column, so Waze fits the routes there."
+  "fields": "header / title + headerAction (BACK) · itemList rows (title = time, texts = via, distance) with onSelectedDelegate + selectedIndex · navigateAction (FLAG_PRIMARY) · panModeDelegate (not shown: no map buttons)",
+  "desc": "“Go now” holds the focus when the screen opens: one push starts the drive. The chosen route is lit in the middle of the wheel; turning the knob back moves the ring onto the routes. Waze draws the routes in the map’s free middle."
  },
  {
   "file": "13-route-preview-choosing",
   "title": "Route preview, turning to another route",
-  "group": "A",
+  "group": "C",
   "template": "RoutePreviewNavigationTemplate",
   "fields": "itemList (onSelectedDelegate.sendSelected on push) · navigateAction",
-  "desc": "The focus ring on the second route; the radio dot still on the chosen one. A push picks it and the focus jumps back to “Go now”."
+  "desc": "The second route turned into the middle with the focus ring; the radio dot still on the chosen one. A push picks it, Waze redraws, and the focus jumps back to “Go now”."
  },
  {
   "file": "14-route-preview-loading",
   "title": "Route preview, loading",
-  "group": "A",
+  "group": "C",
   "template": "RoutePreviewNavigationTemplate",
   "fields": "isLoading · header / title · navigateAction (not drawn until routes come)",
-  "desc": "Only ORBIT’s spinning ring: Waze sends no words while loading, so we add none. Back is focused."
+  "desc": "Only ORBIT’s spinning ring in the wheel’s middle: Waze sends no words while loading, so we add none. Back is focused."
  },
  {
   "file": "15-navigating",
-  "title": "Navigating: the action strip and map buttons",
-  "group": "A",
+  "title": "Navigating: the turn, lanes, arrival, speed — nothing else",
+  "group": "C",
   "template": "NavigationTemplate",
-  "fields": "navigationInfo (RoutingInfo → ORBIT’s turn disc and lanes) · destinationTravelEstimate (→ the hub: arrival, time and distance left, remainingTimeColor) · actionStrip (top) · mapActionStrip (right)",
-  "desc": "ORBIT draws the turn and the trip itself; Waze’s action strip becomes a row of discs along the top of the free area and its map buttons a column down the right edge, both clear of the middle where Waze draws the car. Here the knob is on the first strip action."
+  "fields": "navigationInfo (RoutingInfo: current step, maneuver, distance, lanes → ORBIT’s turn disc and lane pill) · destinationTravelEstimate (→ the hub: arrival, time and distance left, remainingTimeColor) · actionStrip and mapActionStrip not drawn: they are in the actions wheel",
+  "desc": "The owner’s pick: no map buttons and no action strip on screen. The turn with its lanes (the lanes to take in Navigate’s green), the arrival in the hub’s trip ring, and the speed. Back or the pad’s centre opens Waze’s actions."
  },
  {
-  "file": "16-navigating-titled-strip",
-  "title": "Navigating: an action with a title",
-  "group": "A",
-  "template": "NavigationTemplate",
-  "fields": "actionStrip with a titled Action (icon + title) · mapActionStrip",
-  "desc": "When Waze sends an action with words, it becomes a pill in the same row. Here the knob is on the map’s zoom-in disc."
+  "file": "16-navigating-actions",
+  "title": "Waze’s actions, on one press",
+  "group": "C",
+  "template": "NavigationTemplate (actionStrip + mapActionStrip, in a wheel)",
+  "fields": "actionStrip actions then mapActionStrip actions: icon · title (when Waze sends one) · Action.PAN (→ “Move map”, ours) · each push sends its onClickDelegate",
+  "desc": "Back or the pad’s centre while navigating opens Waze’s action strip and map buttons as a wheel: the same arc as the lists, the first action in the middle and focused. A push runs it and closes the wheel; Back closes it. Labels are the actions’ titles; an action with only an icon shows its icon alone."
  },
  {
   "file": "17-navigating-pan",
-  "title": "Moving the map (pan mode)",
-  "group": "A",
+  "title": "Moving the map (from the actions wheel)",
+  "group": "C",
   "template": "NavigationTemplate",
-  "fields": "mapActionStrip (Action.PAN) · panModeDelegate.sendPanModeChanged · SurfaceCallback onScroll / onScale",
-  "desc": "Pan mode hides the turn and the action strip (as Android Auto). The pan disc is lit; the d-pad moves the map, turning zooms, Back leaves pan mode."
+  "fields": "Action.PAN from the wheel · panModeDelegate.sendPanModeChanged · SurfaceCallback onScroll / onScale",
+  "desc": "Picking “Move map” in the wheel: the turn goes (as Android Auto), the d-pad moves the map, turning zooms, Back finishes. No buttons appear on the map."
  },
  {
   "file": "18-navigating-message",
   "title": "A navigation message (arrived)",
-  "group": "A",
+  "group": "C",
   "template": "NavigationTemplate (navigationInfo = MessageInfo)",
   "fields": "MessageInfo: title, text, image · destinationTravelEstimate (if any)",
   "desc": "A MessageInfo takes the turn’s place: its image in the accent disc, its title and text floating beside it like the distance and road."
@@ -146,7 +146,7 @@
  {
   "file": "19-navigating-rerouting",
   "title": "A navigation message (loading)",
-  "group": "A",
+  "group": "C",
   "template": "NavigationTemplate (RoutingInfo.isLoading, or a MessageInfo with no image)",
   "fields": "RoutingInfo.isLoading · or MessageInfo title / text",
   "desc": "While Waze works out the way, the turn disc becomes ORBIT’s spinning ring; any words it sends float beside it."
@@ -154,23 +154,23 @@
  {
   "file": "20-alert",
   "title": "An alert while driving",
-  "group": "A",
+  "group": "C",
   "template": "Alert (AppManager.showAlert)",
   "fields": "title · subtitle · icon · actions (first two) · durationMillis (→ the ring round the icon) · callbackDelegate (timeout / cancel)",
-  "desc": "ORBIT’s alert pill, between the hub and the song, clear of the turn. New: the alert’s time left runs as a ring round its icon, so the driver sees it will go by itself. The first action is focused; Back dismisses."
+  "desc": "ORBIT’s alert pill, between the hub and the song, clear of the turn and lanes. The alert’s time left runs as a ring round its icon, so the driver sees it will go by itself. The first action is focused; Back dismisses."
  },
  {
   "file": "21-message",
   "title": "A message screen",
-  "group": "A",
+  "group": "C",
   "template": "MessageTemplate (alone, or in MapWithContentTemplate)",
   "fields": "header / title + headerAction · icon · message · isLoading · actions (up to two; FLAG_PRIMARY filled) · debugMessage (never shown in the car)",
-  "desc": "Centred in the free area on glass. The primary action (or the first) is focused; a second action is a plain pill beside it. Back is the header action."
+  "desc": "A message is not a list, so no wheel: its icon in a ring, the words, and its buttons, the primary one focused. Back is the title’s."
  },
  {
   "file": "22-message-loading",
   "title": "A message screen, loading",
-  "group": "A",
+  "group": "C",
   "template": "MessageTemplate (isLoading)",
   "fields": "isLoading · message (if any)",
   "desc": "ORBIT’s ring spinner in place of the icon; no buttons, so Back is focused."
@@ -178,18 +178,18 @@
  {
   "file": "23-route-preview-day",
   "title": "Route preview by day",
-  "group": "A",
+  "group": "C",
   "template": "RoutePreviewNavigationTemplate",
   "fields": "as Route preview",
-  "desc": "ORBIT’s day glass and darkened accent (each at least 4.9:1); the same layout."
+  "desc": "ORBIT’s day glass and darkened accent (each at least 4.9:1); the same wheel."
  },
  {
   "file": "24-navigating-day",
   "title": "Navigating by day",
-  "group": "A",
+  "group": "C",
   "template": "NavigationTemplate",
   "fields": "as Navigating",
-  "desc": "The day glass over a day map."
+  "desc": "The day glass over a day map; still only the turn, lanes, arrival and speed."
  },
  {
   "file": "25-settings",
@@ -197,7 +197,7 @@
   "group": "more",
   "template": "MyPlay · SettingsWorld (SettingsPage)",
   "fields": "SettingRow: title · value (a choice’s label) · switch + on · note",
-  "desc": "The same pills as Waze’s lists, across the whole free area: a choice shows its value and a chevron (a push steps it on), a switch shows ORBIT’s accent switch. Six rows fit; the first is focused."
+  "desc": "The settings on the same wheel: a choice shows its value and a chevron (a push steps it on), a switch shows ORBIT’s accent switch. Opens on the first setting."
  },
  {
   "file": "26-settings-switch",
@@ -205,7 +205,7 @@
   "group": "more",
   "template": "MyPlay · SettingsWorld (SettingsPage)",
   "fields": "SettingRow: title · switch + on · note",
-  "desc": "Turned further down: the focus on a switch; a push flips it. A setting’s note (here: it can only be turned on while stopped) goes under its title."
+  "desc": "Turned to the end: the focus on a switch, a push flips it. The note (it can only be turned on while stopped) shows under the title in the middle row."
  },
  {
   "file": "27-notice-message",
@@ -213,7 +213,7 @@
   "group": "more",
   "template": "MyPlay · Notice (CarNotice, message = true)",
   "fields": "CarNotice: icon · title · text (hidden while driving for a message) · actions (labels) · asked = false → the ring on Dismiss",
-  "desc": "The same glass and buttons as Waze’s alert, at the top of the free area, 500 px wide so it clears the turn’s distance and the clock. Nobody asked for it, so the focus ring is on Dismiss: a stray push never acts. A message’s text is hidden while driving."
+  "desc": "The alert’s glass and buttons, at the top of the free area, 500 px wide so it clears the turn’s distance and the clock. Nobody asked for it, so the ring is on Dismiss: a stray push never acts. A message’s text is hidden while driving."
  },
  {
   "file": "28-notice-asked",
@@ -229,7 +229,7 @@
   "group": "more",
   "template": "MyPlay · NoticeList (NoticeListPage)",
   "fields": "NoticeRow: notice (icon, title) · text · time · action (the label a push runs) · a null notice = Clear all",
-  "desc": "The same rows: the notice’s app icon, its title, its text, the time at the end and, when it has one, the action a push runs as a small pill. Clear all closes the list."
+  "desc": "The notices on the wheel: the app’s icon, the title, the text, the time at the end and, when there is one, the action a push runs as a small pill. Clear all is the wheel’s last row."
  },
  {
   "file": "30-call-ringing",
@@ -237,7 +237,7 @@
   "group": "more",
   "template": "MyPlay · Ringing (CarCall, ringing = true)",
   "fields": "CarCall: name · ringing · canEnd → Answer / Decline (CALL_ANSWER, CALL_DECLINE)",
-  "desc": "Centred in the free area: the caller’s initials in Calls’ green ring, the name, and two big discs. Answer holds the focus; Decline is a turn away. While the driver is navigating the turn and the hub stay."
+  "desc": "Centred in the free area: the caller’s initials in Calls’ green ring, the name, and two big discs. Answer holds the focus; Decline is a turn away. While navigating, the turn, lanes and hub stay."
  },
  {
   "file": "31-call-in-call",
@@ -245,7 +245,7 @@
   "group": "more",
   "template": "MyPlay · InCall (CarCall, ringing = false)",
   "fields": "CarCall: name · sinceMs (the time) · canEnd → the red hang-up disc",
-  "desc": "The call shrinks to a pill at the bottom of the free area, like the alert, so the map comes back. The ring is not on it until the driver turns there; hang-up is red and one turn from the call pill."
+  "desc": "The call shrinks to a pill at the bottom of the free area, like the alert, so the turn and lanes come back. The ring is not on it until the driver turns there; hang-up is red and one turn on."
  },
  {
   "file": "32-calls-world",
@@ -253,15 +253,15 @@
   "group": "more",
   "template": "MyPlay · PhoneWorld (PhonePage)",
   "fields": "PhoneRow: title · subtitle · kind (RECENT, MISSED, FAVOURITE, PHONE_APP — last) · loading · permitted",
-  "desc": "Recent calls, then favourites, then the phone app, as the same pills. A missed call is in the warning red; the first row is focused so one push calls back."
+  "desc": "Recent calls, then favourites, then the phone app, on the wheel. A missed call is in the warning red; the first row is in the middle, so one push calls back."
  },
  {
-  "file": "33-apps-grid",
-  "title": "Apps grid",
+  "file": "33-apps-ring",
+  "title": "Apps: a ring of apps",
   "group": "more",
   "template": "MyPlay · AppsWorld (CarAppEntry list, page / pages)",
   "fields": "CarAppEntry: label · icon · kind · ringed tile · page / pages",
-  "desc": "Round icons in a 4 × 2 grid (8 per page), the label under each; the focused app gets the ring round its icon and a bolder label. The page dots say how many pages there are; turning past the last tile goes to the next page."
+  "desc": "The grid becomes ORBIT’s dial: eight apps round a ring, the focused one bigger with the focus ring, its name in the middle. Turning goes round the ring; past the last app the next page turns in (the dots)."
  },
  {
   "file": "34-phone-apps",
@@ -269,6 +269,6 @@
   "group": "more",
   "template": "MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)",
   "fields": "CarAppEntry: label · icon · kind",
-  "desc": "The phone’s own apps that the owner allowed on the car (Apps › Phone apps on the phone), as rows rather than tiles: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the data is the same CarAppEntry list as the grid.)"
+  "desc": "The phone’s own apps that the owner allowed on the car, on the wheel: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the same CarAppEntry list as the ring.)"
  }
 ]

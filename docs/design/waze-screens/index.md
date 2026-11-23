@@ -1,118 +1,129 @@
-# Waze screens and MyPlay's worlds in ORBIT
+# Waze screens and MyPlay's worlds in ORBIT: look C, the orbit wheel
 
-Design proposals for every Waze screen the owner meets in the Audi, drawn in ORBIT's language (glass, rings, Navigate's green, the focus ring) at the MMI's 1280 × 720. Waze is a car-app-library app: it sends templates, MyPlay's host (`host/templates`) draws everything except Waze's map surface. These PNGs show how the host's renderers could draw those templates under ORBIT. The owner asked for **one look everywhere**, so MyPlay's own Settings, notices, calls and apps screens (screens 25–34) are drawn in the same style: the same glass, pill rows, buttons, focus ring and corners.
+Designs for every Waze screen the owner meets in the Audi, and for MyPlay's own Settings, notices, calls and apps, in one ORBIT look at the MMI's 1280 × 720. Waze is a car-app-library app: it sends templates, and MyPlay's host (`host/templates`) draws everything except Waze's map surface.
+
+**Chosen: look C, the orbit wheel**, with the alert countdown ring, the letter-ring keyboard and the lane guidance. While navigating there are no map buttons and no action strip on screen. Waze's actions are one press away, in a wheel. Screens 07–34 are all drawn in C.
 
 ![All screens](overview.png)
 
-**Sample data only.** Places, times, labels and icons are made up; Waze chooses its own words and icons. The map is a stand-in street map, not Waze's. Each screen uses only fields the template carries (listed below, from the renderers in `host/templates`); words that are not Waze's are MyPlay's own (the knob hints, "Typing works when you're parked", "N more").
+**Sample data only.** Places, times, labels and icons are made up; Waze chooses its own words and icons. The map is a stand-in street map, not Waze's, and the app icons are made-up coloured discs, not real logos. Each screen uses only fields its template or data class carries (listed below). Words that are not Waze's are MyPlay's own: the knob hints, "N more", "Typing works when you're parked", "Move map".
 
-## Rules followed
+## The orbit wheel
 
-- **Free area** (MC-1): Waze's content stays inside x 288–992, y 43–677. ORBIT's own parts keep their corners: the turn (top left), the clock (top right), the hub with the trip ring (bottom left), the song (bottom right).
-- **Knob first**: one obvious focus ring (ORBIT's: 5 px halo gap, 7 px accent, soft halo). The primary action is focused when a screen opens ("Go now", the first place, the first result, an alert's first action, a message's primary action). With nothing to act on, Back is focused.
-- **Minimal scrolling**: five rows fit in a list without scrolling; "N more" / "N earlier" say the list goes on. The knob moves the list a row at a time.
-- **Glanceable**: titles 27–32 px extra bold, second lines 21 px, numbers bold; ORBIT's night and day glass (accents at least 7:1 by night, 4.9:1 by day).
+- **One wheel for every list.** Rows sit on an arc round a centre off the left of the screen, the same way ORBIT's dial turns. The focused row is always in the middle and biggest, with one row either side, smaller and faded. The knob turns the wheel one row per detent, so the focus never travels down the screen.
+- **Where you are.** A thin arc left of the rows, with an accent dot at the focused row's place in the whole list. "N more" above and below say how far it goes either way.
+- **Focus.** ORBIT's ring: a 5 px halo gap, 7 px of accent and a soft halo. The primary action holds the focus when a screen opens: Go now, the first place, the first result, the first setting, an alert's first action, a message's primary action, or Answer. A banner nobody asked for opens on Dismiss. With nothing to act on, Back is focused.
+- **Free area** (MC-1): content stays inside x 288–992, y 43–677. ORBIT's corners stay where they are: the turn and lanes top left, the clock top right, the hub with the trip ring bottom left, and the song bottom right. While navigating, a speed disc sits between the turn and the hub.
+- **Glanceable.** The middle row's title is 32 px extra bold and other rows are 27 px. ORBIT's night and day glass keeps the accent at least 7:1 by night and 4.9:1 by day.
 
-## Three looks
+## Navigating: only what's needed, actions on one press
 
-| | Look | List | Route preview | For | Against |
-|---|---|---|---|---|---|
-| A | **Side column** (recommended) | [01-option-a-column-list](01-option-a-column-list.png) | [02-option-a-column-route](02-option-a-column-route.png) | A 420 px glass column on the driver's side of the free area; the map stays visible to its right. Waze's routes stay visible beside the choices; the map's visible area (right of the column) is told to Waze, so it fits the routes there. Same column for every screen: one place to look. | Narrower rows: the distance moves to the second line. |
-| B | **Centre stage** | [03-option-b-stage-list](03-option-b-stage-list.png) | [04-option-b-stage-route](04-option-b-stage-route.png) | One panel fills the free area. The biggest type; routes as ORBIT rings. | Covers the map: the route preview's routes are hidden. |
-| C | **Orbit wheel** | [05-option-c-wheel-list](05-option-c-wheel-list.png) | [06-option-c-wheel-route](06-option-c-wheel-route.png) | Rows on an arc that turns like ORBIT's dial; the focused row is always in the middle and biggest. Most ORBIT-like; no scroll position to think about. | Only three rows at once; "Go now" is a second place to look; more work to build. |
+- On screen while navigating: the turn disc with distance and road, the **lanes** (Waze's `Step.lanes`, the lanes to take in Navigate's green), the arrival in the hub's trip ring, the speed, and any alert, banner or call.
+- Not on screen: Waze's `actionStrip` and `mapActionStrip` (zoom, pan, report, mute, end route and so on). **Back or the pad's centre** opens them as a wheel, the action strip first and the map actions after. A push runs an action and closes the wheel; Back closes it. Action.PAN is labelled "Move map" (ours) and opens pan mode, where the d-pad moves the map, turning zooms and Back finishes. Other actions show Waze's `title`; one with only an icon shows its icon alone.
 
-**Recommendation: A, the side column.** It is the only look where the driver can compare routes on the map while choosing, it keeps the map useful behind every list, and it is the smallest change from today's `MapContentCard` (a start-side card, full height), so the host's list, search and route-preview renderers keep their structure and change mostly their drawing.
+## The three looks (C chosen)
 
-## Every key screen in look A
+| PNG | Look |
+|---|---|
+| [01-option-a-column-list](01-option-a-column-list.png) | Option A · Side column — destinations: A glass column on the driver’s side of the free area (x 288–708); Waze’s map stays visible to its right. Rows are ORBIT pills, the focused row carries the focus ring. The first recommendation; not chosen. |
+| [02-option-a-column-route](02-option-a-column-route.png) | Option A · Side column — route preview: Routes as radio rows; “Go now” is a full-width accent pill at the column’s foot and holds the focus when the screen opens. The routes stay visible on the map beside the column. |
+| [03-option-b-stage-list](03-option-b-stage-list.png) | Option B · Centre stage — destinations: One wide glass panel fills the whole free area. The biggest type and the longest names, but the map is covered while a list is up. |
+| [04-option-b-stage-route](04-option-b-stage-route.png) | Option B · Centre stage — route preview: Each route is an ORBIT ring with its time inside; the chosen one is lit. “Go now” sits under them, focused. Clear, but the routes on the map are hidden behind the panel. |
+| [05-option-c-wheel-list](05-option-c-wheel-list.png) | Option C · Orbit wheel — destinations (chosen): The list turns like the dial: the focused place is always in the middle and biggest, one place either side, a position arc on the left. Chosen by the owner. |
+| [06-option-c-wheel-route](06-option-c-wheel-route.png) | Option C · Orbit wheel — route preview (chosen): Routes on the arc; “Go now” is a big accent disc to their right and holds the focus. Chosen by the owner. |
+
+A (side column) kept the routes visible beside the list. B (centre stage) had the biggest type. The owner chose C.
+
+## Waze screens in look C
 
 | PNG | Screen | Template | Fields drawn | Notes |
 |---|---|---|---|---|
-| [07-destinations](07-destinations.png) | Destinations (Waze’s first screen) | `MapWithContentTemplate › ListTemplate (or PlaceListNavigationTemplate)` | header: Action.APP_ICON + title · header actionStrip (search) · itemList rows: image, title, texts (address, DistanceSpan), browsable · mapController.mapActionStrip | Opens with the first place focused. Five rows fit with no scrolling; “2 more” shows the list goes on. The distance (Waze’s DistanceSpan) is pulled to the row’s end so it can be read at a glance. |
-| [08-destinations-scrolled](08-destinations-scrolled.png) | Destinations, turned to the end | `MapWithContentTemplate › ListTemplate` | itemList (as above) · onItemVisibilityChangedDelegate gets the rows now shown | Turning past the fifth row moves the list a row at a time, the focus stays one row from the edge, and “2 earlier” appears at the top. |
-| [09-search-driving](09-search-driving.png) | Search while driving | `SearchTemplate` | headerAction (BACK) · searchHint · initialSearchText · itemList (rows: image, title, texts, DistanceSpan) · isLoading · showKeyboardByDefault (refused while driving) | Typing is refused while driving (as Android Auto), so the field shows the search text Waze sent, with a lock, and the focus goes straight to the first result. |
-| [10-search-parked-keyboard](10-search-parked-keyboard.png) | Search while parked: the letter ring | `SearchTemplate (our keyboard)` | searchHint · the text we own (sendSearchTextChanged on each letter, sendSearchSubmitted on Search) · itemList (its size, as you type) | Parked, the knob types on a ring of letters that fills the free area: turn to a letter, push to type it. Space, delete and Search close the ring. The text and the number of places Waze has found so far sit in the middle; Search (or the d-pad down) goes to the results list. |
-| [11-search-no-results](11-search-no-results.png) | Search with no results | `SearchTemplate` | itemList empty → itemList.noItemsMessage (else our “No results”) | The message Waze gives for an empty list, centred in the column; the focus falls back to Back so one push leaves. |
-| [12-route-preview](12-route-preview.png) | Route preview | `RoutePreviewNavigationTemplate` | header / title + headerAction (BACK) · itemList rows (title = time, texts = via, distance) with onSelectedDelegate + selectedIndex · navigateAction (FLAG_PRIMARY) · actionStrip · mapActionStrip · panModeDelegate | “Go now” holds the focus when the screen opens: one push starts the drive. Turning the knob back moves through the routes (each is a radio row: a push picks it, Waze redraws the map). The map’s visible area is right of the column, so Waze fits the routes there. |
-| [13-route-preview-choosing](13-route-preview-choosing.png) | Route preview, turning to another route | `RoutePreviewNavigationTemplate` | itemList (onSelectedDelegate.sendSelected on push) · navigateAction | The focus ring on the second route; the radio dot still on the chosen one. A push picks it and the focus jumps back to “Go now”. |
-| [14-route-preview-loading](14-route-preview-loading.png) | Route preview, loading | `RoutePreviewNavigationTemplate` | isLoading · header / title · navigateAction (not drawn until routes come) | Only ORBIT’s spinning ring: Waze sends no words while loading, so we add none. Back is focused. |
-| [15-navigating](15-navigating.png) | Navigating: the action strip and map buttons | `NavigationTemplate` | navigationInfo (RoutingInfo → ORBIT’s turn disc and lanes) · destinationTravelEstimate (→ the hub: arrival, time and distance left, remainingTimeColor) · actionStrip (top) · mapActionStrip (right) | ORBIT draws the turn and the trip itself; Waze’s action strip becomes a row of discs along the top of the free area and its map buttons a column down the right edge, both clear of the middle where Waze draws the car. Here the knob is on the first strip action. |
-| [16-navigating-titled-strip](16-navigating-titled-strip.png) | Navigating: an action with a title | `NavigationTemplate` | actionStrip with a titled Action (icon + title) · mapActionStrip | When Waze sends an action with words, it becomes a pill in the same row. Here the knob is on the map’s zoom-in disc. |
-| [17-navigating-pan](17-navigating-pan.png) | Moving the map (pan mode) | `NavigationTemplate` | mapActionStrip (Action.PAN) · panModeDelegate.sendPanModeChanged · SurfaceCallback onScroll / onScale | Pan mode hides the turn and the action strip (as Android Auto). The pan disc is lit; the d-pad moves the map, turning zooms, Back leaves pan mode. |
+| [07-destinations](07-destinations.png) | Destinations (Waze’s first screen) | `MapWithContentTemplate › ListTemplate (or PlaceListNavigationTemplate)` | header: Action.APP_ICON + title · header actionStrip (search) · itemList rows: image, title, texts (address, DistanceSpan), browsable · onItemVisibilityChangedDelegate | Opens on the first place, in the middle of the wheel. Turning moves the next place into the middle; the arc on the left shows where in the list the focus is. Search sits top right of the free area (the d-pad’s up reaches it). |
+| [08-destinations-turned](08-destinations-turned.png) | Destinations, turned further | `MapWithContentTemplate › ListTemplate` | itemList (as above) | Four turns on: the dot has moved down the arc, and “3 more” above / “2 more” below say how far the list goes either way. |
+| [09-search-driving](09-search-driving.png) | Search while driving | `SearchTemplate` | headerAction (BACK) · searchHint · initialSearchText · itemList (rows: image, title, texts, DistanceSpan) · isLoading · showKeyboardByDefault (refused while driving) | Typing is refused while driving, so the search text Waze sent sits in a locked field where the title goes, and the focus is on the first result in the wheel. |
+| [10-search-parked-keyboard](10-search-parked-keyboard.png) | Search while parked: the letter ring | `SearchTemplate (our keyboard)` | searchHint · the text we own (sendSearchTextChanged on each letter, sendSearchSubmitted on Search) · itemList (its size, as you type) | Parked, the knob types on a ring of letters that fills the free area: turn to a letter, push to type it. Space, delete and Search close the ring. The text and the number of places found so far sit in the middle; Search (or the d-pad down) opens the results wheel. |
+| [11-search-no-results](11-search-no-results.png) | Search with no results | `SearchTemplate` | itemList empty → itemList.noItemsMessage (else our “No results”) | Where the wheel would be, one glass disc with Waze’s message for an empty list. The focus falls back to Back, so one push leaves. |
+| [12-route-preview](12-route-preview.png) | Route preview | `RoutePreviewNavigationTemplate` | header / title + headerAction (BACK) · itemList rows (title = time, texts = via, distance) with onSelectedDelegate + selectedIndex · navigateAction (FLAG_PRIMARY) · panModeDelegate (not shown: no map buttons) | “Go now” holds the focus when the screen opens: one push starts the drive. The chosen route is lit in the middle of the wheel; turning the knob back moves the ring onto the routes. Waze draws the routes in the map’s free middle. |
+| [13-route-preview-choosing](13-route-preview-choosing.png) | Route preview, turning to another route | `RoutePreviewNavigationTemplate` | itemList (onSelectedDelegate.sendSelected on push) · navigateAction | The second route turned into the middle with the focus ring; the radio dot still on the chosen one. A push picks it, Waze redraws, and the focus jumps back to “Go now”. |
+| [14-route-preview-loading](14-route-preview-loading.png) | Route preview, loading | `RoutePreviewNavigationTemplate` | isLoading · header / title · navigateAction (not drawn until routes come) | Only ORBIT’s spinning ring in the wheel’s middle: Waze sends no words while loading, so we add none. Back is focused. |
+| [15-navigating](15-navigating.png) | Navigating: the turn, lanes, arrival, speed — nothing else | `NavigationTemplate` | navigationInfo (RoutingInfo: current step, maneuver, distance, lanes → ORBIT’s turn disc and lane pill) · destinationTravelEstimate (→ the hub: arrival, time and distance left, remainingTimeColor) · actionStrip and mapActionStrip not drawn: they are in the actions wheel | The owner’s pick: no map buttons and no action strip on screen. The turn with its lanes (the lanes to take in Navigate’s green), the arrival in the hub’s trip ring, and the speed. Back or the pad’s centre opens Waze’s actions. |
+| [16-navigating-actions](16-navigating-actions.png) | Waze’s actions, on one press | `NavigationTemplate (actionStrip + mapActionStrip, in a wheel)` | actionStrip actions then mapActionStrip actions: icon · title (when Waze sends one) · Action.PAN (→ “Move map”, ours) · each push sends its onClickDelegate | Back or the pad’s centre while navigating opens Waze’s action strip and map buttons as a wheel: the same arc as the lists, the first action in the middle and focused. A push runs it and closes the wheel; Back closes it. Labels are the actions’ titles; an action with only an icon shows its icon alone. |
+| [17-navigating-pan](17-navigating-pan.png) | Moving the map (from the actions wheel) | `NavigationTemplate` | Action.PAN from the wheel · panModeDelegate.sendPanModeChanged · SurfaceCallback onScroll / onScale | Picking “Move map” in the wheel: the turn goes (as Android Auto), the d-pad moves the map, turning zooms, Back finishes. No buttons appear on the map. |
 | [18-navigating-message](18-navigating-message.png) | A navigation message (arrived) | `NavigationTemplate (navigationInfo = MessageInfo)` | MessageInfo: title, text, image · destinationTravelEstimate (if any) | A MessageInfo takes the turn’s place: its image in the accent disc, its title and text floating beside it like the distance and road. |
 | [19-navigating-rerouting](19-navigating-rerouting.png) | A navigation message (loading) | `NavigationTemplate (RoutingInfo.isLoading, or a MessageInfo with no image)` | RoutingInfo.isLoading · or MessageInfo title / text | While Waze works out the way, the turn disc becomes ORBIT’s spinning ring; any words it sends float beside it. |
-| [20-alert](20-alert.png) | An alert while driving | `Alert (AppManager.showAlert)` | title · subtitle · icon · actions (first two) · durationMillis (→ the ring round the icon) · callbackDelegate (timeout / cancel) | ORBIT’s alert pill, between the hub and the song, clear of the turn. New: the alert’s time left runs as a ring round its icon, so the driver sees it will go by itself. The first action is focused; Back dismisses. |
-| [21-message](21-message.png) | A message screen | `MessageTemplate (alone, or in MapWithContentTemplate)` | header / title + headerAction · icon · message · isLoading · actions (up to two; FLAG_PRIMARY filled) · debugMessage (never shown in the car) | Centred in the free area on glass. The primary action (or the first) is focused; a second action is a plain pill beside it. Back is the header action. |
+| [20-alert](20-alert.png) | An alert while driving | `Alert (AppManager.showAlert)` | title · subtitle · icon · actions (first two) · durationMillis (→ the ring round the icon) · callbackDelegate (timeout / cancel) | ORBIT’s alert pill, between the hub and the song, clear of the turn and lanes. The alert’s time left runs as a ring round its icon, so the driver sees it will go by itself. The first action is focused; Back dismisses. |
+| [21-message](21-message.png) | A message screen | `MessageTemplate (alone, or in MapWithContentTemplate)` | header / title + headerAction · icon · message · isLoading · actions (up to two; FLAG_PRIMARY filled) · debugMessage (never shown in the car) | A message is not a list, so no wheel: its icon in a ring, the words, and its buttons, the primary one focused. Back is the title’s. |
 | [22-message-loading](22-message-loading.png) | A message screen, loading | `MessageTemplate (isLoading)` | isLoading · message (if any) | ORBIT’s ring spinner in place of the icon; no buttons, so Back is focused. |
-| [23-route-preview-day](23-route-preview-day.png) | Route preview by day | `RoutePreviewNavigationTemplate` | as Route preview | ORBIT’s day glass and darkened accent (each at least 4.9:1); the same layout. |
-| [24-navigating-day](24-navigating-day.png) | Navigating by day | `NavigationTemplate` | as Navigating | The day glass over a day map. |
+| [23-route-preview-day](23-route-preview-day.png) | Route preview by day | `RoutePreviewNavigationTemplate` | as Route preview | ORBIT’s day glass and darkened accent (each at least 4.9:1); the same wheel. |
+| [24-navigating-day](24-navigating-day.png) | Navigating by day | `NavigationTemplate` | as Navigating | The day glass over a day map; still only the turn, lanes, arrival and speed. |
 
 ## MyPlay's own worlds, in the same look
 
-Worlds that have no map to keep in view (Settings, Notifications, Calls, Apps) use the whole free area (x 288–992) in the same glass card as Waze's column. Banners and calls over the map use the alert's pill and buttons. These are MyPlay's own screens, not templates: the fields are the skin's data classes (`ui/car/myplay/MyPlaySkin.kt`, `ui/car/CarModel.kt`), and the setting titles are the real ones from `EngineSettings.kt`.
+These are MyPlay's own screens, not templates. Their fields are the skin's data classes (`ui/car/myplay/MyPlaySkin.kt`, `ui/car/CarModel.kt`), and the setting titles are the real ones from `EngineSettings.kt`. Lists use the same wheel; banners and calls over the map use the alert's pill and buttons; the Apps grid becomes a ring like ORBIT's dial.
 
 ### Settings
 
 | PNG | Screen | Drawn by | Fields drawn | Notes |
 |---|---|---|---|---|
-| [25-settings](25-settings.png) | Settings world | `MyPlay · SettingsWorld (SettingsPage)` | SettingRow: title · value (a choice’s label) · switch + on · note | The same pills as Waze’s lists, across the whole free area: a choice shows its value and a chevron (a push steps it on), a switch shows ORBIT’s accent switch. Six rows fit; the first is focused. |
-| [26-settings-switch](26-settings-switch.png) | Settings world, on a switch with a note | `MyPlay · SettingsWorld (SettingsPage)` | SettingRow: title · switch + on · note | Turned further down: the focus on a switch; a push flips it. A setting’s note (here: it can only be turned on while stopped) goes under its title. |
+| [25-settings](25-settings.png) | Settings world | `MyPlay · SettingsWorld (SettingsPage)` | SettingRow: title · value (a choice’s label) · switch + on · note | The settings on the same wheel: a choice shows its value and a chevron (a push steps it on), a switch shows ORBIT’s accent switch. Opens on the first setting. |
+| [26-settings-switch](26-settings-switch.png) | Settings world, on a switch with a note | `MyPlay · SettingsWorld (SettingsPage)` | SettingRow: title · switch + on · note | Turned to the end: the focus on a switch, a push flips it. The note (it can only be turned on while stopped) shows under the title in the middle row. |
 
 ### Notices and banners
 
 | PNG | Screen | Drawn by | Fields drawn | Notes |
 |---|---|---|---|---|
-| [27-notice-message](27-notice-message.png) | A message banner while driving | `MyPlay · Notice (CarNotice, message = true)` | CarNotice: icon · title · text (hidden while driving for a message) · actions (labels) · asked = false → the ring on Dismiss | The same glass and buttons as Waze’s alert, at the top of the free area, 500 px wide so it clears the turn’s distance and the clock. Nobody asked for it, so the focus ring is on Dismiss: a stray push never acts. A message’s text is hidden while driving. |
+| [27-notice-message](27-notice-message.png) | A message banner while driving | `MyPlay · Notice (CarNotice, message = true)` | CarNotice: icon · title · text (hidden while driving for a message) · actions (labels) · asked = false → the ring on Dismiss | The alert’s glass and buttons, at the top of the free area, 500 px wide so it clears the turn’s distance and the clock. Nobody asked for it, so the ring is on Dismiss: a stray push never acts. A message’s text is hidden while driving. |
 | [28-notice-asked](28-notice-asked.png) | A banner the driver asked for | `MyPlay · Notice (CarNotice, asked = true)` | CarNotice: icon · title · text · actions · asked = true → the ring on the first action | After “Call back” the driver expects to act: the ring is on the first button, so one push calls. |
-| [29-notifications](29-notifications.png) | Notifications list | `MyPlay · NoticeList (NoticeListPage)` | NoticeRow: notice (icon, title) · text · time · action (the label a push runs) · a null notice = Clear all | The same rows: the notice’s app icon, its title, its text, the time at the end and, when it has one, the action a push runs as a small pill. Clear all closes the list. |
+| [29-notifications](29-notifications.png) | Notifications list | `MyPlay · NoticeList (NoticeListPage)` | NoticeRow: notice (icon, title) · text · time · action (the label a push runs) · a null notice = Clear all | The notices on the wheel: the app’s icon, the title, the text, the time at the end and, when there is one, the action a push runs as a small pill. Clear all is the wheel’s last row. |
 
 ### Calls
 
 | PNG | Screen | Drawn by | Fields drawn | Notes |
 |---|---|---|---|---|
-| [30-call-ringing](30-call-ringing.png) | A call ringing | `MyPlay · Ringing (CarCall, ringing = true)` | CarCall: name · ringing · canEnd → Answer / Decline (CALL_ANSWER, CALL_DECLINE) | Centred in the free area: the caller’s initials in Calls’ green ring, the name, and two big discs. Answer holds the focus; Decline is a turn away. While the driver is navigating the turn and the hub stay. |
-| [31-call-in-call](31-call-in-call.png) | In a call | `MyPlay · InCall (CarCall, ringing = false)` | CarCall: name · sinceMs (the time) · canEnd → the red hang-up disc | The call shrinks to a pill at the bottom of the free area, like the alert, so the map comes back. The ring is not on it until the driver turns there; hang-up is red and one turn from the call pill. |
-| [32-calls-world](32-calls-world.png) | Calls world | `MyPlay · PhoneWorld (PhonePage)` | PhoneRow: title · subtitle · kind (RECENT, MISSED, FAVOURITE, PHONE_APP — last) · loading · permitted | Recent calls, then favourites, then the phone app, as the same pills. A missed call is in the warning red; the first row is focused so one push calls back. |
+| [30-call-ringing](30-call-ringing.png) | A call ringing | `MyPlay · Ringing (CarCall, ringing = true)` | CarCall: name · ringing · canEnd → Answer / Decline (CALL_ANSWER, CALL_DECLINE) | Centred in the free area: the caller’s initials in Calls’ green ring, the name, and two big discs. Answer holds the focus; Decline is a turn away. While navigating, the turn, lanes and hub stay. |
+| [31-call-in-call](31-call-in-call.png) | In a call | `MyPlay · InCall (CarCall, ringing = false)` | CarCall: name · sinceMs (the time) · canEnd → the red hang-up disc | The call shrinks to a pill at the bottom of the free area, like the alert, so the turn and lanes come back. The ring is not on it until the driver turns there; hang-up is red and one turn on. |
+| [32-calls-world](32-calls-world.png) | Calls world | `MyPlay · PhoneWorld (PhonePage)` | PhoneRow: title · subtitle · kind (RECENT, MISSED, FAVOURITE, PHONE_APP — last) · loading · permitted | Recent calls, then favourites, then the phone app, on the wheel. A missed call is in the warning red; the first row is in the middle, so one push calls back. |
 
 ### Apps
 
 | PNG | Screen | Drawn by | Fields drawn | Notes |
 |---|---|---|---|---|
-| [33-apps-grid](33-apps-grid.png) | Apps grid | `MyPlay · AppsWorld (CarAppEntry list, page / pages)` | CarAppEntry: label · icon · kind · ringed tile · page / pages | Round icons in a 4 × 2 grid (8 per page), the label under each; the focused app gets the ring round its icon and a bolder label. The page dots say how many pages there are; turning past the last tile goes to the next page. |
-| [34-phone-apps](34-phone-apps.png) | Phone apps list | `MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)` | CarAppEntry: label · icon · kind | The phone’s own apps that the owner allowed on the car (Apps › Phone apps on the phone), as rows rather than tiles: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the data is the same CarAppEntry list as the grid.) |
+| [33-apps-ring](33-apps-ring.png) | Apps: a ring of apps | `MyPlay · AppsWorld (CarAppEntry list, page / pages)` | CarAppEntry: label · icon · kind · ringed tile · page / pages | The grid becomes ORBIT’s dial: eight apps round a ring, the focused one bigger with the focus ring, its name in the middle. Turning goes round the ring; past the last app the next page turns in (the dots). |
+| [34-phone-apps](34-phone-apps.png) | Phone apps list | `MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)` | CarAppEntry: label · icon · kind | The phone’s own apps that the owner allowed on the car, on the wheel: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the same CarAppEntry list as the ring.) |
 
 ## Placement, in the car's pixels
 
 | Part | Where | Size |
 |---|---|---|
-| Content column (list, search, route preview) | x 288–708, y 43–677 | 420 × 634, corner 44 |
-| Rows | in the column | 84 high (routes 92), pill; image in a 56 disc |
-| "Go now" (navigateAction) | column foot | full width × 88, accent fill |
-| Action strip (NavigationTemplate) | top of the free area, right-aligned to x 992 | discs 72, gap 14; titled actions as pills |
-| Map action strip | down the right edge, x 928–992, bottom at y 677 | discs 64, gap 14 |
-| Alert | bottom of the free area, x 288–908, y 556 | pill; icon in an 84 ring that counts down `durationMillis` |
-| Message (MessageTemplate) | centred, x 338–942, y 103–617 | 604 × 514 |
-| Letter ring (parked search) | centred in the free area | 620 ring |
-| World panel (Settings, Notifications, Calls, Apps) | the whole free area, x 288–992, y 43–677 | 704 × 634; rows 76–88 high |
+| Wheel title (+ Back, app or world icon) | x 300, y 46 | title 34 px; discs 64 |
+| Wheel rows | arc centred at (−322, cy), radius 640, 17° per row; cy 370 (400 under a search field) | middle row 112 high, 460–600 wide; others 84 high, 90 narrower, 72 % opacity |
+| Position arc | radius 622 on the same centre | 5 px track, 8 px accent dot |
+| Go now (navigateAction) | x 800–990, centred on the wheel | 190 disc, accent fill |
+| Search field (SearchTemplate) | in the title's place | 420 × 64 |
+| Letter ring (parked search) | centred in the free area | 620 ring, letters on radius 252 |
+| Apps ring | centred in the free area | 600 ring, 8 apps on radius 220 (96, focused 120) |
+| Speed (navigating) | x 76–196, y 340–460 | 120 disc |
+| Alert | bottom of the free area, x 300–920, y 556 | pill; icon in an 84 ring that counts down `durationMillis` |
 | Notice banner | top of the free area, x 470–970 | 500 wide, clear of the turn's distance and the clock |
 | Ringing call | centred in the free area | caller ring 200; Answer / Decline discs 112 |
-| In-call pill | bottom of the free area | pill 76 high + red hang-up disc 76 |
+| In-call pill | bottom of the free area | 76 high + red hang-up disc 76 |
 
 ## What the host would change
 
-- `MapScaffold`: the action strip and map action strip as ORBIT discs in the free area's top right and right edge (today: top end and bottom end of the whole screen, under ORBIT's clock and song).
-- `MapContentCard`: the column above (today 42 % of the width, 320–480 dp) in ORBIT glass; rows as pills with the focus ring.
-- `ItemListView` / `RowItem` in a narrow column: the DistanceSpan text first on the second line.
-- `RoutePreviewNavigationTemplateView`: focus starts on `navigateAction`; after a route is picked (`onSelectedDelegate`) the focus returns to it.
-- `SearchTemplateView`: while driving, focus starts on the first result; parked, the letter ring replaces `CarKeyboard` (same `KeyboardSink`: type, backspace, submit, hide).
-- `AlertCard` / ORBIT's `MapAlertCard`: a countdown ring from `durationMillis`.
-- `NavigationTemplateView`: `MessageInfo` and `RoutingInfo.isLoading` in ORBIT's turn disc (today a separate card).
+- A shared `OrbitWheel` composable (rows, position arc, "N more") used by `ItemListView` in map templates and search, and by ORBIT's SettingsWorld, NoticeList, PhoneWorld and phone apps list. Knob turns move the wheel's focus; `onItemVisibilityChangedDelegate` gets the three rows shown.
+- `MapScaffold` under ORBIT: draw neither `actionStrip` nor `mapActionStrip`. Back or the pad's centre while navigating opens them in the wheel. Action.PAN goes into pan mode as today (`MapMoveMode`). The visible area told to Waze no longer loses the strips' space.
+- `RoutePreviewNavigationTemplateView`: the Go now disc (`navigateAction`) is focused at the start; after `onSelectedDelegate` the focus returns to it.
+- `SearchTemplateView`: while driving, the locked field with focus on the first result; parked, the letter ring replaces `CarKeyboard`, using the same `KeyboardSink` (type, backspace, submit, hide).
+- ORBIT's `MapAlertCard`: a countdown ring from `durationMillis`.
+- `NavigationTemplateView`: `MessageInfo` and `RoutingInfo.isLoading` in ORBIT's turn disc. Lanes stay as today (`LanesToSkin`).
+- ORBIT's `AppsWorld`: the ring of eight with the name in the middle, pages as dots.
 
 ## Open questions for the owner
 
-- Phone apps list: drawn from the same `CarAppEntry` list as the grid (phone apps allowed on the car, opened on the mirrored screen). Is that the list meant?
-- The letter ring is new: is turning through 29 keys quick enough, or should the d-pad jump by a quarter of the ring?
-- Should the column sit on the driver's side (left, as drawn) in every case, or move right when Waze's map needs the left?
+- The letter ring: is turning through 29 keys quick enough, or should the d-pad jump a quarter of the ring?
+- The actions wheel: is the pad's centre free while navigating, or should only Back open it?
+- Phone apps list: I assumed it is drawn from the same `CarAppEntry` list as the Apps ring (the phone apps allowed on the car, opened on the mirrored screen). Is that the list meant?
 
 ## Rebuilding
 
-`node docs/design/waze-screens/src/build.cjs` renders every screen (HTML in `html/`, PNGs here, `overview.png`) with Playwright at 1280 × 720, 1×. Parts are in `src/parts.cjs` (ORBIT's tokens from `OrbitTokens.kt`), screens and sample data in `src/screens.cjs`. Icons are the phone-app design's (`src/icons.json`, Lucide, ISC licence); the font is `../phone-app/src/fonts/RobotoFlex`.
+`node docs/design/waze-screens/src/build.cjs` renders every screen with Playwright at 1280 × 720, 1×: the HTML goes in `html/` and the PNGs and `overview.png` here. Parts are in `src/parts.cjs` (ORBIT's tokens from `OrbitTokens.kt`); screens and sample data are in `src/screens.cjs`. Icons are the phone-app design's (`src/icons.json`, Lucide, ISC licence). The font is `../phone-app/src/fonts/RobotoFlex`.
