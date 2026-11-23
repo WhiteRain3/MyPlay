@@ -62,6 +62,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -451,10 +452,16 @@ internal fun PlaceListNavigationTemplateView(t: PlaceListNavigationTemplate) {
     }
 }
 
+/** Look C, step 4: the route preview's Go now disc. */
+internal const val GO_DISC_TAG = "go_disc"
+
 /** RoutePreviewNavigationTemplate (deprecated): route choices and a big Navigate button. */
 @Composable
 internal fun RoutePreviewNavigationTemplateView(t: RoutePreviewNavigationTemplate) {
+    // Look C, step 4 (ORBIT): Go now is a big accent disc to the right of the routes, not a footer button.
+    val wheel = LocalWheelLists.current && !LocalCompactMap.current
     MapScaffold(t.actionStrip, t.mapActionStrip, t.panModeDelegate) {
+        val disc = wheel && !narrow && !t.isLoading
         MapContentCard {
             @Suppress("DEPRECATION")
             MapListCard(
@@ -462,10 +469,13 @@ internal fun RoutePreviewNavigationTemplateView(t: RoutePreviewNavigationTemplat
                 list = t.itemList,
                 loading = t.isLoading,
                 limitType = ConstraintManager.CONTENT_LIMIT_TYPE_ROUTE_LIST,
-                footer = t.navigateAction?.let { action ->
+                footer = t.navigateAction?.takeIf { !disc }?.let { action ->
                     { ActionView(action, ActionLook.Button, Modifier.fillMaxWidth().padding(12.dp), fill = true, forcePrimary = true) }
                 },
             )
+        }
+        if (disc) t.navigateAction?.let { action ->
+            ActionView(action, ActionLook.Disc, Modifier.align(Alignment.CenterStart).padding(start = panelWidth() + 32.dp).obstructsMap().testTag(GO_DISC_TAG), forcePrimary = true)
         }
     }
 }

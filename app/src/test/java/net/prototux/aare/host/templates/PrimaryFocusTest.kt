@@ -14,6 +14,10 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.test.onNodeWithTag
 import net.prototux.aare.ui.theme.CarTheme
 import net.prototux.aare.ui.theme.CarThemes
 import org.junit.Assert.assertNotNull
@@ -70,9 +74,9 @@ class PrimaryFocusTest {
         .apply { if (go) setNavigateAction(Action.Builder().setTitle("Go now").setOnClickListener { }.build()) }
         .build()
 
-    private fun show(t: RoutePreviewNavigationTemplate, primary: PrimaryFocus) = rule.setContent {
+    private fun show(t: RoutePreviewNavigationTemplate, primary: PrimaryFocus, wheel: Boolean = false) = rule.setContent {
         CarTheme(night = true, theme = CarThemes.byId("aare")) {
-            CompositionLocalProvider(LocalTemplateHost provides host, LocalPrimaryFocus provides primary) {
+            CompositionLocalProvider(LocalTemplateHost provides host, LocalPrimaryFocus provides primary, LocalWheelLists provides wheel) {
                 @Suppress("DEPRECATION")
                 RoutePreviewNavigationTemplateView(t)
             }
@@ -94,5 +98,31 @@ class PrimaryFocusTest {
         show(preview(go = false), primary)
         rule.waitForIdle()
         assertNull(primary.holder)
+    }
+
+    /**
+     * Look C, step 4 (ORBIT): Go now is a big disc to the right of the routes, not a footer button;
+     * it still takes the ring when the screen opens (GO-1).
+     */
+    @Test fun onOrbitGoNowIsADiscBesideTheRoutesAndTakesTheRing() {
+        val primary = PrimaryFocus()
+        show(preview(go = true), primary, wheel = true)
+        rule.waitForIdle()
+        val disc = rule.onNodeWithTag(GO_DISC_TAG).fetchSemanticsNode().boundsInRoot
+        val routes = rule.onNodeWithText("24 min", substring = true).fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("the disc $disc is right of the routes $routes", disc.left > routes.right)
+        org.junit.Assert.assertEquals("a disc: as wide as it is high", disc.width, disc.height, 2f)
+        assertNotNull("Go now registered", primary.holder)
+        rule.runOnIdle { primary.requester.requestFocus() }
+        rule.onNodeWithText("Go now").assertIsFocused()
+    }
+
+    /** Look C, step 4: a picture of the route preview on ORBIT (build/reports/myplay-screens). */
+    @Test @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun routePreviewPicture() {
+        show(preview(go = true), PrimaryFocus(), wheel = true)
+        rule.waitForIdle()
+        val bmp = rule.onRoot().captureToImage().asAndroidBitmap()
+        java.io.File(java.io.File("build/reports/myplay-screens").apply { mkdirs() }, "route-preview-wheel-1280x720.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 }

@@ -57,10 +57,16 @@ internal enum class ActionLook {
 
     /** ListTemplate/GridTemplate floating actions. */
     Fab,
+
+    /** Look C (step 4): the route preview's Go now on ORBIT, a big round accent disc beside the routes. */
+    Disc,
 }
 
 /** Pan-mode state of the enclosing map template, for Action.PAN buttons. */
 internal class PanControl(val active: Boolean, val toggle: () -> Unit)
+
+/** Look C (step 4): the size of [ActionLook.Disc]. */
+internal val DISC_SIZE = 176.dp
 
 internal val LocalPanControl = compositionLocalOf<PanControl?> { null }
 
@@ -152,6 +158,7 @@ internal fun ActionView(
         ActionLook.Header, ActionLook.Strip -> if (titled) 64.dp else d.touchTarget
         ActionLook.MapStrip -> if (titled) 64.dp else 68.dp
         ActionLook.Button, ActionLook.Fab -> d.touchTarget
+        ActionLook.Disc -> DISC_SIZE
     }
     val minWidth = when {
         look == ActionLook.Button && titled -> 160.dp
@@ -160,7 +167,7 @@ internal fun ActionView(
     val hasIcon = vec != null || icon != null
     val iconSize = if (titled) 30.dp else d.iconSize
     // GO-1: a large primary button that can be pressed takes the screen's primary focus (the first).
-    val primaryFocus = LocalPrimaryFocus.current.takeIf { primary && look == ActionLook.Button && onClick != null && action.isEnabled }
+    val primaryFocus = LocalPrimaryFocus.current.takeIf { primary && (look == ActionLook.Button || look == ActionLook.Disc) && onClick != null && action.isEnabled }
     val me = androidx.compose.runtime.remember { Any() }
     if (primaryFocus != null) {
         androidx.compose.runtime.DisposableEffect(primaryFocus) {
@@ -173,12 +180,22 @@ internal fun ActionView(
         bg = bg,
         height = height,
         minWidth = minWidth,
-        elevated = look == ActionLook.MapStrip || look == ActionLook.Fab,
+        elevated = look == ActionLook.MapStrip || look == ActionLook.Fab || look == ActionLook.Disc,
         enabled = action.isEnabled,
         onClick = onClick,
         modifier = modifier.then(focusMod),
-        horizontalPadding = if (titled) (if (look == ActionLook.Button) 28.dp else 20.dp) else 0.dp,
+        horizontalPadding = if (look == ActionLook.Disc) 16.dp else if (titled) (if (look == ActionLook.Button) 28.dp else 20.dp) else 0.dp,
+        fixedWidth = if (look == ActionLook.Disc) DISC_SIZE else null,
     ) {
+        if (look == ActionLook.Disc) {
+            // The disc: the title big in the middle (an icon above it when the app sends one).
+            androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                if (vec != null) Icon(vec, null, tint = fg, modifier = Modifier.size(40.dp))
+                else if (icon != null) CarIconView(icon, 40.dp, monochromeTint = fg)
+                if (titled) CarTextView(label, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold), color = fg)
+            }
+            return@ActionSurface
+        }
         if (vec != null) {
             Icon(vec, label.plain().ifEmpty { null }, tint = fg, modifier = Modifier.size(iconSize))
         } else if (icon != null) {
@@ -206,6 +223,8 @@ private fun ActionSurface(
     onClick: (() -> Unit)?,
     modifier: Modifier,
     horizontalPadding: Dp,
+    /** Look C: a disc's width (its height); null: at least [minWidth], as wide as its content. */
+    fixedWidth: Dp? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
     val shape = RoundedCornerShape(percent = 50)
@@ -213,7 +232,7 @@ private fun ActionSurface(
         modifier
             .then(if (elevated) Modifier.shadow(6.dp, shape) else Modifier)
             .height(height)
-            .widthIn(min = minWidth)
+            .then(if (fixedWidth != null) Modifier.width(fixedWidth) else Modifier.widthIn(min = minWidth))
             .clip(shape)
             .background(bg)
             .then(if (onClick != null && enabled) Modifier.carFocusHighlight(shape).clickable(onClick = onClick) else Modifier)
