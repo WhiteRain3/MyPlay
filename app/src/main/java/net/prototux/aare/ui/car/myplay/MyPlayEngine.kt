@@ -131,7 +131,13 @@ internal fun MyPlayEngineShell(
     val routeOn = state.trip != null
     val (seen, progress) = TripProgress.update(longest.takeIf { routeOn }, left)
     LaunchedEffect(seen, routeOn) { longest = if (routeOn) seen else null }
-    val slots = plain.copy(trip = plain.trip?.copy(progress = progress))
+    // Lanes: the trip's own, else those the maps app's turn card hands over (LocalLaneSink).
+    var templateLanes by remember { mutableStateOf<List<LaneHint>>(emptyList()) }
+    val laneSink: (List<LaneHint>) -> Unit = remember { { l -> templateLanes = l } }
+    val slots = plain.copy(
+        trip = plain.trip?.copy(progress = progress),
+        turn = plain.turn?.let { t -> LaneHints.pick(t.lanes, templateLanes).let { if (it == t.lanes) t else t.copy(lanes = it) } },
+    )
     // The home's stops and where they are, as the slots report them.
     val boxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
     var chosen by memory.chosen
@@ -769,7 +775,8 @@ internal fun MyPlayEngineShell(
                 // home. O9-1: only then: a maps app whose turn reaches MyPlay only through its card keeps it.
                 CompositionLocalProvider(LocalMapTapIsKnobStop provides false, LocalSkinMapFilter provides tokens.mapFilter,
                     net.prototux.aare.host.templates.LocalOwnTurnShown provides (slots.turn != null),
-                    LocalMapAlertSink provides (if (skin.drawsMapAlerts) alertSink else null)) {
+                    LocalMapAlertSink provides (if (skin.drawsMapAlerts) alertSink else null),
+                    LocalLaneSink provides laneSink) {
                     if (nav != null) navMap(nav, Modifier.fillMaxSize()) else Wallpaper(state, Modifier.fillMaxSize())
                 }
                 val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)

@@ -92,7 +92,7 @@ internal fun NavigationTemplateView(t: NavigationTemplate) {
         val width = if (narrow) maxWidth else panelWidth()
         val top = Modifier.align(Alignment.TopStart).width(width)
         when (info) {
-            is RoutingInfo -> if (LocalOwnTurnShown.current) Unit
+            is RoutingInfo -> if (LocalOwnTurnShown.current) LanesToSkin(info)
                 else if (compact) CompactRoutingCard(info, t.backgroundColor, top.obstructsMap()) else RoutingCard(info, t.backgroundColor, top.obstructsMap())
             is MessageInfo -> MessageInfoCard(info, t.backgroundColor, top.obstructsMap())
         }
@@ -186,6 +186,17 @@ private fun CompactRoutingCard(info: RoutingInfo, background: CarColor?, modifie
         }
         val cue = if (!CarText.isNullOrEmpty(step.cue)) step.cue else step.road
         CarTextView(cue, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = fg, maxLines = 1)
+    }
+}
+
+/** MyPlay (lanes on ORBIT): the turn card is the skin's, so its lanes go to the skin (LocalLaneSink). */
+@Composable
+private fun LanesToSkin(info: RoutingInfo) {
+    val sink = net.prototux.aare.ui.car.myplay.LocalLaneSink.current ?: return
+    val hints = net.prototux.aare.ui.car.myplay.LaneHints.from(info.currentStep?.lanes)
+    androidx.compose.runtime.DisposableEffect(hints, sink) {
+        sink(hints)
+        onDispose { sink(emptyList()) }
     }
 }
 
@@ -286,7 +297,7 @@ internal fun maneuverVector(type: Int): ImageVector = when (type) {
     else -> Icons.Rounded.Navigation // DEPART, UNKNOWN
 }
 
-private fun laneVector(shape: Int): ImageVector = when (shape) {
+internal fun laneVector(shape: Int): ImageVector = when (shape) {
     LaneDirection.SHAPE_SLIGHT_LEFT -> Icons.Rounded.TurnSlightLeft
     LaneDirection.SHAPE_SLIGHT_RIGHT -> Icons.Rounded.TurnSlightRight
     LaneDirection.SHAPE_NORMAL_LEFT -> Icons.Rounded.TurnLeft

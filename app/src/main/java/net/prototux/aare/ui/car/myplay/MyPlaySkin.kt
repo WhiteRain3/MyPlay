@@ -84,7 +84,9 @@ data class PadHints(
  * the maps app's own arrow picture when it sends one (phone guidance); else [direction], from the
  * route step's manoeuvre, when it is one MyPlay can draw; else neither (draw no direction at all).
  */
-data class TurnSlot(val distance: String?, val road: String?, val arrow: Bitmap? = null, val direction: TurnDirection? = null)
+data class TurnSlot(val distance: String?, val road: String?, val arrow: Bitmap? = null, val direction: TurnDirection? = null,
+    /** The lanes for this turn, when the maps app sends them (MyPlayLanes.kt); empty: none shown. */
+    val lanes: List<LaneHint> = emptyList())
 
 /** The turns a skin can draw an arrow for; anything else gets no arrow (never a guessed one). */
 enum class TurnDirection { STRAIGHT, SLIGHT_LEFT, LEFT, SHARP_LEFT, SLIGHT_RIGHT, RIGHT, SHARP_RIGHT, U_TURN_LEFT, U_TURN_RIGHT;
@@ -213,7 +215,8 @@ data class HomeSlots(val turn: TurnSlot?, val trip: TripSlot?, val song: SongSlo
                 val step = trip.steps.firstOrNull()
                 val distance = trip.stepTravelEstimates.firstOrNull()?.remainingDistance?.let { CarFormat.distance(it.displayDistance, it.displayUnit) }
                 val road = (step?.road ?: step?.cue ?: trip.currentRoad)?.toString()?.takeIf { it.isNotBlank() }
-                if (distance == null && road == null) null else TurnSlot(distance, road, direction = TurnDirection.of(step?.maneuver?.type))
+                if (distance == null && road == null) null else TurnSlot(distance, road, direction = TurnDirection.of(step?.maneuver?.type),
+                    lanes = LaneHints.from(step?.lanes))
             } else state.phoneGuidance?.let { g ->
                 TurnSlot(g.primary.takeIf { it.isNotBlank() }, g.secondary.takeIf { it.isNotBlank() }, arrow = g.arrow)
             }
