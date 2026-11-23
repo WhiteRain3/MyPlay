@@ -43,7 +43,7 @@ class NextDiagnosticsTest {
             "more/diagnostics" -> NextDiagnosticsPage()
             "more/diagnostics/car-check" -> NextCarCheckPage()
             "more/diagnostics/log" -> NextLogPage()
-            else -> NextPlaceholder(r) {}
+            else -> NextPlaceholder(r)
         }
     }
 

@@ -24,56 +24,8 @@
     <string name="common_loading">Latautuu</string>
 
     <!-- setup: MainActivity home/settings screens -->
-    <string name="setup_page_car_screen_title">Auton näyttö</string>
-    <string name="setup_page_car_screen_subtitle">Värit, palkin sijainti, puhelimen näyttö</string>
-    <string name="setup_page_apps_title">Sovellukset</string>
-    <string name="setup_page_apps_subtitle">Mitkä sovellukset näkyvät autossa</string>
-    <string name="setup_page_connection_title">Yhteys</string>
-    <string name="setup_page_connection_subtitle">Langaton yhteys, videon laatu, autosi</string>
-    <string name="setup_page_advanced_title">Lisäasetukset</string>
-    <string name="setup_page_advanced_subtitle">Soittolaitteen palvelin, varmenteet, loki</string>
-    <string name="setup_tagline">Avoimen lähdekoodin auton projisointi</string>
-    <string name="setup_status_certificate">varmenne: %1$s</string>
-    <string name="setup_status_disconnected_hint">Liitä puhelin auton Android Auto -USB-porttiin tai yhdistä langattomasti laitepariksi liitettyyn autoon.</string>
-    <string name="setup_status_last_error">Viimeisin virhe: %1$s</string>
-    <string name="setup_trust_new_cert">Luota tämän soittolaitteen uuteen varmenteeseen</string>
-    <string name="setup_trust_head_unit">Luota tähän soittolaitteeseen</string>
-    <string name="setup_trust_fingerprint_suffix">%1$s (SHA-256 %2$s...)</string>
-    <string name="setup_preview_car_screen">Esikatsele auton näyttöä</string>
-    <string name="setup_disconnect">Katkaise yhteys</string>
-    <string name="setup_finish_title">Viimeistele käyttöönotto</string>
-    <string name="setup_check_permissions_title">Käyttöoikeudet</string>
-    <string name="setup_check_permissions_subtitle">Mikrofoni, sijainti, Bluetooth, lähellä olevat Wi-Fi-verkot, ilmoitukset, puhelut, yhteystiedot ja kalenteri</string>
-    <string name="setup_check_notification_access_title">Ilmoitusten käyttöoikeus</string>
-    <string name="setup_check_notification_access_subtitle">Viestit, Google Mapsin ja Wazen reittiohjeet, nyt soi</string>
-    <string name="setup_check_audio_subtitle">Anna puhelimen äänen kuulua autossa</string>
-    <string name="setup_action_set_up">Ota käyttöön</string>
-    <string name="setup_section_connecting">Yhdistäminen</string>
-    <string name="setup_toggle_wireless_title">Langaton</string>
-    <string name="setup_toggle_wireless_subtitle">Yhdistä laiteparina oleviin autoihin Wi-Fin kautta, kun ne tulevat Bluetooth-kantaman sisään</string>
-    <string name="setup_toggle_resume_music_title">Jatka musiikkia</string>
-    <string name="setup_toggle_resume_music_subtitle">Käynnistä viimeksi soitettu musiikkisovellus, kun auto yhdistetään</string>
-    <string name="setup_bt_address_label">Puhelimen Bluetooth-osoite (valinnainen)</string>
-    <string name="setup_bt_address_hint">Jotkin soittolaitteet näyttävät mustan näytön, kunnes ne tietävät, mikä puhelin on yhdistetty. Löydät sen kohdasta Asetukset &gt; Tietoja puhelimesta &gt; Tila. Jätä tyhjäksi, jos autosi toimii jo.</string>
-    <string name="setup_section_location">Sijainti</string>
-    <string name="setup_toggle_car_gps_title">Käytä auton GPS:ää</string>
-    <string name="setup_toggle_car_gps_subtitle">Yhteyden aikana puhelimen sovellukset näkevät auton sijainnin puhelimen oman sijainnin sijaan, jotta navigointisovellukset eivät sekoita niitä</string>
-    <string name="setup_check_mock_location_title">Anna MyPlaylle lupa asettaa sijainti</string>
-    <string name="setup_check_mock_location_subtitle">Kehittäjäasetukset &gt; Valitse simuloitu sijaintisovellus &gt; MyPlay</string>
-    <string name="setup_section_video">Video</string>
-    <string name="setup_toggle_60fps_title">Suosi 60 kuvaa/s</string>
     <string name="setup_toggle_60fps_subtitle">Sujuvampaa, jos auto tukee sitä</string>
-    <string name="setup_choice_max_resolution">Enimmäistarkkuus</string>
     <string name="setup_hint_lower_resolution">Pienempi kuluttaa vähemmän akkua ja dataa.</string>
-    <string name="setup_section_your_cars">Autosi</string>
-    <string name="setup_cars_empty">Autot näkyvät tässä ensimmäisen yhteyden jälkeen.</string>
-    <string name="setup_car_last_connected">Viimeksi yhdistetty %1$s</string>
-    <string name="setup_action_forget">Unohda</string>
-    <string name="setup_section_trusted_head_units">Luotetut soittolaitteet</string>
-    <string name="setup_trusted_head_units_hint">Laiteparina oleva langaton auto on luotettu ensimmäisen yhteyden jälkeen; uusi USB- tai kehittäjän soittolaite vasta sen jälkeen, kun olet napauttanut Luota (sen ilmoituksessa tai etusivulla). Luota vain soittolaitteeseen, johon olet yhteydessä juuri nyt. Jos soittolaite näyttää myöhemmin eri varmenteen, sinua kysytään uudelleen: luota siihen vain, jos sen ohjelmisto on päivitetty.</string>
-    <string name="setup_trusted_head_units_empty">Ei vielä yhtään.</string>
-    <string name="setup_sha256_fingerprint">SHA-256 %1$s...</string>
-    <string name="setup_section_look">Ulkoasu</string>
     <string name="setup_choice_colors">Värit</string>
     <string name="setup_choice_colors_auto">Auton päivä/yö</string>
     <string name="setup_choice_dark">Tumma</string>
@@ -85,7 +37,6 @@
     <string name="setup_choice_bottom">Alaosa</string>
     <string name="setup_toggle_dark_bar_title">Tumma palkki</string>
     <string name="setup_toggle_dark_bar_subtitle">Pidä palkki tummana myös vaaleilla väreillä</string>
-    <string name="setup_section_dashboard">Kojelauta</string>
     <string name="dash_cards_title">Kortit</string>
     <string name="dash_cards_hint">Ensimmäinen kortti saa eniten tilaa, muut täyttävät loput näytöstä. Kortti, jolla ei ole näytettävää, antaa paikkansa seuraavalle.</string>
     <string name="dash_card_map">Kartta</string>
@@ -93,34 +44,11 @@
     <string name="dash_card_calendar">Seuraava kalenteritapahtuma</string>
     <string name="dash_card_notification">Viimeisin ilmoitus</string>
     <string name="dash_card_weather">Sää</string>
-    <string name="setup_choice_wallpaper">Taustakuva</string>
-    <string name="setup_wallpaper_none">Ei mitään</string>
-    <string name="setup_wallpaper_photo">Valokuva</string>
     <string name="setup_toggle_weather_title">Sää</string>
     <string name="setup_toggle_weather_subtitle">Kellon vierellä, Open-Meteolta (hakee arvioidun sijainnin, noin 10 km)</string>
-    <string name="setup_section_driving">Ajaminen</string>
-    <string name="setup_toggle_passenger_title">Matkustajatila</string>
-    <string name="setup_toggle_passenger_subtitle">Ohita auton ajotila: kirjoittaminen, pitkät luettelot ja puhelimen näyttö pysyvät käytettävissä liikkeessä, matkustajaa varten. Kuljettaja ei saa käyttää näyttöä ajaessaan.</string>
-    <string name="setup_section_app_list">Auton sovellusluettelossa</string>
-    <string name="setup_app_list_hint">Poista käytöstä sovellukset, joita et halua autoon.</string>
-    <string name="setup_app_list_loading">Etsitään sovelluksia…</string>
-    <string name="setup_app_group_nav">Navigointi ja autosovellukset</string>
-    <string name="setup_app_list_no_nav">Ei vielä yhtään: asenna CoMaps, Organic Maps tai muu Android Auto -sovellus.</string>
-    <string name="setup_app_kind_navigation">Navigointi</string>
-    <string name="setup_app_kind_generic">Autosovellus</string>
-    <string name="setup_app_group_media">Media</string>
-    <string name="setup_app_kind_media">Musiikki, podcastit, radio</string>
-    <string name="setup_app_group_messaging">Viestit</string>
-    <string name="setup_app_kind_messaging">Viestit sen ilmoituksista</string>
-    <string name="setup_app_group_aare">MyPlay</string>
-    <string name="setup_section_unsupported_apps">Android Auto -sovellukset, joita MyPlay ei voi näyttää</string>
-    <string name="setup_hint_allowlist">Googlen auto-kirjaston uusimmilla versioilla rakennetut sovellukset hyväksyvät vain sallittujen isäntien luettelossa olevia; katso README.</string>
     <string name="setup_app_entry_phone">Puhelin</string>
     <string name="setup_app_entry_settings">Asetukset</string>
     <string name="setup_app_entry_notifications">Ilmoitukset</string>
-    <string name="setup_section_app_order">Järjestys autossa</string>
-    <string name="setup_section_connection_log">Yhteysloki</string>
-    <string name="setup_about_text">MyPlay %1$s · GPL-3.0-or-later · Ei liity Googleen. Android Auto on Google LLC:n tavaramerkki.</string>
     <string name="setup_choice_style">Tyyli</string>
     <string name="setup_choice_theme">Teema</string>
     <string name="setup_choice_layout">Asettelu</string>
@@ -146,91 +74,34 @@
     <string name="setup_switch_audio_next_connection">Puhelimen äänet autossa (seuraava yhteys)</string>
 
     <!-- cert: certificate management -->
-    <string name="cert_section_title">Puhelimen varmenteet</string>
-    <string name="cert_hint">Soittolaitteet tarkistavat puhelimen varmenteen. Avoimen lähdekoodin soittolaitteet hyväksyvät luodun varmenteen; Googlen soittolaiteohjelmistoa käyttävät autot hyväksyvät vain Googlen myöntämän varmenteen, jota MyPlay ei voi sisällyttää. Voit tuoda sellaisen, jonka käyttöön sinulla on oikeus (PEM-varmenne + PKCS#8-avain, tai PKCS#12). Voit myös ladata uusimman Android Auto -sovelluksen varmenteen (github.com/iscle/android-auto-certificates).</string>
-    <string name="cert_entry_subtitle">%1$s · asti %2$s</string>
-    <string name="cert_action_remove">Poista</string>
-    <string name="cert_action_import">Tuo varmenne…</string>
-    <string name="cert_action_download">Lataa varmenne</string>
-    <string name="cert_action_downloading">Ladataan…</string>
     <string name="cert_download_unavailable">Varmennevarastoa ei enää ole (poistettu tai estetty): %1$s. Pura varmenne sen sijaan Android Auto -sovelluksesta (katso README).</string>
     <string name="cert_download_network">Varmenteen lataus epäonnistui: %1$s. Tarkista yhteys ja yritä uudelleen.</string>
     <string name="cert_download_invalid">Ladattu varmenne hylättiin: %1$s</string>
-    <string name="cert_p12_dialog_title">PKCS#12-salasana</string>
-    <string name="cert_action_import_confirm">Tuo</string>
     <string name="cert_imported_fallback">tuotu</string>
 
     <!-- huserver: developer head unit server -->
     <string name="huserver_label">Soittolaitteen palvelin</string>
     <string name="huserver_toggle_subtitle">Kuten Android Auton kehittäjätila, pöytäkoneen soittolaitteelle, DHU, openauto, Headunit Revived. Käytettävissä vain adb:n kautta: adb forward tcp:5277 localabstract:aare_hu</string>
-    <string name="huserver_toggle_network_title">Hyväksy verkosta</string>
     <string name="huserver_toggle_network_subtitle">Kuuntele myös TCP-portissa 5277 kaikissa verkoissa, ilman salasanaa. Kuka tahansa samassa Wi-Fi-verkossa voi yhdistää, nähdä auton näytön ja käyttää mikrofonia.</string>
-    <string name="huserver_toggle_lanonce_title">Poista verkkotila käytöstä istunnon jälkeen</string>
     <string name="huserver_toggle_lanonce_subtitle">Turvallisempi: verkko on sallittava uudelleen joka istunnolle. Poista tämä käytöstä soittolaitteille, jotka yhdistävät uudelleen itsestään, kuten openauto tai Headunit Revived.</string>
-    <string name="huserver_toggle_mirror_title">Puhelimen näyttö palvelimella</string>
     <string name="huserver_toggle_mirror_subtitle">Tarjoa "Puhelimen näyttö" myös kaikille, jotka yhdistävät tähän. Riskialtista: he näkevät puhelimen näytön ja voivat napauttaa sitä, jätä siis pois päältä, jos et luota soittolaitteeseen.</string>
-    <string name="huserver_toggle_localhost_title">Salli localhost (webaa / paath)</string>
     <string name="huserver_toggle_localhost_subtitle">Hyväksy yhteys tämän puhelimen Android Auto -selainsovellukselta, autoille, joissa ei ole Android Autoa (esim. Tesla). Mikä tahansa puhelimen sovellus voisi yhdistää, jätä siis pois päältä, ellet käytä sellaista.</string>
 
     <!-- msg: messaging settings -->
-    <string name="msg_settings_title">Viestit</string>
-    <string name="msg_page_subtitle">Ilmoitusbannerit ja ääneen lukeminen</string>
-    <string name="msg_check_notification_access_subtitle">Tarvitaan viestien näkemiseen autossa</string>
-    <string name="msg_toggle_banners_title">Näytä viesti-ilmoitukset</string>
-    <string name="msg_toggle_banners_subtitle">Banneri auton näytölle kutakin uutta viestiä kohden</string>
-    <string name="msg_toggle_group_title">Ryhmäviestit</string>
-    <string name="msg_toggle_group_subtitle">Näytä myös viestit ryhmäkeskusteluista</string>
     <string name="msg_toggle_read_aloud_title">Lue viestit ääneen</string>
-    <string name="msg_toggle_read_aloud_subtitle">Lue kukin uusi viesti ääneen sen saapuessa</string>
-    <string name="msg_hint_apps">Viestisovelluksilla (WhatsApp, Signal, tekstiviestit…) on myös oma sivunsa auton sovellusluettelossa.</string>
-    <string name="msg_section_while_driving">Ajon aikana</string>
-    <string name="msg_toggle_dnd_title">Älä häiritse</string>
-    <string name="msg_toggle_dnd_subtitle">Mykistä puhelin yhteyden aikana; puhelut ja tärkeät keskustelut kuuluvat silti läpi</string>
-    <string name="msg_check_dnd_access_title">Salli MyPlaylle Älä häiritse -tilan käyttöönotto</string>
-    <string name="msg_check_dnd_access_subtitle">Android kysyy kerran</string>
-    <string name="msg_toggle_autoreply_title">Automaattinen vastaus</string>
-    <string name="msg_toggle_autoreply_subtitle">Vastaa kirjoittaville kerran keskustelua kohden ajomatkalla (ei ryhmille)</string>
-    <string name="msg_autoreply_field_label">Vastaus</string>
 
     <!-- audio: car audio settings -->
     <string name="audio_settings_title">Auton äänet</string>
-    <string name="audio_page_subtitle">Miten puhelimen ääni kuuluu autossa</string>
-    <string name="audio_toggle_enable_title">Puhelimen äänet autossa</string>
-    <string name="audio_toggle_enable_subtitle">Musiikki, podcastit, avustaja ja menetelmästä riippuen navigoinnin ääniohjaus</string>
-    <string name="audio_using_method">Käytössä: %1$s</string>
-    <string name="audio_no_method">Mitään menetelmää ei ole vielä otettu käyttöön: valitse jokin alla.</string>
-    <string name="audio_section_methods">Menetelmät, parhaat ensin</string>
-    <string name="audio_policy_ready">Valmis. Musiikki ja navigoinnin ääniohjaus kulkevat autoon erikseen, puhelin pysyy hiljaisena.</string>
     <string name="audio_method_policy">Järjestelmän äänen reititys (kuten Android Auto)</string>
     <string name="audio_method_shizuku_policy">Shizuku, musiikki ja navigointi erikseen (kuten Android Auto)</string>
     <string name="audio_method_shizuku">Shizuku tai root</string>
     <string name="audio_method_playback_capture">Näytön kaappauslupa</string>
-    <string name="audio_policy_not_ready">Kuten Android Auto: musiikki ja navigoinnin ääniohjaus erikseen, puhelimen kaiutin pois päältä. Vaatii juuritetun puhelimen: asenna MyPlay järjestelmäsovelluksena Magisk-moduulilla (katso README).</string>
-    <string name="audio_shizuku_ready">Valmis. Kaikki, mitä puhelin toistaa, kulkee autoon, navigoinnin ääniohjaus mukaan lukien; puhelin pysyy hiljaisena.</string>
-    <string name="audio_shizuku_needs_android12">Vaatii Android 12:n tai uudemman.</string>
-    <string name="audio_shizuku_tap_allow">Shizuku on käynnissä: napauta sallimaan MyPlay.</string>
-    <string name="audio_shizuku_install_hint">Juurioikeuksia ei tarvita. Asenna Shizuku, käynnistä se (langaton virheenkorjaus, kerran uudelleenkäynnistyksen jälkeen), ja palaa tähän.</string>
-    <string name="audio_playback_ready">Valmis. Vain media: ei navigoinnin ääniohjausta, jotkin sovellukset kieltäytyvät, ja puhelin jatkaa toistoa myös itse.</string>
-    <string name="audio_playback_not_ready">Toimii kaikkialla, rajoituksin: vain media, ei navigoinnin ääniohjausta. Android pyytää näytön kaappausta: valitse Koko näyttö (sama kuin puhelimen näytössä).</string>
     <string name="audio_notice_setup_hint">Avaa MyPlay puhelimella ja ota auton äänet käyttöön kuullaksesi puhelimen autossa</string>
 
     <!-- phone: phone screen feature -->
     <string name="phone_section_title">Puhelimen näyttö</string>
-    <string name="phone_toggle_enable_title">Puhelimen näyttö autossa</string>
-    <string name="phone_toggle_enable_subtitle">Puhelimen oma näyttö, sovelluksille, joita MyPlay ei voi isännöidä (Google Maps, Waze). Keskeytetty, kun puhelin on lukittu, ja ajon aikana, ellei navigointisovellus ohjaa. Ei tarjolla soittolaitteen palvelimella, ellei sitä ole otettu käyttöön siellä</string>
-    <string name="phone_check_touch_title">Kosketus puhelimen näytöllä</string>
-    <string name="phone_check_touch_subtitle">Ota MyPlay käyttöön Esteettömyydessä. Sovelluksille, joita ei ole asennettu kaupasta, voidaan ensin tarvita "Salli rajoitetut asetukset" MyPlay:n sovellustiedoissa</string>
-    <string name="phone_hint_touch_capture">Kuva käyttää näytön kaappauslupaa (Auton äänet -sivu, valitse Koko näyttö).</string>
-    <string name="phone_app_row_subtitle">Puhelimen oma näyttö, sovelluksille, joita MyPlay ei voi isännöidä</string>
 
     <!-- assistant: voice assistant settings and bar -->
-    <string name="assistant_settings_title">Ääniavustaja</string>
-    <string name="assistant_page_subtitle">Mitä äänipainike avaa</string>
-    <string name="assistant_same_as_phone">Samoin kuin puhelimessa</string>
-    <string name="assistant_no_default">Puhelimeen ei ole asetettu oletusavustajaa</string>
-    <string name="assistant_has_car_app_subtitle">Auton näytöllä, auton mikrofonilla</string>
-    <string name="assistant_opens_on_phone">Avautuu puhelimessa</string>
-    <string name="assistant_hint">Ohjauspyörän äänipainike ja listan mikrofoni avaavat tämän avustajan. Parhaiten toimivat avustajat, joilla on autosovellus, kuten Lapin.</string>
 
     <!-- notif: notifications and in-car notices -->
     <string name="notif_channel_connection">Autoyhteys</string>
@@ -251,7 +122,6 @@
     <string name="notif_new_head_unit_title">Uusi soittolaite</string>
     <string name="notif_trust_warning">Luota vain soittolaitteeseen, johon olet yhteydessä juuri nyt</string>
     <string name="notif_untrusted_message">SHA-256 %1$s... %2$s, yhdistä sitten uudelleen.</string>
-    <string name="notif_trust_reconnect_suffix">%1$s, yhdistä sitten uudelleen.</string>
     <string name="notif_cert_changed_message">soittolaitteen varmenne vaihtui: napauta Luota ilmoituksessa tai MyPlay:ssa vain, jos sen ohjelmisto on päivitetty, yhdistä sitten uudelleen</string>
     <string name="notif_cert_untrusted_message">soittolaitteen varmenteeseen ei vielä luoteta: napauta Luota ilmoituksessa tai MyPlay:ssa, yhdistä sitten uudelleen</string>
     <string name="notif_car_nearby_title">Auto lähellä</string>
@@ -359,39 +229,24 @@
     <string name="search_parked_only">Haku on käytettävissä pysäköitynä</string>
 
     <!-- standalone: launching ordinary phone apps on the car screen (root/Shizuku, parked only) -->
-    <string name="standalone_section_title">Sovellukset auton näytöllä (lisäasetukset)</string>
-    <string name="standalone_section_warning">Nämä eivät ole Android Auto -sovelluksia: MyPlay näyttää niiden tavallisen puhelinnäytön, vain pysäköitynä, ja vaatii root- tai Shizuku-oikeudet. Käytä omalla vastuullasi.</string>
-    <string name="standalone_toggle_title">Käynnistä puhelinsovelluksia auton näytöllä</string>
-    <string name="standalone_toggle_subtitle">Valitse sovellukset alta. Näkyy vain pysäköitynä.</string>
-    <string name="standalone_keep_awake_title">Ei-unitila itsenäisille sovelluksille</string>
-    <string name="standalone_keep_awake_subtitle">Pitää puhelimen fyysisen näytön herätettynä, kun sovellus on avoinna. Vaikutuksen alaisilla Android 17 -puhelimilla virtuaalinäytöt pysähtyvät, kun puhelimen näyttö on pois päältä. Kuluttaa enemmän akkua.</string>
-    <string name="standalone_need_root">Vaatii root- tai Shizuku-oikeudet. Ota jompikumpi käyttöön Auton äänet -sivulla ja palaa sitten takaisin.</string>
     <string name="standalone_not_native">Ei Android Auto -sovellus · käyttö pysäköitynä</string>
     <string name="standalone_starting">Käynnistyy…</string>
     <string name="standalone_paused_driving">Keskeytetty ajon ajaksi.</string>
     <!-- browser: the in-car WebView browser -->
     <string name="browser_app_label">Selain</string>
-    <string name="browser_app_row_subtitle">Verkkoselain auton näytöllä, kun olet pysäköitynä</string>
-    <string name="browser_url_label">Aloitussivu</string>
-    <string name="browser_hint_parked">Selain on keskeytetty ajon ajaksi.</string>
     <string name="browser_paused_driving">Selain on keskeytetty ajon ajaksi.</string>
     <string name="browser_forward">Eteenpäin</string>
     <string name="browser_reload">Päivitä</string>
     <string name="browser_home">Aloitussivu</string>
     <string name="browser_address_hint">Hae tai kirjoita verkko-osoite</string>
     <!-- setup_page: car data entry -->
-    <string name="setup_page_car_data_title">Auton tiedot</string>
-    <string name="setup_page_car_data_subtitle">Nopeus, vaihde ja anturit suoraan autosta</string>
 
     <!-- car_data: the read-only car sensor viewer -->
     <string name="car_data_not_connected">Yhdistä autoon nähdäksesi sen tiedot.</string>
-    <string name="car_data_section_car">Auto</string>
-    <string name="car_data_section_live">Reaaliaikaiset tiedot</string>
     <string name="car_data_identity">Ajoneuvo</string>
     <string name="car_data_head_unit">Keskusyksikkö</string>
     <string name="car_data_connection">Yhteys</string>
     <string name="car_data_video">Video</string>
-    <string name="car_data_advertised">Ilmoitetut anturit</string>
     <string name="car_data_driving">Ajo</string>
     <string name="car_data_parked">pysäköity</string>
     <string name="car_data_moving">liikkeessä</string>
@@ -430,31 +285,13 @@
     <string name="car_data_gyroscope">Gyroskooppi</string>
     <string name="car_data_dtc">Vikakoodit</string>
     <string name="car_data_app_label">Auton tiedot</string>
-    <string name="car_data_show_in_car_title">Näytä auton näytöllä</string>
-    <string name="car_data_show_in_car_subtitle">Lisää autoon diagnostiikkasovellus näitä reaaliaikaisia tietoja varten</string>
-    <string name="vehicles_section_title">Autokohtaiset asetukset</string>
     <string name="vehicles_hint">Korjaa tietyn auton tiheys tai näkyvän alueen reunat ilman uutta koontiversiota. Muokkaa vehicles.json-tiedostoa tiedostonhallinnalla ja täsmäytä auto merkin/mallin/nimen mukaan.</string>
-    <string name="vehicles_rule_count">Ladattuja sääntöjä: %1$d</string>
-    <string name="vehicles_import">Tuo tiedosto…</string>
-    <string name="vehicles_template">Kirjoita malli</string>
-    <string name="setup_toggle_force_h264_title">Pakota H.264-video</string>
     <string name="setup_toggle_force_h264_subtitle">MyPlay käyttää oletusarvoisesti parasta koodekkia, jonka auto ja puhelin jakavat (H.265…). Ota käyttöön, jos auton kuva on häiriöinen.</string>
     <string name="common_ok">OK</string>
     <string name="common_try_again">Yritä uudelleen</string>
     <string name="common_something_went_wrong">Jokin meni pieleen</string>
-    <string name="setup_section_updates">Päivitykset</string>
-    <string name="setup_toggle_updates_title">Tarkista päivitykset</string>
-    <string name="setup_toggle_updates_subtitle">Varoita etusivulla, kun GitHubissa on uudempi julkaisu.</string>
-    <string name="update_available_title">Päivitys saatavilla — %1$s</string>
-    <string name="update_available_subtitle">Käytössäsi on %1$s. Napauta nähdäksesi julkaisun.</string>
-    <string name="setup_log_save">Tallenna</string>
-    <string name="setup_toggle_verbose_log_title">Yksityiskohtainen protokollaloki</string>
-    <string name="setup_toggle_verbose_log_subtitle">Tallentaa koko soittolaitteen protokollajäljen tähän lokiin, liitettäväksi vikailmoitukseen. Kirjaa paljon; jätä muuten pois päältä.</string>
-    <string name="setup_nothing_to_open">Puhelimessa ei ole sovellusta, joka voisi avata tämän</string>
     <string name="setup_wallpaper_failed">Tätä kuvaa ei voitu käyttää taustakuvana</string>
     <string name="msg_autoreply_default">Ajan juuri nyt, vastaan myöhemmin.</string>
-    <string name="audio_root_ready">Valmis, juurioikeuksien kautta. Kaikki, mitä puhelin toistaa, kulkee autoon, navigoinnin ääniohjaus mukaan lukien; puhelin pysyy hiljaisena.</string>
-    <string name="audio_shizuku_or_root_hint">Rootatulla puhelimella (KernelSU, Magisk, APatch…) napauta salliaksesi juurioikeudet. Muuten asenna Shizuku ja käynnistä se (langaton virheenkorjaus, kerran uudelleenkäynnistyksen jälkeen).</string>
     <string name="dash_menu_exit_to_car">Poistu autoon</string>
     <string name="media_action_retry">Yritä uudelleen</string>
     <string name="media_error_fix">Korjaa</string>

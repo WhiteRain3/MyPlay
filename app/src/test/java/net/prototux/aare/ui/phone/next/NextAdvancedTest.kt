@@ -33,7 +33,7 @@ class NextAdvancedTest {
             "more/advanced" -> NextAdvancedPage()
             "more/advanced/certificates" -> NextCertificatesPage()
             "more/advanced/developer" -> NextDeveloperPage()
-            else -> NextPlaceholder(r) {}
+            else -> NextPlaceholder(r)
         }
     }
 

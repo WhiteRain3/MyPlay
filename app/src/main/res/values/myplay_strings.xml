@@ -2,19 +2,8 @@
 <!-- Text that only MyPlay has. English only for now, so it is marked as not to be translated. -->
 <resources>
     <string name="myplay_about_fork" translatable="false">MyPlay is a personal fork of AARE by prototux and contributors. It is free software under the same licence, GPL-3.0-or-later. MyPlay is not AARE and is not Android Auto.</string>
-    <string name="myplay_about_link_upstream" translatable="false">AARE (original project)</string>
-    <string name="myplay_update_check_now" translatable="false">Check now</string>
-    <string name="myplay_update_check_now_hint" translatable="false">Asks GitHub once for the latest MyPlay release. Nothing about you or this phone is sent; GitHub sees your internet address, as any website does.</string>
-    <string name="myplay_update_checking" translatable="false">Checking…</string>
-    <string name="myplay_update_none" translatable="false">You have the latest release (%1$s).</string>
-    <string name="myplay_update_found" translatable="false">MyPlay %1$s is available. You have %2$s. Tap here to open the release page.</string>
-    <string name="myplay_update_failed" translatable="false">Could not check. GitHub did not answer, or there is no MyPlay release yet.</string>
     <string name="myplay_dash_card_weather_note" translatable="false">While this card is shown, an approximate position (about 10 km) is sent to Open-Meteo every 30 minutes, also when the Weather switch is off.</string>
-    <string name="myplay_toggle_log_car_input_title" translatable="false">Log the car\'s buttons and knob</string>
-    <string name="myplay_toggle_log_car_input_subtitle" translatable="false">Write each button press and knob turn the car sends into this log: the key code, down or up, and how far the knob turned. No touches and nothing about you are recorded. At most 120 lines per connection.</string>
     <string name="myplay_maps_more" translatable="false">More</string>
-    <string name="myplay_toggle_maps_follow_car_title" translatable="false">Map apps follow the car\'s lights</string>
-    <string name="myplay_toggle_maps_follow_car_subtitle" translatable="false">Map apps switch between day and night colours when the car does, even when the colours above are always dark or always light.</string>
     <string name="myplay_layout_map_behind" translatable="false">Map behind, cards on top</string>
     <string name="myplay_card_arrival" translatable="false">Arrive %1$s</string>
     <string name="myplay_home_maps_title" translatable="false">Maps on the home screen</string>
@@ -93,14 +82,11 @@
     <string name="myplay_nav_home_title" translatable="false">Navigate home</string>
     <string name="myplay_nav_home_unset" translatable="false">Set home address on the phone</string>
     <string name="myplay_nav_home_no_maps" translatable="false">No maps app to navigate with</string>
-    <string name="phone_home_address_title" translatable="false">Home address (for Navigate home)</string>
-    <string name="phone_home_address_hint" translatable="false">An address or lat,lng. Kept on this phone only, not in backups.</string>
     <!-- Drive warnings (ideas 2026-11-22): quiet road and phone warnings on the car screen -->
     <string name="myplay_warning_ice" translatable="false">%1$d °C outside: the road may be icy</string>
     <string name="myplay_warning_ice_sign" translatable="false">Ice possible</string>
     <string name="myplay_warning_phone_hot" translatable="false">The phone is hot: the screen may slow down</string>
     <string name="myplay_setting_drive_warnings" translatable="false">Ice and phone warnings</string>
-    <string name="phone_drive_warnings_hint" translatable="false">The outside temperature and, at 4 °C or less, a snowflake by the clock, if the car reports it, with a short line once per drive. Also a line when the phone gets hot.</string>
     <!-- #10: call back the last missed call (an action for a button or the home pad) -->
     <string name="phone_action_call_back" translatable="false">Call back the last missed call</string>
     <string name="myplay_call_back_title" translatable="false">Call back</string>
@@ -114,19 +100,11 @@
     <string name="myplay_places_home" translatable="false">Home</string>
     <string name="myplay_places_maps" translatable="false">Maps app</string>
     <string name="myplay_places_hint" translatable="false">Push to go there</string>
-    <string name="phone_places_title" translatable="false">Places</string>
-    <string name="phone_places_hint" translatable="false">Up to five, listed with Home when a pad direction is set to Places. Kept on this phone only, not in backups.</string>
-    <string name="phone_places_name" translatable="false">Name</string>
-    <string name="phone_places_address" translatable="false">Address or lat,lng</string>
-    <string name="phone_places_add" translatable="false">Add a place</string>
-    <string name="phone_places_delete" translatable="false">Remove this place</string>
     <!-- #11: where I parked (off by default) -->
     <string name="myplay_parked_channel" translatable="false">Where you parked</string>
     <string name="myplay_parked_title" translatable="false">Car parked at %1$s</string>
     <string name="myplay_parked_text" translatable="false">Tap to find your way back to it</string>
     <string name="myplay_parked_navigate" translatable="false">Navigate back to car</string>
-    <string name="phone_parked_title" translatable="false">Remember where I parked</string>
-    <string name="phone_parked_hint" translatable="false">When a drive ends, keeps the spot on this phone only and offers the way back in a notification.</string>
     <!-- LP-1: the limit sign's pulse on its own switch -->
     <string name="myplay_setting_limit_pulse" translatable="false">Limit sign pulse</string>
     <string name="phone_limit_pulse_hint" translatable="false">The speed limit sign grows a little once when the limit changes. No sound.</string>

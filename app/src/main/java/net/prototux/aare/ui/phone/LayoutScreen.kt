@@ -103,42 +103,6 @@ fun List<SpecCard>.withSpecCard(card: SpecCard, shown: Boolean): List<SpecCard> 
 }
 
 /**
- * The car screen's layout (plan E6, with phase M): which kind of layout, and for "map behind,
- * cards on top" the presets A to F as pictures, then each of the eight options. Choosing a
- * preset sets all eight; changing one keeps the rest. Reads and writes only through the car
- * side's MyPlayLayoutSettings, which keeps the layout's rules.
- */
-@Composable
-fun LayoutScreen() {
-    val ctx = LocalContext.current
-    val settings = remember { Settings(ctx) }
-    var layoutId by remember { mutableStateOf(CarLayout.byId(settings.carLayoutId).id) }
-    // Re-read after every change: the rules may have changed other options too.
-    val version = rememberSettingsChanges()
-    val spec = remember(version) { settings.myplayLayoutSpec }
-    val preset = remember(version) { settings.myplayLayoutPreset }
-    fun change(f: (CarLayoutSpec) -> CarLayoutSpec) = settings.changeLayout(f)
-
-    Column {
-        PartPicture()
-        OrbitPreviewSwitch()
-        SectionHeading(stringResource(R.string.phone_layout_kind))
-        PhoneChoices(
-            stringResource(R.string.phone_layout_kind_hint),
-            listOf(
-                CarLayout.MAP_BEHIND.id to stringResource(R.string.myplay_layout_map_behind),
-                CarLayout.TASKBAR.id to stringResource(R.string.setup_layout_taskbar),
-                CarLayout.DOCK.id to stringResource(R.string.setup_layout_dock),
-                CarLayout.CLASSIC.id to stringResource(R.string.setup_layout_classic),
-            ),
-            layoutId,
-        ) { layoutId = it; settings.carLayoutId = it }
-        HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_layout_at_once))
-        if (layoutId == CarLayout.MAP_BEHIND.id) MapBehindOptions(spec, preset, { settings.chooseLayoutPreset(it) }, ::change)
-    }
-}
-
-/**
  * The "map behind, cards on top" layout: the presets A to F as pictures ([preset]: the chosen
  * one, "" for an own mix), then each option of [spec]. [onPreset] chooses a preset; [change]
  * changes options (the rules are kept by the settings).
@@ -324,80 +288,6 @@ private val SpecCard.title: Int
         SpecCard.MUSIC -> R.string.phone_layout_card_music
         SpecCard.CLOCK_STATUS -> R.string.phone_layout_card_clock
     }
-
-
-/** MyPlay's own car screen (ORBIT or DECK), on by default since N10 (myplay_engine_preview, backed up). */
-@Composable
-private fun OrbitPreviewSwitch() {
-    val ctx = LocalContext.current
-    val settings = remember { Settings(ctx) }
-    var on by remember { mutableStateOf(settings.myplayEnginePreview) }
-    var language by remember { mutableStateOf(settings.myplayEngineLanguage) }
-    var panelTimeout by remember { mutableIntStateOf(settings.myplayPanelTimeout) }
-    var shade by remember { mutableStateOf(settings.myplayOrbitShade) }
-    var mapsIdle by remember { mutableIntStateOf(settings.myplayMapsIdleHome) }
-    var warnings by remember { mutableStateOf(settings.myplayDriveWarnings) }
-    var pulse by remember { mutableStateOf(settings.myplayLimitPulse) }
-    Spacer(Modifier.height(12.dp))
-    RowGroup(rows = listOf {
-        SwitchRow(Icons.Rounded.Layers, stringResource(R.string.phone_orbit_preview_title), on, TileTone.VIOLET,
-            stringResource(R.string.phone_orbit_preview_hint)) { on = it; settings.myplayEnginePreview = it }
-    })
-    // N15: which of MyPlay's own designs; it takes effect at once, without reconnecting.
-    if (on) {
-        Spacer(Modifier.height(12.dp))
-        PhoneChoices(
-            stringResource(R.string.phone_engine_language),
-            MyPlaySkins.ALL.map { it.id to engineLanguageName(it.id) },
-            language,
-        ) { id -> language = MyPlaySkins.byId(id).id; settings.myplayEngineLanguage = language }
-        if (language == "deck") HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_engine_deck_preview))
-        // The soft plates behind ORBIT's turn, song and clock, or none.
-        Spacer(Modifier.height(12.dp))
-        PhoneChoices(
-            stringResource(R.string.myplay_setting_orbit_shade),
-            listOf(
-                ORBIT_SHADE_SOFT to stringResource(R.string.myplay_setting_orbit_shade_soft),
-                ORBIT_SHADE_NONE to stringResource(R.string.myplay_setting_orbit_shade_none),
-            ),
-            shade,
-        ) { id -> settings.myplayOrbitShade = id; shade = settings.myplayOrbitShade }
-        // O2: how long the music panel and ORBIT's dial stay open with nothing pressed.
-        Spacer(Modifier.height(12.dp))
-        PhoneChoices(
-            stringResource(R.string.myplay_setting_panel_timeout),
-            PanelTimeout.CHOICES.map { s ->
-                s.toString() to if (s == PanelTimeout.NEVER) stringResource(R.string.myplay_setting_panel_timeout_never)
-                else stringResource(R.string.myplay_setting_panel_timeout_after, s)
-            },
-            panelTimeout.toString(),
-        ) { id -> id.toIntOrNull()?.let { panelTimeout = PanelTimeout.valid(it); settings.myplayPanelTimeout = panelTimeout } }
-        HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_panel_timeout_hint))
-        // O2b: a full-screen maps app goes home after this long untouched (off by default).
-        Spacer(Modifier.height(12.dp))
-        PhoneChoices(
-            stringResource(R.string.myplay_setting_maps_idle_home),
-            MapsIdleHome.CHOICES.map { m ->
-                m.toString() to if (m == MapsIdleHome.OFF) stringResource(R.string.myplay_off)
-                else stringResource(R.string.myplay_setting_maps_idle_home_after, m)
-            },
-            mapsIdle.toString(),
-        ) { id -> id.toIntOrNull()?.let { mapsIdle = MapsIdleHome.valid(it); settings.myplayMapsIdleHome = mapsIdle } }
-        HintLine(Icons.Rounded.Layers, stringResource(R.string.phone_maps_idle_home_hint))
-        // Drive warnings: the ice sign and line (and the phone's heat), on unless turned off.
-        Spacer(Modifier.height(12.dp))
-        RowGroup(rows = listOf {
-            SwitchRow(Icons.Rounded.Layers, stringResource(R.string.myplay_setting_drive_warnings), warnings, TileTone.VIOLET,
-                stringResource(R.string.phone_drive_warnings_hint)) { warnings = it; settings.myplayDriveWarnings = it }
-        })
-        // LP-1: the limit sign's pulse, on its own switch.
-        Spacer(Modifier.height(12.dp))
-        RowGroup(rows = listOf {
-            SwitchRow(Icons.Rounded.Layers, stringResource(R.string.myplay_setting_limit_pulse), pulse, TileTone.VIOLET,
-                stringResource(R.string.phone_limit_pulse_hint)) { pulse = it; settings.myplayLimitPulse = it }
-        })
-    }
-}
 
 /** A design's name as the phone shows it: its stored id in capitals (ORBIT, DECK). */
 fun engineLanguageName(id: String): String = id.uppercase(java.util.Locale.ROOT)

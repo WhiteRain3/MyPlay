@@ -24,56 +24,8 @@
     <string name="common_loading">Laden</string>
 
     <!-- setup: MainActivity home/settings screens -->
-    <string name="setup_page_car_screen_title">Autoscherm</string>
-    <string name="setup_page_car_screen_subtitle">Kleuren, balkpositie, telefoonscherm</string>
-    <string name="setup_page_apps_title">Apps</string>
-    <string name="setup_page_apps_subtitle">Welke apps in de auto worden getoond</string>
-    <string name="setup_page_connection_title">Verbinding</string>
-    <string name="setup_page_connection_subtitle">Draadloos, videokwaliteit, uw auto\'s</string>
-    <string name="setup_page_advanced_title">Geavanceerd</string>
-    <string name="setup_page_advanced_subtitle">Head-unit-server, certificaten, logboek</string>
-    <string name="setup_tagline">Opensource auto-projectie</string>
-    <string name="setup_status_certificate">certificaat: %1$s</string>
-    <string name="setup_status_disconnected_hint">Sluit de telefoon aan op de Android Auto USB-poort van de auto, of maak draadloos verbinding met een gekoppelde auto.</string>
-    <string name="setup_status_last_error">Laatste fout: %1$s</string>
-    <string name="setup_trust_new_cert">Dit nieuwe certificaat van de head unit vertrouwen</string>
-    <string name="setup_trust_head_unit">Deze head unit vertrouwen</string>
-    <string name="setup_trust_fingerprint_suffix">%1$s (SHA-256 %2$s...)</string>
-    <string name="setup_preview_car_screen">Voorbeeld autoscherm</string>
-    <string name="setup_disconnect">Verbinding verbreken</string>
-    <string name="setup_finish_title">Installatie afronden</string>
-    <string name="setup_check_permissions_title">Machtigingen</string>
-    <string name="setup_check_permissions_subtitle">Microfoon, locatie, Bluetooth, Wi-Fi in de buurt, meldingen, oproepen, contacten en agenda</string>
-    <string name="setup_check_notification_access_title">Meldingstoegang</string>
-    <string name="setup_check_notification_access_subtitle">Berichten, routebeschrijvingen van Google Maps en Waze, nu afspelend</string>
-    <string name="setup_check_audio_subtitle">Laat het geluid van de telefoon naar de auto gaan</string>
-    <string name="setup_action_set_up">Instellen</string>
-    <string name="setup_section_connecting">Verbinden</string>
-    <string name="setup_toggle_wireless_title">Draadloos</string>
-    <string name="setup_toggle_wireless_subtitle">Maakt verbinding met gekoppelde auto\'s via Wi-Fi zodra ze binnen Bluetooth-bereik komen</string>
-    <string name="setup_toggle_resume_music_title">Muziek hervatten</string>
-    <string name="setup_toggle_resume_music_subtitle">Start de laatst gebruikte muziekapp wanneer de auto verbinding maakt</string>
-    <string name="setup_bt_address_label">Bluetooth-adres van de telefoon (optioneel)</string>
-    <string name="setup_bt_address_hint">Sommige head units tonen een zwart scherm totdat ze weten welke telefoon verbonden is. U vindt het bij Instellingen &gt; Over de telefoon &gt; Status. Laat dit leeg als uw auto al werkt.</string>
-    <string name="setup_section_location">Locatie</string>
-    <string name="setup_toggle_car_gps_title">GPS van de auto gebruiken</string>
-    <string name="setup_toggle_car_gps_subtitle">Tijdens de verbinding zien apps op de telefoon de positie van de auto in plaats van die van de telefoon zelf, zodat navigatie-apps de twee niet mengen</string>
-    <string name="setup_check_mock_location_title">MyPlay toestaan de locatie in te stellen</string>
-    <string name="setup_check_mock_location_subtitle">Ontwikkelaarsopties &gt; App voor neplocatie selecteren &gt; MyPlay</string>
-    <string name="setup_section_video">Video</string>
-    <string name="setup_toggle_60fps_title">Voorkeur voor 60 fps</string>
     <string name="setup_toggle_60fps_subtitle">Vloeiender als de auto het ondersteunt</string>
-    <string name="setup_choice_max_resolution">Maximale resolutie</string>
     <string name="setup_hint_lower_resolution">Lager verbruikt minder batterij en bandbreedte.</string>
-    <string name="setup_section_your_cars">Uw auto\'s</string>
-    <string name="setup_cars_empty">Auto\'s verschijnen hier na de eerste verbinding.</string>
-    <string name="setup_car_last_connected">Laatst verbonden %1$s</string>
-    <string name="setup_action_forget">Vergeten</string>
-    <string name="setup_section_trusted_head_units">Vertrouwde head units</string>
-    <string name="setup_trusted_head_units_hint">Een gekoppelde draadloze auto wordt vertrouwd bij de eerste verbinding; een nieuwe USB- of ontwikkelaars-head unit alleen nadat u op Vertrouwen heeft getikt (in de melding of op het startscherm). Vertrouw alleen een head unit waarmee u nu verbonden bent. Als een head unit later een ander certificaat toont, wordt u opnieuw gevraagd: vertrouw het alleen als de software is bijgewerkt.</string>
-    <string name="setup_trusted_head_units_empty">Nog geen.</string>
-    <string name="setup_sha256_fingerprint">SHA-256 %1$s...</string>
-    <string name="setup_section_look">Uiterlijk</string>
     <string name="setup_choice_colors">Kleuren</string>
     <string name="setup_choice_colors_auto">Dag/nacht van de auto</string>
     <string name="setup_choice_dark">Donker</string>
@@ -85,7 +37,6 @@
     <string name="setup_choice_bottom">Onder</string>
     <string name="setup_toggle_dark_bar_title">Donkere balk</string>
     <string name="setup_toggle_dark_bar_subtitle">Houd de balk donker, ook bij dagkleuren</string>
-    <string name="setup_section_dashboard">Dashboard</string>
     <string name="dash_cards_title">Kaarten</string>
     <string name="dash_cards_hint">De eerste kaart krijgt de meeste ruimte; de andere vullen de rest van het scherm. Een kaart zonder iets te tonen laat zijn plek aan de volgende.</string>
     <string name="dash_card_map">Plattegrond</string>
@@ -93,34 +44,11 @@
     <string name="dash_card_calendar">Volgende agenda-afspraak</string>
     <string name="dash_card_notification">Laatste melding</string>
     <string name="dash_card_weather">Weer</string>
-    <string name="setup_choice_wallpaper">Achtergrond</string>
-    <string name="setup_wallpaper_none">Geen</string>
-    <string name="setup_wallpaper_photo">Foto</string>
     <string name="setup_toggle_weather_title">Weer</string>
     <string name="setup_toggle_weather_subtitle">Naast de klok, van Open-Meteo (het haalt een geschatte positie op, ongeveer 10 km)</string>
-    <string name="setup_section_driving">Rijden</string>
-    <string name="setup_toggle_passenger_title">Passagiersmodus</string>
-    <string name="setup_toggle_passenger_subtitle">Negeert de rijstatus van de auto: typen, lange lijsten en het telefoonscherm blijven beschikbaar tijdens het rijden, voor een passagier. De bestuurder mag het scherm niet gebruiken tijdens het rijden.</string>
-    <string name="setup_section_app_list">In de app-lijst van de auto</string>
-    <string name="setup_app_list_hint">Schakel de apps uit die u niet in de auto wilt.</string>
-    <string name="setup_app_list_loading">Apps zoeken…</string>
-    <string name="setup_app_group_nav">Navigatie- en auto-apps</string>
-    <string name="setup_app_list_no_nav">Nog geen: installeer CoMaps, Organic Maps of een andere Android Auto-app.</string>
-    <string name="setup_app_kind_navigation">Navigatie</string>
-    <string name="setup_app_kind_generic">Auto-app</string>
-    <string name="setup_app_group_media">Media</string>
-    <string name="setup_app_kind_media">Muziek, podcasts, radio</string>
-    <string name="setup_app_group_messaging">Berichten</string>
-    <string name="setup_app_kind_messaging">Berichten uit hun meldingen</string>
-    <string name="setup_app_group_aare">MyPlay</string>
-    <string name="setup_section_unsupported_apps">Android Auto-apps die MyPlay niet kan tonen</string>
-    <string name="setup_hint_allowlist">Apps die zijn gebouwd met recente versies van Google\'s auto-bibliotheek accepteren alleen hosts op hun toestaanlijst; zie de README.</string>
     <string name="setup_app_entry_phone">Telefoon</string>
     <string name="setup_app_entry_settings">Instellingen</string>
     <string name="setup_app_entry_notifications">Meldingen</string>
-    <string name="setup_section_app_order">Volgorde in de auto</string>
-    <string name="setup_section_connection_log">Verbindingslogboek</string>
-    <string name="setup_about_text">MyPlay %1$s · GPL-3.0-or-later · Niet aangesloten bij Google. Android Auto is een handelsmerk van Google LLC.</string>
     <string name="setup_choice_style">Stijl</string>
     <string name="setup_choice_theme">Thema</string>
     <string name="setup_choice_layout">Indeling</string>
@@ -146,91 +74,34 @@
     <string name="setup_switch_audio_next_connection">Telefoonaudio in de auto (volgende verbinding)</string>
 
     <!-- cert: certificate management -->
-    <string name="cert_section_title">Telefooncertificaten</string>
-    <string name="cert_hint">Head units controleren het certificaat van de telefoon. Opensource head units accepteren het gegenereerde certificaat; auto\'s met Google\'s head-unit-software accepteren alleen een certificaat dat door Google is uitgegeven, dat MyPlay niet kan meeleveren. U kunt een certificaat importeren dat u mag gebruiken (PEM-certificaat + PKCS#8-sleutel, of PKCS#12). U kunt ook het certificaat van de nieuwste Android Auto-app downloaden (github.com/iscle/android-auto-certificates).</string>
-    <string name="cert_entry_subtitle">%1$s · tot %2$s</string>
-    <string name="cert_action_remove">Verwijderen</string>
-    <string name="cert_action_import">Certificaat importeren…</string>
-    <string name="cert_action_download">Certificaat downloaden</string>
-    <string name="cert_action_downloading">Downloaden…</string>
     <string name="cert_download_unavailable">De certificaatrepository bestaat niet meer (verwijderd of offline gehaald): %1$s. Haal het certificaat in plaats daarvan uit de Android Auto-app (zie de README).</string>
     <string name="cert_download_network">Kan het certificaat niet downloaden: %1$s. Controleer de verbinding en probeer het opnieuw.</string>
     <string name="cert_download_invalid">Het gedownloade certificaat is geweigerd: %1$s</string>
-    <string name="cert_p12_dialog_title">PKCS#12-wachtwoord</string>
-    <string name="cert_action_import_confirm">Importeren</string>
     <string name="cert_imported_fallback">geïmporteerd</string>
 
     <!-- huserver: developer head unit server -->
     <string name="huserver_label">Head-unit-server</string>
     <string name="huserver_toggle_subtitle">Zoals de ontwikkelaarsmodus van Android Auto, voor de desktop head unit, DHU, openauto, Headunit Revived. Alleen bereikbaar via adb: adb forward tcp:5277 localabstract:aare_hu</string>
-    <string name="huserver_toggle_network_title">Accepteren vanaf het netwerk</string>
     <string name="huserver_toggle_network_subtitle">Ook luisteren op TCP-poort 5277 op elk netwerk, zonder wachtwoord. Iedereen op dezelfde Wi-Fi kan verbinding maken, het autoscherm zien en de microfoon gebruiken.</string>
-    <string name="huserver_toggle_lanonce_title">Netwerkmodus uitschakelen na een sessie</string>
     <string name="huserver_toggle_lanonce_subtitle">Veiliger: het netwerk moet voor elke sessie opnieuw worden toegestaan. Schakel dit uit voor head units die zelf opnieuw verbinding maken, zoals openauto of Headunit Revived.</string>
-    <string name="huserver_toggle_mirror_title">Telefoonscherm op de server</string>
     <string name="huserver_toggle_mirror_subtitle">Biedt "Telefoonscherm" ook aan iedereen die hier verbinding maakt. Risicovol: deze persoon ziet het scherm van de telefoon en kan erop tikken, laat het dus uit, tenzij u de head unit vertrouwt.</string>
-    <string name="huserver_toggle_localhost_title">Localhost toestaan (webaa / paath)</string>
     <string name="huserver_toggle_localhost_subtitle">Accepteer een verbinding van een Android-Auto-in-de-browser-app op deze telefoon, voor auto\'s zonder Android Auto (bijv. Tesla). Elke app op de telefoon zou kunnen verbinden, laat dit dus uit tenzij u er een gebruikt.</string>
 
     <!-- msg: messaging settings -->
-    <string name="msg_settings_title">Berichten</string>
-    <string name="msg_page_subtitle">Banners en voorlezen</string>
-    <string name="msg_check_notification_access_subtitle">Nodig om berichten in de auto te zien</string>
-    <string name="msg_toggle_banners_title">Berichtmeldingen tonen</string>
-    <string name="msg_toggle_banners_subtitle">Een banner op het autoscherm voor elk nieuw bericht</string>
-    <string name="msg_toggle_group_title">Groepsberichten</string>
-    <string name="msg_toggle_group_subtitle">Toon ook berichten uit groepsgesprekken</string>
     <string name="msg_toggle_read_aloud_title">Berichten voorlezen</string>
-    <string name="msg_toggle_read_aloud_subtitle">Lees elk nieuw bericht voor zodra het binnenkomt</string>
-    <string name="msg_hint_apps">Berichten-apps (WhatsApp, Signal, sms…) hebben ook hun eigen pagina in de app-lijst van de auto.</string>
-    <string name="msg_section_while_driving">Tijdens het rijden</string>
-    <string name="msg_toggle_dnd_title">Niet storen</string>
-    <string name="msg_toggle_dnd_subtitle">Zet de telefoon op stil tijdens de verbinding; oproepen en prioritaire gesprekken komen nog steeds door</string>
-    <string name="msg_check_dnd_access_title">MyPlay toestaan Niet storen in te schakelen</string>
-    <string name="msg_check_dnd_access_subtitle">Android vraagt dit eenmaal</string>
-    <string name="msg_toggle_autoreply_title">Automatisch antwoord</string>
-    <string name="msg_toggle_autoreply_subtitle">Beantwoordt mensen die schrijven, eenmaal per gesprek per rit (geen groepen)</string>
-    <string name="msg_autoreply_field_label">Antwoord</string>
 
     <!-- audio: car audio settings -->
     <string name="audio_settings_title">Autoaudio</string>
-    <string name="audio_page_subtitle">Hoe het geluid van de telefoon naar de auto gaat</string>
-    <string name="audio_toggle_enable_title">Telefoonaudio in de auto</string>
-    <string name="audio_toggle_enable_subtitle">Muziek, podcasts, de assistent en, afhankelijk van de methode, navigatiestem</string>
-    <string name="audio_using_method">Gebruikt: %1$s</string>
-    <string name="audio_no_method">Nog geen methode ingesteld: kies er hieronder een.</string>
-    <string name="audio_section_methods">Methoden, beste eerst</string>
-    <string name="audio_policy_ready">Gereed. Muziek en navigatiestem gaan apart naar de auto, de telefoon blijft stil.</string>
     <string name="audio_method_policy">Systeemaudiorouting (zoals Android Auto)</string>
     <string name="audio_method_shizuku_policy">Shizuku, muziek en navigatie apart (zoals Android Auto)</string>
     <string name="audio_method_shizuku">Shizuku of root</string>
     <string name="audio_method_playback_capture">Schermopname-machtiging</string>
-    <string name="audio_policy_not_ready">Zoals Android Auto: muziek en navigatiestem apart, telefoonluidspreker uit. Vereist een geroote telefoon: installeer MyPlay als systeemapp met de Magisk-module (zie de README).</string>
-    <string name="audio_shizuku_ready">Gereed. Alles wat de telefoon afspeelt gaat naar de auto, inclusief navigatiestem; de telefoon blijft stil.</string>
-    <string name="audio_shizuku_needs_android12">Vereist Android 12 of nieuwer.</string>
-    <string name="audio_shizuku_tap_allow">Shizuku draait: tik om MyPlay toe te staan.</string>
-    <string name="audio_shizuku_install_hint">Geen root nodig. Installeer Shizuku, start het (draadloos debuggen, eenmaal per herstart), en kom dan hier terug.</string>
-    <string name="audio_playback_ready">Gereed. Alleen media: geen navigatiestem, sommige apps doen niet mee, en de telefoon blijft ook afspelen.</string>
-    <string name="audio_playback_not_ready">Werkt overal, met beperkingen: alleen media, geen navigatiestem. Android vraagt om het scherm op te nemen: kies Volledig scherm (ook gebruikt door het telefoonscherm).</string>
     <string name="audio_notice_setup_hint">Open MyPlay op de telefoon en stel Autoaudio in om de telefoon in de auto te horen</string>
 
     <!-- phone: phone screen feature -->
     <string name="phone_section_title">Telefoonscherm</string>
-    <string name="phone_toggle_enable_title">Telefoonscherm in de auto</string>
-    <string name="phone_toggle_enable_subtitle">Het eigen scherm van de telefoon, voor apps die MyPlay niet kan hosten (Google Maps, Waze). Gepauzeerd zolang de telefoon vergrendeld is, en tijdens het rijden, behalve wanneer een navigatie-app de weg wijst. Niet aangeboden op de head-unit-server, behalve als daar ingeschakeld</string>
-    <string name="phone_check_touch_title">Aanraken op het telefoonscherm</string>
-    <string name="phone_check_touch_subtitle">Schakel MyPlay in bij Toegankelijkheid. Sideloaded apps hebben mogelijk eerst "Beperkte instellingen toestaan" nodig in de app-info van MyPlay</string>
-    <string name="phone_hint_touch_capture">De afbeelding gebruikt de schermopname-machtiging (pagina Autoaudio, kies Volledig scherm).</string>
-    <string name="phone_app_row_subtitle">Het eigen scherm van de telefoon, voor apps die MyPlay niet kan hosten</string>
 
     <!-- assistant: voice assistant settings and bar -->
-    <string name="assistant_settings_title">Spraakassistent</string>
-    <string name="assistant_page_subtitle">Wat de spraakknop opent</string>
-    <string name="assistant_same_as_phone">Hetzelfde als de telefoon</string>
-    <string name="assistant_no_default">Geen standaardassistent ingesteld op de telefoon</string>
-    <string name="assistant_has_car_app_subtitle">Op het autoscherm, met de microfoon van de auto</string>
-    <string name="assistant_opens_on_phone">Opent op de telefoon</string>
-    <string name="assistant_hint">De spraakknop op het stuur en de microfoon van de balk openen deze assistent. Assistenten met een auto-app, zoals Lapin, werken het best.</string>
 
     <!-- notif: notifications and in-car notices -->
     <string name="notif_channel_connection">Autoverbinding</string>
@@ -251,7 +122,6 @@
     <string name="notif_new_head_unit_title">Nieuwe head unit</string>
     <string name="notif_trust_warning">Vertrouw alleen een head unit waarmee u nu verbonden bent</string>
     <string name="notif_untrusted_message">SHA-256 %1$s... %2$s, maak dan opnieuw verbinding.</string>
-    <string name="notif_trust_reconnect_suffix">%1$s, maak dan opnieuw verbinding.</string>
     <string name="notif_cert_changed_message">certificaat van head unit gewijzigd: tik op Vertrouwen in de melding of in MyPlay, alleen als de software is bijgewerkt, maak dan opnieuw verbinding</string>
     <string name="notif_cert_untrusted_message">certificaat van head unit nog niet vertrouwd: tik op Vertrouwen in de melding of in MyPlay, maak dan opnieuw verbinding</string>
     <string name="notif_car_nearby_title">Auto in de buurt</string>
@@ -359,39 +229,24 @@
     <string name="search_parked_only">Zoeken is beschikbaar tijdens parkeren</string>
 
     <!-- standalone: launching ordinary phone apps on the car screen (root/Shizuku, parked only) -->
-    <string name="standalone_section_title">Apps op het autoscherm (geavanceerd)</string>
-    <string name="standalone_section_warning">Dit zijn geen Android Auto-apps: MyPlay toont hun normale telefoonscherm, alleen tijdens parkeren, en vereist root of Shizuku. Gebruik op eigen risico.</string>
-    <string name="standalone_toggle_title">Telefoonapps starten op het autoscherm</string>
-    <string name="standalone_toggle_subtitle">Kies de apps hieronder. Alleen getoond tijdens parkeren.</string>
-    <string name="standalone_keep_awake_title">Wakker blijven voor zelfstandige apps</string>
-    <string name="standalone_keep_awake_subtitle">Houdt het fysieke telefoonscherm wakker terwijl een app open is. Op getroffen Android 17-telefoons stoppen virtuele schermen wanneer het telefoonscherm uit is. Gebruikt meer batterij.</string>
-    <string name="standalone_need_root">Vereist root of Shizuku. Stel er een in op de pagina Autoaudio en kom dan terug.</string>
     <string name="standalone_not_native">Geen Android Auto-app · gebruik tijdens parkeren</string>
     <string name="standalone_starting">Starten…</string>
     <string name="standalone_paused_driving">Gepauzeerd tijdens het rijden.</string>
     <!-- browser: the in-car WebView browser -->
     <string name="browser_app_label">Browser</string>
-    <string name="browser_app_row_subtitle">Een webbrowser op het autoscherm, voor wanneer je geparkeerd staat</string>
-    <string name="browser_url_label">Startpagina</string>
-    <string name="browser_hint_parked">De browser is gepauzeerd tijdens het rijden.</string>
     <string name="browser_paused_driving">De browser is gepauzeerd tijdens het rijden.</string>
     <string name="browser_forward">Vooruit</string>
     <string name="browser_reload">Vernieuwen</string>
     <string name="browser_home">Startpagina</string>
     <string name="browser_address_hint">Zoeken of een webadres invoeren</string>
     <!-- setup_page: car data entry -->
-    <string name="setup_page_car_data_title">Auto-gegevens</string>
-    <string name="setup_page_car_data_subtitle">Snelheid, versnelling en sensoren live vanuit de auto</string>
 
     <!-- car_data: the read-only car sensor viewer -->
     <string name="car_data_not_connected">Maak verbinding met een auto om de gegevens te zien.</string>
-    <string name="car_data_section_car">Auto</string>
-    <string name="car_data_section_live">Livegegevens</string>
     <string name="car_data_identity">Voertuig</string>
     <string name="car_data_head_unit">Hoofdeenheid</string>
     <string name="car_data_connection">Verbinding</string>
     <string name="car_data_video">Video</string>
-    <string name="car_data_advertised">Aangekondigde sensoren</string>
     <string name="car_data_driving">Rijden</string>
     <string name="car_data_parked">geparkeerd</string>
     <string name="car_data_moving">in beweging</string>
@@ -430,32 +285,14 @@
     <string name="car_data_gyroscope">Gyroscoop</string>
     <string name="car_data_dtc">Foutcodes</string>
     <string name="car_data_app_label">Autogegevens</string>
-    <string name="car_data_show_in_car_title">Weergeven op het autoscherm</string>
-    <string name="car_data_show_in_car_subtitle">Voeg een diagnose-app toe in de auto voor deze livegegevens</string>
-    <string name="vehicles_section_title">Uitzonderingen per voertuig</string>
     <string name="vehicles_hint">Pas de dichtheid of de marges van het zichtbare gebied aan voor een specifieke auto, zonder nieuwe build. Bewerk vehicles.json met een bestandsbeheerder en match de auto op merk/model/naam.</string>
-    <string name="vehicles_rule_count">Regels geladen: %1$d</string>
-    <string name="vehicles_import">Bestand importeren…</string>
-    <string name="vehicles_template">Sjabloon schrijven</string>
-    <string name="setup_toggle_force_h264_title">H.264-video forceren</string>
     <string name="setup_toggle_force_h264_subtitle">Standaard gebruikt MyPlay de beste codec die auto en telefoon gemeen hebben (H.265…). Schakel dit in als het beeld in de auto hapert.</string>
     <!-- newly translated strings -->
     <string name="common_ok">OK</string>
     <string name="common_try_again">Opnieuw proberen</string>
     <string name="common_something_went_wrong">Er is iets misgegaan</string>
-    <string name="setup_section_updates">Updates</string>
-    <string name="setup_toggle_updates_title">Controleren op updates</string>
-    <string name="setup_toggle_updates_subtitle">Waarschuwt op het startscherm wanneer er een nieuwere versie op GitHub staat.</string>
-    <string name="update_available_title">Update beschikbaar — %1$s</string>
-    <string name="update_available_subtitle">U hebt %1$s. Tik om de release te bekijken.</string>
-    <string name="setup_log_save">Opslaan</string>
-    <string name="setup_toggle_verbose_log_title">Uitgebreid protocollogboek</string>
-    <string name="setup_toggle_verbose_log_subtitle">Legt het volledige head-unit-protocolverloop vast in dit logboek, om bij een bugrapport te voegen. Logt veel; laat dit anders uit.</string>
-    <string name="setup_nothing_to_open">Deze telefoon heeft geen app die dit kan openen</string>
     <string name="setup_wallpaper_failed">Kon deze foto niet als achtergrond gebruiken</string>
     <string name="msg_autoreply_default">Ik rijd nu, ik antwoord later.</string>
-    <string name="audio_root_ready">Gereed, via root. Alles wat de telefoon afspeelt gaat naar de auto, inclusief de navigatiestem; de telefoon blijft stil.</string>
-    <string name="audio_shizuku_or_root_hint">Op een geroote telefoon (KernelSU, Magisk, APatch…) tikt u om root toe te staan. Installeer anders Shizuku en start het (draadloos debuggen, eenmaal per herstart).</string>
     <string name="dash_menu_exit_to_car">Terug naar de auto</string>
     <string name="media_action_retry">Opnieuw proberen</string>
     <string name="media_error_fix">Oplossen</string>

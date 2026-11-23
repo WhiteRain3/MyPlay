@@ -24,56 +24,8 @@
     <string name="common_loading">Загрузка</string>
 
     <!-- setup: MainActivity home/settings screens -->
-    <string name="setup_page_car_screen_title">Экран автомобиля</string>
-    <string name="setup_page_car_screen_subtitle">Цвета, положение панели, экран телефона</string>
-    <string name="setup_page_apps_title">Приложения</string>
-    <string name="setup_page_apps_subtitle">Какие приложения отображаются в автомобиле</string>
-    <string name="setup_page_connection_title">Соединение</string>
-    <string name="setup_page_connection_subtitle">Беспроводное соединение, качество видео, ваши автомобили</string>
-    <string name="setup_page_advanced_title">Дополнительно</string>
-    <string name="setup_page_advanced_subtitle">Сервер головного устройства, сертификаты, журнал</string>
-    <string name="setup_tagline">Проекция для автомобиля с открытым кодом</string>
-    <string name="setup_status_certificate">сертификат: %1$s</string>
-    <string name="setup_status_disconnected_hint">Подключите телефон к USB-порту Android Auto в автомобиле или соединитесь по беспроводной сети с парным автомобилем.</string>
-    <string name="setup_status_last_error">Последняя ошибка: %1$s</string>
-    <string name="setup_trust_new_cert">Доверять новому сертификату этого головного устройства</string>
-    <string name="setup_trust_head_unit">Доверять этому головному устройству</string>
-    <string name="setup_trust_fingerprint_suffix">%1$s (SHA-256 %2$s...)</string>
-    <string name="setup_preview_car_screen">Предпросмотр экрана автомобиля</string>
-    <string name="setup_disconnect">Отключить</string>
-    <string name="setup_finish_title">Завершить настройку</string>
-    <string name="setup_check_permissions_title">Разрешения</string>
-    <string name="setup_check_permissions_subtitle">Микрофон, местоположение, Bluetooth, сети Wi-Fi рядом, уведомления, звонки, контакты и календарь</string>
-    <string name="setup_check_notification_access_title">Доступ к уведомлениям</string>
-    <string name="setup_check_notification_access_subtitle">Сообщения, маршруты из Google Maps и Waze, то, что сейчас играет</string>
-    <string name="setup_check_audio_subtitle">Разрешить звуку телефона достигать автомобиля</string>
-    <string name="setup_action_set_up">Настроить</string>
-    <string name="setup_section_connecting">Подключение</string>
-    <string name="setup_toggle_wireless_title">По беспроводной сети</string>
-    <string name="setup_toggle_wireless_subtitle">Соединяться с парными автомобилями по Wi-Fi, когда они оказываются в зоне действия Bluetooth</string>
-    <string name="setup_toggle_resume_music_title">Возобновлять музыку</string>
-    <string name="setup_toggle_resume_music_subtitle">Запускать последнее воспроизводимое музыкальное приложение при соединении с автомобилем</string>
-    <string name="setup_bt_address_label">Bluetooth-адрес телефона (необязательно)</string>
-    <string name="setup_bt_address_hint">Некоторые головные устройства показывают чёрный экран, пока не узнают, какой телефон подключён. Найдите его в Настройки &gt; О телефоне &gt; Статус. Оставьте пустым, если ваш автомобиль уже работает.</string>
-    <string name="setup_section_location">Местоположение</string>
-    <string name="setup_toggle_car_gps_title">Использовать GPS автомобиля</string>
-    <string name="setup_toggle_car_gps_subtitle">При соединении приложения на телефоне видят позицию автомобиля вместо позиции телефона, поэтому навигационные приложения не путают их</string>
-    <string name="setup_check_mock_location_title">Разрешить MyPlay устанавливать местоположение</string>
-    <string name="setup_check_mock_location_subtitle">Параметры разработчика &gt; Выбрать приложение фиктивного местоположения &gt; MyPlay</string>
-    <string name="setup_section_video">Видео</string>
-    <string name="setup_toggle_60fps_title">Предпочитать 60 кадров/с</string>
     <string name="setup_toggle_60fps_subtitle">Плавнее, если автомобиль это поддерживает</string>
-    <string name="setup_choice_max_resolution">Максимальное разрешение</string>
     <string name="setup_hint_lower_resolution">Более низкое расходует меньше заряда батареи и трафика.</string>
-    <string name="setup_section_your_cars">Ваши автомобили</string>
-    <string name="setup_cars_empty">Автомобили появятся здесь после первого соединения.</string>
-    <string name="setup_car_last_connected">Последнее соединение %1$s</string>
-    <string name="setup_action_forget">Забыть</string>
-    <string name="setup_section_trusted_head_units">Доверенные головные устройства</string>
-    <string name="setup_trusted_head_units_hint">Парный беспроводной автомобиль становится доверенным после первого соединения; новое USB-устройство или устройство разработчика — только после нажатия Доверять (в его уведомлении или на главном экране). Доверяйте только тому головному устройству, к которому вы подключены прямо сейчас. Если головное устройство позже показывает другой сертификат, вас спросят снова: доверяйте ему только если его программное обеспечение было обновлено.</string>
-    <string name="setup_trusted_head_units_empty">Пока нет.</string>
-    <string name="setup_sha256_fingerprint">SHA-256 %1$s...</string>
-    <string name="setup_section_look">Внешний вид</string>
     <string name="setup_choice_colors">Цвета</string>
     <string name="setup_choice_colors_auto">День/ночь автомобиля</string>
     <string name="setup_choice_dark">Тёмный</string>
@@ -85,7 +37,6 @@
     <string name="setup_choice_bottom">Снизу</string>
     <string name="setup_toggle_dark_bar_title">Тёмная панель</string>
     <string name="setup_toggle_dark_bar_subtitle">Оставлять панель тёмной даже со светлыми цветами</string>
-    <string name="setup_section_dashboard">Панель приборов</string>
     <string name="dash_cards_title">Карточки</string>
     <string name="dash_cards_hint">Первая карточка получает больше всего места, остальные заполняют оставшийся экран. Карточка, которой нечего показать, уступает место следующей.</string>
     <string name="dash_card_map">Карта</string>
@@ -93,34 +44,11 @@
     <string name="dash_card_calendar">Следующее событие календаря</string>
     <string name="dash_card_notification">Последнее уведомление</string>
     <string name="dash_card_weather">Погода</string>
-    <string name="setup_choice_wallpaper">Обои</string>
-    <string name="setup_wallpaper_none">Нет</string>
-    <string name="setup_wallpaper_photo">Фото</string>
     <string name="setup_toggle_weather_title">Погода</string>
     <string name="setup_toggle_weather_subtitle">Рядом с часами, от Open-Meteo (получает приблизительное местоположение, около 10 км)</string>
-    <string name="setup_section_driving">Вождение</string>
-    <string name="setup_toggle_passenger_title">Режим пассажира</string>
-    <string name="setup_toggle_passenger_subtitle">Игнорировать статус вождения автомобиля: ввод текста, длинные списки и экран телефона остаются доступными в движении, для пассажира. Водитель не должен использовать экран во время движения.</string>
-    <string name="setup_section_app_list">В списке приложений автомобиля</string>
-    <string name="setup_app_list_hint">Отключите приложения, которые не нужны в автомобиле.</string>
-    <string name="setup_app_list_loading">Поиск приложений…</string>
-    <string name="setup_app_group_nav">Навигация и автомобильные приложения</string>
-    <string name="setup_app_list_no_nav">Пока нет: установите CoMaps, Organic Maps или другое приложение Android Auto.</string>
-    <string name="setup_app_kind_navigation">Навигация</string>
-    <string name="setup_app_kind_generic">Автомобильное приложение</string>
-    <string name="setup_app_group_media">Медиа</string>
-    <string name="setup_app_kind_media">Музыка, подкасты, радио</string>
-    <string name="setup_app_group_messaging">Сообщения</string>
-    <string name="setup_app_kind_messaging">Сообщения из его уведомлений</string>
-    <string name="setup_app_group_aare">MyPlay</string>
-    <string name="setup_section_unsupported_apps">Приложения Android Auto, которые MyPlay не может показать</string>
-    <string name="setup_hint_allowlist">Приложения, созданные на новых версиях библиотеки Google для автомобилей, принимают только хосты из списка разрешённых; см. README.</string>
     <string name="setup_app_entry_phone">Телефон</string>
     <string name="setup_app_entry_settings">Настройки</string>
     <string name="setup_app_entry_notifications">Уведомления</string>
-    <string name="setup_section_app_order">Порядок в автомобиле</string>
-    <string name="setup_section_connection_log">Журнал соединений</string>
-    <string name="setup_about_text">MyPlay %1$s · GPL-3.0-or-later · Не связано с Google. Android Auto является товарным знаком Google LLC.</string>
     <string name="setup_choice_style">Стиль</string>
     <string name="setup_choice_theme">Тема</string>
     <string name="setup_choice_layout">Макет</string>
@@ -146,91 +74,34 @@
     <string name="setup_switch_audio_next_connection">Звук телефона в автомобиле (следующее соединение)</string>
 
     <!-- cert: certificate management -->
-    <string name="cert_section_title">Сертификаты телефона</string>
-    <string name="cert_hint">Головные устройства проверяют сертификат телефона. Головные устройства с открытым кодом принимают сгенерированный сертификат; автомобили с программным обеспечением головного устройства Google принимают только сертификат, выданный Google, который MyPlay не может включить. Вы можете импортировать тот, на использование которого у вас есть право (сертификат PEM + ключ PKCS#8, или PKCS#12). Также можно скачать сертификат из последней версии Android Auto (github.com/iscle/android-auto-certificates).</string>
-    <string name="cert_entry_subtitle">%1$s · до %2$s</string>
-    <string name="cert_action_remove">Удалить</string>
-    <string name="cert_action_import">Импортировать сертификат…</string>
-    <string name="cert_action_download">Скачать сертификат</string>
-    <string name="cert_action_downloading">Загрузка…</string>
     <string name="cert_download_unavailable">Репозиторий сертификатов больше не существует (удалён или заблокирован): %1$s. Вместо этого извлеките сертификат из приложения Android Auto (см. README).</string>
     <string name="cert_download_network">Не удалось скачать сертификат: %1$s. Проверьте подключение и повторите попытку.</string>
     <string name="cert_download_invalid">Скачанный сертификат отклонён: %1$s</string>
-    <string name="cert_p12_dialog_title">Пароль PKCS#12</string>
-    <string name="cert_action_import_confirm">Импортировать</string>
     <string name="cert_imported_fallback">импортирован</string>
 
     <!-- huserver: developer head unit server -->
     <string name="huserver_label">Сервер головного устройства</string>
     <string name="huserver_toggle_subtitle">Как режим разработчика Android Auto, для настольного головного устройства, DHU, openauto, Headunit Revived. Доступен только через adb: adb forward tcp:5277 localabstract:aare_hu</string>
-    <string name="huserver_toggle_network_title">Принимать из сети</string>
     <string name="huserver_toggle_network_subtitle">Также слушать на порту TCP 5277 в любой сети, без пароля. Любой в той же сети Wi-Fi может подключиться, видеть экран автомобиля и использовать микрофон.</string>
-    <string name="huserver_toggle_lanonce_title">Отключать сетевой режим после сессии</string>
     <string name="huserver_toggle_lanonce_subtitle">Безопаснее: сеть нужно снова разрешать для каждой сессии. Отключите это для головных устройств, которые переподключаются сами, например openauto или Headunit Revived.</string>
-    <string name="huserver_toggle_mirror_title">Экран телефона на сервере</string>
     <string name="huserver_toggle_mirror_subtitle">Также предлагать «Экран телефона» всем, кто подключается здесь. Рискованно: они видят экран телефона и могут нажимать на него, поэтому оставьте это выключенным, если не доверяете головному устройству.</string>
-    <string name="huserver_toggle_localhost_title">Разрешить localhost (webaa / paath)</string>
     <string name="huserver_toggle_localhost_subtitle">Принимать подключение от приложения вида Android Auto в браузере на этом телефоне — для автомобилей без Android Auto (например, Tesla). Подключиться может любое приложение на телефоне, поэтому оставьте это выключенным, если вы не используете такое приложение.</string>
 
     <!-- msg: messaging settings -->
-    <string name="msg_settings_title">Сообщения</string>
-    <string name="msg_page_subtitle">Баннеры и чтение вслух</string>
-    <string name="msg_check_notification_access_subtitle">Нужно, чтобы видеть сообщения в автомобиле</string>
-    <string name="msg_toggle_banners_title">Показывать уведомления о сообщениях</string>
-    <string name="msg_toggle_banners_subtitle">Баннер на экране автомобиля для каждого нового сообщения</string>
-    <string name="msg_toggle_group_title">Групповые сообщения</string>
-    <string name="msg_toggle_group_subtitle">Также показывать сообщения из групповых бесед</string>
     <string name="msg_toggle_read_aloud_title">Читать сообщения вслух</string>
-    <string name="msg_toggle_read_aloud_subtitle">Читать каждое новое сообщение вслух по мере поступления</string>
-    <string name="msg_hint_apps">Приложения для обмена сообщениями (WhatsApp, Signal, SMS…) также имеют собственную страницу в списке приложений автомобиля.</string>
-    <string name="msg_section_while_driving">Во время движения</string>
-    <string name="msg_toggle_dnd_title">Не беспокоить</string>
-    <string name="msg_toggle_dnd_subtitle">Отключать звук телефона во время соединения; звонки и приоритетные беседы всё равно проходят</string>
-    <string name="msg_check_dnd_access_title">Разрешить MyPlay включать Не беспокоить</string>
-    <string name="msg_check_dnd_access_subtitle">Android спрашивает один раз</string>
-    <string name="msg_toggle_autoreply_title">Автоответ</string>
-    <string name="msg_toggle_autoreply_subtitle">Отвечает тем, кто пишет, один раз за беседу за поездку (не группам)</string>
-    <string name="msg_autoreply_field_label">Ответ</string>
 
     <!-- audio: car audio settings -->
     <string name="audio_settings_title">Звук в автомобиле</string>
-    <string name="audio_page_subtitle">Как звук телефона достигает автомобиля</string>
-    <string name="audio_toggle_enable_title">Звук телефона в автомобиле</string>
-    <string name="audio_toggle_enable_subtitle">Музыка, подкасты, ассистент и, в зависимости от метода, голос навигации</string>
-    <string name="audio_using_method">Используется: %1$s</string>
-    <string name="audio_no_method">Пока не настроен ни один метод: выберите один ниже.</string>
-    <string name="audio_section_methods">Методы, лучшие сначала</string>
-    <string name="audio_policy_ready">Готово. Музыка и голос навигации идут в автомобиль отдельно, телефон остаётся тихим.</string>
     <string name="audio_method_policy">Системная маршрутизация звука (как Android Auto)</string>
     <string name="audio_method_shizuku_policy">Shizuku, музыка и навигация отдельно (как Android Auto)</string>
     <string name="audio_method_shizuku">Shizuku или root</string>
     <string name="audio_method_playback_capture">Разрешение на захват экрана</string>
-    <string name="audio_policy_not_ready">Как Android Auto: музыка и голос навигации отдельно, динамик телефона выключен. Требуется телефон с root-правами: установите MyPlay как системное приложение с помощью модуля Magisk (см. README).</string>
-    <string name="audio_shizuku_ready">Готово. Всё, что воспроизводит телефон, идёт в автомобиль, включая голос навигации; телефон остаётся тихим.</string>
-    <string name="audio_shizuku_needs_android12">Требуется Android 12 или новее.</string>
-    <string name="audio_shizuku_tap_allow">Shizuku работает: нажмите, чтобы разрешить MyPlay.</string>
-    <string name="audio_shizuku_install_hint">Root-права не нужны. Установите Shizuku, запустите его (беспроводная отладка, один раз после перезагрузки), а затем вернитесь сюда.</string>
-    <string name="audio_playback_ready">Готово. Только медиа: без голоса навигации, некоторые приложения отключаются, а телефон тоже продолжает воспроизведение.</string>
-    <string name="audio_playback_not_ready">Работает везде, с ограничениями: только медиа, без голоса навигации. Android спросит о захвате экрана: выберите Весь экран (также используется экраном телефона).</string>
     <string name="audio_notice_setup_hint">Откройте MyPlay на телефоне и настройте звук в автомобиле, чтобы слышать телефон в автомобиле</string>
 
     <!-- phone: phone screen feature -->
     <string name="phone_section_title">Экран телефона</string>
-    <string name="phone_toggle_enable_title">Экран телефона в автомобиле</string>
-    <string name="phone_toggle_enable_subtitle">Собственный экран телефона, для приложений, которые MyPlay не может разместить (Google Maps, Waze). Приостановлен, когда телефон заблокирован, и во время движения, если навигационное приложение не ведёт маршрут. Не предлагается на сервере головного устройства, если там не включён</string>
-    <string name="phone_check_touch_title">Касание на экране телефона</string>
-    <string name="phone_check_touch_subtitle">Включите MyPlay в Специальных возможностях. Приложениям, установленным не из магазина, может сначала потребоваться «Разрешить ограниченные настройки» в информации о приложении MyPlay</string>
-    <string name="phone_hint_touch_capture">Изображение использует разрешение на захват экрана (страница Звук в автомобиле, выберите Весь экран).</string>
-    <string name="phone_app_row_subtitle">Собственный экран телефона, для приложений, которые MyPlay не может разместить</string>
 
     <!-- assistant: voice assistant settings and bar -->
-    <string name="assistant_settings_title">Голосовой ассистент</string>
-    <string name="assistant_page_subtitle">Что открывает голосовая кнопка</string>
-    <string name="assistant_same_as_phone">Так же, как на телефоне</string>
-    <string name="assistant_no_default">На телефоне не задан ассистент по умолчанию</string>
-    <string name="assistant_has_car_app_subtitle">На экране автомобиля, с микрофоном автомобиля</string>
-    <string name="assistant_opens_on_phone">Открывается на телефоне</string>
-    <string name="assistant_hint">Голосовая кнопка на руле и микрофон на панели открывают этого ассистента. Лучше всего работают ассистенты с автомобильным приложением, например Lapin.</string>
 
     <!-- notif: notifications and in-car notices -->
     <string name="notif_channel_connection">Соединение с автомобилем</string>
@@ -251,7 +122,6 @@
     <string name="notif_new_head_unit_title">Новое головное устройство</string>
     <string name="notif_trust_warning">Доверяйте только тому головному устройству, к которому вы подключены прямо сейчас</string>
     <string name="notif_untrusted_message">SHA-256 %1$s... %2$s, затем подключитесь снова.</string>
-    <string name="notif_trust_reconnect_suffix">%1$s, затем подключитесь снова.</string>
     <string name="notif_cert_changed_message">сертификат головного устройства изменился: нажмите Доверять в уведомлении или в MyPlay только если его программное обеспечение было обновлено, затем подключитесь снова</string>
     <string name="notif_cert_untrusted_message">сертификат головного устройства ещё не доверенный: нажмите Доверять в уведомлении или в MyPlay, затем подключитесь снова</string>
     <string name="notif_car_nearby_title">Автомобиль рядом</string>
@@ -359,39 +229,24 @@
     <string name="search_parked_only">Поиск доступен на парковке</string>
 
     <!-- standalone: launching ordinary phone apps on the car screen (root/Shizuku, parked only) -->
-    <string name="standalone_section_title">Приложения на экране автомобиля (расширенные)</string>
-    <string name="standalone_section_warning">Это не приложения Android Auto: MyPlay показывает их обычный экран телефона, только на парковке, и требует root или Shizuku. Используйте на свой риск.</string>
-    <string name="standalone_toggle_title">Запуск приложений телефона на экране автомобиля</string>
-    <string name="standalone_toggle_subtitle">Выберите приложения ниже. Отображаются только на парковке.</string>
-    <string name="standalone_keep_awake_title">Режим без отключения экрана для автономных приложений</string>
-    <string name="standalone_keep_awake_subtitle">Не даёт физическому экрану телефона выключиться, пока приложение открыто. На затронутых телефонах с Android 17 виртуальные дисплеи останавливаются, когда экран телефона выключен. Расходует больше заряда батареи.</string>
-    <string name="standalone_need_root">Требуется root или Shizuku. Настройте одно из них на странице Звук в автомобиле, а затем вернитесь.</string>
     <string name="standalone_not_native">Не приложение Android Auto · использование на парковке</string>
     <string name="standalone_starting">Запуск…</string>
     <string name="standalone_paused_driving">Приостановлено во время движения.</string>
     <!-- browser: the in-car WebView browser -->
     <string name="browser_app_label">Браузер</string>
-    <string name="browser_app_row_subtitle">Веб-браузер на экране автомобиля — для случаев, когда вы припаркованы</string>
-    <string name="browser_url_label">Домашняя страница</string>
-    <string name="browser_hint_parked">Браузер приостановлен во время движения.</string>
     <string name="browser_paused_driving">Браузер приостановлен во время движения.</string>
     <string name="browser_forward">Вперёд</string>
     <string name="browser_reload">Обновить</string>
     <string name="browser_home">Домашняя страница</string>
     <string name="browser_address_hint">Поиск или введите веб-адрес</string>
     <!-- setup_page: car data entry -->
-    <string name="setup_page_car_data_title">Данные автомобиля</string>
-    <string name="setup_page_car_data_subtitle">Скорость, передача и датчики автомобиля в реальном времени</string>
 
     <!-- car_data: the read-only car sensor viewer -->
     <string name="car_data_not_connected">Подключитесь к автомобилю, чтобы увидеть его данные.</string>
-    <string name="car_data_section_car">Автомобиль</string>
-    <string name="car_data_section_live">Данные в реальном времени</string>
     <string name="car_data_identity">Транспортное средство</string>
     <string name="car_data_head_unit">Головное устройство</string>
     <string name="car_data_connection">Подключение</string>
     <string name="car_data_video">Видео</string>
-    <string name="car_data_advertised">Заявленные датчики</string>
     <string name="car_data_driving">Движение</string>
     <string name="car_data_parked">на стоянке</string>
     <string name="car_data_moving">в движении</string>
@@ -430,31 +285,13 @@
     <string name="car_data_gyroscope">Гироскоп</string>
     <string name="car_data_dtc">Коды неисправностей</string>
     <string name="car_data_app_label">Данные автомобиля</string>
-    <string name="car_data_show_in_car_title">Показывать на экране автомобиля</string>
-    <string name="car_data_show_in_car_subtitle">Добавьте диагностическое приложение в автомобиле для этих данных в реальном времени</string>
-    <string name="vehicles_section_title">Переопределения для отдельных автомобилей</string>
     <string name="vehicles_hint">Настройте плотность экрана или отступы видимой области для конкретного автомобиля без новой сборки. Отредактируйте vehicles.json в файловом менеджере, указав автомобиль по марке/модели/названию.</string>
-    <string name="vehicles_rule_count">Загружено правил: %1$d</string>
-    <string name="vehicles_import">Импортировать файл…</string>
-    <string name="vehicles_template">Записать шаблон</string>
-    <string name="setup_toggle_force_h264_title">Принудительно использовать видео H.264</string>
     <string name="setup_toggle_force_h264_subtitle">По умолчанию MyPlay использует лучший кодек, поддерживаемый и автомобилем, и телефоном (H.265…). Включите, если изображение в автомобиле искажено.</string>
     <string name="common_ok">OK</string>
     <string name="common_try_again">Повторить</string>
     <string name="common_something_went_wrong">Что-то пошло не так</string>
-    <string name="setup_section_updates">Обновления</string>
-    <string name="setup_toggle_updates_title">Проверять обновления</string>
-    <string name="setup_toggle_updates_subtitle">Предупреждать на главном экране о новом релизе на GitHub.</string>
-    <string name="update_available_title">Доступно обновление — %1$s</string>
-    <string name="update_available_subtitle">У вас %1$s. Нажмите, чтобы посмотреть релиз.</string>
-    <string name="setup_log_save">Сохранить</string>
-    <string name="setup_toggle_verbose_log_title">Подробный журнал протокола</string>
-    <string name="setup_toggle_verbose_log_subtitle">Записывать в этот журнал полную трассировку протокола головного устройства, чтобы приложить её к отчёту об ошибке. Записывается много данных; в остальных случаях оставьте выключенным.</string>
-    <string name="setup_nothing_to_open">На этом телефоне нет приложения, которое может это открыть</string>
     <string name="setup_wallpaper_failed">Не удалось использовать это фото в качестве обоев</string>
     <string name="msg_autoreply_default">Я сейчас за рулём, отвечу позже.</string>
-    <string name="audio_root_ready">Готово, через root. Всё, что воспроизводит телефон, идёт в автомобиль, включая голос навигации; сам телефон остаётся без звука.</string>
-    <string name="audio_shizuku_or_root_hint">На телефоне с root (KernelSU, Magisk, APatch…) нажмите, чтобы разрешить root. Иначе установите Shizuku и запустите его (беспроводная отладка, один раз после каждой перезагрузки).</string>
     <string name="dash_menu_exit_to_car">Выйти в автомобиль</string>
     <string name="media_action_retry">Повторить</string>
     <string name="media_error_fix">Исправить</string>

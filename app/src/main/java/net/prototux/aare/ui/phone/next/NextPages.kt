@@ -6,12 +6,6 @@ import net.prototux.aare.R
 
 /** Each route's title, and the pages a placeholder lists so every route can be reached while they are built. */
 object NextPages {
-    /** Taps on the old About's version line that turn the new app on. */
-    const val TAPS = 7
-
-    /** How many taps are left to show after [taps]: none before the third, 0 when the switch turns on. */
-    fun tapsLeft(taps: Int): Int? = if (taps < 3) null else (TAPS - taps).coerceAtLeast(0)
-
     @StringRes
     fun title(route: String): Int? = TITLES[route]
 
@@ -88,7 +82,7 @@ object NextPages {
 
 /** The page for [route]: the built ones, then a placeholder for the rest. */
 @Composable
-fun NextPage(route: String, onOldApp: () -> Unit) {
+fun NextPage(route: String) {
     when (route) {
         "home" -> NextHome()
         "screen" -> NextScreenRoot()
@@ -131,10 +125,10 @@ fun NextPage(route: String, onOldApp: () -> Unit) {
         "more/archive/layouts" -> NextOlderLayoutsPage()
         "more/archive/layouts/map", "more/archive/layouts/bar", "more/archive/layouts/cards",
         "more/archive/layouts/clock", "more/archive/layouts/status" -> NextKeptPage(route)
-        "more/about" -> NextAboutPage(onOldApp)
+        "more/about" -> NextAboutPage()
         "more/advanced/developer/parts" -> { val nav = LocalNextNavigator.current; net.prototux.aare.ui.phone.PhonePartsSample { nav.back() } }
         "more/updates" -> NextUpdatesPage()
         "more/whats-new" -> NextWhatsNewPage()
-        else -> if (route.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(route.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(route, onOldApp)
+        else -> if (route.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(route.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(route)
     }
 }

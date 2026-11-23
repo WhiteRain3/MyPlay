@@ -50,9 +50,6 @@ import net.prototux.aare.Settings
 import net.prototux.aare.ui.theme.MapColourFilter
 import net.prototux.aare.ui.theme.myplayMapFilter
 
-/** The map filter's setting, as the car side stores it (Settings.myplayMapFilter). */
-private const val MAP_FILTER_KEY = "myplay_map_filter"
-
 /** The made-up map the preview draws: land, water, park, small and main roads, the route, a label. */
 enum class SampleMapPart { LAND, WATER, PARK, ROAD, MAIN_ROAD, ROUTE, LABEL }
 
@@ -75,89 +72,6 @@ fun filteredSampleMap(filter: MapColourFilter, night: Boolean): Map<SampleMapPar
 
 /** The preset [filter] is exactly, or null for the owner's own values. */
 fun mapPresetOf(filter: MapColourFilter): String? = MapColourFilter.PRESETS.entries.firstOrNull { it.value == filter.clamped() }?.key
-
-private val PRESET_NAMES = mapOf(
-    "none" to R.string.phone_map_preset_none, "muted" to R.string.phone_map_preset_muted, "cool" to R.string.phone_map_preset_cool,
-    "warm" to R.string.phone_map_preset_warm, "dark_night" to R.string.phone_map_preset_dark_night, "grey" to R.string.phone_map_preset_grey,
-)
-
-/**
- * Map colours (the car side's map colour filter): a filter on the hosted maps app's picture, with a
- * before/after preview on a made-up map ([night] or day), presets and the filter's own values.
- * Stored in myplay_map_filter, one of a whole look's settings: saving or choosing a look keeps it
- * with the look.
- */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun MapColoursSection(settings: Settings, night: Boolean) {
-    var filter by remember { mutableStateOf(settings.myplayMapFilter) }
-    // Follows a change made elsewhere while the page stays open (a look chosen, a backup restored).
-    DisposableEffect(settings) {
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (key == null || key == MAP_FILTER_KEY) filter = settings.myplayMapFilter
-        }
-        settings.prefs.registerOnSharedPreferenceChangeListener(listener)
-        onDispose { settings.prefs.unregisterOnSharedPreferenceChangeListener(listener) }
-    }
-    var pickingTint by remember { mutableStateOf(false) }
-    fun save(f: MapColourFilter) { filter = f.clamped(); settings.myplayMapFilter = filter }
-
-    SectionHeading(stringResource(R.string.phone_map_colours))
-    Text(stringResource(R.string.phone_map_colours_for), color = PhoneColors.Muted, fontSize = 14.sp, modifier = Modifier.padding(bottom = 10.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        FilterSampleMap(filteredSampleMap(MapColourFilter(), night), stringResource(R.string.phone_map_before), Modifier.weight(1f))
-        FilterSampleMap(filteredSampleMap(filter, night), stringResource(R.string.phone_map_after), Modifier.weight(1f))
-    }
-    Spacer(Modifier.height(12.dp))
-    val preset = mapPresetOf(filter)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        MapColourFilter.PRESETS.forEach { (key, f) ->
-            PillButton(stringResource(PRESET_NAMES[key] ?: R.string.phone_map_preset_none), main = key == preset) { save(f) }
-        }
-    }
-    Spacer(Modifier.height(8.dp))
-    PartCard {
-        Column(Modifier.padding(16.dp)) {
-            FilterSlider(stringResource(R.string.phone_map_hue, filter.hueShift), filter.hueShift, -180..180, { filter = filter.copy(hueShift = it) }) { save(filter) }
-            FilterSlider(stringResource(R.string.phone_map_saturation, filter.saturation), filter.saturation, 0..200, { filter = filter.copy(saturation = it) }) { save(filter) }
-            FilterSlider(stringResource(R.string.phone_map_brightness, filter.brightness), filter.brightness, -100..100, { filter = filter.copy(brightness = it) }) { save(filter) }
-            FilterSlider(stringResource(R.string.phone_map_contrast, filter.contrast), filter.contrast, 0..200, { filter = filter.copy(contrast = it) }) { save(filter) }
-            val tintLabel = stringResource(R.string.phone_map_tint_colour)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) {
-                    FilterSlider(stringResource(R.string.phone_map_tint, filter.tintStrength), filter.tintStrength, 0..100, { filter = filter.copy(tintStrength = it) }) { save(filter) }
-                }
-                Spacer(Modifier.width(10.dp))
-                Box(
-                    Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF000000.toInt() or filter.tint))
-                        .border(1.dp, PhoneColors.Border, RoundedCornerShape(10.dp))
-                        .clickable(onClickLabel = tintLabel, role = Role.Button) { pickingTint = true }
-                        .semantics { contentDescription = tintLabel },
-                )
-            }
-            FilterSlider(stringResource(R.string.phone_map_night_darker, filter.nightDarker), filter.nightDarker, 0..90, { filter = filter.copy(nightDarker = it) }) { save(filter) }
-        }
-    }
-    Spacer(Modifier.height(10.dp))
-    HintLine(Icons.Rounded.Speed, stringResource(R.string.phone_map_what))
-    HintLine(Icons.Rounded.Info, stringResource(R.string.phone_map_with_look))
-    if (pickingTint) {
-        ColourPickerDialog(stringResource(R.string.phone_map_tint_colour), 0xFF000000.toInt() or filter.tint, onDismiss = { pickingTint = false }) { c ->
-            pickingTint = false
-            save(filter.copy(tint = c and 0xFFFFFF, tintStrength = if (filter.tintStrength == 0) 20 else filter.tintStrength))
-        }
-    }
-}
-
-@Composable
-private fun FilterSlider(label: String, value: Int, range: IntRange, onChange: (Int) -> Unit, onDone: () -> Unit) {
-    Text(label, color = PhoneColors.Text, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-    Slider(
-        value.toFloat(), { onChange(Math.round(it)) }, valueRange = range.first.toFloat()..range.last.toFloat(),
-        onValueChangeFinished = onDone,
-        colors = SliderDefaults.colors(thumbColor = PhoneColors.Accent, activeTrackColor = PhoneColors.Accent, inactiveTrackColor = PhoneColors.SwitchOff),
-    )
-}
 
 /** The made-up map in [colours], with [caption] under it. */
 @Composable

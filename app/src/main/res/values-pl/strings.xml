@@ -24,56 +24,8 @@
     <string name="common_loading">Wczytywanie</string>
 
     <!-- setup: MainActivity home/settings screens -->
-    <string name="setup_page_car_screen_title">Ekran samochodu</string>
-    <string name="setup_page_car_screen_subtitle">Kolory, pozycja paska, ekran telefonu</string>
-    <string name="setup_page_apps_title">Aplikacje</string>
-    <string name="setup_page_apps_subtitle">Które aplikacje są widoczne w samochodzie</string>
-    <string name="setup_page_connection_title">Połączenie</string>
-    <string name="setup_page_connection_subtitle">Łączność bezprzewodowa, jakość obrazu, Twoje samochody</string>
-    <string name="setup_page_advanced_title">Zaawansowane</string>
-    <string name="setup_page_advanced_subtitle">Serwer jednostki centralnej, certyfikaty, dziennik</string>
-    <string name="setup_tagline">Projekcja samochodowa typu open source</string>
-    <string name="setup_status_certificate">certyfikat: %1$s</string>
-    <string name="setup_status_disconnected_hint">Podłącz telefon do portu USB Android Auto w samochodzie lub połącz się bezprzewodowo z sparowanym samochodem.</string>
-    <string name="setup_status_last_error">Ostatni błąd: %1$s</string>
-    <string name="setup_trust_new_cert">Zaufaj nowemu certyfikatowi tej jednostki centralnej</string>
-    <string name="setup_trust_head_unit">Zaufaj tej jednostce centralnej</string>
-    <string name="setup_trust_fingerprint_suffix">%1$s (SHA-256 %2$s...)</string>
-    <string name="setup_preview_car_screen">Podgląd ekranu samochodu</string>
-    <string name="setup_disconnect">Odłącz</string>
-    <string name="setup_finish_title">Zakończ konfigurację</string>
-    <string name="setup_check_permissions_title">Uprawnienia</string>
-    <string name="setup_check_permissions_subtitle">Mikrofon, lokalizacja, Bluetooth, sieci Wi-Fi w pobliżu, powiadomienia, połączenia, kontakty i kalendarz</string>
-    <string name="setup_check_notification_access_title">Dostęp do powiadomień</string>
-    <string name="setup_check_notification_access_subtitle">Wiadomości, wskazówki z Google Maps i Waze, odtwarzany utwór</string>
-    <string name="setup_check_audio_subtitle">Pozwól, aby dźwięk telefonu dotarł do samochodu</string>
-    <string name="setup_action_set_up">Skonfiguruj</string>
-    <string name="setup_section_connecting">Łączenie</string>
-    <string name="setup_toggle_wireless_title">Bezprzewodowo</string>
-    <string name="setup_toggle_wireless_subtitle">Łącz się ze sparowanymi samochodami przez Wi-Fi, gdy znajdą się w zasięgu Bluetooth</string>
-    <string name="setup_toggle_resume_music_title">Wznów muzykę</string>
-    <string name="setup_toggle_resume_music_subtitle">Uruchom ostatnią odtwarzaną aplikację muzyczną po połączeniu z samochodem</string>
-    <string name="setup_bt_address_label">Adres Bluetooth telefonu (opcjonalnie)</string>
-    <string name="setup_bt_address_hint">Niektóre jednostki centralne pokazują czarny ekran, dopóki nie wiedzą, który telefon jest podłączony. Znajdziesz go w Ustawienia &gt; Informacje o telefonie &gt; Stan. Zostaw puste, jeśli samochód już działa.</string>
-    <string name="setup_section_location">Lokalizacja</string>
-    <string name="setup_toggle_car_gps_title">Użyj GPS samochodu</string>
-    <string name="setup_toggle_car_gps_subtitle">Gdy połączone, aplikacje na telefonie widzą pozycję samochodu zamiast pozycji telefonu, dzięki czemu aplikacje nawigacyjne nie mieszają obu</string>
-    <string name="setup_check_mock_location_title">Pozwól MyPlay ustawiać lokalizację</string>
-    <string name="setup_check_mock_location_subtitle">Opcje programisty &gt; Wybierz aplikację fikcyjnej lokalizacji &gt; MyPlay</string>
-    <string name="setup_section_video">Obraz</string>
-    <string name="setup_toggle_60fps_title">Preferuj 60 fps</string>
     <string name="setup_toggle_60fps_subtitle">Płynniej, jeśli samochód to obsługuje</string>
-    <string name="setup_choice_max_resolution">Maksymalna rozdzielczość</string>
     <string name="setup_hint_lower_resolution">Niższa zużywa mniej baterii i transferu danych.</string>
-    <string name="setup_section_your_cars">Twoje samochody</string>
-    <string name="setup_cars_empty">Samochody pojawią się tutaj po pierwszym połączeniu.</string>
-    <string name="setup_car_last_connected">Ostatnio połączono %1$s</string>
-    <string name="setup_action_forget">Zapomnij</string>
-    <string name="setup_section_trusted_head_units">Zaufane jednostki centralne</string>
-    <string name="setup_trusted_head_units_hint">Sparowany samochód bezprzewodowy jest zaufany po pierwszym połączeniu; nowa jednostka centralna USB lub programistyczna tylko po dotknięciu Zaufaj (w jej powiadomieniu lub na ekranie głównym). Ufaj tylko jednostce centralnej, z którą jesteś teraz połączony. Jeśli jednostka centralna później pokaże inny certyfikat, zostaniesz zapytany ponownie: zaufaj jej tylko wtedy, gdy jej oprogramowanie zostało zaktualizowane.</string>
-    <string name="setup_trusted_head_units_empty">Jeszcze brak.</string>
-    <string name="setup_sha256_fingerprint">SHA-256 %1$s...</string>
-    <string name="setup_section_look">Wygląd</string>
     <string name="setup_choice_colors">Kolory</string>
     <string name="setup_choice_colors_auto">Dzień/noc samochodu</string>
     <string name="setup_choice_dark">Ciemny</string>
@@ -85,7 +37,6 @@
     <string name="setup_choice_bottom">Dół</string>
     <string name="setup_toggle_dark_bar_title">Ciemny pasek</string>
     <string name="setup_toggle_dark_bar_subtitle">Zachowaj ciemny pasek nawet z jasnymi kolorami</string>
-    <string name="setup_section_dashboard">Panel</string>
     <string name="dash_cards_title">Karty</string>
     <string name="dash_cards_hint">Pierwsza karta dostaje najwięcej miejsca, pozostałe wypełniają resztę ekranu. Karta, która nie ma nic do pokazania, ustępuje miejsca następnej.</string>
     <string name="dash_card_map">Mapa</string>
@@ -93,34 +44,11 @@
     <string name="dash_card_calendar">Następne wydarzenie w kalendarzu</string>
     <string name="dash_card_notification">Ostatnie powiadomienie</string>
     <string name="dash_card_weather">Pogoda</string>
-    <string name="setup_choice_wallpaper">Tapeta</string>
-    <string name="setup_wallpaper_none">Brak</string>
-    <string name="setup_wallpaper_photo">Zdjęcie</string>
     <string name="setup_toggle_weather_title">Pogoda</string>
     <string name="setup_toggle_weather_subtitle">Przy zegarze, z Open-Meteo (pobiera przybliżoną pozycję, około 10 km)</string>
-    <string name="setup_section_driving">Jazda</string>
-    <string name="setup_toggle_passenger_title">Tryb pasażera</string>
-    <string name="setup_toggle_passenger_subtitle">Ignoruj stan jazdy samochodu: pisanie, długie listy i ekran telefonu pozostają dostępne w ruchu, dla pasażera. Kierowca nie może używać ekranu podczas jazdy.</string>
-    <string name="setup_section_app_list">Na liście aplikacji samochodu</string>
-    <string name="setup_app_list_hint">Wyłącz aplikacje, których nie chcesz w samochodzie.</string>
-    <string name="setup_app_list_loading">Wyszukiwanie aplikacji…</string>
-    <string name="setup_app_group_nav">Nawigacja i aplikacje samochodowe</string>
-    <string name="setup_app_list_no_nav">Jeszcze brak: zainstaluj CoMaps, Organic Maps lub inną aplikację Android Auto.</string>
-    <string name="setup_app_kind_navigation">Nawigacja</string>
-    <string name="setup_app_kind_generic">Aplikacja samochodowa</string>
-    <string name="setup_app_group_media">Multimedia</string>
-    <string name="setup_app_kind_media">Muzyka, podcasty, radio</string>
-    <string name="setup_app_group_messaging">Wiadomości</string>
-    <string name="setup_app_kind_messaging">Wiadomości z jej powiadomień</string>
-    <string name="setup_app_group_aare">MyPlay</string>
-    <string name="setup_section_unsupported_apps">Aplikacje Android Auto, których MyPlay nie może wyświetlić</string>
-    <string name="setup_hint_allowlist">Aplikacje zbudowane na nowszych wersjach biblioteki samochodowej Google akceptują tylko hosty z listy dozwolonych; zobacz README.</string>
     <string name="setup_app_entry_phone">Telefon</string>
     <string name="setup_app_entry_settings">Ustawienia</string>
     <string name="setup_app_entry_notifications">Powiadomienia</string>
-    <string name="setup_section_app_order">Kolejność w samochodzie</string>
-    <string name="setup_section_connection_log">Dziennik połączeń</string>
-    <string name="setup_about_text">MyPlay %1$s · GPL-3.0-or-later · Niezwiązane z Google. Android Auto jest znakiem towarowym Google LLC.</string>
     <string name="setup_choice_style">Styl</string>
     <string name="setup_choice_theme">Motyw</string>
     <string name="setup_choice_layout">Układ</string>
@@ -146,91 +74,34 @@
     <string name="setup_switch_audio_next_connection">Dźwięk telefonu w samochodzie (następne połączenie)</string>
 
     <!-- cert: certificate management -->
-    <string name="cert_section_title">Certyfikaty telefonu</string>
-    <string name="cert_hint">Jednostki centralne sprawdzają certyfikat telefonu. Jednostki centralne open source akceptują wygenerowany certyfikat; samochody z oprogramowaniem jednostki centralnej Google akceptują tylko certyfikat wydany przez Google, którego MyPlay nie może dołączyć. Możesz zaimportować taki, do którego masz prawo użycia (certyfikat PEM + klucz PKCS#8, lub PKCS#12). Możesz też pobrać certyfikat z najnowszej aplikacji Android Auto (github.com/iscle/android-auto-certificates).</string>
-    <string name="cert_entry_subtitle">%1$s · do %2$s</string>
-    <string name="cert_action_remove">Usuń</string>
-    <string name="cert_action_import">Importuj certyfikat…</string>
-    <string name="cert_action_download">Pobierz certyfikat</string>
-    <string name="cert_action_downloading">Pobieranie…</string>
     <string name="cert_download_unavailable">Repozytorium certyfikatów już nie istnieje (usunięte lub zablokowane): %1$s. Zamiast tego wyodrębnij certyfikat z aplikacji Android Auto (zobacz README).</string>
     <string name="cert_download_network">Nie udało się pobrać certyfikatu: %1$s. Sprawdź połączenie i spróbuj ponownie.</string>
     <string name="cert_download_invalid">Pobrany certyfikat został odrzucony: %1$s</string>
-    <string name="cert_p12_dialog_title">Hasło PKCS#12</string>
-    <string name="cert_action_import_confirm">Importuj</string>
     <string name="cert_imported_fallback">zaimportowany</string>
 
     <!-- huserver: developer head unit server -->
     <string name="huserver_label">Serwer jednostki centralnej</string>
     <string name="huserver_toggle_subtitle">Jak tryb programisty Android Auto, dla jednostki centralnej na komputerze, DHU, openauto, Headunit Revived. Dostępny tylko przez adb: adb forward tcp:5277 localabstract:aare_hu</string>
-    <string name="huserver_toggle_network_title">Akceptuj z sieci</string>
     <string name="huserver_toggle_network_subtitle">Słuchaj także na porcie TCP 5277 w każdej sieci, bez hasła. Każdy w tej samej sieci Wi-Fi może się połączyć, zobaczyć ekran samochodu i używać mikrofonu.</string>
-    <string name="huserver_toggle_lanonce_title">Wyłącz tryb sieciowy po sesji</string>
     <string name="huserver_toggle_lanonce_subtitle">Bezpieczniej: sieć musi być ponownie zatwierdzona dla każdej sesji. Wyłącz to dla jednostek centralnych, które łączą się ponownie samodzielnie, jak openauto czy Headunit Revived.</string>
-    <string name="huserver_toggle_mirror_title">Ekran telefonu na serwerze</string>
     <string name="huserver_toggle_mirror_subtitle">Udostępnij też „Ekran telefonu” każdemu, kto się tu połączy. Ryzykowne: widzą ekran telefonu i mogą go dotykać, więc zostaw to wyłączone, jeśli nie ufasz jednostce centralnej.</string>
-    <string name="huserver_toggle_localhost_title">Zezwól na localhost (webaa / paath)</string>
     <string name="huserver_toggle_localhost_subtitle">Zaakceptuj połączenie od aplikacji typu Android Auto w przeglądarce na tym telefonie, dla samochodów bez Android Auto (np. Tesla). Każda aplikacja na telefonie mogłaby się połączyć, więc zostaw to wyłączone, jeśli nie używasz takiej aplikacji.</string>
 
     <!-- msg: messaging settings -->
-    <string name="msg_settings_title">Wiadomości</string>
-    <string name="msg_page_subtitle">Banery i odczytywanie na głos</string>
-    <string name="msg_check_notification_access_subtitle">Potrzebne, aby widzieć wiadomości w samochodzie</string>
-    <string name="msg_toggle_banners_title">Pokazuj powiadomienia o wiadomościach</string>
-    <string name="msg_toggle_banners_subtitle">Baner na ekranie samochodu dla każdej nowej wiadomości</string>
-    <string name="msg_toggle_group_title">Wiadomości grupowe</string>
-    <string name="msg_toggle_group_subtitle">Pokazuj także wiadomości z rozmów grupowych</string>
     <string name="msg_toggle_read_aloud_title">Czytaj wiadomości na głos</string>
-    <string name="msg_toggle_read_aloud_subtitle">Czytaj każdą nową wiadomość na głos, gdy przychodzi</string>
-    <string name="msg_hint_apps">Aplikacje do wiadomości (WhatsApp, Signal, SMS…) mają też własną stronę na liście aplikacji samochodu.</string>
-    <string name="msg_section_while_driving">Podczas jazdy</string>
-    <string name="msg_toggle_dnd_title">Nie przeszkadzać</string>
-    <string name="msg_toggle_dnd_subtitle">Wycisz telefon podczas połączenia; połączenia i priorytetowe rozmowy nadal przechodzą</string>
-    <string name="msg_check_dnd_access_title">Pozwól MyPlay włączać Nie przeszkadzać</string>
-    <string name="msg_check_dnd_access_subtitle">Android pyta jednokrotnie</string>
-    <string name="msg_toggle_autoreply_title">Autoodpowiedź</string>
-    <string name="msg_toggle_autoreply_subtitle">Odpowiada osobom piszącym, raz na rozmowę na przejazd (nie grupom)</string>
-    <string name="msg_autoreply_field_label">Odpowiedź</string>
 
     <!-- audio: car audio settings -->
     <string name="audio_settings_title">Dźwięk w samochodzie</string>
-    <string name="audio_page_subtitle">Jak dźwięk telefonu dociera do samochodu</string>
-    <string name="audio_toggle_enable_title">Dźwięk telefonu w samochodzie</string>
-    <string name="audio_toggle_enable_subtitle">Muzyka, podcasty, asystent i, zależnie od metody, głos nawigacji</string>
-    <string name="audio_using_method">Używana metoda: %1$s</string>
-    <string name="audio_no_method">Żadna metoda nie jest jeszcze skonfigurowana: wybierz jedną poniżej.</string>
-    <string name="audio_section_methods">Metody, od najlepszej</string>
-    <string name="audio_policy_ready">Gotowe. Muzyka i głos nawigacji idą do samochodu osobno, telefon pozostaje wyciszony.</string>
     <string name="audio_method_policy">Systemowe przekierowanie audio (jak Android Auto)</string>
     <string name="audio_method_shizuku_policy">Shizuku, muzyka i nawigacja osobno (jak Android Auto)</string>
     <string name="audio_method_shizuku">Shizuku lub root</string>
     <string name="audio_method_playback_capture">Uprawnienie do przechwytywania ekranu</string>
-    <string name="audio_policy_not_ready">Jak Android Auto: muzyka i głos nawigacji osobno, głośnik telefonu wyłączony. Wymaga telefonu z rootem: zainstaluj MyPlay jako aplikację systemową za pomocą modułu Magisk (zobacz README).</string>
-    <string name="audio_shizuku_ready">Gotowe. Wszystko, co odtwarza telefon, idzie do samochodu, włącznie z głosem nawigacji; telefon pozostaje wyciszony.</string>
-    <string name="audio_shizuku_needs_android12">Wymaga Androida 12 lub nowszego.</string>
-    <string name="audio_shizuku_tap_allow">Shizuku działa: dotknij, aby zezwolić MyPlay.</string>
-    <string name="audio_shizuku_install_hint">Root nie jest potrzebny. Zainstaluj Shizuku, uruchom je (debugowanie bezprzewodowe, raz po restarcie), a potem wróć tutaj.</string>
-    <string name="audio_playback_ready">Gotowe. Tylko multimedia: bez głosu nawigacji, niektóre aplikacje się wyłączają, a telefon też nadal odtwarza.</string>
-    <string name="audio_playback_not_ready">Działa wszędzie, z ograniczeniami: tylko multimedia, bez głosu nawigacji. Android pyta o przechwytywanie ekranu: wybierz Cały ekran (używane też przez ekran telefonu).</string>
     <string name="audio_notice_setup_hint">Otwórz MyPlay na telefonie i skonfiguruj dźwięk w samochodzie, aby słyszeć telefon w samochodzie</string>
 
     <!-- phone: phone screen feature -->
     <string name="phone_section_title">Ekran telefonu</string>
-    <string name="phone_toggle_enable_title">Ekran telefonu w samochodzie</string>
-    <string name="phone_toggle_enable_subtitle">Własny ekran telefonu, dla aplikacji, których MyPlay nie może obsłużyć (Google Maps, Waze). Wstrzymany, gdy telefon jest zablokowany, i podczas jazdy, jeśli nie prowadzi aplikacja nawigacyjna. Niedostępny na serwerze jednostki centralnej, jeśli nie jest tam włączony</string>
-    <string name="phone_check_touch_title">Dotyk na ekranie telefonu</string>
-    <string name="phone_check_touch_subtitle">Włącz MyPlay w Ułatwieniach dostępu. Aplikacje zainstalowane poza magazynem mogą najpierw wymagać „Zezwól na ograniczone ustawienia” w informacjach o aplikacji MyPlay</string>
-    <string name="phone_hint_touch_capture">Obraz wykorzystuje uprawnienie do przechwytywania ekranu (strona Dźwięk w samochodzie, wybierz Cały ekran).</string>
-    <string name="phone_app_row_subtitle">Własny ekran telefonu, dla aplikacji, których MyPlay nie może obsłużyć</string>
 
     <!-- assistant: voice assistant settings and bar -->
-    <string name="assistant_settings_title">Asystent głosowy</string>
-    <string name="assistant_page_subtitle">Co otwiera przycisk głosowy</string>
-    <string name="assistant_same_as_phone">Tak jak na telefonie</string>
-    <string name="assistant_no_default">Na telefonie nie ustawiono domyślnego asystenta</string>
-    <string name="assistant_has_car_app_subtitle">Na ekranie samochodu, z mikrofonu samochodu</string>
-    <string name="assistant_opens_on_phone">Otwiera się na telefonie</string>
-    <string name="assistant_hint">Przycisk głosowy na kierownicy i mikrofon na listwie otwierają tego asystenta. Najlepiej działają asystenci z aplikacją samochodową, jak Lapin.</string>
 
     <!-- notif: notifications and in-car notices -->
     <string name="notif_channel_connection">Połączenie z samochodem</string>
@@ -251,7 +122,6 @@
     <string name="notif_new_head_unit_title">Nowa jednostka centralna</string>
     <string name="notif_trust_warning">Ufaj tylko jednostce centralnej, z którą jesteś teraz połączony</string>
     <string name="notif_untrusted_message">SHA-256 %1$s... %2$s, a potem połącz się ponownie.</string>
-    <string name="notif_trust_reconnect_suffix">%1$s, a potem połącz się ponownie.</string>
     <string name="notif_cert_changed_message">certyfikat jednostki centralnej zmieniony: dotknij Zaufaj w powiadomieniu lub w MyPlay tylko jeśli jej oprogramowanie zostało zaktualizowane, a potem połącz się ponownie</string>
     <string name="notif_cert_untrusted_message">certyfikat jednostki centralnej jeszcze niezaufany: dotknij Zaufaj w powiadomieniu lub w MyPlay, a potem połącz się ponownie</string>
     <string name="notif_car_nearby_title">Samochód w pobliżu</string>
@@ -359,39 +229,24 @@
     <string name="search_parked_only">Wyszukiwanie jest dostępne po zaparkowaniu</string>
 
     <!-- standalone: launching ordinary phone apps on the car screen (root/Shizuku, parked only) -->
-    <string name="standalone_section_title">Aplikacje na ekranie samochodu (zaawansowane)</string>
-    <string name="standalone_section_warning">To nie są aplikacje Android Auto: MyPlay wyświetla ich zwykły ekran telefonu, tylko po zaparkowaniu, i wymaga roota lub Shizuku. Używasz na własne ryzyko.</string>
-    <string name="standalone_toggle_title">Uruchamianie aplikacji telefonu na ekranie samochodu</string>
-    <string name="standalone_toggle_subtitle">Wybierz aplikacje poniżej. Widoczne tylko po zaparkowaniu.</string>
-    <string name="standalone_keep_awake_title">Tryb bez usypiania dla samodzielnych aplikacji</string>
-    <string name="standalone_keep_awake_subtitle">Utrzymuje fizyczny ekran telefonu aktywnym, gdy aplikacja jest otwarta. Na dotkniętych telefonach z Androidem 17 wirtualne wyświetlacze zatrzymują się, gdy ekran telefonu jest wyłączony. Zużywa więcej baterii.</string>
-    <string name="standalone_need_root">Wymaga roota lub Shizuku. Skonfiguruj jedno z nich na stronie Dźwięk w samochodzie, a potem wróć.</string>
     <string name="standalone_not_native">Nie jest aplikacją Android Auto · użycie po zaparkowaniu</string>
     <string name="standalone_starting">Uruchamianie…</string>
     <string name="standalone_paused_driving">Wstrzymane podczas jazdy.</string>
     <!-- browser: the in-car WebView browser -->
     <string name="browser_app_label">Przeglądarka</string>
-    <string name="browser_app_row_subtitle">Przeglądarka internetowa na ekranie samochodu, na czas postoju</string>
-    <string name="browser_url_label">Strona główna</string>
-    <string name="browser_hint_parked">Przeglądarka jest wstrzymana podczas jazdy.</string>
     <string name="browser_paused_driving">Przeglądarka jest wstrzymana podczas jazdy.</string>
     <string name="browser_forward">Do przodu</string>
     <string name="browser_reload">Odśwież</string>
     <string name="browser_home">Strona główna</string>
     <string name="browser_address_hint">Szukaj lub wpisz adres internetowy</string>
     <!-- setup_page: car data entry -->
-    <string name="setup_page_car_data_title">Dane samochodu</string>
-    <string name="setup_page_car_data_subtitle">Prędkość, bieg i czujniki na żywo z samochodu</string>
 
     <!-- car_data: the read-only car sensor viewer -->
     <string name="car_data_not_connected">Połącz się z samochodem, aby zobaczyć jego dane.</string>
-    <string name="car_data_section_car">Samochód</string>
-    <string name="car_data_section_live">Dane na żywo</string>
     <string name="car_data_identity">Pojazd</string>
     <string name="car_data_head_unit">Jednostka centralna</string>
     <string name="car_data_connection">Połączenie</string>
     <string name="car_data_video">Wideo</string>
-    <string name="car_data_advertised">Zgłoszone czujniki</string>
     <string name="car_data_driving">Jazda</string>
     <string name="car_data_parked">zaparkowany</string>
     <string name="car_data_moving">w ruchu</string>
@@ -430,32 +285,14 @@
     <string name="car_data_gyroscope">Żyroskop</string>
     <string name="car_data_dtc">Kody usterek</string>
     <string name="car_data_app_label">Dane samochodu</string>
-    <string name="car_data_show_in_car_title">Wyświetlaj na ekranie samochodu</string>
-    <string name="car_data_show_in_car_subtitle">Dodaj aplikację diagnostyczną w samochodzie dla tych danych na żywo</string>
-    <string name="vehicles_section_title">Wyjątki dla poszczególnych pojazdów</string>
     <string name="vehicles_hint">Dostosuj gęstość ekranu lub marginesy widocznego obszaru dla konkretnego samochodu, bez nowej kompilacji. Edytuj plik vehicles.json za pomocą menedżera plików, dopasowując samochód według marki/modelu/nazwy.</string>
-    <string name="vehicles_rule_count">Wczytane reguły: %1$d</string>
-    <string name="vehicles_import">Importuj plik…</string>
-    <string name="vehicles_template">Zapisz szablon</string>
-    <string name="setup_toggle_force_h264_title">Wymuś wideo H.264</string>
     <string name="setup_toggle_force_h264_subtitle">Domyślnie MyPlay używa najlepszego kodeka wspólnego dla samochodu i telefonu (H.265…). Włącz, jeśli obraz w samochodzie się zacina lub jest zniekształcony.</string>
     <!-- newly translated strings -->
     <string name="common_ok">OK</string>
     <string name="common_try_again">Spróbuj ponownie</string>
     <string name="common_something_went_wrong">Coś poszło nie tak</string>
-    <string name="setup_section_updates">Aktualizacje</string>
-    <string name="setup_toggle_updates_title">Sprawdzaj aktualizacje</string>
-    <string name="setup_toggle_updates_subtitle">Ostrzegaj na ekranie głównym, gdy na GitHub jest nowsza wersja.</string>
-    <string name="update_available_title">Dostępna aktualizacja — %1$s</string>
-    <string name="update_available_subtitle">Masz %1$s. Dotknij, aby zobaczyć wydanie.</string>
-    <string name="setup_log_save">Zapisz</string>
-    <string name="setup_toggle_verbose_log_title">Szczegółowy dziennik protokołu</string>
-    <string name="setup_toggle_verbose_log_subtitle">Zapisuj w tym dzienniku pełny zapis protokołu jednostki centralnej, by dołączyć go do zgłoszenia błędu. Zapisuje dużo danych; w innym wypadku pozostaw wyłączone.</string>
-    <string name="setup_nothing_to_open">Ten telefon nie ma aplikacji, która mogłaby to otworzyć</string>
     <string name="setup_wallpaper_failed">Nie udało się użyć tego zdjęcia jako tapety</string>
     <string name="msg_autoreply_default">Właśnie prowadzę, odpowiem później.</string>
-    <string name="audio_root_ready">Gotowe, przez root. Wszystko, co odtwarza telefon, idzie do samochodu, włącznie z głosem nawigacji; telefon pozostaje wyciszony.</string>
-    <string name="audio_shizuku_or_root_hint">Na zrootowanym telefonie (KernelSU, Magisk, APatch…) dotknij, aby zezwolić na root. W przeciwnym razie zainstaluj Shizuku i uruchom je (debugowanie bezprzewodowe, raz po restarcie).</string>
     <string name="dash_menu_exit_to_car">Wyjdź do samochodu</string>
     <string name="media_action_retry">Powtórz</string>
     <string name="media_error_fix">Napraw</string>

@@ -30,31 +30,6 @@ import androidx.compose.ui.unit.sp
  * the new design (plan E7). The pages keep their own logic; only the look of these parts changes.
  */
 
-/** A section: a heading with a line, then its contents in a dark card. */
-@Composable
-fun PhoneSection(title: String, content: @Composable () -> Unit) {
-    Column {
-        SectionHeading(title, Modifier.padding(top = 0.dp))
-        PartCard(padding = 16.dp) { Column { content() } }
-    }
-}
-
-/** A switch with a title and a line under it; tapping anywhere on the row switches it. */
-@Composable
-fun PhoneToggle(title: String, subtitle: String, checked: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(role = Role.Switch) { onChange(!checked) }.padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, color = PhoneColors.Text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            if (subtitle.isNotEmpty()) Text(subtitle, color = PhoneColors.Muted, fontSize = 13.sp)
-        }
-        Spacer(Modifier.width(12.dp))
-        PhoneSwitch(checked, onChange)
-    }
-}
-
 /** One of several values, as pills: the chosen one green. Labels are never cut, the pills wrap instead. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

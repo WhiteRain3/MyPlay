@@ -24,56 +24,8 @@
     <string name="common_loading">Đang tải</string>
 
     <!-- setup: MainActivity home/settings screens -->
-    <string name="setup_page_car_screen_title">Màn hình xe</string>
-    <string name="setup_page_car_screen_subtitle">Màu sắc, vị trí thanh, màn hình điện thoại</string>
-    <string name="setup_page_apps_title">Ứng dụng</string>
-    <string name="setup_page_apps_subtitle">Ứng dụng nào hiển thị trên xe</string>
-    <string name="setup_page_connection_title">Kết nối</string>
-    <string name="setup_page_connection_subtitle">Không dây, chất lượng video, xe của bạn</string>
-    <string name="setup_page_advanced_title">Nâng cao</string>
-    <string name="setup_page_advanced_subtitle">Máy chủ đầu đĩa, chứng chỉ, nhật ký</string>
-    <string name="setup_tagline">Trình chiếu màn hình xe mã nguồn mở</string>
-    <string name="setup_status_certificate">chứng chỉ: %1$s</string>
-    <string name="setup_status_disconnected_hint">Cắm điện thoại vào cổng USB Android Auto của xe, hoặc kết nối không dây với xe đã ghép đôi.</string>
-    <string name="setup_status_last_error">Lỗi gần nhất: %1$s</string>
-    <string name="setup_trust_new_cert">Tin tưởng chứng chỉ mới của đầu đĩa này</string>
-    <string name="setup_trust_head_unit">Tin tưởng đầu đĩa này</string>
-    <string name="setup_trust_fingerprint_suffix">%1$s (SHA-256 %2$s...)</string>
-    <string name="setup_preview_car_screen">Xem trước màn hình xe</string>
-    <string name="setup_disconnect">Ngắt kết nối</string>
-    <string name="setup_finish_title">Hoàn tất thiết lập</string>
-    <string name="setup_check_permissions_title">Quyền truy cập</string>
-    <string name="setup_check_permissions_subtitle">Micro, vị trí, Bluetooth, Wi-Fi lân cận, thông báo, cuộc gọi, danh bạ và lịch</string>
-    <string name="setup_check_notification_access_title">Quyền truy cập thông báo</string>
-    <string name="setup_check_notification_access_subtitle">Tin nhắn, chỉ đường từ Google Maps và Waze, nhạc đang phát</string>
-    <string name="setup_check_audio_subtitle">Cho phép âm thanh của điện thoại truyền đến xe</string>
-    <string name="setup_action_set_up">Thiết lập</string>
-    <string name="setup_section_connecting">Đang kết nối</string>
-    <string name="setup_toggle_wireless_title">Không dây</string>
-    <string name="setup_toggle_wireless_subtitle">Kết nối với xe đã ghép đôi qua Wi-Fi khi xe vào phạm vi Bluetooth</string>
-    <string name="setup_toggle_resume_music_title">Tiếp tục nhạc</string>
-    <string name="setup_toggle_resume_music_subtitle">Bật lại ứng dụng nhạc vừa phát khi xe kết nối</string>
-    <string name="setup_bt_address_label">Địa chỉ Bluetooth điện thoại (không bắt buộc)</string>
-    <string name="setup_bt_address_hint">Một số đầu đĩa hiển thị màn hình đen cho đến khi biết điện thoại nào đang kết nối. Bạn có thể tìm thấy nó trong Cài đặt &gt; Giới thiệu về điện thoại &gt; Trạng thái. Để trống nếu xe của bạn đã hoạt động tốt.</string>
-    <string name="setup_section_location">Vị trí</string>
-    <string name="setup_toggle_car_gps_title">Dùng GPS của xe</string>
-    <string name="setup_toggle_car_gps_subtitle">Khi đang kết nối, các ứng dụng trên điện thoại sẽ thấy vị trí của xe thay vì vị trí của điện thoại, để ứng dụng điều hướng không lẫn hai vị trí này</string>
-    <string name="setup_check_mock_location_title">Cho phép MyPlay đặt vị trí</string>
-    <string name="setup_check_mock_location_subtitle">Tùy chọn nhà phát triển &gt; Chọn ứng dụng vị trí giả &gt; MyPlay</string>
-    <string name="setup_section_video">Video</string>
-    <string name="setup_toggle_60fps_title">Ưu tiên 60 fps</string>
     <string name="setup_toggle_60fps_subtitle">Mượt hơn khi xe hỗ trợ</string>
-    <string name="setup_choice_max_resolution">Độ phân giải tối đa</string>
     <string name="setup_hint_lower_resolution">Độ phân giải thấp hơn tiết kiệm pin và băng thông hơn.</string>
-    <string name="setup_section_your_cars">Xe của bạn</string>
-    <string name="setup_cars_empty">Xe sẽ xuất hiện ở đây sau lần kết nối đầu tiên.</string>
-    <string name="setup_car_last_connected">Kết nối lần cuối %1$s</string>
-    <string name="setup_action_forget">Quên</string>
-    <string name="setup_section_trusted_head_units">Đầu đĩa được tin tưởng</string>
-    <string name="setup_trusted_head_units_hint">Xe không dây đã ghép đôi được tin tưởng ngay từ lần kết nối đầu tiên; đầu đĩa USB hoặc đầu đĩa dành cho nhà phát triển mới chỉ được tin tưởng sau khi bạn nhấn Tin tưởng (trong thông báo hoặc trên màn hình chính). Chỉ nên tin tưởng đầu đĩa mà bạn đang kết nối ngay lúc này. Nếu sau đó đầu đĩa hiển thị chứng chỉ khác, bạn sẽ được hỏi lại: chỉ tin tưởng nếu phần mềm của nó đã được cập nhật.</string>
-    <string name="setup_trusted_head_units_empty">Chưa có.</string>
-    <string name="setup_sha256_fingerprint">SHA-256 %1$s...</string>
-    <string name="setup_section_look">Giao diện</string>
     <string name="setup_choice_colors">Màu sắc</string>
     <string name="setup_choice_colors_auto">Ngày/đêm theo xe</string>
     <string name="setup_choice_dark">Tối</string>
@@ -85,7 +37,6 @@
     <string name="setup_choice_bottom">Dưới</string>
     <string name="setup_toggle_dark_bar_title">Thanh tối</string>
     <string name="setup_toggle_dark_bar_subtitle">Giữ thanh màu tối ngay cả khi dùng màu ban ngày</string>
-    <string name="setup_section_dashboard">Bảng điều khiển</string>
     <string name="dash_cards_title">Thẻ</string>
     <string name="dash_cards_hint">Thẻ đầu tiên có nhiều chỗ nhất; các thẻ khác lấp phần còn lại của màn hình. Thẻ không có gì để hiển thị sẽ nhường chỗ cho thẻ tiếp theo.</string>
     <string name="dash_card_map">Bản đồ</string>
@@ -93,34 +44,11 @@
     <string name="dash_card_calendar">Sự kiện lịch tiếp theo</string>
     <string name="dash_card_notification">Thông báo mới nhất</string>
     <string name="dash_card_weather">Thời tiết</string>
-    <string name="setup_choice_wallpaper">Hình nền</string>
-    <string name="setup_wallpaper_none">Không có</string>
-    <string name="setup_wallpaper_photo">Ảnh</string>
     <string name="setup_toggle_weather_title">Thời tiết</string>
     <string name="setup_toggle_weather_subtitle">Bên cạnh đồng hồ, từ Open-Meteo (lấy vị trí gần đúng, khoảng 10 km)</string>
-    <string name="setup_section_driving">Lái xe</string>
-    <string name="setup_toggle_passenger_title">Chế độ hành khách</string>
-    <string name="setup_toggle_passenger_subtitle">Bỏ qua trạng thái lái xe của ô tô: nhập văn bản, danh sách dài và màn hình điện thoại vẫn khả dụng khi xe đang di chuyển, dành cho hành khách. Người lái không được dùng màn hình khi đang lái xe.</string>
-    <string name="setup_section_app_list">Trong danh sách ứng dụng của xe</string>
-    <string name="setup_app_list_hint">Tắt các ứng dụng bạn không muốn hiển thị trên xe.</string>
-    <string name="setup_app_list_loading">Đang tìm ứng dụng…</string>
-    <string name="setup_app_group_nav">Ứng dụng điều hướng và ứng dụng xe</string>
-    <string name="setup_app_list_no_nav">Chưa có: hãy cài CoMaps, Organic Maps hoặc một ứng dụng Android Auto khác.</string>
-    <string name="setup_app_kind_navigation">Điều hướng</string>
-    <string name="setup_app_kind_generic">Ứng dụng xe</string>
-    <string name="setup_app_group_media">Phương tiện</string>
-    <string name="setup_app_kind_media">Nhạc, podcast, radio</string>
-    <string name="setup_app_group_messaging">Tin nhắn</string>
-    <string name="setup_app_kind_messaging">Tin nhắn từ thông báo của ứng dụng</string>
-    <string name="setup_app_group_aare">MyPlay</string>
-    <string name="setup_section_unsupported_apps">Ứng dụng Android Auto mà MyPlay không thể hiển thị</string>
-    <string name="setup_hint_allowlist">Các ứng dụng được xây dựng với phiên bản mới của thư viện xe hơi của Google chỉ chấp nhận các host trong danh sách cho phép của họ; xem README.</string>
     <string name="setup_app_entry_phone">Điện thoại</string>
     <string name="setup_app_entry_settings">Cài đặt</string>
     <string name="setup_app_entry_notifications">Thông báo</string>
-    <string name="setup_section_app_order">Thứ tự trên xe</string>
-    <string name="setup_section_connection_log">Nhật ký kết nối</string>
-    <string name="setup_about_text">MyPlay %1$s · GPL-3.0-or-later · Không liên kết với Google. Android Auto là thương hiệu của Google LLC.</string>
     <string name="setup_choice_style">Kiểu</string>
     <string name="setup_choice_theme">Giao diện</string>
     <string name="setup_choice_layout">Bố cục</string>
@@ -146,91 +74,34 @@
     <string name="setup_switch_audio_next_connection">Âm thanh điện thoại trên xe (lần kết nối tiếp theo)</string>
 
     <!-- cert: certificate management -->
-    <string name="cert_section_title">Chứng chỉ điện thoại</string>
-    <string name="cert_hint">Đầu đĩa kiểm tra chứng chỉ của điện thoại. Đầu đĩa mã nguồn mở chấp nhận chứng chỉ được tạo tự động; xe dùng phần mềm đầu đĩa của Google chỉ chấp nhận chứng chỉ do Google cấp, mà MyPlay không thể kèm theo. Bạn có thể nhập chứng chỉ mà bạn có quyền sử dụng (chứng chỉ PEM + khóa PKCS#8, hoặc PKCS#12). Bạn cũng có thể tải xuống chứng chỉ từ ứng dụng Android Auto mới nhất (github.com/iscle/android-auto-certificates).</string>
-    <string name="cert_entry_subtitle">%1$s · đến %2$s</string>
-    <string name="cert_action_remove">Xóa</string>
-    <string name="cert_action_import">Nhập chứng chỉ…</string>
-    <string name="cert_action_download">Tải chứng chỉ xuống</string>
-    <string name="cert_action_downloading">Đang tải xuống…</string>
     <string name="cert_download_unavailable">Kho chứng chỉ không còn tồn tại (đã bị xóa hoặc gỡ bỏ): %1$s. Thay vào đó, hãy trích xuất chứng chỉ từ ứng dụng Android Auto (xem README).</string>
     <string name="cert_download_network">Không tải được chứng chỉ: %1$s. Hãy kiểm tra kết nối rồi thử lại.</string>
     <string name="cert_download_invalid">Chứng chỉ đã tải xuống bị từ chối: %1$s</string>
-    <string name="cert_p12_dialog_title">Mật khẩu PKCS#12</string>
-    <string name="cert_action_import_confirm">Nhập</string>
     <string name="cert_imported_fallback">đã nhập</string>
 
     <!-- huserver: developer head unit server -->
     <string name="huserver_label">Máy chủ đầu đĩa</string>
     <string name="huserver_toggle_subtitle">Giống chế độ nhà phát triển của Android Auto, dùng cho đầu đĩa desktop, DHU, openauto, Headunit Revived. Chỉ truy cập được qua adb: adb forward tcp:5277 localabstract:aare_hu</string>
-    <string name="huserver_toggle_network_title">Chấp nhận từ mạng</string>
     <string name="huserver_toggle_network_subtitle">Cũng lắng nghe trên cổng TCP 5277 trên mọi mạng, không cần mật khẩu. Bất kỳ ai dùng chung Wi-Fi đều có thể kết nối, xem màn hình xe và dùng micro.</string>
-    <string name="huserver_toggle_lanonce_title">Tắt chế độ mạng sau mỗi phiên</string>
     <string name="huserver_toggle_lanonce_subtitle">An toàn hơn: mạng phải được cho phép lại ở mỗi phiên. Hãy tắt tùy chọn này cho các đầu đĩa tự kết nối lại, như openauto hoặc Headunit Revived.</string>
-    <string name="huserver_toggle_mirror_title">Màn hình điện thoại trên máy chủ</string>
     <string name="huserver_toggle_mirror_subtitle">Cũng cung cấp "Màn hình điện thoại" cho bất kỳ ai kết nối vào đây. Rủi ro: họ có thể thấy màn hình điện thoại và chạm vào nó, vì vậy hãy để tắt trừ khi bạn tin tưởng đầu đĩa này.</string>
-    <string name="huserver_toggle_localhost_title">Cho phép localhost (webaa / paath)</string>
     <string name="huserver_toggle_localhost_subtitle">Chấp nhận kết nối từ một ứng dụng kiểu Android Auto trong trình duyệt trên điện thoại này, dùng cho xe không có Android Auto (ví dụ: Tesla). Bất kỳ ứng dụng nào trên điện thoại cũng có thể kết nối, vì vậy hãy để tắt trừ khi bạn dùng một ứng dụng như vậy.</string>
 
     <!-- msg: messaging settings -->
-    <string name="msg_settings_title">Tin nhắn</string>
-    <string name="msg_page_subtitle">Thông báo nổi và đọc to</string>
-    <string name="msg_check_notification_access_subtitle">Cần để xem tin nhắn trên xe</string>
-    <string name="msg_toggle_banners_title">Hiện thông báo tin nhắn</string>
-    <string name="msg_toggle_banners_subtitle">Hiện thông báo nổi trên màn hình xe cho mỗi tin nhắn mới</string>
-    <string name="msg_toggle_group_title">Tin nhắn nhóm</string>
-    <string name="msg_toggle_group_subtitle">Cũng hiện tin nhắn từ các cuộc trò chuyện nhóm</string>
     <string name="msg_toggle_read_aloud_title">Đọc to tin nhắn</string>
-    <string name="msg_toggle_read_aloud_subtitle">Đọc to mỗi tin nhắn mới ngay khi nhận được</string>
-    <string name="msg_hint_apps">Các ứng dụng nhắn tin (WhatsApp, Signal, SMS…) cũng có trang riêng trong danh sách ứng dụng của xe.</string>
-    <string name="msg_section_while_driving">Khi đang lái xe</string>
-    <string name="msg_toggle_dnd_title">Không làm phiền</string>
-    <string name="msg_toggle_dnd_subtitle">Im lặng điện thoại khi đang kết nối; cuộc gọi và cuộc trò chuyện ưu tiên vẫn được thông báo</string>
-    <string name="msg_check_dnd_access_title">Cho phép MyPlay bật Không làm phiền</string>
-    <string name="msg_check_dnd_access_subtitle">Android chỉ hỏi một lần</string>
-    <string name="msg_toggle_autoreply_title">Tự động trả lời</string>
-    <string name="msg_toggle_autoreply_subtitle">Tự động trả lời người gửi tin, một lần cho mỗi cuộc trò chuyện trong mỗi chuyến đi (không áp dụng cho nhóm)</string>
-    <string name="msg_autoreply_field_label">Trả lời</string>
 
     <!-- audio: car audio settings -->
     <string name="audio_settings_title">Âm thanh xe hơi</string>
-    <string name="audio_page_subtitle">Cách âm thanh điện thoại truyền đến xe</string>
-    <string name="audio_toggle_enable_title">Âm thanh điện thoại trên xe</string>
-    <string name="audio_toggle_enable_subtitle">Nhạc, podcast, trợ lý ảo và, tùy phương thức, giọng điều hướng</string>
-    <string name="audio_using_method">Đang dùng: %1$s</string>
-    <string name="audio_no_method">Chưa thiết lập phương thức nào: hãy chọn một phương thức dưới đây.</string>
-    <string name="audio_section_methods">Các phương thức, tốt nhất trước</string>
-    <string name="audio_policy_ready">Đã sẵn sàng. Nhạc và giọng điều hướng truyền riêng đến xe, điện thoại vẫn im lặng.</string>
     <string name="audio_method_policy">Định tuyến âm thanh hệ thống (giống Android Auto)</string>
     <string name="audio_method_shizuku_policy">Shizuku, nhạc và điều hướng tách riêng (giống Android Auto)</string>
     <string name="audio_method_shizuku">Shizuku hoặc root</string>
     <string name="audio_method_playback_capture">Quyền ghi màn hình</string>
-    <string name="audio_policy_not_ready">Giống Android Auto: nhạc và giọng điều hướng tách riêng, loa điện thoại tắt. Cần điện thoại đã root: cài MyPlay như ứng dụng hệ thống bằng module Magisk (xem README).</string>
-    <string name="audio_shizuku_ready">Đã sẵn sàng. Mọi âm thanh điện thoại phát ra đều truyền đến xe, kể cả giọng điều hướng; điện thoại vẫn im lặng.</string>
-    <string name="audio_shizuku_needs_android12">Cần Android 12 hoặc mới hơn.</string>
-    <string name="audio_shizuku_tap_allow">Shizuku đang chạy: nhấn để cho phép MyPlay.</string>
-    <string name="audio_shizuku_install_hint">Không cần root. Cài Shizuku, khởi động nó (gỡ lỗi không dây, một lần mỗi khi khởi động lại máy), rồi trở lại đây.</string>
-    <string name="audio_playback_ready">Đã sẵn sàng. Chỉ phương tiện: không có giọng điều hướng, một số ứng dụng không hỗ trợ, và điện thoại vẫn tiếp tục phát.</string>
-    <string name="audio_playback_not_ready">Hoạt động ở mọi nơi, nhưng có hạn chế: chỉ phương tiện, không có giọng điều hướng. Android sẽ hỏi quyền ghi màn hình: chọn Toàn bộ màn hình (cũng được dùng cho màn hình điện thoại).</string>
     <string name="audio_notice_setup_hint">Mở MyPlay trên điện thoại và thiết lập âm thanh xe hơi để nghe điện thoại trên xe</string>
 
     <!-- phone: phone screen feature -->
     <string name="phone_section_title">Màn hình điện thoại</string>
-    <string name="phone_toggle_enable_title">Màn hình điện thoại trên xe</string>
-    <string name="phone_toggle_enable_subtitle">Màn hình riêng của điện thoại, dùng cho các ứng dụng mà MyPlay không thể hiển thị (Google Maps, Waze). Tạm dừng khi điện thoại đang khóa, và khi đang lái xe trừ khi có ứng dụng điều hướng đang dẫn đường. Không khả dụng trên máy chủ đầu đĩa trừ khi được bật ở đó</string>
-    <string name="phone_check_touch_title">Chạm trên màn hình điện thoại</string>
-    <string name="phone_check_touch_subtitle">Bật MyPlay trong Trợ năng. Ứng dụng cài từ bên ngoài có thể cần bật "Cho phép cài đặt bị hạn chế" trong thông tin ứng dụng MyPlay trước</string>
-    <string name="phone_hint_touch_capture">Hình ảnh sử dụng quyền ghi màn hình (trang Âm thanh xe hơi, chọn Toàn bộ màn hình).</string>
-    <string name="phone_app_row_subtitle">Màn hình riêng của điện thoại, dùng cho các ứng dụng mà MyPlay không thể hiển thị</string>
 
     <!-- assistant: voice assistant settings and bar -->
-    <string name="assistant_settings_title">Trợ lý giọng nói</string>
-    <string name="assistant_page_subtitle">Nút trợ lý giọng nói mở ứng dụng nào</string>
-    <string name="assistant_same_as_phone">Giống như trên điện thoại</string>
-    <string name="assistant_no_default">Chưa đặt trợ lý mặc định trên điện thoại</string>
-    <string name="assistant_has_car_app_subtitle">Trên màn hình xe, dùng micro của xe</string>
-    <string name="assistant_opens_on_phone">Mở trên điện thoại</string>
-    <string name="assistant_hint">Nút giọng nói trên vô lăng và micro trên thanh công cụ sẽ mở trợ lý này. Các trợ lý có ứng dụng dành cho xe, như Lapin, hoạt động tốt nhất.</string>
 
     <!-- notif: notifications and in-car notices -->
     <string name="notif_channel_connection">Kết nối xe</string>
@@ -251,7 +122,6 @@
     <string name="notif_new_head_unit_title">Đầu đĩa mới</string>
     <string name="notif_trust_warning">Chỉ tin tưởng đầu đĩa mà bạn đang kết nối ngay lúc này</string>
     <string name="notif_untrusted_message">SHA-256 %1$s... %2$s, rồi kết nối lại.</string>
-    <string name="notif_trust_reconnect_suffix">%1$s, rồi kết nối lại.</string>
     <string name="notif_cert_changed_message">chứng chỉ đầu đĩa đã thay đổi: chỉ nhấn Tin tưởng trong thông báo hoặc trong MyPlay nếu phần mềm của nó đã được cập nhật, rồi kết nối lại</string>
     <string name="notif_cert_untrusted_message">chứng chỉ đầu đĩa chưa được tin tưởng: nhấn Tin tưởng trong thông báo hoặc trong MyPlay, rồi kết nối lại</string>
     <string name="notif_car_nearby_title">Xe ở gần</string>
@@ -359,39 +229,24 @@
     <string name="search_parked_only">Tìm kiếm chỉ khả dụng khi đã đỗ xe</string>
 
     <!-- standalone: launching ordinary phone apps on the car screen (root/Shizuku, parked only) -->
-    <string name="standalone_section_title">Ứng dụng trên màn hình xe (nâng cao)</string>
-    <string name="standalone_section_warning">Đây không phải là ứng dụng Android Auto: MyPlay hiển thị màn hình điện thoại bình thường của chúng, chỉ khi đã đỗ xe, và cần root hoặc Shizuku. Sử dụng với rủi ro của riêng bạn.</string>
-    <string name="standalone_toggle_title">Khởi chạy ứng dụng điện thoại trên màn hình xe</string>
-    <string name="standalone_toggle_subtitle">Chọn ứng dụng bên dưới. Chỉ hiển thị khi đã đỗ xe.</string>
-    <string name="standalone_keep_awake_title">Chế độ không ngủ cho ứng dụng độc lập</string>
-    <string name="standalone_keep_awake_subtitle">Giữ màn hình vật lý của điện thoại luôn sáng khi có ứng dụng đang mở. Trên các điện thoại Android 17 bị ảnh hưởng, màn hình ảo sẽ dừng khi màn hình điện thoại tắt. Tiêu tốn nhiều pin hơn.</string>
-    <string name="standalone_need_root">Cần root hoặc Shizuku. Thiết lập một trong hai ở Âm thanh xe hơi, rồi quay lại.</string>
     <string name="standalone_not_native">Không phải ứng dụng Android Auto · dùng khi đã đỗ xe</string>
     <string name="standalone_starting">Đang khởi động…</string>
     <string name="standalone_paused_driving">Tạm dừng khi đang lái xe.</string>
     <!-- browser: the in-car WebView browser -->
     <string name="browser_app_label">Trình duyệt</string>
-    <string name="browser_app_row_subtitle">Trình duyệt web trên màn hình xe, dùng khi bạn đã đỗ xe</string>
-    <string name="browser_url_label">Trang chủ</string>
-    <string name="browser_hint_parked">Trình duyệt tạm dừng khi đang lái xe.</string>
     <string name="browser_paused_driving">Trình duyệt tạm dừng khi đang lái xe.</string>
     <string name="browser_forward">Tiến</string>
     <string name="browser_reload">Tải lại</string>
     <string name="browser_home">Trang chủ</string>
     <string name="browser_address_hint">Tìm kiếm hoặc nhập địa chỉ web</string>
     <!-- setup_page: car data entry -->
-    <string name="setup_page_car_data_title">Dữ liệu xe</string>
-    <string name="setup_page_car_data_subtitle">Tốc độ, số và cảm biến trực tiếp từ xe</string>
 
     <!-- car_data: the read-only car sensor viewer -->
     <string name="car_data_not_connected">Kết nối với xe để xem dữ liệu của xe.</string>
-    <string name="car_data_section_car">Xe</string>
-    <string name="car_data_section_live">Dữ liệu trực tiếp</string>
     <string name="car_data_identity">Phương tiện</string>
     <string name="car_data_head_unit">Màn hình trung tâm</string>
     <string name="car_data_connection">Kết nối</string>
     <string name="car_data_video">Video</string>
-    <string name="car_data_advertised">Cảm biến được khai báo</string>
     <string name="car_data_driving">Đang lái</string>
     <string name="car_data_parked">đã đỗ</string>
     <string name="car_data_moving">đang di chuyển</string>
@@ -430,31 +285,13 @@
     <string name="car_data_gyroscope">Con quay hồi chuyển</string>
     <string name="car_data_dtc">Mã lỗi</string>
     <string name="car_data_app_label">Dữ liệu xe hơi</string>
-    <string name="car_data_show_in_car_title">Hiện trên màn hình xe</string>
-    <string name="car_data_show_in_car_subtitle">Thêm ứng dụng chẩn đoán trên xe cho dữ liệu trực tiếp này</string>
-    <string name="vehicles_section_title">Ghi đè theo từng xe</string>
     <string name="vehicles_hint">Chỉnh mật độ màn hình hoặc lề vùng hiển thị cho một xe cụ thể, không cần bản dựng mới. Sửa vehicles.json bằng trình quản lý file, khớp xe theo hãng/dòng xe/tên.</string>
-    <string name="vehicles_rule_count">Đã tải %1$d quy tắc</string>
-    <string name="vehicles_import">Nhập file…</string>
-    <string name="vehicles_template">Ghi tệp mẫu</string>
-    <string name="setup_toggle_force_h264_title">Buộc dùng video H.264</string>
     <string name="setup_toggle_force_h264_subtitle">Theo mặc định, MyPlay sử dụng codec tốt nhất mà xe và điện thoại đều hỗ trợ (H.265…). Bật tùy chọn này nếu hình ảnh trên xe bị lỗi.</string>
     <string name="common_ok">OK</string>
     <string name="common_try_again">Thử lại</string>
     <string name="common_something_went_wrong">Đã xảy ra lỗi</string>
-    <string name="setup_section_updates">Cập nhật</string>
-    <string name="setup_toggle_updates_title">Kiểm tra cập nhật</string>
-    <string name="setup_toggle_updates_subtitle">Cảnh báo trên màn hình chính khi có bản phát hành mới hơn trên GitHub.</string>
-    <string name="update_available_title">Có cập nhật mới — %1$s</string>
-    <string name="update_available_subtitle">Bạn đang dùng %1$s. Nhấn để xem bản phát hành.</string>
-    <string name="setup_log_save">Lưu</string>
-    <string name="setup_toggle_verbose_log_title">Nhật ký giao thức chi tiết</string>
-    <string name="setup_toggle_verbose_log_subtitle">Ghi lại toàn bộ dấu vết giao thức của màn hình xe vào nhật ký này, để đính kèm vào báo cáo lỗi. Ghi rất nhiều; nếu không cần thì nên để tắt.</string>
-    <string name="setup_nothing_to_open">Điện thoại này không có ứng dụng nào để mở nội dung này</string>
     <string name="setup_wallpaper_failed">Không thể dùng ảnh này làm hình nền</string>
     <string name="msg_autoreply_default">Tôi đang lái xe, tôi sẽ trả lời sau.</string>
-    <string name="audio_root_ready">Đã sẵn sàng, qua quyền root. Mọi âm thanh điện thoại phát ra đều chuyển sang xe, kể cả giọng điều hướng; điện thoại vẫn im lặng.</string>
-    <string name="audio_shizuku_or_root_hint">Trên điện thoại đã root (KernelSU, Magisk, APatch…), nhấn để cho phép root. Nếu không, hãy cài Shizuku và khởi động nó (gỡ lỗi không dây, mỗi lần khởi động lại một lần).</string>
     <string name="dash_menu_exit_to_car">Quay lại màn hình xe</string>
     <string name="media_action_retry">Thử lại</string>
     <string name="media_error_fix">Sửa</string>

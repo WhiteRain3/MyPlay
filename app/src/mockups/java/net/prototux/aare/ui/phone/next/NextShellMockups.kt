@@ -190,7 +190,7 @@ class NextShellMockups {
     @Test fun archRoot() = paparazzi.snapshot { Page("more/archive") { NextArchivePage() } }
     @Test fun archLayouts() = paparazzi.snapshot { Page("more/archive/layouts") { NextOlderLayoutsPage() } }
     @Test fun archKeptBar() = paparazzi.snapshot { Page("more/archive/layouts/bar") { NextKeptPage("more/archive/layouts/bar") } }
-    @Test fun aboutPage() = paparazzi.snapshot { Page("more/about") { NextAboutPage {} } }
+    @Test fun aboutPage() = paparazzi.snapshot { Page("more/about") { NextAboutPage() } }
 
     @Test fun searchReply() = paparazzi.snapshot { Page("car", bare = true) { NextSearch({}, {}, initial = "reply") } }
     @Test fun setupStep1() = paparazzi.snapshot { Page("home", bare = true) { NextSetup {} } }

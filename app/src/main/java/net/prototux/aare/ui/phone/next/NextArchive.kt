@@ -233,7 +233,7 @@ fun NextKeptPage(route: String) {
 
 /** More › About (frame 70): the version, What's new, the links, thanks, licences, the map data notice. */
 @Composable
-fun NextAboutPage(onOldApp: () -> Unit) {
+fun NextAboutPage() {
     val ctx = LocalContext.current
     val nav = LocalNextNavigator.current
     var sheet by rememberSaveable { mutableStateOf<String?>(null) }
@@ -260,9 +260,6 @@ fun NextAboutPage(onOldApp: () -> Unit) {
         }
         item {
             NextNote(stringResource(R.string.myplay_about_fork))
-            Spacer(Modifier.height(12.dp))
-            // While both apps exist (plan §16): the way back, in plain sight.
-            NextCard { NextValueRow(stringResource(R.string.next_old_app_label), note = RowNote.Help(stringResource(R.string.next_old_app_help)), onClick = onOldApp) }
         }
     }
     when (sheet) {

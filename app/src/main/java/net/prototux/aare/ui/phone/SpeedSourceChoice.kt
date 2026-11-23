@@ -20,19 +20,3 @@ val SPEED_SOURCE_NAMES: List<Pair<SpeedSourceMode, Int>> = listOf(
     SpeedSourceMode.OFF to R.string.phone_speed_source_off,
 )
 
-/** N3: where the car screen's speed comes from (myplay_speed_source, the car side's setting). */
-@Composable
-fun SpeedSourceChoice(settings: Settings) {
-    var mode by remember { mutableStateOf(settings.myplaySpeedSource) }
-    SectionHeading(stringResource(R.string.phone_speed_source_title))
-    PhoneChoices(
-        stringResource(R.string.phone_speed_source_which),
-        SPEED_SOURCE_NAMES.map { (m, res) -> m.id to stringResource(res) },
-        mode.id,
-    ) { id -> SpeedSourceMode.byId(id).let { mode = it; settings.myplaySpeedSource = it } }
-    HintLine(Icons.Rounded.Info, stringResource(when (mode) {
-        SpeedSourceMode.AUTO -> R.string.phone_speed_source_auto_hint
-        SpeedSourceMode.CAR -> R.string.phone_speed_source_car_hint
-        SpeedSourceMode.OFF -> R.string.phone_speed_source_off_hint
-    }))
-}

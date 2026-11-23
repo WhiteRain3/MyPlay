@@ -19,23 +19,3 @@ import net.prototux.aare.car.myplayMirrorTurns
 fun withMirrorTurn(all: String?, packageName: String, mode: MirroredKeys.TurnMode): String =
     MirroredKeys.encodeTurns(MirroredKeys.decodeTurns(all) + (packageName to mode))
 
-/**
- * G1: what turning the knob does inside one mirrored phone app: move up and down (lists, most
- * apps) or left and right (rows). Shown under an app the owner allowed on the car screen.
- */
-@Composable
-fun MirrorTurnChoice(settings: Settings, packageName: String) {
-    var mode by remember(packageName) { mutableStateOf(MirroredKeys.turnFor(settings.myplayMirrorTurns, packageName)) }
-    Box(Modifier.padding(start = 56.dp, bottom = 8.dp)) {
-        PhoneChoices(
-            stringResource(R.string.phone_mirror_turn),
-            listOf(
-                MirroredKeys.TurnMode.UP_DOWN.id to stringResource(R.string.phone_mirror_turn_up_down),
-                MirroredKeys.TurnMode.LEFT_RIGHT.id to stringResource(R.string.phone_mirror_turn_left_right),
-            ),
-            mode.id,
-        ) { id ->
-            MirroredKeys.TurnMode.byId(id)?.let { m -> mode = m; settings.myplayMirrorTurns = withMirrorTurn(settings.myplayMirrorTurns, packageName, m) }
-        }
-    }
-}

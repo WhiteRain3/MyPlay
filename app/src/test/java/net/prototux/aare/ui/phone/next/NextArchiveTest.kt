@@ -30,9 +30,8 @@ class NextArchiveTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
     private val ctx get() = ApplicationProvider.getApplicationContext<android.content.Context>()
     private val settings get() = Settings(ctx)
-    private var oldApp = 0
 
-    private val pages: @Composable (String) -> Unit = { r -> NextPage(r) { oldApp++ } }
+    private val pages: @Composable (String) -> Unit = { r -> NextPage(r) }
 
     @Test fun deckWritesTheDesignLanguage() {
         settings.myplayEnginePreview = true
@@ -74,10 +73,4 @@ class NextArchiveTest {
         rule.onNodeWithText("Kept as it was. Not updated any more.").assertExists()
     }
 
-    @Test fun aboutLeadsBackToTheOldApp() {
-        rule.setContent { NextApp(start = "more/about", page = pages) }
-        rule.onNodeWithTag("next-page-more/about").performScrollToNode(hasText("Back to the old app"))
-        rule.onNodeWithText("Back to the old app").performClick()
-        assertTrue(oldApp == 1)
-    }
 }
