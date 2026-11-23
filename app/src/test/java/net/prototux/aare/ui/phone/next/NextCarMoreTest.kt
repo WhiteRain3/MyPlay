@@ -33,7 +33,7 @@ class NextCarMoreTest {
     private val settings get() = Settings(ApplicationProvider.getApplicationContext())
 
     @Test fun mapsWritesTodaysKeysAndLinksToMapColours() {
-        rule.setContent { NextApp(start = "car/maps") { if (it == "car/maps") NextMapsPage() else NextPlaceholder(it) {} } }
+        rule.setContent { NextApp(start = "car/maps") { if (it == "car/maps") NextMapsPage() else NextPlaceholder(it) } }
         rule.onNodeWithText("Home when maps untouched").performClick()
         rule.onNodeWithText("5 min").performClick()
         rule.waitForIdle()
@@ -57,7 +57,7 @@ class NextCarMoreTest {
 
     @Test fun soundLivesInAdvancedButItsSwitchStaysOnCar() {
         // The owner's car plays over its own Bluetooth: the page moved; the switch carries the maps voice too, so it stays.
-        rule.setContent { NextApp(start = "car") { r -> when (r) { "car" -> NextCarRoot(); "more/advanced" -> NextAdvancedPage(); else -> NextPlaceholder(r) {} } } }
+        rule.setContent { NextApp(start = "car") { r -> when (r) { "car" -> NextCarRoot(); "more/advanced" -> NextAdvancedPage(); else -> NextPlaceholder(r) } } }
         rule.onNode(hasText("Sound to the car") and isToggleable()).assertExists()
         rule.onNodeWithText("Needs setting up: More › Advanced › Sound").assertExists() // no capture method in the test
         assertFalse(NextRoutes.isKnown("car/sound"))

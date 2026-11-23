@@ -132,9 +132,8 @@ fun NextApp(
     deepLink: String? = null,
     start: String? = null,
     onDeepLinkUsed: () -> Unit = {},
-    onOldApp: () -> Unit = {},
     badges: Set<NextTab> = emptySet(),
-    page: @Composable (String) -> Unit = { NextPlaceholder(it, onOldApp) },
+    page: @Composable (String) -> Unit = { NextPlaceholder(it) },
 ) {
     var nav by rememberSaveable(stateSaver = NavStateSaver) { mutableStateOf(start?.let { NavState().deepLink(it) } ?: NavState()) }
     // Per tab: bumped when the tab is tapped at its root, so its list scrolls to the top.
@@ -362,10 +361,10 @@ fun NextTabBar(selected: NextTab, badge: Set<NextTab> = emptySet(), onSelect: (N
 
 /**
  * A page not built yet: one line, then links to the pages under it (and its cross-tab links), so every
- * route can be reached. About also has "Back to the old app" while the hidden switch exists.
+ * route can be reached.
  */
 @Composable
-fun NextPlaceholder(route: String, onOldApp: () -> Unit) {
+fun NextPlaceholder(route: String) {
     val navigator = LocalNextNavigator.current
     val children = NextPages.children(route)
     val links = NextPages.links(route)
@@ -383,15 +382,6 @@ fun NextPlaceholder(route: String, onOldApp: () -> Unit) {
                     links.map { r -> @Composable { Box(Modifier.testTag("next-row-$r")) { NextLinkRow(title(r)) { navigator.open(r) } } } },
                 inset = 16.dp,
             )
-        }
-        if (route == "more/about") item {
-            Spacer(Modifier.height(12.dp))
-            NextCard {
-                NextRow(
-                    stringResource(R.string.next_old_app_label), note = RowNote.Help(stringResource(R.string.next_old_app_help)),
-                    onClick = onOldApp, role = Role.Button,
-                )
-            }
         }
     }
 }

@@ -24,7 +24,7 @@ import net.prototux.aare.ui.phone.SpeedLimitDownload
  * always done (start the idle service, look for the car, updates, certificates and the speed file).
  */
 @Composable
-fun NextAppHost(deepLink: String?, onDeepLinkUsed: () -> Unit, onOldApp: () -> Unit) {
+fun NextAppHost(deepLink: String?, onDeepLinkUsed: () -> Unit) {
     val ctx = LocalContext.current
     LaunchedEffect(Unit) {
         ProjectionService.startIdleIfEnabled(ctx)
@@ -47,10 +47,9 @@ fun NextAppHost(deepLink: String?, onDeepLinkUsed: () -> Unit, onOldApp: () -> U
         deepLink = deepLink ?: "more/whats-new".takeIf { whatsNew },
         // Either way What's new is done: a notification's page wins over it (review UP-1).
         onDeepLinkUsed = { whatsNew = false; if (deepLink != null) onDeepLinkUsed() },
-        onOldApp = onOldApp,
         // An update waiting: the dot on More (plan §4).
         badges = if (update != null) setOf(NextTab.MORE) else emptySet(),
-    ) { NextPage(it, onOldApp) }
+    ) { NextPage(it) }
 }
 
 /** Setup on a fresh install until it is finished or left; never after an update. */

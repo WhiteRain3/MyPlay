@@ -8,8 +8,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.core.app.ApplicationProvider
 import net.prototux.aare.Settings
-import net.prototux.aare.ui.phone.KEY_NEW_PHONE_APP
-import net.prototux.aare.ui.phone.myplayNewPhoneApp
 import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
@@ -38,10 +36,10 @@ class NextSettingsTest {
 
     @Test fun otherKeysDoNotMatterButAClearDoes() {
         rule.setContent {
-            val on = rememberSetting(KEY_NEW_PHONE_APP) { myplayNewPhoneApp }
+            val on = rememberSetting("check_updates") { checkUpdates }
             Text(on.value.toString(), Modifier.testTag("v"))
         }
-        settings.myplayNewPhoneApp = true
+        settings.checkUpdates = true
         rule.waitForIdle()
         rule.onNodeWithTag("v").assertTextEquals("true")
         settings.prefs.edit().clear().commit()
@@ -49,5 +47,4 @@ class NextSettingsTest {
         rule.onNodeWithTag("v").assertTextEquals("false")
     }
 
-    @Test fun theHiddenSwitchIsOffByDefault() = assertFalse(settings.myplayNewPhoneApp)
 }

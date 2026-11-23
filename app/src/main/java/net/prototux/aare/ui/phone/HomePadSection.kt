@@ -37,32 +37,3 @@ val HOME_PAD_ACTION_NAMES: List<Pair<HomePadAction, Int>> = listOf(
 /** [mapping] with [key] set to [action]. */
 fun withHomePad(mapping: Map<HomePadKey, HomePadAction>, key: HomePadKey, action: HomePadAction) = mapping + (key to action)
 
-/**
- * O6: what the pad's keys open on ORBIT's home while the knob's ring is hidden
- * (myplay_home_pad, the car side's setting, applied live).
- */
-@Composable
-fun HomePadSection(
-    mapping: Map<HomePadKey, HomePadAction>, onChange: (Map<HomePadKey, HomePadAction>) -> Unit,
-    infoHome: Boolean = false, onInfoHome: (Boolean) -> Unit = {},
-) {
-    SectionHeading(stringResource(R.string.phone_home_pad_title))
-    PartCard(padding = 16.dp) {
-        Column {
-            HOME_PAD_KEY_NAMES.forEachIndexed { i, (key, name) ->
-                if (i > 0) Spacer(Modifier.height(14.dp))
-                PhoneChoices(
-                    stringResource(name),
-                    HOME_PAD_ACTION_NAMES.map { (a, res) -> a.id to stringResource(res) },
-                    (mapping[key] ?: HomePadAction.NOTHING).id,
-                ) { id -> HomePadAction.byId(id)?.let { onChange(withHomePad(mapping, key, it)) } }
-            }
-        }
-    }
-    HintLine(Icons.Rounded.Info, stringResource(R.string.phone_home_pad_hint))
-    // O6: with the shortcuts on, the home can drop the knob's ring altogether.
-    RowGroup(rows = listOf {
-        SwitchRow(Icons.Rounded.Info, stringResource(R.string.myplay_setting_info_home), infoHome, TileTone.VIOLET,
-            stringResource(R.string.phone_info_home_hint), onInfoHome)
-    })
-}

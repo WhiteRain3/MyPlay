@@ -407,7 +407,6 @@
     <string name="next_apps_down_label" translatable="false">Move %1$s down</string>
     <string name="next_apps_needs_root_label" translatable="false">Needs root or Shizuku</string>
     <string name="next_apps_needs_root_help" translatable="false">To open your phone\'s apps in the car</string>
-    <string name="next_apps_open_sound_label" translatable="false">Open Sound</string>
     <string name="next_apps_launch_label" translatable="false">Launch phone apps on the car</string>
     <string name="next_apps_parked_warn_help" translatable="false">Use them only when parked</string>
     <string name="next_apps_launch_info" translatable="false">Ordinary phone apps were not made for a car screen. Open them only when the car is parked.</string>
@@ -493,13 +492,6 @@
 
     <!-- Placeholders while the pages are built -->
     <string name="next_placeholder_help" translatable="false">This page is still being built.</string>
-    <string name="next_switch_on_label" translatable="false">New phone app on</string>
-    <plurals name="next_taps_left_label" translatable="false">
-        <item quantity="one">%1$d more tap</item>
-        <item quantity="other">%1$d more taps</item>
-    </plurals>
-    <string name="next_old_app_label" translatable="false">Back to the old app</string>
-    <string name="next_old_app_help" translatable="false">The new app is a preview. Its pages come one by one.</string>
     <string name="next_diag_step_of_label" translatable="false">%1$d of %2$d</string>
     <string name="next_diag_done_label" translatable="false">Done</string>
     <string name="next_diag_done_on_label" translatable="false">Done %1$s</string>

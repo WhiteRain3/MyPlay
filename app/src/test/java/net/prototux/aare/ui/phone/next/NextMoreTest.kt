@@ -41,7 +41,7 @@ class NextMoreTest {
 
     @Test fun forgetTakesEffectOnlyAfterTheUndoTime() {
         settings.rememberCar("Sedan")
-        rule.setContent { NextApp(start = "more/cars") { r -> if (r == "more/cars") NextCarsPage() else if (r.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(r.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(r) {} } }
+        rule.setContent { NextApp(start = "more/cars") { r -> if (r == "more/cars") NextCarsPage() else if (r.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(r.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(r) } }
         rule.onNodeWithText("Sedan").performClick()
         rule.onNodeWithText("Forget this car").performClick()
         rule.waitForIdle()
@@ -55,7 +55,7 @@ class NextMoreTest {
 
     @Test fun forgetCanBeUndone() {
         settings.rememberCar("Sedan")
-        rule.setContent { NextApp(start = "more/cars") { r -> if (r == "more/cars") NextCarsPage() else if (r.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(r.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(r) {} } }
+        rule.setContent { NextApp(start = "more/cars") { r -> if (r == "more/cars") NextCarsPage() else if (r.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(r.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(r) } }
         rule.onNodeWithText("Sedan").performClick()
         rule.onNodeWithText("Forget this car").performClick()
         rule.onNodeWithText("Undo").performClick()
@@ -68,7 +68,7 @@ class NextMoreTest {
     @Test fun forgettingATrustedCarClearsThePinToo() {
         settings.rememberCar("AA:BB:CC:DD:EE:FF")
         PinnedHeadUnits(ctx).add("AA:BB:CC:DD:EE:FF", "abcd")
-        rule.setContent { NextApp(start = "more/cars") { r -> if (r == "more/cars") NextCarsPage() else if (r.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(r.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(r) {} } }
+        rule.setContent { NextApp(start = "more/cars") { r -> if (r == "more/cars") NextCarsPage() else if (r.startsWith(NextRoutes.CAR_PREFIX)) NextCarPage(r.removePrefix(NextRoutes.CAR_PREFIX)) else NextPlaceholder(r) } }
         rule.onNodeWithText("Trusted").assertExists()
         rule.onNodeWithText("AA:BB:CC:DD:EE:FF").performClick()
         rule.onNodeWithText("Forget this car").performClick()

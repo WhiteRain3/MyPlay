@@ -32,55 +32,8 @@ import net.prototux.aare.car.SavedPlace
 import net.prototux.aare.car.myplayParkedHere
 import net.prototux.aare.car.myplayPlaces
 
-/**
- * MyPlay (#5): up to five places of the owner's own, beside Home address, for ORBIT's Places list
- * (a home pad shortcut). Saved as typed (an entry with no address is not kept); never backed up.
- */
-@Composable
-internal fun PlacesSection(settings: Settings) {
-    // Rows being edited, blank ones included; the setting keeps only the ones with an address.
-    var rows by remember { mutableStateOf(settings.myplayPlaces) }
-    fun save(new: List<SavedPlace>) { rows = new; settings.myplayPlaces = new }
-    val colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = PhoneColors.Accent, unfocusedBorderColor = PhoneColors.Border)
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.phone_places_title), color = PhoneColors.Text, fontSize = 16.sp)
-        Text(stringResource(R.string.phone_places_hint), color = PhoneColors.Muted, fontSize = 13.sp)
-        rows.forEachIndexed { i, p ->
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    OutlinedTextField(p.name, { v -> save(rows.toMutableList().also { it[i] = p.copy(name = v.take(Places.NAME_MAX)) }) },
-                        singleLine = true, colors = colors, label = { Text(stringResource(R.string.phone_places_name)) },
-                        modifier = Modifier.fillMaxWidth().testTag(placeNameTag(i)))
-                    OutlinedTextField(p.address, { v -> save(rows.toMutableList().also { it[i] = p.copy(address = v.take(Places.ADDRESS_MAX)) }) },
-                        singleLine = true, colors = colors, label = { Text(stringResource(R.string.phone_places_address)) },
-                        modifier = Modifier.fillMaxWidth().testTag(placeAddressTag(i)))
-                }
-                IconButton({ save(rows.toMutableList().also { it.removeAt(i) }) }, Modifier.testTag(placeDeleteTag(i))) {
-                    Icon(Icons.Rounded.Delete, stringResource(R.string.phone_places_delete), tint = PhoneColors.Muted)
-                }
-            }
-        }
-        if (rows.size < Places.MAX) {
-            TextButton({ rows = rows + SavedPlace("", "") }, Modifier.testTag(PLACE_ADD_TAG)) {
-                Text(stringResource(R.string.phone_places_add), color = PhoneColors.Accent)
-            }
-        }
-    }
-}
-
 internal const val PLACE_ADD_TAG = "phone_place_add"
 internal fun placeNameTag(i: Int) = "phone_place_name_$i"
 internal fun placeAddressTag(i: Int) = "phone_place_address_$i"
 internal fun placeDeleteTag(i: Int) = "phone_place_delete_$i"
 
-/** MyPlay (#11): "Remember where I parked", off unless turned on here. */
-@Composable
-internal fun ParkedHereSwitch(settings: Settings) {
-    var on by remember { mutableStateOf(settings.myplayParkedHere) }
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
-        RowGroup(rows = listOf {
-            SwitchRow(Icons.Rounded.LocalParking, stringResource(R.string.phone_parked_title), on, TileTone.BLUE,
-                stringResource(R.string.phone_parked_hint)) { on = it; settings.myplayParkedHere = it }
-        })
-    }
-}

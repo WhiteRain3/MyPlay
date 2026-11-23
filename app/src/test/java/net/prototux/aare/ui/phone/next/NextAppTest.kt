@@ -47,7 +47,7 @@ class NextAppTest {
                     Text("row $i", Modifier.fillMaxWidth().height(64.dp).clickable { nav.open("car/speed") }.testTag("car-row-$i"))
                 }
             }
-        } else NextPlaceholder(route) {}
+        } else NextPlaceholder(route)
     }
 
     private fun page(route: String) = rule.onNodeWithTag("next-page-$route")
@@ -123,7 +123,7 @@ class NextAppTest {
     }
 
     @Test fun mapsLinkToMapColoursReturnsToMaps() {
-        rule.setContent { NextApp(deepLink = "car/maps") { if (it == "car") NextPlaceholder(it) {} else TestPage(it) } }
+        rule.setContent { NextApp(deepLink = "car/maps") { if (it == "car") NextPlaceholder(it) else TestPage(it) } }
         page("car/maps").assertExists()
         row("screen/map-colours")
         page("screen/map-colours").assertExists()

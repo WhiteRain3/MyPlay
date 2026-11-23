@@ -4,40 +4,19 @@
     <string name="phone_parts_help" translatable="false">Help</string>
 
     <!-- The start screen (Customise). -->
-    <string name="phone_customise_title" translatable="false">Customise</string>
-    <string name="phone_customise_hint" translatable="false">Tap a part of the picture to change it</string>
-    <string name="phone_customise_picture_description" translatable="false">Picture of the car screen. Tap to change how it looks.</string>
     <string name="phone_part_picture_description" translatable="false">Picture of the car screen with the current settings</string>
-    <string name="phone_part_bar" translatable="false">Bar</string>
     <string name="phone_bar_side" translatable="false">Side</string>
     <string name="phone_bar_items" translatable="false">Shown on the bar, in this order</string>
     <string name="phone_bar_items_hint" translatable="false">A bar at the side of a short screen (the Audi\'s) has room for the clock only; the others show when the bar is at the bottom.</string>
     <string name="phone_bar_more" translatable="false">Colour and weather</string>
-    <string name="phone_part_cards" translatable="false">Cards</string>
     <string name="phone_cards_weather_note" translatable="false">While this card is on, MyPlay sends a rough position (about 10 km) to Open-Meteo, even with the Weather switch off</string>
     <string name="phone_home_maps_question" translatable="false">Which map the home screen shows</string>
     <string name="phone_slots_hint" translatable="false">Drag a card to a place, or down here to hide it. The first place is the most important. The rows below do the same with arrows.</string>
     <string name="phone_slots_tray_empty" translatable="false">Not shown: none. Drag a card here to hide it.</string>
     <string name="phone_home_maps_unavailable" translatable="false">This maps app is hidden or no longer installed, so the home screen shows the maps buttons instead.</string>
     <string name="phone_cards_order" translatable="false">Shown, in this order</string>
-    <string name="phone_part_wallpaper" translatable="false">Wallpaper</string>
-    <string name="phone_wallpaper_edit_title" translatable="false">Edit the photo</string>
     <string name="phone_wallpaper_edit_none" translatable="false">No photo yet. Choose one first.</string>
-    <string name="phone_wallpaper_edit_hint" translatable="false">Drag to move the photo, pinch to zoom. The frame is the car screen\'s shape.</string>
-    <string name="phone_wallpaper_edit_dim" translatable="false">Darker: %1$d %%</string>
-    <string name="phone_wallpaper_edit_blur" translatable="false">Blur: %1$d</string>
-    <string name="phone_wallpaper_edit_reset" translatable="false">Start again</string>
-    <string name="phone_wallpaper_edit_use" translatable="false">Use as wallpaper</string>
-    <string name="phone_wallpaper_edit_saving" translatable="false">Saving…</string>
-    <string name="phone_wallpaper_edit_button" translatable="false">Edit the photo</string>
-    <string name="phone_wallpaper_other_photo" translatable="false">Choose another photo</string>
-    <string name="phone_part_colours" translatable="false">Colours</string>
-    <string name="phone_colours_phone_accent" translatable="false">Use the phone\'s colours</string>
-    <string name="phone_colours_day_night" translatable="false">Day and night</string>
-    <string name="phone_part_layout" translatable="false">Layout</string>
-    <string name="phone_layout_kind" translatable="false">Kind of layout</string>
     <string name="phone_layout_kind_hint" translatable="false">How the home screen is laid out</string>
-    <string name="phone_layout_at_once" translatable="false">Changes here show on a connected car at once.</string>
     <string name="phone_layout_presets" translatable="false">Ready-made layouts</string>
     <string name="phone_layout_preset_name" translatable="false">Layout %1$s</string>
     <string name="phone_layout_preset_hint" translatable="false">Tap one to use it. Each option below can then be changed on its own.</string>
@@ -92,8 +71,6 @@
     <string name="phone_cards_note_taskbar" translatable="false">The cards below are its home screen.</string>
     <string name="phone_cards_note_map_behind" translatable="false">Its cards float over the map. Where they sit is on the Layout page.</string>
     <string name="phone_cards_note_none" translatable="false">This layout has no cards. The list below is for the Taskbar layout.</string>
-    <string name="phone_part_status" translatable="false">Status icons</string>
-    <string name="phone_part_clock" translatable="false">Clock</string>
     <string name="phone_status_show" translatable="false">Show</string>
     <string name="phone_status_icon" translatable="false">Icon</string>
     <string name="phone_status_number" translatable="false">Number</string>
@@ -119,47 +96,17 @@
     <string name="phone_clock_style" translatable="false">Style</string>
     <string name="phone_clock_bold" translatable="false">Bold</string>
     <string name="phone_clock_bold_sub" translatable="false">Thicker digits. The Retro look keeps its own digits.</string>
-    <string name="phone_backup_save" translatable="false">Save settings to a file</string>
-    <string name="phone_backup_save_sub" translatable="false">Choose where; keep it somewhere safe</string>
-    <string name="phone_backup_save_button" translatable="false">Save</string>
-    <string name="phone_backup_load" translatable="false">Load settings from a file</string>
-    <string name="phone_backup_load_sub" translatable="false">Replaces the settings in the file; asks first</string>
-    <string name="phone_backup_load_button" translatable="false">Load</string>
-    <string name="phone_backup_restores_all" translatable="false">Loading restores every setting in the file, including ones that use the internet: the update check, the weather and the browser\'s address. If they were on when the file was saved, they are on again.</string>
-    <string name="phone_backup_no_photo" translatable="false">A wallpaper photo is not in the file. After loading, choose the photo again on the Wallpaper page.</string>
     <string name="phone_backup_saved" translatable="false">Settings saved.</string>
-    <string name="phone_tile_backup" translatable="false">Backup</string>
-    <string name="phone_tile_file" translatable="false">Save, load</string>
-    <string name="phone_part_size" translatable="false">Size</string>
-    <string name="phone_size_text_controls" translatable="false">Text and controls</string>
-    <string name="phone_size_text_controls_hint" translatable="false">Text size makes the words larger; control size makes buttons, the bar and icons larger. They change the car screen at once.</string>
-    <string name="phone_size_density_title" translatable="false">How much fits on the car screen</string>
-    <string name="phone_size_density_ignored" translatable="false">The stored %1$d dpi is outside 80 to 640, so the car ignores it and uses Auto.</string>
-    <string name="phone_size_dpi" translatable="false">%1$d dpi</string>
-    <string name="phone_size_density_hint" translatable="false">A higher number draws everything larger, so less fits. 213 is what Google\'s Android Auto used for the Audi. The picture above follows the choice.</string>
-    <string name="phone_whats_new_title" translatable="false">What\'s new in %1$s</string>
-    <string name="phone_whats_new_close" translatable="false">Got it</string>
-    <string name="phone_tile_buttons" translatable="false">Buttons</string>
-    <string name="phone_tile_buttons_default" translatable="false">Default</string>
-    <string name="phone_tile_buttons_changed" translatable="false">%1$d changed</string>
-    <string name="phone_page_buttons" translatable="false">Car buttons</string>
-    <string name="phone_buttons_hint" translatable="false">Tap a part of the drawing to see what it does and change it. Changes apply in the car at once.</string>
-    <string name="phone_buttons_steering" translatable="false">Steering wheel</string>
-    <string name="phone_buttons_dash" translatable="false">Dash knob</string>
     <string name="phone_control_knob" translatable="false">Knob push</string>
     <string name="phone_control_wheel" translatable="false">Wheel click</string>
     <string name="phone_control_menu" translatable="false">Menu</string>
     <string name="phone_control_back" translatable="false">Back</string>
     <string name="phone_control_pad" translatable="false">Pad on the knob</string>
-    <string name="phone_buttons_pad_text" translatable="false">Up, down, left and right move the ring in that direction, like a TV remote; holding one keeps moving. Turning the knob or the wheel moves the ring to the next or previous item. These are not changed here.</string>
     <string name="phone_gesture_press" translatable="false">Press</string>
     <string name="phone_gesture_hold" translatable="false">Press and hold</string>
     <string name="phone_gesture_double" translatable="false">Double press</string>
     <string name="phone_gesture_hold_turn" translatable="false">Hold and turn</string>
     <string name="phone_gesture_triple" translatable="false">Triple press</string>
-    <string name="phone_buttons_default" translatable="false">Default</string>
-    <string name="phone_buttons_changed" translatable="false">Changed</string>
-    <string name="phone_buttons_choose" translatable="false">Does</string>
     <string name="phone_action_select" translatable="false">Press what has the ring</string>
     <string name="phone_action_back" translatable="false">Back</string>
     <string name="phone_action_home" translatable="false">Home</string>
@@ -173,63 +120,12 @@
     <string name="phone_action_open_media" translatable="false">Open the music app</string>
     <string name="phone_action_open_phone" translatable="false">Open the phone</string>
     <string name="phone_action_nothing" translatable="false">Nothing</string>
-    <string name="phone_buttons_double_wait" translatable="false">With a double or a triple press set to do something, every single press of this button waits the double-press time to see if another follows. With a triple press set, a double press waits once more for a third.</string>
-    <string name="phone_buttons_hold_turn_unknown" translatable="false">Hold and turn works only if the car sends knob turns while the knob is held down. Not known yet for this car.</string>
-    <string name="phone_buttons_back_double" translatable="false">Two quick presses of Back always leave an app that ignores Back, so a double press is not offered here.</string>
-    <string name="phone_buttons_way_out" translatable="false">Choices that would leave no way out are not offered: Back pressed or held always goes back or home, and one button always goes home.</string>
-    <string name="phone_buttons_timing" translatable="false">Timing</string>
-    <string name="phone_buttons_hold_time" translatable="false">A hold is a press longer than %1$d ms</string>
-    <string name="phone_buttons_double_time" translatable="false">A double press is two presses within %1$d ms</string>
-    <string name="phone_buttons_codes_unknown" translatable="false">Which signals the box sends for each button is not known until a connection log from the car. If the wheel and the knob send the same signal, they share one set of gestures.</string>
-    <string name="phone_buttons_reset" translatable="false">Reset to the defaults</string>
-    <string name="phone_update_install" translatable="false">Download and install %1$s</string>
-    <string name="phone_update_busy" translatable="false">Installing %1$s…</string>
-    <string name="phone_update_install_hint" translatable="false">Downloads the new MyPlay from its GitHub releases, checks it is MyPlay, that version and signed by the same key, then Android asks you to confirm. Your settings stay.</string>
-    <string name="phone_update_downloading" translatable="false">Downloading…</string>
-    <string name="phone_update_downloading_pct" translatable="false">Downloading… %1$d %%</string>
-    <string name="phone_update_checking" translatable="false">Checking the download…</string>
-    <string name="phone_update_installing" translatable="false">Confirm the install in Android\'s window.</string>
-    <string name="phone_update_permission" translatable="false">First allow MyPlay to install apps in the screen that opened, then tap again.</string>
-    <string name="phone_update_fail_network" translatable="false">Couldn\'t download it. Check the connection and try again.</string>
-    <string name="phone_update_fail_no_apk" translatable="false">This release has no MyPlay app file to install. Nothing was changed.</string>
-    <string name="phone_update_fail_checksum" translatable="false">The download didn\'t match the release\'s checksum, so it was deleted and not installed.</string>
-    <string name="phone_update_fail_not_myplay" translatable="false">The download is not MyPlay, so it was deleted and not installed.</string>
-    <string name="phone_update_fail_version" translatable="false">The download is not the expected version, so it was deleted and not installed.</string>
-    <string name="phone_update_fail_signer" translatable="false">The download is not signed by MyPlay\'s key, so it was deleted and not installed.</string>
-    <string name="phone_update_fail_install" translatable="false">Android didn\'t install it (cancelled or refused). Nothing was changed.</string>
     <string name="phone_colour_before" translatable="false">Before</string>
     <string name="phone_colour_now" translatable="false">Now</string>
     <string name="phone_colour_hex" translatable="false">Hex (RRGGBB)</string>
     <string name="phone_colour_use" translatable="false">Use colour</string>
-    <string name="phone_customise_behind" translatable="false">Behind the scenes</string>
 
     <!-- The "Behind the scenes" tiles: a name, and a short value (at most 10 letters fit). -->
-    <string name="phone_tile_updates" translatable="false">Updates</string>
-    <string name="phone_tile_connection" translatable="false">Connection</string>
-    <string name="phone_tile_connected" translatable="false">Connected</string>
-    <string name="phone_tile_waiting" translatable="false">Waiting</string>
-    <string name="phone_tile_apps" translatable="false">Apps</string>
-    <string name="phone_tile_apps_count" translatable="false">%1$d apps</string>
-    <string name="phone_tile_sound" translatable="false">Sound</string>
-    <string name="phone_tile_sound_best" translatable="false">Best</string>
-    <string name="phone_tile_sound_all" translatable="false">All sound</string>
-    <string name="phone_tile_sound_music" translatable="false">Music only</string>
-    <string name="phone_tile_messages" translatable="false">Messages</string>
-    <string name="phone_tile_voice" translatable="false">Voice</string>
-    <string name="phone_tile_certificates" translatable="false">Certificate</string>
-    <string name="phone_tile_cert_own" translatable="false">MyPlay\'s</string>
-    <string name="phone_tile_advanced" translatable="false">Advanced</string>
-    <string name="phone_tile_log_on" translatable="false">Log on</string>
-    <string name="phone_tile_server_on" translatable="false">Server on</string>
-    <string name="phone_tile_normal" translatable="false">Normal</string>
-    <string name="phone_tile_car_data" translatable="false">Car data</string>
-    <string name="phone_tile_view" translatable="false">View</string>
-    <string name="phone_tile_about" translatable="false">About</string>
-    <string name="phone_tile_on" translatable="false">On</string>
-    <string name="phone_tile_off" translatable="false">Off</string>
-    <string name="phone_tile_none" translatable="false">None</string>
-    <string name="phone_tile_set_up" translatable="false">Set up</string>
-    <string name="phone_certificates_subtitle" translatable="false">Which certificate MyPlay shows the car</string>
 
     <!-- The sample page of every shared part (for screenshots only; changes nothing). -->
     <string name="phone_parts_title" translatable="false">Phone parts</string>
@@ -264,15 +160,6 @@
     <string name="phone_parts_sample_changed" translatable="false">3 changed</string>
     <string name="phone_parts_sample_two_on" translatable="false">2 on</string>
     <string name="phone_parts_sample_wide" translatable="false">A wide button</string>
-    <string name="phone_own_colours" translatable="false">Your own colours</string>
-    <string name="phone_own_colours_hint" translatable="false">Tap a part of the picture, or a row, to choose its colour. Night and day are set apart.</string>
-    <string name="phone_own_colours_night" translatable="false">Night</string>
-    <string name="phone_own_colours_day" translatable="false">Day</string>
-    <string name="phone_own_colours_looks_own" translatable="false">The look\'s own</string>
-    <string name="phone_own_colours_yours" translatable="false">Yours</string>
-    <string name="phone_own_colours_back" translatable="false">Back to the look\'s own</string>
-    <string name="phone_own_colours_reset" translatable="false">Clear all my colours</string>
-    <string name="phone_own_colours_hard_to_read" translatable="false">Hard to read: %1$s on %2$s (%3$s to 1, aim for 4.5 or more).</string>
     <string name="phone_role_background" translatable="false">Background</string>
     <string name="phone_role_card" translatable="false">Cards</string>
     <string name="phone_role_bar" translatable="false">Bar</string>
@@ -287,46 +174,8 @@
     <string name="phone_role_on_accent_what" translatable="false">Text and symbols on the accent colour</string>
     <string name="phone_role_text_what" translatable="false">Most text and symbols</string>
     <string name="phone_role_text_dim_what" translatable="false">Second lines and quieter text</string>
-    <string name="phone_own_colours_dark_bar" translatable="false">\"Dark bar\" is on, so by day the car shows the bar in its night colour.</string>
-    <string name="phone_part_looks" translatable="false">Looks</string>
-    <string name="phone_looks_built_in" translatable="false">Looks that come with MyPlay</string>
-    <string name="phone_looks_yours" translatable="false">Your looks</string>
-    <string name="phone_looks_unsaved" translatable="false">The look now set is not saved. Save it to keep it before choosing another.</string>
-    <string name="phone_looks_save" translatable="false">Save this look</string>
-    <string name="phone_looks_open" translatable="false">Open a look file</string>
-    <string name="phone_looks_no_photo" translatable="false">A shared look leaves out a photo wallpaper: the photo is not in the file.</string>
-    <string name="phone_looks_what" translatable="false">A look holds the colours, layout, wallpaper, status icons, clock and the bar\'s items. Day and night, sizes and apps stay as they are.</string>
-    <string name="phone_looks_replace_title" translatable="false">Choose \"%1$s\"?</string>
-    <string name="phone_looks_replace_text" translatable="false">The look now set is not saved, and choosing another replaces it.</string>
-    <string name="phone_looks_replace_action" translatable="false">Choose</string>
-    <string name="phone_looks_save_title" translatable="false">Save this look</string>
-    <string name="phone_looks_add_title" translatable="false">Add this look to yours</string>
-    <string name="phone_looks_name" translatable="false">Name</string>
-    <string name="phone_looks_name_built_in" translatable="false">A look that comes with MyPlay has this name.</string>
-    <string name="phone_looks_save_action" translatable="false">Save</string>
-    <string name="phone_looks_delete_title" translatable="false">Delete \"%1$s\"?</string>
-    <string name="phone_looks_delete_text" translatable="false">Only the saved look goes; the car screen stays as it is.</string>
-    <string name="phone_looks_delete_action" translatable="false">Delete</string>
-    <string name="phone_looks_share" translatable="false">Share %1$s as a file</string>
-    <string name="phone_looks_delete" translatable="false">Delete %1$s</string>
     <string name="phone_looks_shared" translatable="false">Look saved to the file</string>
     <string name="phone_looks_open_failed" translatable="false">That file could not be read as a look.</string>
-    <string name="phone_looks_hard_to_read" translatable="false">Some of this look\'s own colours are hard to read. You can change them on the Colours page after choosing it.</string>
-    <string name="phone_looks_photo_missing" translatable="false">Its photo is not on this phone</string>
-    <string name="phone_tile_car_check" translatable="false">Car check</string>
-    <string name="phone_check_not_connected" translatable="false">No car is connected. Connect first: the check listens to what the car sends.</string>
-    <string name="phone_check_how" translatable="false">Parked, with the car connected: do what each step says. Whatever the car sends while a step is on screen is recorded for that step. The car screen also reacts, which is fine.</string>
-    <string name="phone_check_step_of" translatable="false">Step %1$d of %2$d</string>
-    <string name="phone_check_hold_hint" translatable="false">Hold it for about two seconds, then let go.</string>
-    <string name="phone_check_waiting" translatable="false">Waiting for the car…</string>
-    <string name="phone_check_next" translatable="false">Next</string>
-    <string name="phone_check_nothing" translatable="false">Nothing happened, next</string>
-    <string name="phone_check_again" translatable="false">Again</string>
-    <string name="phone_check_done" translatable="false">All steps done</string>
-    <string name="phone_check_steps" translatable="false">Steps</string>
-    <string name="phone_check_nothing_arrived" translatable="false">nothing arrived</string>
-    <string name="phone_check_share" translatable="false">Share the log</string>
-    <string name="phone_check_private" translatable="false">The shared log leaves out who messages were auto-replied to, Bluetooth device and Wi-Fi names, addresses (a Bluetooth address keeps its last two pairs), e-mails, phone numbers and VINs. The car\'s own name and its certificate\'s name stay. Read it before you send it.</string>
     <string name="phone_check_knob_right" translatable="false">Turn the dash knob right, a few clicks</string>
     <string name="phone_check_knob_left" translatable="false">Turn the dash knob left, a few clicks</string>
     <string name="phone_check_knob_push" translatable="false">Push the dash knob once</string>
@@ -341,74 +190,25 @@
     <string name="phone_check_wheel_scroll" translatable="false">Scroll the steering-wheel wheel, both ways</string>
     <string name="phone_check_wheel_click" translatable="false">Click the steering-wheel wheel once</string>
     <string name="phone_check_wheel_hold" translatable="false">Click the steering-wheel wheel and hold it</string>
-    <string name="phone_check_start" translatable="false">Start</string>
-    <string name="phone_map_areas_title" translatable="false">Show the map\'s free area</string>
     <string name="phone_map_areas_hint" translatable="false">Outlines on the car screen the part of the map MyPlay tells the maps app is free (green: now, dashed yellow: always). For checking why a map is not centred; turn it off when done.</string>
-    <string name="phone_map_colours" translatable="false">Map colours</string>
-    <string name="phone_map_colours_for" translatable="false">A colour filter over the maps app on the car screen.</string>
-    <string name="phone_map_before" translatable="false">As the app draws it</string>
-    <string name="phone_map_after" translatable="false">On the car screen</string>
-    <string name="phone_map_preset_none" translatable="false">None</string>
     <string name="phone_map_preset_muted" translatable="false">Muted</string>
     <string name="phone_map_preset_cool" translatable="false">Cool</string>
     <string name="phone_map_preset_warm" translatable="false">Warm</string>
     <string name="phone_map_preset_dark_night" translatable="false">Darker nights</string>
     <string name="phone_map_preset_grey" translatable="false">Grey</string>
-    <string name="phone_map_hue" translatable="false">Hue shift: %1$d°</string>
-    <string name="phone_map_saturation" translatable="false">Colourfulness: %1$d %%</string>
-    <string name="phone_map_brightness" translatable="false">Brightness: %1$d</string>
-    <string name="phone_map_contrast" translatable="false">Contrast: %1$d %%</string>
-    <string name="phone_map_tint" translatable="false">Tint: %1$d %%</string>
-    <string name="phone_map_tint_colour" translatable="false">Tint colour</string>
-    <string name="phone_map_night_darker" translatable="false">Darker at night: %1$d %% (when the maps app is in night colours)</string>
-    <string name="phone_map_what" translatable="false">It recolours everything the maps app draws on its map, its own buttons and speed sign too. It works on colours only, so it cannot tell water from roads, and it costs a little more work per frame.</string>
-    <string name="phone_map_with_look" translatable="false">The filter is part of the look: saving a look keeps it, and choosing a look brings its own (or none).</string>
-    <string name="phone_buttons_line_title" translatable="false">Show what a button did</string>
-    <string name="phone_buttons_line_hint" translatable="false">A short line at the top of the car screen after a button changes the song, plays or pauses, or starts the assistant.</string>
-    <string name="phone_tile_speed" translatable="false">Speed</string>
-    <string name="phone_speed_region" translatable="false">Region</string>
-    <string name="phone_speed_region_none" translatable="false">None</string>
-    <string name="phone_speed_file" translatable="false">Speed limit file</string>
-    <string name="phone_speed_not_downloaded" translatable="false">Not downloaded yet</string>
-    <string name="phone_speed_kept" translatable="false">%1$s, from %2$s</string>
     <string name="phone_speed_checking" translatable="false">Looking for a newer file…</string>
     <string name="phone_speed_downloading" translatable="false">Downloading…</string>
     <string name="phone_speed_up_to_date" translatable="false">The file is up to date.</string>
     <string name="phone_speed_done" translatable="false">Downloaded.</string>
     <string name="phone_speed_needs_wifi" translatable="false">Connect to Wi-Fi to download it, or allow mobile data below.</string>
     <string name="phone_speed_failed" translatable="false">The file could not be downloaded. Try again later.</string>
-    <string name="phone_speed_download" translatable="false">Download</string>
-    <string name="phone_speed_look_now" translatable="false">Look for a newer one</string>
-    <string name="phone_speed_delete" translatable="false">Delete</string>
-    <string name="phone_speed_wifi_only" translatable="false">Downloaded on Wi-Fi only unless allowed above, from MyPlay\'s own release page. Looked for again once a month, when MyPlay is opened. Choosing a region, or None, deletes nothing: an old region\'s file goes only once the new one is downloaded, and Delete removes it.</string>
-    <string name="phone_speed_hint_only" translatable="false">The limit is a hint; the signs on the road win. OpenStreetMap does not know every limit: it misses road works, variable motorway signs and some limits by time or weather, and a match can be wrong at junctions or on roads side by side.</string>
-    <string name="phone_speed_offline" translatable="false">The file is used offline on the phone: the car\'s position is never sent anywhere to find a limit.</string>
     <string name="phone_osm_notice" translatable="false">Speed limit data © OpenStreetMap contributors, available under the Open Database Licence (ODbL) 1.0: openstreetmap.org/copyright</string>
-    <string name="phone_speed_region_which" translatable="false">Which region\'s speed limits the car screen shows</string>
     <string name="phone_speed_not_published" translatable="false">No speed limit file for this region has been published yet.</string>
-    <string name="phone_mirror_turn" translatable="false">Turning the knob in this app moves</string>
-    <string name="phone_mirror_turn_up_down" translatable="false">Up and down</string>
-    <string name="phone_mirror_turn_left_right" translatable="false">Left and right</string>
-    <string name="phone_speed_source_title" translatable="false">Speed on the car screen</string>
-    <string name="phone_speed_source_which" translatable="false">Where the speed comes from</string>
     <string name="phone_speed_source_auto" translatable="false">Auto</string>
     <string name="phone_speed_source_car" translatable="false">Car only</string>
     <string name="phone_speed_source_off" translatable="false">Off</string>
-    <string name="phone_speed_source_auto_hint" translatable="false">From the car; else from the phone\'s location, only while a maps app runs.</string>
-    <string name="phone_speed_source_car_hint" translatable="false">Only the car\'s own speed; never the phone\'s location.</string>
-    <string name="phone_speed_source_off_hint" translatable="false">No speed is shown.</string>
-    <string name="phone_nav_text_title" translatable="false">Log the maps app\'s texts</string>
     <string name="phone_nav_text_hint" translatable="false">For the Waze check: every text the maps app sends to the car screen goes into the connection log, alert texts in full, marked when it looks like a speed. The log on the phone then holds street names and your destination; a shared Car check log keeps only the speeds unless you tick to include alert texts. Off when done.</string>
-    <string name="phone_orbit_preview_title" translatable="false">MyPlay car screen (ORBIT)</string>
     <string name="phone_orbit_preview_hint" translatable="false">The car screen MyPlay draws itself: the home and every world (navigate, music, calls, apps, car, settings). On by default. Off: the car uses an older layout chosen below (taskbar, dock, classic, map behind); those will be removed later. The picture above shows it.</string>
-    <string name="phone_speed_warning" translatable="false">Over the limit</string>
-    <string name="phone_speed_warning_hint" translatable="false">The car screen\'s speed turns amber when you are this far over the known limit.</string>
-    <string name="phone_speed_limit_needs_location" translatable="false">The limit is found from the phone\'s location, so it is not shown with the speed set to Car only.</string>
-    <string name="phone_engine_language" translatable="false">Design</string>
-    <string name="phone_engine_deck_preview" translatable="false">DECK: its home is new; its worlds still use ORBIT\'s look for now.</string>
-    <string name="phone_youtube_row_subtitle" translatable="false">YouTube\'s website in the car browser, parked only</string>
-    <string name="phone_panel_timeout_hint" translatable="false">The music panel and the dial close after this long with no knob, pad or touch.</string>
-    <string name="phone_home_pad_title" translatable="false">ORBIT home: pad shortcuts</string>
     <string name="phone_home_pad_center" translatable="false">Knob push</string>
     <string name="phone_home_pad_up" translatable="false">Pad up</string>
     <string name="phone_home_pad_left" translatable="false">Pad left</string>
@@ -420,31 +220,6 @@
     <string name="phone_home_pad_apps" translatable="false">Apps</string>
     <string name="phone_home_pad_calls" translatable="false">Calls</string>
     <string name="phone_home_pad_nothing" translatable="false">Nothing</string>
-    <string name="phone_home_pad_hint" translatable="false">On ORBIT\'s home, while the knob\'s ring is hidden. Turning the knob shows the ring, and then these keys move it as before. Nothing: the key only shows the ring. With every key set to Nothing the shortcuts are off and the ring always shows.</string>
-    <string name="phone_maps_idle_home_hint" translatable="false">A maps app opened full screen goes back to the home after this long with nothing pressed.</string>
-    <string name="phone_teach_title" translatable="false">Teach a car button</string>
-    <string name="phone_teach_choose" translatable="false">What should the button do?</string>
-    <string name="phone_teach_start" translatable="false">Teach it</string>
-    <string name="phone_teach_waiting" translatable="false">Now press the button in the car. It will do: %1$s.</string>
-    <string name="phone_teach_hint" translatable="false">For buttons MyPlay does not know, like the ones round the knob. With the car connected, choose what it should do, tap Teach it, then press the button within 30 seconds. Not Back, the knob, the pad or the call keys.</string>
-    <string name="phone_teach_learned" translatable="false">Buttons taught</string>
-    <string name="phone_teach_forget" translatable="false">Forget %1$s</string>
-    <string name="phone_teach_seconds" translatable="false">Waiting %1$d more seconds.</string>
-    <string name="phone_info_home_hint" translatable="false">The home never shows the knob\'s ring: the pad and the taught buttons do everything. Needs a pad key set to The dial or Apps, so the car\'s settings stay reachable; without one the ring stays.</string>
-    <string name="phone_youtube_app_title" translatable="false">YouTube app on the car screen</string>
-    <string name="phone_youtube_app_action" translatable="false">Put it on</string>
-    <string name="phone_youtube_app_hint" translatable="false">The real YouTube app, as a phone app on the car screen: parked only, with root or Shizuku. Turning it on also turns on phone apps on the car screen. While it is on, the car leaves out the YouTube website entry, so there is only one YouTube.</string>
-    <string name="phone_youtube_app_needs_root" translatable="false">The real YouTube app, as a phone app on the car screen: parked only. Needs root or Shizuku, which this phone does not give MyPlay yet.</string>
-    <string name="phone_youtube_app_also" translatable="false">This also turns on phone apps on the car screen, with any other apps chosen below.</string>
-    <string name="phone_speed_mobile_title" translatable="false">Download on mobile data</string>
-    <string name="phone_speed_mobile_hint" translatable="false">Off: Wi-Fi only. On: the file and its monthly update may also use mobile data, never when roaming.</string>
-    <string name="phone_speed_mobile_confirm" translatable="false">The speed limit file is %1$s. Downloading it, and each monthly update, may then use that much mobile data.</string>
-    <string name="phone_speed_mobile_confirm_unknown" translatable="false">The file\'s size could not be looked up just now. Downloading it, and each monthly update, may then use mobile data.</string>
-    <string name="phone_speed_mobile_allow" translatable="false">Allow</string>
-    <string name="phone_speed_kept_unused" translatable="false">%1$s, from %2$s, kept but not used while no region is chosen</string>
     <string name="phone_speed_no_internet" translatable="false">This network has no internet (the car\'s Wi-Fi, perhaps). Try again on another one.</string>
     <string name="phone_check_knob_buttons" translatable="false">Press each of the 4 buttons round the knob, one at a time</string>
-    <string name="phone_check_knob_buttons_seen" translatable="false">Different buttons seen: %1$d of 4.</string>
-    <string name="phone_buttons_no_holds" translatable="false">This car doesn\'t send holds: the Car check saw every hold arrive as an instant press. Hold and hold-and-turn cannot work here; use double or triple presses instead.</string>
-    <string name="phone_check_alert_texts" translatable="false">Include alert texts (may contain street names)</string>
 </resources>
