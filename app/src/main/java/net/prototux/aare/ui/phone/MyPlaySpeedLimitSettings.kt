@@ -64,8 +64,14 @@ object SpeedLimitFiles {
 
     /** The release the files are published in (rolling, rebuilt monthly; not a myplay-v* tag, so the updater ignores it). */
     private const val DOWNLOADS = "https://github.com/WhiteRain3/MyPlay/releases/download/speed-limits/"
-    fun manifestUrl(region: String) = "${DOWNLOADS}speed-limits-$region.json"
-    fun fileUrl(region: String) = "${DOWNLOADS}speed-limits-$region.bin"
+    /**
+     * SL-5: the files with option A's estimates are published as "-v2" (only apps that draw them as
+     * estimates fetch those); the plain names stay, without estimates, for older apps. [v2] false:
+     * the plain names (the fallback while no "-v2" file is published).
+     */
+    fun manifestUrl(region: String, v2: Boolean = true) = "${DOWNLOADS}speed-limits-$region${if (v2) V2 else ""}.json"
+    fun fileUrl(region: String, v2: Boolean = true) = "${DOWNLOADS}speed-limits-$region${if (v2) V2 else ""}.bin"
+    private const val V2 = "-v2"
 
     /** Looked for again at most this often. */
     const val CHECK_EVERY_MS = 30L * 24 * 60 * 60 * 1000
@@ -100,7 +106,8 @@ object SpeedLimitCheck {
 
     /** Whether [remote] should replace what is kept ([local], null if nothing): newer, or nothing kept. */
     fun wanted(local: SpeedLimitManifest?, haveFile: Boolean, remote: SpeedLimitManifest): Boolean =
-        !haveFile || local == null || remote.built > local.built
+        // SL-5: the "-v2" file of the same day as the plain one kept (another file, same date) is wanted too.
+        !haveFile || local == null || remote.built > local.built || (remote.built == local.built && remote.sha256 != local.sha256)
 
     /** Whether a try counts as the month's look: it reached the release page and got an answer. */
     fun counts(state: SpeedLimitDownload.State, stopped: Boolean = false): Boolean = stopped || state == SpeedLimitDownload.State.Done ||

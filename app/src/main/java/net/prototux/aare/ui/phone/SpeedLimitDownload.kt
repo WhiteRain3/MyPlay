@@ -96,8 +96,11 @@ object SpeedLimitDownload {
 
     /** The region's file description from the release page, for its size before a download (small, any network); null if unknown. */
     suspend fun lookUp(region: String): SpeedLimitManifest? = withContext(Dispatchers.IO) {
-        runCatching { SpeedLimitManifest.parse(String(get(SpeedLimitFiles.manifestUrl(SpeedLimitFiles.known(region).ifEmpty { return@runCatching null })), Charsets.UTF_8)) }
-            .getOrNull()?.takeIf { it.region == region }
+        val known = SpeedLimitFiles.known(region).ifEmpty { return@withContext null }
+        // SL-5: the "-v2" file first, the plain one while no "-v2" is published.
+        listOf(true, false).firstNotNullOfOrNull { v2 ->
+            runCatching { SpeedLimitManifest.parse(String(get(SpeedLimitFiles.manifestUrl(known, v2)), Charsets.UTF_8)) }.getOrNull()?.takeIf { it.region == region }
+        }
     }
 
     /** The look a month after the last one (called when the app or the page opens); quiet when it is not due or not on Wi-Fi. */
@@ -151,8 +154,15 @@ object SpeedLimitDownload {
     }
 
     private fun fetch(context: Context, region: String): State {
+        // SL-5: the "-v2" file (with estimates) first; the plain one while no "-v2" is published.
+        var v2 = true
         val text = try {
-            String(get(SpeedLimitFiles.manifestUrl(region)), Charsets.UTF_8)
+            try {
+                String(get(SpeedLimitFiles.manifestUrl(region, v2 = true)), Charsets.UTF_8)
+            } catch (e: NotFound) {
+                v2 = false
+                String(get(SpeedLimitFiles.manifestUrl(region, v2 = false)), Charsets.UTF_8)
+            }
         } catch (e: NotFound) {
             return State.NotPublished
         } catch (e: Exception) {
@@ -165,7 +175,7 @@ object SpeedLimitDownload {
         val dir = SpeedLimitFiles.dir(context.filesDir).apply { mkdirs() }
         val tmp = File(dir, "$region.bin.tmp")
         try {
-            if (!download(SpeedLimitFiles.fileUrl(region), tmp, remote.bytes)) {
+            if (!download(SpeedLimitFiles.fileUrl(region, v2), tmp, remote.bytes)) {
                 if (stop.get()) { DiagLog.add("speed limits: download stopped by the owner"); return State.Idle }
                 return State.Failed
             }

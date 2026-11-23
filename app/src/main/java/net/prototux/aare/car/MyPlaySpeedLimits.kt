@@ -91,11 +91,12 @@ class FileSpeedLimits(context: Context) : SpeedLimits {
             matcher = Matcher(SpeedLimitFile(buffer))
         }
         val m = matcher ?: return LimitShown.Unknown
+        // Option A: the owner's "Fill in standard limits" (on by default); off leaves the estimates the
+        // file fills in (GUESSED) out, so those roads show "no limit known"; zone and kind defaults stay.
+        m.withGuessed = settings.myplayFillStandardLimits
         val month = Calendar.getInstance().apply { timeInMillis = fix.atMillis }.get(Calendar.MONTH) + 1
         return when (val r = m.match(fix.lat, fix.lon, fix.bearingDeg, fix.accuracyM, month)) {
-            // Option A: the owner's "Fill in standard limits" (on by default); off, a limit that is not
-            // a sign tagged on the road (a default for the road's kind or place) shows as not known.
-            is Matcher.Result.Known -> if (r.defaulted && !settings.myplayFillStandardLimits) LimitShown.Unknown else LimitShown.Known(r.limit, r.defaulted)
+            is Matcher.Result.Known -> LimitShown.Known(r.limit, r.defaulted, r.guessed)
             Matcher.Result.Unknown -> LimitShown.Unknown
         }
     }

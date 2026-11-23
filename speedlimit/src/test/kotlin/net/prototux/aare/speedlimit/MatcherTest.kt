@@ -94,4 +94,15 @@ class MatcherTest {
         val m = Matcher { _, _ -> throw IllegalArgumentException("bad tile") }
         assertEquals(Unknown, m.match(54.68, 25.27, 0f, 5f, 6))
     }
+
+    /** Option A: the matcher says a guess is a guess, and leaves guesses out when asked (the owner's switch off). */
+    @Test fun guessesAreMarkedAndCanBeLeftOut() {
+        val guess = Piece(90, 0, SpeedLimitFormat.DEFAULTED or SpeedLimitFormat.GUESSED, 4, intArrayOf(5_470_000, 5_470_100), intArrayOf(2_527_000, 2_527_000))
+        val m = Matcher { _, _ -> listOf(guess) }
+        val r = m.match(54.70050, 25.27000, 0f, 5f, 6) as Matcher.Result.Known
+        org.junit.Assert.assertEquals(90, r.limit)
+        org.junit.Assert.assertTrue(r.defaulted && r.guessed)
+        m.withGuessed = false
+        org.junit.Assert.assertEquals(Matcher.Result.Unknown, m.match(54.70050, 25.27000, 0f, 5f, 6))
+    }
 }

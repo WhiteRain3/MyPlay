@@ -50,6 +50,13 @@ class SpeedLimitTest {
         assertTrue(SpeedLimitCheck.wanted(old, true, new))
         assertFalse(SpeedLimitCheck.wanted(new, true, new))
         assertFalse(SpeedLimitCheck.wanted(new, true, old))
+        // SL-5: the same day's "-v2" file (another file, so another checksum) replaces the plain one.
+        val v2 = new.copy(sha256 = "f".repeat(64))
+        assertTrue(SpeedLimitCheck.wanted(new, true, v2))
+        // The URLs: "-v2" first, the plain names as the fallback.
+        assertTrue(SpeedLimitFiles.fileUrl("lithuania").endsWith("/speed-limits-lithuania-v2.bin"))
+        assertTrue(SpeedLimitFiles.manifestUrl("lithuania").endsWith("/speed-limits-lithuania-v2.json"))
+        assertTrue(SpeedLimitFiles.fileUrl("lithuania", v2 = false).endsWith("/speed-limits-lithuania.bin"))
     }
 
     @Test
@@ -69,8 +76,8 @@ class SpeedLimitTest {
         val dir = File("/data/x/files")
         assertEquals(File(dir, "speed_limits/lithuania.bin"), SpeedLimitFiles.file(dir, "lithuania"))
         assertEquals(File(dir, "speed_limits/lithuania.json"), SpeedLimitFiles.manifestFile(dir, "lithuania"))
-        assertEquals("https://github.com/WhiteRain3/MyPlay/releases/download/speed-limits/speed-limits-lithuania.json", SpeedLimitFiles.manifestUrl("lithuania"))
-        assertEquals("https://github.com/WhiteRain3/MyPlay/releases/download/speed-limits/speed-limits-lithuania.bin", SpeedLimitFiles.fileUrl("lithuania"))
+        assertEquals("https://github.com/WhiteRain3/MyPlay/releases/download/speed-limits/speed-limits-lithuania.json", SpeedLimitFiles.manifestUrl("lithuania", v2 = false))
+        assertEquals("https://github.com/WhiteRain3/MyPlay/releases/download/speed-limits/speed-limits-lithuania.bin", SpeedLimitFiles.fileUrl("lithuania", v2 = false))
     }
 
     @Test
