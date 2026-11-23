@@ -247,8 +247,6 @@
     <string name="next_looks_use_label" translatable="false">Use %1$s?</string>
     <string name="next_looks_changes_help" translatable="false">This look changes:</string>
     <string name="next_looks_no_change_help" translatable="false">It is the look now set</string>
-    <string name="next_looks_uses_label" translatable="false">This look uses %1$s</string>
-    <string name="next_looks_switches_help" translatable="false">The car screen switches from %1$s</string>
     <string name="next_looks_older_label" translatable="false">Older-layout settings</string>
     <string name="next_looks_use_it_label" translatable="false">Use it</string>
 
@@ -688,4 +686,15 @@
     <string name="next_shz_h5_help" translatable="false">MyPlay asks Shizuku once</string>
     <string name="next_shz_restart_help" translatable="false">After a phone restart, open Shizuku and tap Start again</string>
     <string name="next_shz_root_help" translatable="false">On a rooted phone none of this is needed</string>
+    <string name="next_shz_root_ready_label" translatable="false">Using root</string>
+    <string name="next_shz_root_ready_help" translatable="false">Phone apps open through root; no Shizuku needed</string>
+    <string name="next_shz_root_allow_title_label" translatable="false">This phone is rooted</string>
+    <string name="next_shz_root_allow_help" translatable="false">Allow MyPlay root once to open phone apps</string>
+    <string name="next_shz_root_allow_label" translatable="false">Allow root</string>
+    <string name="next_shz_old_android_label" translatable="false">Needs Android 12 or newer</string>
+    <string name="next_shz_old_android_help" translatable="false">Phone apps can\'t open in the car on this Android</string>
+    <string name="next_shz_old_shizuku_label" translatable="false">Update Shizuku</string>
+    <string name="next_shz_old_shizuku_help" translatable="false">This Shizuku is too old; version 11 or newer works</string>
+    <string name="next_scr_fits_orbit_help" translatable="false">Changes the app screens; ORBIT fits itself to the car</string>
+    <string name="next_scr_wallpaper_orbit_help" translatable="false">On ORBIT it shows when no map is on the home screen</string>
 </resources>

@@ -12,6 +12,7 @@ import net.prototux.aare.ui.phone.MyPlayLooks
 import net.prototux.aare.ui.phone.myplayLooks
 import net.prototux.aare.ui.theme.myplayLookColours
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -30,8 +31,6 @@ class NextLooksColoursTest {
     @Test fun whatALookChanges() {
         assertEquals(listOf(LookPart.COLOURS, LookPart.WALLPAPER, LookPart.OLDER_LAYOUTS), lookChanges(emptyMap<String, Any>(), forest))
         assertEquals(emptyList<LookPart>(), lookChanges(forest.values, forest))
-        assertEquals("deck", lookSwitchesDesign(emptyMap<String, Any>(), Look("D", mapOf("myplay_engine_language" to "deck"))))
-        assertEquals(null, lookSwitchesDesign(emptyMap<String, Any>(), forest))
     }
 
     @Test fun applyingALookWritesExactlyItsKeys() {
@@ -50,14 +49,17 @@ class NextLooksColoursTest {
         assertEquals(true, settings.wireless)
     }
 
-    @Test fun aDeckLookAsksFirst() {
-        settings.myplayLooks = listOf(Look("Night drive", mapOf("myplay_engine_language" to "deck", "style_accent" to "amber")))
-        rule.setContent { NextLooksPage() }
-        rule.onNodeWithText("Night drive").performClick()
-        rule.onNodeWithText("This look uses DECK").assertExists()
-        rule.onNodeWithText("Cancel").performClick()
-        rule.waitForIdle()
-        assertEquals(null, settings.prefs.getString("myplay_engine_language", null))
+    @Test fun aLookKeepsTheDesignInUse() {
+        // TH-2: a DECK driver who picks a look stays on DECK; an old look file's design is not taken either.
+        settings.prefs.edit().putString("myplay_engine_language", "deck").commit()
+        MyPlayLooks.choose(settings, forest)
+        assertEquals("deck", settings.prefs.getString("myplay_engine_language", null))
+        settings.prefs.edit().putString("myplay_engine_language", "orbit").commit()
+        val old = MyPlayLooks.fromFile(net.prototux.aare.SettingsBackup.export(mapOf("style_accent" to "amber", "myplay_engine_language" to "deck"))
+            .put(MyPlayLooks.NAME_KEY, "Old"), "")
+        assertFalse("myplay_engine_language" in old.values)
+        MyPlayLooks.choose(settings, old)
+        assertEquals("orbit", settings.prefs.getString("myplay_engine_language", null))
     }
 
     @Test fun deletingALookCanBeUndone() {

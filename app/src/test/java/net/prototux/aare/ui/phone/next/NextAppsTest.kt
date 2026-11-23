@@ -70,6 +70,7 @@ class NextAppsTest {
     }
 
     @Test fun phoneAppsWithoutRootOrShizuku() {
+        suPresentCheck = { false }
         rule.setContent { NextPhoneAppsPage() }
         rule.onNodeWithText("Needs root or Shizuku").assertExists()
         rule.onNode(hasText("Launch phone apps on the car") and isToggleable()).assertIsNotEnabled()
@@ -79,6 +80,7 @@ class NextAppsTest {
     }
 
     @Test fun howToSetUpOpensTheHelpPage() {
+        suPresentCheck = { false }
         rule.setContent { NextApp(start = "apps/phone-apps") { r -> if (r == "apps/phone-apps") NextPhoneAppsPage() else NextShizukuHelpPage() } }
         rule.onNodeWithText("How to set up").performClick()
         rule.waitForIdle()
@@ -86,10 +88,24 @@ class NextAppsTest {
         rule.onNodeWithText("Pair Shizuku once").assertExists()
     }
 
+    @Test fun aRootedPhoneAsksForRootNotShizuku() {
+        suPresentCheck = { true }
+        try {
+            rule.setContent { NextPhoneAppsPage() }
+            rule.onNodeWithText("Allow root").assertExists()
+            rule.onNodeWithText("Install Shizuku").assertDoesNotExist()
+        } finally { suPresentCheck = { false } }
+    }
+
     @Test fun shizukuSteps() {
         assertEquals(ShizukuStep.INSTALL, shizukuStep(installed = false, running = false, allowed = false))
         assertEquals(ShizukuStep.START, shizukuStep(installed = true, running = false, allowed = false))
         assertEquals(ShizukuStep.ALLOW, shizukuStep(installed = true, running = true, allowed = false))
         assertEquals(ShizukuStep.READY, shizukuStep(installed = true, running = true, allowed = true))
+        // Root first (dispatcher), then the gates that would leave the owner stuck (review PH-1).
+        assertEquals(ShizukuStep.ROOT_READY, shizukuStep(installed = true, running = true, allowed = false, rootGranted = true, suPresent = true))
+        assertEquals(ShizukuStep.ROOT_ALLOW, shizukuStep(installed = false, running = false, allowed = false, suPresent = true))
+        assertEquals(ShizukuStep.OLD_ANDROID, shizukuStep(installed = true, running = true, allowed = true, android12 = false))
+        assertEquals(ShizukuStep.OLD_SHIZUKU, shizukuStep(installed = true, running = true, allowed = true, preV11 = true))
     }
 }

@@ -306,13 +306,14 @@ Screen. That is a move of a row, not a restructure.
 
 ### 6.1 Looks and archived settings
 
-A look keeps exactly today's keys (`MyPlayLooks.KEYS`, storage and shared files stay compatible),
-which include `myplay_engine_language` and the archived layout, bar, clock, status and weather keys.
+A look keeps today's keys (`MyPlayLooks.KEYS`, storage and shared files stay compatible): the
+archived layout, bar, clock, status and weather keys among them. Since TH-2 (owner report) a look no
+longer sets or clears `myplay_engine_language`: choosing one keeps the design in use, and an older
+look file that carries it still loads, without it.
 Two rules (review 6):
 1. Before applying, the look's page lists what it changes, in user words ("Colours, wallpaper,
    map colours"; archived parts summarised as "older-layout settings").
-2. A look that changes the **design** asks first: "This look uses DECK. Use it?" Applied, the Home
-   "Using DECK" card appears. A look never changes the design silently.
+2. A look never changes the **design** (TH-2): DECK is chosen only in More › Archive.
 
 ## 7. Search
 
@@ -563,7 +564,7 @@ SharedPreferences file `settings` unless noted. Backup: A = allowed, B = blocked
 | `myplay_gesture_line` | Boolean | A | Car › Buttons |
 | `myplay_speed_source` | String | A | Car › Speed |
 | `myplay_engine_preview` | Boolean | A | Archive › Older layouts |
-| `myplay_engine_language` | String | A | Screen › Design (ORBIT; RACE later); `deck` from Archive › DECK or a look (§6.1) |
+| `myplay_engine_language` | String | A | Screen › Design (ORBIT; RACE later); `deck` from Archive › DECK only (a look keeps it, §6.1) |
 | `myplay_maps_idle_home` | Int | A | Car › Maps |
 | `myplay_learned_buttons` | String | A | Car › Buttons › Teach |
 | `myplay_learn_button`, `myplay_learn_button_at` | String/Long | — | internal (Teach) |

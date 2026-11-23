@@ -322,6 +322,8 @@ fun NextSizePage() {
                 density != 0,
                 { fixed -> if (fixed) picking = true else settings.carDensity = 0 },
             )
+            // TH-4: ORBIT sizes itself to the car's screen; this sets how much fits in the app screens.
+            NextNote(stringResource(R.string.next_scr_fits_orbit_help), Icons.Outlined.Info)
         }
         if (density != 0) item {
             Spacer(Modifier.height(12.dp))
@@ -436,6 +438,8 @@ fun NextWallpaperPage() {
             ))
             NextNote(stringResource(R.string.next_scr_photo_private_help), Icons.Outlined.Info)
         }
+        // TH-5: ORBIT's home shows the wallpaper only when no map is on it.
+        item { NextNote(stringResource(R.string.next_scr_wallpaper_orbit_help), Icons.Outlined.Info) }
     }
 }
 

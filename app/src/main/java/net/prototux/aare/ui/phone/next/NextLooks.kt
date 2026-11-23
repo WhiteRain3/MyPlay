@@ -280,25 +280,15 @@ private fun SaveCard(onClick: () -> Unit) {
     }
 }
 
-/** Before a look is applied (plan §6.1): what it changes, and a confirm when it switches the design. */
+/** Before a look is applied (plan §6.1): what it changes. A look never changes the design (TH-2). */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ApplySheet(look: Look, all: Map<String, *>, unsaved: Boolean, onDismiss: () -> Unit, onApply: () -> Unit) {
     val changes = remember(look, all) { lookChanges(all, look) }
-    val design = remember(look, all) { lookSwitchesDesign(all, look) }
     NextSheet(stringResource(R.string.next_looks_use_label, look.name), onDismiss,
         sub = stringResource(if (changes.isEmpty()) R.string.next_looks_no_change_help else R.string.next_looks_changes_help)) {
         if (changes.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             changes.forEach { NextTag(lookPartWord(it), TagKind.MUTE) }
-        }
-        if (design != null) {
-            Spacer(Modifier.height(16.dp))
-            NextCard {
-                NextRow(
-                    stringResource(R.string.next_looks_uses_label, design.uppercase()), icon = Icons.Rounded.WarningAmber, disc = DiscTone.WARN,
-                    note = RowNote.Help(stringResource(R.string.next_looks_switches_help, if (design == "deck") "ORBIT" else "DECK")),
-                )
-            }
         }
         if (unsaved) NextNote(stringResource(R.string.next_looks_unsaved_help), Icons.Outlined.Info)
         Spacer(Modifier.height(20.dp))
