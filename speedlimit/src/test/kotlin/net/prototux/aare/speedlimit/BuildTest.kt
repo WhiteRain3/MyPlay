@@ -15,9 +15,11 @@ class BuildTest {
         assertEquals(listOf(LithuaniaRules.Rule(50, 0, 0)), rules("highway" to "residential", "maxspeed" to "50"))
         assertEquals(listOf(LithuaniaRules.Rule(90, 0, SpeedLimitFormat.DEFAULTED)), rules("highway" to "secondary", "maxspeed:type" to "LT:rural"))
         assertEquals(listOf(LithuaniaRules.Rule(50, 0, 0)), rules("highway" to "tertiary", "maxspeed" to "LT:urban"))
-        // A motorway with no tag: 130, 110 in winter, one way.
-        assertEquals(listOf(LithuaniaRules.Rule(130, 110, SpeedLimitFormat.DEFAULTED or SpeedLimitFormat.FORWARD_ONLY)), rules("highway" to "motorway"))
+        // A motorway with no tag: 110 (the lower guess: its winter limit), one way.
+        assertEquals(listOf(LithuaniaRules.Rule(110, 0, SpeedLimitFormat.DEFAULTED or SpeedLimitFormat.FORWARD_ONLY)), rules("highway" to "motorway"))
         assertEquals(listOf(LithuaniaRules.Rule(20, 0, SpeedLimitFormat.DEFAULTED)), rules("highway" to "living_street"))
+        // Zone and kind defaults are legally defined: DEFAULTED, never GUESSED.
+        assertEquals(0, rules("highway" to "secondary", "maxspeed:type" to "LT:rural").single().flags and SpeedLimitFormat.GUESSED)
         // Unknown: no guess.
         assertTrue(rules("highway" to "residential").isEmpty())
         assertTrue(rules("highway" to "primary", "maxspeed" to "signals").isEmpty())
@@ -32,6 +34,114 @@ class BuildTest {
         val two = rules("highway" to "primary", "maxspeed" to "70", "maxspeed:forward" to "50")
         assertEquals(listOf(LithuaniaRules.Rule(50, 0, SpeedLimitFormat.FORWARD_ONLY), LithuaniaRules.Rule(70, 0, SpeedLimitFormat.BACKWARD_ONLY)), two)
         assertEquals(SpeedLimitFormat.BACKWARD_ONLY, rules("highway" to "primary", "maxspeed" to "50", "oneway" to "-1").single().flags)
+    }
+
+    /** Option A: an untagged road gets Lithuania's default where it is: 50 in a settlement, 90 outside, 70 unpaved. */
+    @Test fun defaultsByPlace() {
+        fun d(inside: Boolean, vararg tags: Pair<String, String>) = LithuaniaRules.defaultLimit(tags.toMap(), inside)
+        assertEquals(50, d(true, "highway" to "tertiary"))
+        assertEquals(90, d(false, "highway" to "tertiary"))
+        assertEquals(50, d(true, "highway" to "unclassified", "surface" to "gravel"))
+        assertEquals(70, d(false, "highway" to "unclassified", "surface" to "gravel"))
+        assertNull(d(false, "highway" to "track"))
+        // A residential street outside a mapped area: still inside the town signs, most likely.
+        assertEquals(50, d(false, "highway" to "residential"))
+        assertEquals(110, d(false, "highway" to "trunk", "motorroad" to "yes"))
+        assertEquals(50, d(true, "highway" to "trunk", "motorroad" to "yes"))
+        // No default for service roads, or anything not for cars.
+        assertNull(d(true, "highway" to "service"))
+        assertNull(d(false, "highway" to "footway"))
+        assertEquals(90, d(false, "highway" to "primary_link"))
+    }
+
+    /** Option A: a square settlement; a road crossing it gets 50 inside, 90 outside, each piece DEFAULTED. */
+    @Test fun piecesTakeTheDefaultWhereTheyAre() {
+        val town = Settlements.of(listOf(Settlements.Area(listOf(
+            intArrayOf(5400000, 5400000, 5401000, 5401000) to intArrayOf(2400000, 2401000, 2401000, 2400000),
+        ))))
+        assertTrue(town.contains(5400500, 2400500))
+        assertTrue(!town.contains(5402000, 2400500))
+        val inside = Opl.Way(mapOf("highway" to "tertiary"), intArrayOf(5400200, 5400800), intArrayOf(2400500, 2400500))
+        val outside = Opl.Way(mapOf("highway" to "tertiary"), intArrayOf(5402000, 5403000), intArrayOf(2400500, 2400500))
+        assertEquals(listOf(50), Pieces.of(inside, town).map { it.limit })
+        assertEquals(listOf(90), Pieces.of(outside, town).map { it.limit })
+        assertTrue(Pieces.of(inside, town).all { it.flags and SpeedLimitFormat.DEFAULTED != 0 && it.flags and SpeedLimitFormat.GUESSED != 0 })
+        // Without the areas (the old build), no guess.
+        assertTrue(Pieces.of(outside, null).isEmpty())
+        // A signed limit always wins.
+        val signed = Opl.Way(mapOf("highway" to "tertiary", "maxspeed" to "70"), intArrayOf(5400200, 5400800), intArrayOf(2400500, 2400500))
+        assertEquals(listOf(70), Pieces.of(signed, town).map { it.limit })
+        assertEquals(0, Pieces.of(signed, town).single().flags and (SpeedLimitFormat.DEFAULTED or SpeedLimitFormat.GUESSED))
+        // Service roads stay out.
+        assertTrue(Pieces.of(Opl.Way(mapOf("highway" to "service"), intArrayOf(5400200, 5400800), intArrayOf(2400500, 2400500)), town).isEmpty())
+    }
+
+    /** osmium's GeoJSON lines: a polygon with a hole, and a multipolygon. */
+    @Test fun readsSettlementAreas() {
+        val poly = Settlements.area("\u001e" + """{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[24.0,54.0],[24.01,54.0],[24.01,54.01],[24.0,54.01],[24.0,54.0]],[[24.004,54.004],[24.006,54.004],[24.006,54.006],[24.004,54.006],[24.004,54.004]]]},"properties":{"place":"village"}}""")!!
+        assertTrue(poly.contains(5400200, 2400200))
+        assertTrue("the hole is outside", !poly.contains(5400500, 2400500))
+        val multi = Settlements.area("""{"type":"Feature","geometry":{"type":"MultiPolygon","coordinates":[[[[25.0,55.0],[25.01,55.0],[25.01,55.01],[25.0,55.0]]],[[[26.0,55.0],[26.01,55.0],[26.01,55.01],[26.0,55.0]]]]},"properties":{}}""")!!
+        assertTrue(multi.contains(5500200, 2600800))
+        assertNull(Settlements.area("""{"type":"Feature","geometry":{"type":"LineString","coordinates":[[24.0,54.0],[24.1,54.1]]}}"""))
+    }
+
+    /** SL-1: a village mapped only as a point: a road through it gets 50, one 2 km away 90. */
+    @Test fun aVillagePointCountsAsASettlement() {
+        val village = Settlements.place("""{"type":"Feature","geometry":{"type":"Point","coordinates":[24.0,54.0]},"properties":{"place":"village","name":"Kaimas"}}""")!!
+        assertNull(Settlements.place("""{"type":"Feature","geometry":{"type":"Point","coordinates":[24.0,54.0]},"properties":{"place":"locality"}}"""))
+        val s = Settlements.of(emptyList(), listOf(village))
+        val through = Opl.Way(mapOf("highway" to "secondary"), intArrayOf(5399800, 5400200), intArrayOf(2400000, 2400000))
+        val away = Opl.Way(mapOf("highway" to "secondary"), intArrayOf(5401800, 5402400), intArrayOf(2400000, 2400000))
+        assertEquals(listOf(50), Pieces.of(through, s).map { it.limit })
+        assertEquals(listOf(90), Pieces.of(away, s).map { it.limit })
+        // SL-6: 700 m. East-west reaches as far on the ground: about 0.011 degrees of longitude here.
+        assertTrue(s.contains(5400000, 2401000))
+        assertTrue(!s.contains(5400000, 2401200))
+    }
+
+    /** SL-2, SL-3: an untagged expressway or motorway (or link) is 110, the lower guess, all year; a tagged limit still wins. */
+    @Test fun fastRoadDefaults() {
+        val none = Settlements.of(emptyList())
+        val expressway = Opl.Way(mapOf("highway" to "primary", "motorroad" to "yes"), intArrayOf(5402000, 5403000), intArrayOf(2400500, 2400500))
+        val p = Pieces.of(expressway, none).single()
+        assertEquals(110, p.limit); assertEquals(0, p.winterLimit)
+        val link = Opl.Way(mapOf("highway" to "motorway_link"), intArrayOf(5402000, 5403000), intArrayOf(2400500, 2400500))
+        val l = Pieces.of(link, none).single()
+        assertEquals(110, l.limit); assertEquals(0, l.winterLimit)
+        // A tagged 130 still wins, with its winter 110.
+        val signed = Pieces.of(Opl.Way(mapOf("highway" to "motorway", "maxspeed" to "130"), intArrayOf(5402000, 5403000), intArrayOf(2400500, 2400500)), none).single()
+        assertEquals(130, signed.limit); assertEquals(110, signed.winterLimit)
+        assertEquals(0, Pieces.of(Opl.Way(mapOf("highway" to "primary"), intArrayOf(5402000, 5403000), intArrayOf(2400500, 2400500)), none).single().winterLimit)
+    }
+
+    /** Pieces that continue one another with the same limit become one; a different limit, or too many points, does not join. */
+    @Test fun continuingPiecesJoin() {
+        val a = Piece(50, 0, 0, 5, intArrayOf(5400000, 5400100), intArrayOf(2400000, 2400000))
+        val b = Piece(50, 0, 0, 5, intArrayOf(5400100, 5400200), intArrayOf(2400000, 2400000))
+        val c = Piece(50, 0, 0, 5, intArrayOf(5400200, 5400300), intArrayOf(2400000, 2400000))
+        val other = Piece(90, 0, 0, 5, intArrayOf(5400300, 5400400), intArrayOf(2400000, 2400000))
+        val joined = Joiner.join(listOf(c, a, other, b))
+        assertEquals(2, joined.size)
+        val fifty = joined.single { it.limit == 50 }
+        assertEquals(listOf(5400000, 5400100, 5400200, 5400300), fifty.lats.toList())
+        // A one-way piece is never reversed: one that ends where the other ends does not join.
+        val f1 = Piece(50, 0, SpeedLimitFormat.FORWARD_ONLY, 5, intArrayOf(5400000, 5400100), intArrayOf(2400000, 2400000))
+        val f2 = Piece(50, 0, SpeedLimitFormat.FORWARD_ONLY, 5, intArrayOf(5400200, 5400100), intArrayOf(2400000, 2400000))
+        assertEquals(2, Joiner.join(listOf(f1, f2)).size)
+        // No piece grows past MAX_POINTS.
+        val chain = (0 until 40).map { k -> Piece(50, 0, 0, 5, intArrayOf(5400000 + k * 10, 5400000 + (k + 1) * 10), intArrayOf(2400000, 2400000)) }
+        val chained = Joiner.join(chain)
+        assertTrue(chained.all { it.lats.size <= SpeedLimitFormat.MAX_POINTS })
+        assertEquals(41, chained.sumOf { it.lats.size } - (chained.size - 1))
+        assertEquals(2, chained.size)
+    }
+
+    @Test fun theCoverageTableCountsByClass() {
+        val c = Coverage()
+        c.add(4, LithuaniaRules.Source.SIGNED); c.add(4, LithuaniaRules.Source.AREA); c.add(4, LithuaniaRules.Source.NONE); c.add(4, LithuaniaRules.Source.AREA)
+        assertEquals(2, c.count(4, LithuaniaRules.Source.AREA))
+        assertTrue(c.table().lines().any { it.startsWith("tertiary") && it.trim().endsWith("75 %") })
     }
 
     @Test fun parsesValues() {
@@ -94,10 +204,19 @@ class BuildTest {
         val bin = File(dir, "out/speed-limits-lithuania.bin").readBytes()
         val file = SpeedLimitFile(bin)
         val all = (0 until file.rows).flatMap { r -> (0 until file.cols).flatMap { c -> file.tilePieces(r, c) } }.toSet()
-        assertEquals(setOf(50, 130), all.map { it.limit }.toSet())
+        // The untagged motorway: 110, the lower guess.
+        assertEquals(setOf(50, 110), all.map { it.limit }.toSet())
         val json = File(dir, "out/speed-limits-lithuania.json").readText()
         assertTrue(json.contains("\"region\":\"lithuania\"") && json.contains("\"format\":1") && json.contains("\"built\":\"2026-11-21\""))
         assertTrue(json.contains("\"bytes\":${bin.size}") && Regex("\"sha256\":\"[0-9a-f]{64}\"").containsMatchIn(json))
         assertTrue(json.contains("openstreetmap.org/copyright"))
+        // Option A: with settlement areas, the untagged residential street gets 50 (DEFAULTED).
+        val areas = File(dir, "settlements.geojsonseq").apply {
+            writeText("""{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[25.27,54.67],[25.29,54.67],[25.29,54.69],[25.27,54.69],[25.27,54.67]]]},"properties":{}}""" + "\n")
+        }
+        main(arrayOf("lithuania", opl.path, File(dir, "out2").path, "2026-11-21", areas.path))
+        val file2 = SpeedLimitFile(File(dir, "out2/speed-limits-lithuania.bin").readBytes())
+        val all2 = (0 until file2.rows).flatMap { r -> (0 until file2.cols).flatMap { c -> file2.tilePieces(r, c) } }.toSet()
+        assertTrue(all2.any { it.limit == 50 && it.flags and SpeedLimitFormat.DEFAULTED != 0 && it.lats.first() == 5468000 && it.lons.first() == 2528000 })
     }
 }

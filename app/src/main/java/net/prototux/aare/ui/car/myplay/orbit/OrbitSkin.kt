@@ -696,8 +696,8 @@ object OrbitSkin : MyPlaySkin {
     private fun LimitSign(limit: LimitShown, night: Boolean, modifier: Modifier) {
         val known = limit as? LimitShown.Known
         val ring = if (known != null) Color(0xFFD32F2F) else Orbit.glass(night).secondary
-        // Option A, SL-1: a defaulted limit (the road's kind or place, no sign tagged) in a dashed ring: an estimate, not a sign.
-        val guessed = known?.defaulted == true
+        // Option A, SL-1: a guessed limit (the builder's estimate, nothing tagged) in a dashed ring: an estimate, not a sign.
+        val guessed = known?.guessed == true
         Box(
             modifier.limitPulse(known?.kmh).size(84.dp).shadow(6.dp, CircleShape).clip(CircleShape).background(limitSignFill(night))
                 .then(if (guessed) Modifier.dashedRing(9.dp, ring) else Modifier.border(9.dp, ring, CircleShape))
@@ -710,7 +710,7 @@ object OrbitSkin : MyPlaySkin {
 
     /** The speed's colour over the limit: the caution amber, or halfway to the text colour when the limit is an estimate (never stronger). */
     fun overColour(limit: LimitShown?, night: Boolean, text: Color): Color =
-        if ((limit as? LimitShown.Known)?.defaulted == true) androidx.compose.ui.graphics.lerp(Orbit.caution(night), text, 0.45f) else Orbit.caution(night)
+        if ((limit as? LimitShown.Known)?.guessed == true) androidx.compose.ui.graphics.lerp(Orbit.caution(night), text, 0.45f) else Orbit.caution(night)
 
     /** Option A: a ring of dashes [width] wide inside the edge, for an estimated limit. */
     private fun Modifier.dashedRing(width: androidx.compose.ui.unit.Dp, colour: Color): Modifier = drawWithContent {
@@ -1114,7 +1114,7 @@ object OrbitSkin : MyPlaySkin {
     private fun SpeedLimit(limit: LimitShown, night: Boolean) {
         val g = Orbit.glass(night)
         Column(Modifier.padding(top = 8.dp).widthIn(max = 170.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            val guessed = (limit as? LimitShown.Known)?.defaulted == true
+            val guessed = (limit as? LimitShown.Known)?.guessed == true
             OrbitDisc(60.dp, night, Modifier.limitPulse((limit as? LimitShown.Known)?.kmh)
                 .then(if (guessed) Modifier.dashedRing(3.dp, g.secondary) else Modifier.border(3.dp, g.secondary, CircleShape))) {
                 Text(
