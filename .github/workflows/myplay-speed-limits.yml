@@ -83,35 +83,71 @@ jobs:
         run: |
           osmium tags-filter work/region.osm.pbf w/highway -o work/roads.osm.pbf
           osmium add-locations-to-ways work/roads.osm.pbf -f opl -o work/roads.opl
-      - name: Build the file
+      # Option A: the settlement areas, for the default limits of roads with none tagged (50 inside,
+      # 90 outside, 70 unpaved; none on service roads), all marked "probably" (DEFAULTED).
+      - name: Settlement areas
         run: |
-          speedlimit/build/install/myplay-speedlimit/bin/myplay-speedlimit "$REGION" work/roads.opl out "$(date -u +%F)"
+          # SL-1: place points too (most Lithuanian villages are mapped as a point, not an area).
+          osmium tags-filter work/region.osm.pbf nwr/place=city,town,village,hamlet \
+            a/landuse=residential,commercial,retail,industrial -o work/areas.osm.pbf
+          osmium export work/areas.osm.pbf -f geojsonseq --geometry-types=point,polygon \
+            -x print_record_separator=false -o work/settlements.geojsonseq
+          wc -l work/settlements.geojsonseq
+      # How many roads of each class OpenStreetMap tags with a limit (the builder prints the same by
+      # class, with what option A adds).
+      - name: Coverage in the extract
+        run: |
+          osmium tags-count work/roads.osm.pbf -m 'highway=*' | sort -rn | head -20
+          osmium tags-filter work/roads.osm.pbf w/maxspeed -o work/with-maxspeed.osm.pbf
+          echo "with maxspeed:"
+          osmium tags-count work/with-maxspeed.osm.pbf -m 'highway=*' | sort -rn | head -20
+      - name: Build the files
+        run: |
+          tool=speedlimit/build/install/myplay-speedlimit/bin/myplay-speedlimit
+          built="$(date -u +%F)"
+          # SL-5: two files. speed-limits-<region>.bin as before (signed and kind limits only), for
+          # apps that do not draw estimates; speed-limits-<region>-v2.bin with option A's estimates
+          # (marked GUESSED), which only apps that draw them as "probably" fetch.
+          "$tool" "$REGION" work/roads.opl out "$built"
+          "$tool" "$REGION" work/roads.opl work/v2 "$built" work/settlements.geojsonseq
+          mv "work/v2/speed-limits-$REGION.bin" "out/speed-limits-$REGION-v2.bin"
+          mv "work/v2/speed-limits-$REGION.json" "out/speed-limits-$REGION-v2.json"
           ls -l out
           # A broken extract or a bug must not replace a good file with a nearly empty one.
-          size=$(stat -c %s "out/speed-limits-$REGION.bin")
-          if [ "$size" -lt 200000 ]; then echo "The file is only $size bytes: not publishing it." >&2; exit 1; fi
+          for f in "out/speed-limits-$REGION.bin" "out/speed-limits-$REGION-v2.bin"; do
+            size=$(stat -c %s "$f")
+            if [ "$size" -lt 200000 ]; then echo "$f is only $size bytes: not publishing." >&2; exit 1; fi
+          done
       - name: Publish
         # WF-1: never from a push (unreviewed); only by hand or on schedule.
         if: github.event_name != 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            cat > work/notes.md <<'EOF'
+          cat > work/notes.md <<'EOF'
           Speed limit files for MyPlay, rebuilt once a month by `.github/workflows/myplay-speed-limits.yml`.
           The phone app downloads them (Settings, Speed limits); there is nothing to install by hand.
 
           The limits come from map data and may be wrong or out of date. The road signs always count.
+          Where the map has no limit for a road, the -v2 file gives an estimate from Lithuania's rules of the
+          road (50 in a settlement, 90 outside it, 70 on gravel), marked as "probably": it can be wrong,
+          above all near the edge of a town or village.
 
           Map data © OpenStreetMap contributors, from Geofabrik's extract. These files are a database
           derived from OpenStreetMap and are available under the Open Database Licence (ODbL 1.0):
           https://www.openstreetmap.org/copyright. The code that builds them is in this repository
           (`speedlimit/`), under the GPL.
           EOF
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --target "$(git rev-parse HEAD)" \
               --title "Speed limit files (map data)" --notes-file work/notes.md --prerelease --latest=false
+          else
+            # The notes say what the file holds now (SL-1: the estimates).
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --notes-file work/notes.md
           fi
           # The file first, then the manifest that describes it, so the phone never sees a manifest
           # for a file that is not there yet.
           gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "out/speed-limits-$REGION.bin"
           gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "out/speed-limits-$REGION.json"
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "out/speed-limits-$REGION-v2.bin"
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" --clobber "out/speed-limits-$REGION-v2.json"
