@@ -367,4 +367,69 @@ class MyPlayAppFrameTest {
         rule.mainClock.advanceTimeBy(5 * 60_000L)
         rule.onNodeWithTag(FRAME_TAG).assertExists()
     }
+
+    /** A template host for a maps app's map (look C's actions wheel over it). */
+    private val mapHost = object : net.prototux.aare.host.templates.TemplateHost {
+        override val driving = false
+        override val night = true
+        override val appLabel = "Maps"
+        override fun contentLimit(type: Int) = 6
+        override val done = object : androidx.car.app.OnDoneCallback {}
+        override fun back() { asked += "app-back" }
+        override fun loadIcon(icon: androidx.car.app.model.CarIcon, sizePx: Int): androidx.compose.ui.graphics.ImageBitmap? = null
+        override fun showParkedOnlyMessage() = Unit
+        @androidx.compose.runtime.Composable override fun MapSurface(modifier: Modifier) = Unit
+        override fun setVisibleArea(left: Int, top: Int, right: Int, bottom: Int) = Unit
+        override fun setStableArea(left: Int, top: Int, right: Int, bottom: Int) = Unit
+        override fun mapScroll(dx: Float, dy: Float) = Unit
+        override fun mapFling(vx: Float, vy: Float) = Unit
+        override fun mapScale(focusX: Float, focusY: Float, factor: Float) = Unit
+        override fun mapClick(x: Float, y: Float) = Unit
+    }
+
+    /**
+     * WH-1: on the maps app under ORBIT (the actions wheel), a notice holding the knob takes the
+     * car's Back (the dispatcher's, as CarInputs sends it) before the wheel: it dismisses the notice.
+     */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aNoticeTakesBackBeforeTheActionsWheel() {
+        val s = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
+            enginePreview = true
+            engineLanguage = "orbit"
+            screen = CarScreen.App("maps")
+        }
+        state = s
+        val strip = androidx.car.app.model.ActionStrip.Builder()
+            .addAction(androidx.car.app.model.Action.Builder().setTitle("Report").setOnClickListener { }.build()).build()
+        rule.setContent {
+            CarTheme(night = s.night, theme = s.theme) {
+                CarShell(s, actions, appContent = { _, m ->
+                    Box(m) {
+                        androidx.compose.runtime.CompositionLocalProvider(net.prototux.aare.host.templates.LocalTemplateHost provides mapHost) {
+                            net.prototux.aare.host.templates.MapScaffold(strip, null, panModeDelegate = null, wheel = true) { }
+                        }
+                    }
+                }, navMap = { _, m -> Box(m) })
+            }
+        }
+        rule.waitForIdle()
+        fun back() { rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }; rule.waitForIdle() }
+        // No notice: Back is the wheel's (the strip is not on the map).
+        rule.onNodeWithText("Report").assertDoesNotExist()
+        back()
+        rule.onNodeWithTag(net.prototux.aare.host.templates.ACTIONS_WHEEL_TAG).assertExists()
+        // Long enough later that Back is not "twice quickly"; closes the wheel.
+        rule.mainClock.advanceTimeBy(3_000)
+        Shadows.shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(3))
+        back()
+        rule.onNodeWithTag(net.prototux.aare.host.templates.ACTIONS_WHEEL_TAG).assertDoesNotExist()
+        Shadows.shadowOf(android.os.Looper.getMainLooper()).idleFor(java.time.Duration.ofSeconds(3))
+        // A notice with buttons: Back dismisses it; the wheel stays closed, and nothing goes home.
+        rule.runOnIdle { s.notices.add(0, withButtons()) }
+        rule.waitForIdle()
+        back()
+        rule.onNodeWithTag(net.prototux.aare.host.templates.ACTIONS_WHEEL_TAG).assertDoesNotExist()
+        assertEquals(listOf("dismiss:n1"), asked.filter { it != "app-back" })
+        assertTrue("still on the maps app: ${s.screen}", s.screen == CarScreen.App("maps"))
+    }
 }
