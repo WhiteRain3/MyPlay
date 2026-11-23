@@ -21,6 +21,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -87,6 +88,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -234,8 +236,13 @@ object OrbitSkin : MyPlaySkin {
         // soft plate that hugs each part (the turn, the song, the clock), feathered at its edge;
         // nothing in the map's free middle. None at all when the driver chose so.
         if (!parts.soft) return
-        val turn by animateFloatAsState(if (parts.turn) 1f else 0f, tween(400), label = "turn shade")
-        val song by animateFloatAsState(if (parts.song) 1f else 0f, tween(400), label = "song shade")
+        // SM-1: the fades are read where the plates are drawn, not here: while one runs only its plate
+        // is drawn again, instead of the whole backdrop composed again on every frame. Whether a plate is
+        // there at all is read through derivedStateOf, which changes twice per fade, not 24 times.
+        val turn = animateFloatAsState(if (parts.turn) 1f else 0f, tween(400), label = "turn shade")
+        val song = animateFloatAsState(if (parts.song) 1f else 0f, tween(400), label = "song shade")
+        val turnOn by remember { derivedStateOf { turn.value > 0f } }
+        val songOn by remember { derivedStateOf { song.value > 0f } }
         val night = LocalSkinTokens.current.night
         val strength = if (night) PLATE_NIGHT else PLATE_DAY
         // Keep the last place while fading out.
@@ -251,9 +258,11 @@ object OrbitSkin : MyPlaySkin {
             }
         }
         Box(modifier) {
-            if (turn > 0f) last[0]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_TURN_TAG)) { plate(paint, halo, turn * strength, b) } }
-            if (song > 0f) last[1]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_SONG_TAG)) { plate(paint, halo, song * strength, b) } }
-            parts.statusBox?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_STATUS_TAG)) { plate(paint, halo, strength, b) } }
+            // SM-1: each plate on a layer of its own (graphicsLayer), so its blur is drawn again only
+            // when the plate itself changes, not whenever something else on the home is redrawn.
+            if (turnOn) last[0]?.let { b -> Canvas(Modifier.fillMaxSize().graphicsLayer().testTag(SHADE_TURN_TAG)) { plate(paint, halo, turn.value * strength, b) } }
+            if (songOn) last[1]?.let { b -> Canvas(Modifier.fillMaxSize().graphicsLayer().testTag(SHADE_SONG_TAG)) { plate(paint, halo, song.value * strength, b) } }
+            parts.statusBox?.let { b -> Canvas(Modifier.fillMaxSize().graphicsLayer().testTag(SHADE_STATUS_TAG)) { plate(paint, halo, strength, b) } }
         }
     }
 
@@ -537,17 +546,6 @@ object OrbitSkin : MyPlaySkin {
     override fun Song(song: SongSlot, modifier: Modifier) = Box(modifier) {
         Scaled {
             val g = glass()
-            // The player's position is sampled on SystemClock.elapsedRealtime() (PlaybackInfo.sampledAtMs),
-            // so "now" must be on the same clock, not the wall clock.
-            var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
-            LaunchedEffect(song.playing, song.updatedAtMs) {
-                now = SystemClock.elapsedRealtime()
-                while (song.playing) {
-                    delay(1_000)
-                    now = SystemClock.elapsedRealtime()
-                }
-            }
-            val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
             Row(Modifier.carPart(CarPart.OrbitSong), verticalAlignment = Alignment.CenterVertically) {
                 // AR-1: the text takes what room is left after the art's circle (a long title used to
                 // squeeze the circle into an oval in the 40 % wide corner).
@@ -557,7 +555,7 @@ object OrbitSkin : MyPlaySkin {
                 }
                 Spacer(Modifier.width(10.dp))
                 val musicColour = Orbit.accent(World.MUSIC, LocalSkinTokens.current.night)
-                OrbitRing(progress, 152.dp, 7.dp, musicColour, g.track, Modifier.coversMap().testTag(SONG_RING_TAG).progressSemantics(progress).orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
+                SongRing(song, musicColour, g.track, Modifier.coversMap().testTag(SONG_RING_TAG).orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
                     val art = song.art
                     if (art != null) {
                         val image = remember(art) { art.asImageBitmap() }
@@ -571,6 +569,26 @@ object OrbitSkin : MyPlaySkin {
                 }
             }
         }
+    }
+
+    /**
+     * The song's ring with its progress. SM-3: the once-a-second clock lives here, so each tick
+     * composes only the ring again, not the whole song corner (the title, the artist, the art).
+     */
+    @Composable
+    private fun SongRing(song: SongSlot, colour: Color, track: Color, modifier: Modifier, content: @Composable BoxScope.() -> Unit) {
+        // The player's position is sampled on SystemClock.elapsedRealtime() (PlaybackInfo.sampledAtMs),
+        // so "now" must be on the same clock, not the wall clock.
+        var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+        LaunchedEffect(song.playing, song.updatedAtMs) {
+            now = SystemClock.elapsedRealtime()
+            while (song.playing) {
+                delay(1_000)
+                now = SystemClock.elapsedRealtime()
+            }
+        }
+        val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
+        OrbitRing(progress, 152.dp, 7.dp, colour, track, modifier.progressSemantics(progress), content)
     }
 
     /** One line of [text] in [style], made smaller when it is wider than [width]. */
@@ -862,15 +880,6 @@ object OrbitSkin : MyPlaySkin {
     private fun ArtBox(song: SongSlot, accent: Color, on: Boolean, night: Boolean, modifier: Modifier) {
         val g = Orbit.glass(night)
         val shape = androidx.compose.foundation.shape.RoundedCornerShape(78.dp)
-        var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
-        LaunchedEffect(song.playing, song.updatedAtMs) {
-            now = SystemClock.elapsedRealtime()
-            while (song.playing) {
-                delay(500)
-                now = SystemClock.elapsedRealtime()
-            }
-        }
-        val progress = if (song.durationMs > 0) mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now) else null
         Box(modifier.requiredSize(320.dp).orbitFocusRounded(on, accent, g.halo, 78.dp).clip(shape)) {
             val art = song.art
             if (art != null) {
@@ -888,13 +897,29 @@ object OrbitSkin : MyPlaySkin {
             ) {
                 Text(song.title, style = TextStyle(fontSize = 38.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = Color.White), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(song.subtitle, style = TextStyle(fontSize = 26.sp, color = Color(0xFFC4CBDC)), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (progress != null) {
-                    Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(6.dp).clip(CircleShape).background(Color(0x40FFFFFF))
-                        .testTag(MUSIC_PROGRESS_TAG).progressSemantics(progress)) {
-                        Box(Modifier.fillMaxWidth(progress).fillMaxSize().clip(CircleShape).background(Color.White))
-                    }
-                }
+                if (song.durationMs > 0) ArtProgress(song)
             }
+        }
+    }
+
+    /**
+     * The artwork's progress bar. SM-3: its twice-a-second clock lives here, so each tick composes
+     * only the bar again, not the artwork, the title and the artist.
+     */
+    @Composable
+    private fun ArtProgress(song: SongSlot) {
+        var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+        LaunchedEffect(song.playing, song.updatedAtMs) {
+            now = SystemClock.elapsedRealtime()
+            while (song.playing) {
+                delay(500)
+                now = SystemClock.elapsedRealtime()
+            }
+        }
+        val progress = mediaProgress(song.positionMs, song.durationMs, song.playing, song.updatedAtMs, now)
+        Box(Modifier.padding(top = 12.dp).fillMaxWidth().height(6.dp).clip(CircleShape).background(Color(0x40FFFFFF))
+            .testTag(MUSIC_PROGRESS_TAG).progressSemantics(progress)) {
+            Box(Modifier.fillMaxWidth(progress).fillMaxSize().clip(CircleShape).background(Color.White))
         }
     }
 

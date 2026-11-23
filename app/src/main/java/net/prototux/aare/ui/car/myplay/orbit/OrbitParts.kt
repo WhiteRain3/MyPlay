@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -134,14 +135,21 @@ internal fun sectorPath(center: Offset, inner: Float, outer: Float, startDeg: Fl
 @Composable
 fun OrbitSector(index: Int, count: Int, lit: Boolean, accent: Color, night: Boolean, size: Dp, inner: Dp, modifier: Modifier = Modifier) {
     val g = Orbit.glass(night)
-    Canvas(modifier.size(size)) {
+    // SM-5: the sector's path (50 points of trigonometry) and its stroke are made once per size and
+    // look (drawWithCache), not again on every draw of the dial while it ripples open or the ring moves.
+    androidx.compose.foundation.layout.Spacer(modifier.size(size).drawWithCache {
         val c = Offset(this.size.width / 2, this.size.height / 2)
         val span = 360f / count
         val mid = -90f + span * index
         val path = sectorPath(c, inner.toPx(), this.size.minDimension / 2 - 3.dp.toPx(), mid - span / 2 + 1.5f, mid + span / 2 - 1.5f)
-        drawPath(path, if (lit) accent.copy(alpha = 0.30f) else g.glass)
-        drawPath(path, if (lit) accent else g.edge, style = Stroke((if (lit) 5 else 2).dp.toPx()))
-    }
+        val fill = if (lit) accent.copy(alpha = 0.30f) else g.glass
+        val edge = if (lit) accent else g.edge
+        val stroke = Stroke((if (lit) 5 else 2).dp.toPx())
+        onDrawBehind {
+            drawPath(path, fill)
+            drawPath(path, edge, style = stroke)
+        }
+    })
 }
 
 /** ORBIT's motion: everything opens out of the hub like a ripple; the dial turns in detents. */

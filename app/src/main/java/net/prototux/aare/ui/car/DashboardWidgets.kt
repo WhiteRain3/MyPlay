@@ -118,7 +118,9 @@ internal fun Wallpaper(ui: CarUiState, modifier: Modifier) {
     val image = ui.wallpaperImage
     when {
         ui.wallpaper == net.prototux.aare.Settings.WALLPAPER_CUSTOM && image != null ->
-            Image(image.asImageBitmap(), null, modifier, contentScale = ContentScale.Crop)
+            // SM-6: wrapped once per picture: a new ImageBitmap on every composition of the home made a
+            // new painter, and the full-screen picture was drawn again each time.
+            Image(androidx.compose.runtime.remember(image) { image.asImageBitmap() }, null, modifier, contentScale = ContentScale.Crop)
         else -> WALLPAPERS[ui.wallpaper]?.let { colors -> Box(modifier.background(Brush.linearGradient(colors))) }
     }
 }
