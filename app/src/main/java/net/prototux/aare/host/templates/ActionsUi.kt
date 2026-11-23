@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import net.prototux.aare.ui.car.carFocusHighlight
 import net.prototux.aare.ui.theme.LocalCarDimens
 
@@ -192,7 +193,15 @@ internal fun ActionView(
             androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if (vec != null) Icon(vec, null, tint = fg, modifier = Modifier.size(40.dp))
                 else if (icon != null) CarIconView(icon, 40.dp, monochromeTint = fg)
-                if (titled) CarTextView(label, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold), color = fg)
+                // GD-1: any title fits the circle: at most two lines, shrinking to fit, then "…".
+                if (titled) androidx.compose.foundation.text.BasicText(
+                    label.plain(),
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = fg,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center),
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                    autoSize = androidx.compose.foundation.text.TextAutoSize.StepBased(minFontSize = 14.sp, maxFontSize = MaterialTheme.typography.headlineSmall.fontSize),
+                )
             }
             return@ActionSurface
         }

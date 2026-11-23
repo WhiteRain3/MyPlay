@@ -125,4 +125,16 @@ class PrimaryFocusTest {
         val bmp = rule.onRoot().captureToImage().asAndroidBitmap()
         java.io.File(java.io.File("build/reports/myplay-screens").apply { mkdirs() }, "route-preview-wheel-1280x720.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
+
+    /** GD-1: a long Navigate title stays inside the disc (two lines at most, shrunk to fit). */
+    @Test fun aLongGoTitleFitsTheDisc() {
+        val long = RoutePreviewNavigationTemplate.Builder().setItemList(routes()).setTitle("Home")
+            .setNavigateAction(Action.Builder().setTitle("Navigation jetzt starten und losfahren").setOnClickListener { }.build()).build()
+        show(long, PrimaryFocus(), wheel = true)
+        rule.waitForIdle()
+        val disc = rule.onNodeWithTag(GO_DISC_TAG).fetchSemanticsNode().boundsInRoot
+        val text = rule.onNodeWithText("Navigation", substring = true).fetchSemanticsNode().boundsInRoot
+        org.junit.Assert.assertTrue("text $text inside disc $disc", text.top >= disc.top && text.bottom <= disc.bottom && text.left >= disc.left - 1f && text.right <= disc.right + 1f)
+        org.junit.Assert.assertEquals(disc.width, disc.height, 2f)
+    }
 }
