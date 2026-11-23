@@ -431,6 +431,9 @@ interface MyPlaySkin {
      */
     val gestureLine: (@Composable (String, Modifier) -> Unit)? get() = null
 
+    /** Look C (design 10): how the skin draws parked search's letter ring; null: the plain keyboard. */
+    val letterRing: (@Composable (LetterRingInput, Modifier) -> Unit)? get() = null
+
     /**
      * N3: whether [slot] covers the map, so the maps app keeps its arrow and its own signs out of
      * it. The corner slots do; the chooser and a world's page come and go over the middle, and

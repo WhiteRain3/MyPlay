@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import net.prototux.aare.R
@@ -59,6 +60,19 @@ internal fun SearchTemplateView(t: SearchTemplate) {
         override fun hide() {
             keyboardWanted = false
         }
+    }
+
+    // Look C (design 10): parked, a skin with a letter ring types on it in place of the keyboard (the
+    // same sink); Search or Back close it onto the results. `keyboard` is never true while driving.
+    val ring = net.prototux.aare.ui.car.myplay.LocalLetterRing.current
+    if (keyboard && ring != null) {
+        val hint = t.searchHint ?: stringResource(R.string.media_action_search)
+        val found = t.itemList?.items?.size?.takeIf { !t.isLoading && query.isNotEmpty() }
+        ring(
+            net.prototux.aare.ui.car.myplay.LetterRingInput(query, hint, found, sink::type, sink::backspace, sink::submit, sink::hide),
+            Modifier.fillMaxSize().testTag(LETTER_RING_HOST_TAG),
+        )
+        return
     }
 
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -112,3 +126,6 @@ internal fun SearchTemplateView(t: SearchTemplate) {
         }
     }
 }
+
+/** Look C (design 10): where a SearchTemplate shows the skin's letter ring (for tests). */
+internal const val LETTER_RING_HOST_TAG = "search_letter_ring"

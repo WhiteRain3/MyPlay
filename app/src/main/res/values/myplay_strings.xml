@@ -114,4 +114,13 @@
     <!-- SP-1: where the speed comes from (the phone's picture and the Developer check only). -->
     <string name="myplay_speed_from_car" translatable="false">CAR</string>
     <string name="myplay_speed_from_gps" translatable="false">GPS</string>
+    <!-- Look C (design 10): parked search typed on ORBIT's letter ring. -->
+    <string name="myplay_letter_ring_push" translatable="false">Push to type</string>
+    <plurals name="myplay_letter_ring_found" translatable="false">
+        <item quantity="one">%d place so far</item>
+        <item quantity="other">%d places so far</item>
+    </plurals>
+    <string name="myplay_letter_ring_space" translatable="false">Space</string>
+    <string name="myplay_letter_ring_delete" translatable="false">Delete</string>
+    <string name="myplay_letter_ring_search" translatable="false">Search</string>
 </resources>
