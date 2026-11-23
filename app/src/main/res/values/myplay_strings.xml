@@ -15,7 +15,7 @@
     <string name="myplay_gesture_line_playing" translatable="false">Playing</string>
     <string name="myplay_gesture_line_paused" translatable="false">Paused</string>
     <string name="myplay_gesture_line_assistant" translatable="false">Assistant</string>
-    <string name="myplay_mirror_knob_hint" translatable="false">The knob now works the app. To leave: hold Back, or press Back three times quickly.</string>
+    <string name="myplay_mirror_knob_hint" translatable="false">The knob now works the app. To leave: press Back three times quickly.</string>
     <!-- N5: ORBIT, MyPlay's first car screen language -->
     <string name="myplay_world_navigate" translatable="false">Navigate</string>
     <string name="myplay_world_music" translatable="false">Music</string>
@@ -45,7 +45,7 @@
     <string name="myplay_on" translatable="false">On</string>
     <string name="myplay_off" translatable="false">Off</string>
     <!-- O3: shown over a full-screen app the first few times in a drive (there is no Home button beside it) -->
-    <string name="myplay_frame_home_hint" translatable="false">Hold Back to come home</string>
+    <string name="myplay_frame_home_hint" translatable="false">Back twice for home</string>
     <!-- O2: the Settings world's row for how long a panel over the map stays open untouched -->
     <string name="myplay_setting_panel_timeout" translatable="false">Close panels by themselves</string>
     <string name="myplay_setting_panel_timeout_after" translatable="false">After %1$d s</string>
