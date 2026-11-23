@@ -716,4 +716,7 @@
     <string name="next_prev_cannot_info" translatable="false">Not here without a car: the speed limit (it needs the phone\'s position), GPS speed, outside temperature and ice, the car\'s night mode and lights, car data, parked or driving, the touchpad, unusual buttons until taught, the instrument cluster, the car\'s screen size, hands-free calls.</string>
     <string name="next_prev_hide_label" translatable="false">Hide controls</string>
     <string name="next_prev_show_label" translatable="false">Testing controls</string>
+    <string name="next_speed_fill_label" translatable="false">Fill in standard limits</string>
+    <string name="next_speed_fill_help" translatable="false">Usual limits where the map has none, shown as a guess</string>
+    <string name="next_speed_fill_info" translatable="false">Where the map has no limit, show Lithuania\'s usual one for the road (50 in towns, 90 outside, 70 on gravel), marked as a guess.</string>
 </resources>

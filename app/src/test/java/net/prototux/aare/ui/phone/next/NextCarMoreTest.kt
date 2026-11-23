@@ -19,6 +19,7 @@ import net.prototux.aare.car.myplaySpeedSource
 import net.prototux.aare.ui.car.myplay.myplayMapsIdleHome
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import net.prototux.aare.ui.phone.myplaySpeedLimitRegion
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -74,6 +75,13 @@ class NextCarMoreTest {
         org.robolectric.Shadows.shadowOf(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()).grantPermissions(android.Manifest.permission.RECORD_AUDIO)
         rule.setContent { NextVoicePage() }
         rule.onNodeWithText("Allow the microphone").assertDoesNotExist()
+    }
+
+    @Test fun fillInStandardLimitsWritesItsKey() {
+        settings.myplaySpeedLimitRegion = net.prototux.aare.ui.phone.SpeedLimitFiles.REGIONS.first().id
+        rule.setContent { NextSpeedPage() }
+        rule.onNode(hasText("Fill in standard limits") and isToggleable()).performScrollTo().performClick()
+        assertEquals(false, settings.prefs.getBoolean(net.prototux.aare.car.KEY_FILL_STANDARD_LIMITS, true))
     }
 
     @Test fun soundSaysNoMethodNamesOutsideItsRows() {

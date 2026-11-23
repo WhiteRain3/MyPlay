@@ -90,6 +90,7 @@ import net.prototux.aare.car.myplaySpeedLimitMargin
 import net.prototux.aare.car.myplaySpeedSource
 import net.prototux.aare.car.myplayDriveWarnings
 import net.prototux.aare.car.myplayLimitPulse
+import net.prototux.aare.car.myplayFillStandardLimits
 import net.prototux.aare.car.myplayParkedHere
 import net.prototux.aare.host.Assistants
 import net.prototux.aare.host.CarAppCatalog
@@ -237,6 +238,7 @@ fun NextSpeedPage() {
     val mobile by rememberSetting(KEY_SPEED_LIMIT_MOBILE) { myplaySpeedLimitMobile }
     val warnings by rememberSetting(net.prototux.aare.car.KEY_DRIVE_WARNINGS) { myplayDriveWarnings }
     val pulse by rememberSetting(net.prototux.aare.car.KEY_LIMIT_PULSE) { myplayLimitPulse }
+    val fill by rememberSetting(net.prototux.aare.car.KEY_FILL_STANDARD_LIMITS) { myplayFillStandardLimits }
     val state by SpeedLimitDownload.state.collectAsState()
     var changes by remember { mutableIntStateOf(0) }
     val kept = remember(region, state, changes) { if (region.isEmpty()) null else SpeedLimitDownload.kept(ctx, region) }
@@ -317,12 +319,20 @@ fun NextSpeedPage() {
                 }
             }
             Spacer(Modifier.height(12.dp))
-            NextCard {
-                NextSwitchRow(stringResource(R.string.next_speed_mobile_label), mobile, { on ->
-                    if (!on) settings.myplaySpeedLimitMobile = false
-                    else scope.launch { askMobile = SpeedLimitDownload.lookUp(region)?.bytes ?: -1L }
-                }, Icons.Outlined.Wifi)
-            }
+            NextGroup(listOf(
+                {
+                    // Speed-limit option A (dispatcher): where the map has no limit, the usual one for the road, marked as a guess.
+                    NextSwitchRow(stringResource(R.string.next_speed_fill_label), fill, { settings.myplayFillStandardLimits = it }, Icons.Outlined.Speed,
+                        note = RowNote.Help(stringResource(R.string.next_speed_fill_help)), info = stringResource(R.string.next_speed_fill_info),
+                        changed = !fill, tag = { AlsoOnCarTag() })
+                },
+                {
+                    NextSwitchRow(stringResource(R.string.next_speed_mobile_label), mobile, { on ->
+                        if (!on) settings.myplaySpeedLimitMobile = false
+                        else scope.launch { askMobile = SpeedLimitDownload.lookUp(region)?.bytes ?: -1L }
+                    }, Icons.Outlined.Wifi)
+                },
+            ))
         }
         if (region.isEmpty()) {
             // Files kept from before can still be deleted with no region chosen (SL-15).
