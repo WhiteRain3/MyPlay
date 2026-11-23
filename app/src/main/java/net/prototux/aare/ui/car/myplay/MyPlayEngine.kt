@@ -1045,8 +1045,9 @@ internal fun MyPlayEngineShell(
  */
 @Composable
 private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Composable (SpeedReading?) -> Unit) {
-    // The phone's picture shows a fixed speed and never listens to anything.
-    source.fixed?.let { content(it); return }
+    // The phone's picture shows a fixed speed and never listens to anything; SP-1: it shows the
+    // source marker, as the car does with the map-area check on.
+    source.fixed?.let { CompositionLocalProvider(LocalSpeedSourceMark provides true) { content(it) }; return }
     val limits = remember(source) { source.limits() }
     val feed = remember(source) { SpeedFeed(source.fixes(), limits) }
     val car by source.car.collectAsState()
@@ -1086,7 +1087,8 @@ private fun EngineSpeed(state: CarUiState, source: SpeedSource, content: @Compos
     }
     DisposableEffect(feed) { onDispose { feed.release(); limits?.close(); SpeedLimitDiag.why = null; net.prototux.aare.car.DriveSummary.pause() } }
     // #7: the limit sign's one pulse when the limit changes (LP-1: its own switch).
-    CompositionLocalProvider(LocalLimitPulse provides state.limitPulse) { content(feed.reading) }
+    CompositionLocalProvider(LocalLimitPulse provides state.limitPulse,
+        LocalSpeedSourceMark provides net.prototux.aare.host.templates.MapAreaDebug.show) { content(feed.reading) }
 }
 
 private const val SPEED_TICK_MS = 1_000L
@@ -1166,6 +1168,9 @@ internal fun appTag(app: CarAppEntry) = "app_${app.id}"
  */
 internal const val PANEL_OPENS_ON = PANEL_NEXT
 internal const val MUSIC_OPENS_ON = MUSIC_NEXT
+
+/** SP-1: whether the speed shows where it comes from (CAR or GPS): the phone's picture, and the Developer check. */
+val LocalSpeedSourceMark = androidx.compose.runtime.staticCompositionLocalOf { false }
 
 /** HN-2: the hints round the hub (their layer). */
 internal const val SLOT_HINTS = "slot_hints"

@@ -102,6 +102,16 @@ var Settings.myplaySpeedLimitMargin: Int
 object SpeedRules {
     /** A car speed older than this is not shown (cars send some sensors only when they change). */
     const val CAR_FRESH_MS = 3_000L
+    /**
+     * SP-1 (the owner: the speed came from the phone, not the car): many head units send the speed
+     * only when it changes, or less often than [CAR_FRESH_MS] at a steady speed. The car's last
+     * speed is still shown for this long after it came (the phone's fixes are already being
+     * listened to after [CAR_FRESH_MS], so the phone takes over at once after this).
+     */
+    const val CAR_HOLD_MS = 10_000L
+    /** SP-1: how much of a new phone speed is taken at once (the rest is the last one), fixes this close. */
+    const val PHONE_SMOOTH = 0.6f
+    const val PHONE_SMOOTH_WITHIN_MS = 3_000L
     /** A phone fix older than this is not shown. */
     const val PHONE_FRESH_MS = 5_000L
 
@@ -118,6 +128,15 @@ object SpeedRules {
     /** The car's speed in m/s when it is fresh, else null. */
     fun carSpeed(car: CarData.State, now: Long): Float? =
         car.speed?.takeIf { car.connected && now - it.atMillis in 0..CAR_FRESH_MS }?.value?.metersPerSecond
+
+    /** SP-1: the car's speed in m/s to show: the last one it sent, for [CAR_HOLD_MS]. */
+    fun carHeld(car: CarData.State, now: Long): Float? =
+        car.speed?.takeIf { car.connected && now - it.atMillis in 0..CAR_HOLD_MS }?.value?.metersPerSecond
+
+    /** SP-1: a phone speed eased toward [new] from [old] when the fixes are close in time, else [new]. */
+    fun smoothed(old: Float?, oldAt: Long?, new: Float, at: Long): Float =
+        if (old == null || oldAt == null || at - oldAt !in 0..PHONE_SMOOTH_WITHIN_MS) new
+        else PHONE_SMOOTH * new + (1 - PHONE_SMOOTH) * old
 
     /**
      * Whether the phone's fixes are wanted now: every one of the battery rules holds. They are
@@ -246,8 +265,14 @@ internal fun Location.toFix(at: Long): PhoneFix {
 class SpeedFeed(
     private val fixes: PhoneFixes,
     private val limits: SpeedLimits? = null,
+    /** SP-1: where the source switches are told (the connection log). Before [clock], which tests pass last. */
+    private val log: (String) -> Unit = net.prototux.aare.DiagLog::add,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
+    /** SP-1: the source last shown, and how many times it changed (car to phone or back). */
+    private var lastFrom: SpeedReading.From? = null
+    var switches = 0
+        private set
     var reading by mutableStateOf<SpeedReading?>(null)
         private set
     /** Whether the phone's fixes are being listened to (for tests and the connection log). */
@@ -286,7 +311,17 @@ class SpeedFeed(
             stopFixes()
         }
         if (!limitsOn) forgetLimit()
-        val base = if (inputs.shown) SpeedRules.pick(inputs.mode, carMps, phoneMps.takeIf { listening }, phoneAt, now) else null
+        // SP-1: the car's last speed is shown for a while after it came (sent only on change by many cars).
+        val shownCar = SpeedRules.carHeld(inputs.car, now)
+        val base = if (inputs.shown) SpeedRules.pick(inputs.mode, shownCar, phoneMps.takeIf { listening }, phoneAt, now) else null
+        base?.from?.let { from ->
+            val was = lastFrom
+            if (was != null && was != from) {
+                switches++
+                if (switches <= MAX_SWITCH_LINES) log("speed source: ${was.name.lowercase()} to ${from.name.lowercase()} (switch $switches)")
+            }
+            lastFrom = from
+        }
         why = if (!inputs.shown || limits == null) null else SpeedRules.limitWhy(
             inputs.mode, if (limitsOn) LimitFile.READY else inputs.limitFile, inputs.car.connected, inputs.mapsRunning, listening,
             limitAt?.let { now - it in 0..SpeedRules.PHONE_FRESH_MS } == true || (phoneAt?.let { now - it in 0..SpeedRules.PHONE_FRESH_MS } == true),
@@ -303,7 +338,8 @@ class SpeedFeed(
         // SL-7: the passive provider also passes on other apps' network fixes, which have no speed:
         // they leave the last speed alone (it goes stale on its own).
         if (fix.metersPerSecond != null) {
-            phoneMps = fix.metersPerSecond
+            // SP-1: a little smoothing, so GPS jitter does not flicker the number.
+            phoneMps = SpeedRules.smoothed(phoneMps, phoneAt, fix.metersPerSecond, fix.atMillis)
             phoneAt = fix.atMillis
         }
         val l = limits
@@ -334,6 +370,11 @@ class SpeedFeed(
         last = null
         reading = null
         why = null
+    }
+
+    private companion object {
+        /** SP-1: at most this many switch lines in the log per screen. */
+        const val MAX_SWITCH_LINES = 30
     }
 
     private fun stopFixes() {
