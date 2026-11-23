@@ -8,8 +8,9 @@ import android.view.Window
 /**
  * MyPlay (smoothness, the dispatcher 2026-11-23): how many of the car screen's frames took too
  * long, for one line in the log at the end of a drive. Numbers only: frames drawn, how many took
- * longer than one refresh of the display and longer than two (a visible stutter), and the slowest. Counted only while [on] (the hidden "maps text" debug setting, as the
- * other bench lines); off, nothing is counted and no line is written.
+ * longer than one refresh of the display and longer than two (a visible stutter), and the
+ * slowest. Counted only while [on] (the hidden "maps text" debug setting, as the other bench
+ * lines); off, nothing is counted and no line is written.
  *
  * The frames are the car window's own (Window frame metrics), so only frames really drawn count:
  * a still screen adds nothing. The thresholds come from the refresh rate of the display the

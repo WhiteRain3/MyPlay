@@ -195,7 +195,8 @@ data class EngineSources(
                 override fun key(action: Int, keyCode: Int) = Unit
             },
             openMaps = { state.app(state.homeNavAppId ?: state.activeNavAppId)?.let(actions::openApp) ?: actions.openLauncher() },
-            speed = SpeedSource(
+            // MyPlay (Preview): the Preview's pretend speed when it has one; a car session never does.
+            speed = state.pretendSpeed?.let(::pretendSpeedSource) ?: SpeedSource(
                 CarData.state, { context?.let(::PassiveFixes) ?: NoFixes },
                 limits = { context?.let(::FileSpeedLimits) },
                 margin = { context?.let { Settings(it).myplaySpeedLimitMargin } ?: SpeedRules.MARGIN_DEFAULT },
@@ -216,6 +217,12 @@ data class EngineSources(
             of(state, actions, null).copy(speed = SpeedSource(MutableStateFlow(CarData.State()), { NoFixes }, speed), picture = true)
     }
 }
+
+/**
+ * MyPlay (Preview): the speed for the phone's interactive Preview: [pretend]'s car and nothing
+ * else (no phone fixes, no speed limit file), so the speed rules run on the pretended speed only.
+ */
+fun pretendSpeedSource(pretend: net.prototux.aare.car.PretendSpeed): SpeedSource = SpeedSource(pretend.car, { NoFixes })
 
 /** No phone fixes at all. */
 private object NoFixes : PhoneFixes {
