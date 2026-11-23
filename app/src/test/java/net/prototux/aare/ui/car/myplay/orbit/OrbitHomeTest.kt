@@ -61,6 +61,7 @@ import net.prototux.aare.ui.car.myplay.STOP_TURN
 import net.prototux.aare.ui.car.myplay.TripProgress
 import net.prototux.aare.ui.car.myplay.TurnDirection
 import net.prototux.aare.ui.theme.CarTheme
+import androidx.compose.foundation.layout.requiredSize
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -185,7 +186,7 @@ class OrbitHomeTest {
                     }
                 }) {
                     CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
-                        navMap = { _, m -> covers = net.prototux.aare.host.templates.LocalMapCovers.current; Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
+                        navMap = { _, m -> covers = net.prototux.aare.host.templates.LocalMapCovers.current; themedSeen = LocalOrbitThemed.current; Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
                 }
             }
         }
@@ -609,6 +610,8 @@ class OrbitHomeTest {
 
     /** What the engine tells the map covers it (MC-1). */
     private var covers: net.prototux.aare.host.templates.MapCoverRegistry? = null
+    /** TH-1a: the theme the engine provides, as its map sees it. */
+    private var themedSeen: Orbit.Themed? = null
 
     /** MC-1: the free area the maps app would be told, from what ORBIT marks, on the whole screen. */
     private fun freeArea(): net.prototux.aare.host.templates.MapGeometry.Box {
@@ -717,20 +720,48 @@ class OrbitHomeTest {
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun orbitTakesTheChosenTheme() {
         val state = show()
-        assertEquals(Orbit.NIGHT, Orbit.glass(true))
+        assertNull(themedSeen)
         val retro = net.prototux.aare.ui.theme.CarThemes.byId("retro")
         rule.runOnIdle { state.theme = retro; state.orbitThemed = true }
         rule.waitForIdle()
         val themed = Orbit.Themed.from(retro)
-        assertEquals(themed.night, Orbit.glass(true))
-        assertEquals(retro.night.primary, Orbit.accent(net.prototux.aare.ui.car.myplay.World.NAVIGATE, true))
+        assertEquals(themed.night, Orbit.glass(true, themedSeen))
+        assertEquals(retro.night.primary, Orbit.accent(net.prototux.aare.ui.car.myplay.World.NAVIGATE, true, themedSeen))
         val bmp = rule.onNodeWithTag(ENGINE_TAG).captureToImage().asAndroidBitmap()
         File(File("build/reports/myplay-screens").apply { mkdirs() }, "orbit_themed_retro.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
         // Back to the default: ORBIT's own colours.
         rule.runOnIdle { state.orbitThemed = false }
         rule.waitForIdle()
-        assertEquals(Orbit.NIGHT, Orbit.glass(true))
-        assertEquals(Color(0xFF6EE7A8), Orbit.accent(net.prototux.aare.ui.car.myplay.World.NAVIGATE, true))
+        assertNull(themedSeen)
+        assertEquals(Orbit.NIGHT, Orbit.glass(true, themedSeen))
+        assertEquals(Color(0xFF6EE7A8), Orbit.accent(net.prototux.aare.ui.car.myplay.World.NAVIGATE, true, themedSeen))
+    }
+
+    /**
+     * TH-1a: two engines at once (the car's screen and the phone's picture of it) each draw in
+     * their own state's colours; neither overwrites the other's.
+     */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun twoEnginesKeepTheirOwnColours() {
+        val retro = net.prototux.aare.ui.theme.CarThemes.byId("retro")
+        val car = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply { enginePreview = true; theme = retro; orbitThemed = true }
+        val picture = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply { enginePreview = true }
+        var seenCar: Orbit.Themed? = null
+        var seenPicture: Orbit.Themed? = Orbit.Themed.from(retro)
+        rule.setContent {
+            CarTheme(night = true, theme = retro) {
+                androidx.compose.foundation.layout.Row {
+                    for ((s, put) in listOf<Pair<CarUiState, (Orbit.Themed?) -> Unit>>(car to { t -> seenCar = t }, picture to { t -> seenPicture = t })) {
+                        Box(androidx.compose.ui.Modifier.requiredSize(androidx.compose.ui.unit.Dp(640f), androidx.compose.ui.unit.Dp(720f))) {
+                            CarShell(s, actions, appContent = { _, m -> Box(m) }, navMap = { _, m -> put(LocalOrbitThemed.current); Box(m) })
+                        }
+                    }
+                }
+            }
+        }
+        rule.waitForIdle()
+        assertEquals(retro.night.primary, Orbit.accent(net.prototux.aare.ui.car.myplay.World.NAVIGATE, true, seenCar))
+        assertNull(seenPicture)
     }
 
     /** TH-3: the owner's Control size makes ORBIT's parts bigger (the hub's disc here), live. */
@@ -751,8 +782,6 @@ class OrbitHomeTest {
         val bigger = rule.onNodeWithTag("hub").fetchSemanticsNode().boundsInRoot.width
         assertEquals(normal * 1.3f, bigger, 2f)
     }
-
-    @org.junit.After fun noThemeLeftOver() { Orbit.override = null }
 
     /** A picture of the screen as it is now. */
     private fun picture2(name: String) {

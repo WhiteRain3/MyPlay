@@ -105,6 +105,26 @@ internal fun MyPlayEngineShell(
     skin: MyPlaySkin = net.prototux.aare.ui.car.myplay.orbit.OrbitSkin,
     sources: EngineSources = LocalEngineSources.current ?: LocalContext.current.let { c -> remember(state, actions) { EngineSources.of(state, actions, c) } },
 ) {
+    // TH-1, TH-1a: ORBIT takes the owner's theme from this engine's own state (other skins and the default theme: its own).
+    val themed = remember(state.theme, state.orbitThemed, skin.id) {
+        if (skin.id == net.prototux.aare.ui.car.myplay.orbit.OrbitSkin.id && state.orbitThemed) net.prototux.aare.ui.car.myplay.orbit.Orbit.Themed.from(state.theme) else null
+    }
+    CompositionLocalProvider(net.prototux.aare.ui.car.myplay.orbit.LocalOrbitThemed provides themed) {
+        EngineShellThemed(state, actions, appContent, navMap, overlay, modifier, skin, sources)
+    }
+}
+
+@Composable
+private fun EngineShellThemed(
+    state: CarUiState,
+    actions: CarActions,
+    appContent: @Composable (CarAppEntry, Modifier) -> Unit,
+    navMap: @Composable (CarAppEntry, Modifier) -> Unit,
+    overlay: @Composable (Modifier) -> Unit,
+    modifier: Modifier,
+    skin: MyPlaySkin,
+    sources: EngineSources,
+) {
     // O3: kept while an app has the screen (the rest of the engine is not), so Back comes back to it.
     val memory = remember { EngineMemory() }
     if (state.screen != CarScreen.Dashboard) {
@@ -548,11 +568,6 @@ internal fun MyPlayEngineShell(
     val currentApps by rememberUpdatedState(apps)
     val currentMusicActions by rememberUpdatedState(musicActions)
     val covers = remember { MapCoverRegistry() }
-    // TH-1: ORBIT takes the owner's theme while it draws (other skins and the default theme: its own).
-    val themed = remember(state.theme, state.orbitThemed, skin.id) {
-        if (skin.id == net.prototux.aare.ui.car.myplay.orbit.OrbitSkin.id && state.orbitThemed) net.prototux.aare.ui.car.myplay.orbit.Orbit.Themed.from(state.theme) else null
-    }
-    androidx.compose.runtime.SideEffect { net.prototux.aare.ui.car.myplay.orbit.Orbit.override = themed }
     // MC-1: the skin's free area, centred or the largest.
     androidx.compose.runtime.SideEffect { covers.centred = skin.mapAreaCentred }
     val focus = remember { FocusRequester() }

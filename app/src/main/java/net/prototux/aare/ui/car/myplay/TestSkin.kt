@@ -36,7 +36,7 @@ import net.prototux.aare.car.LimitShown
 object TestSkin : MyPlaySkin {
     override val id = "test"
 
-    override fun tokens(night: Boolean) = if (night) {
+    @Composable override fun tokens(night: Boolean) = if (night) {
         SkinTokens(Color(0xFF101214), Color(0xE0262A2E), Color(0xFFEDEFF1), Color(0xFFA0A6AD), Color(0xFF4FC3F7), Color(0xFF00222E), corner = 12.dp)
     } else {
         SkinTokens(Color(0xFFF3F4F6), Color(0xE0FFFFFF), Color(0xFF15181B), Color(0xFF5A6169), Color(0xFF0277BD), Color.White, corner = 12.dp, night = false)

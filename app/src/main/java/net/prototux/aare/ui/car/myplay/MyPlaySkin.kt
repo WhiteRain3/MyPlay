@@ -234,7 +234,7 @@ interface MyPlaySkin {
     /** Stored in the settings once languages can be chosen (N15): never change it once released. */
     val id: String
 
-    fun tokens(night: Boolean): SkinTokens
+    @Composable fun tokens(night: Boolean): SkinTokens
 
     @Composable fun Turn(turn: TurnSlot, modifier: Modifier)
     /**

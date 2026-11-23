@@ -1,7 +1,5 @@
 package net.prototux.aare.ui.car.myplay.orbit
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.DirectionsCar
@@ -28,13 +26,25 @@ import net.prototux.aare.ui.car.myplay.World
  * The sheet draws night only. The day colours here are MyPlay's own reading of it (light glass,
  * the same accents, darker text) until the owner sees them on the car.
  */
+/**
+ * TH-1 (the owner: "our theming doesn't work"): the owner's theme, accent and own colours, taken by
+ * ORBIT. Null (the default theme, its own accent, no own colours): ORBIT's designed colours. TH-1a:
+ * provided by each engine (MyPlayEngineShell) from its own state, so the car's screen and the
+ * phone's picture of it never overwrite each other, and the first frame already has it.
+ */
+val LocalOrbitThemed = androidx.compose.runtime.compositionLocalOf<Orbit.Themed?> { null }
+
 object Orbit {
     /**
      * Each world's accent (the sheet's dial). By night the sheet's colours, each at least 7:1 on
      * the night glass. By day (O-1) the same hues darkened, each at least 4.9:1 on the day glass
      * (the sheet's pale ones were 1.4 to 2.5:1, under the 3:1 needed for icons and rings).
      */
-    fun accent(world: World, night: Boolean): Color = override?.accentFor(world, night) ?: designAccent(world, night)
+    @androidx.compose.runtime.Composable @androidx.compose.runtime.ReadOnlyComposable
+    fun accent(world: World, night: Boolean): Color = accent(world, night, LocalOrbitThemed.current)
+
+    /** [accent] for [themed] given (outside composition). */
+    fun accent(world: World, night: Boolean, themed: Themed?): Color = themed?.accentFor(world, night) ?: designAccent(world, night)
 
     /** The sheet's own accent for [world] (no theme chosen). */
     private fun designAccent(world: World, night: Boolean): Color = if (night) when (world) {
@@ -60,7 +70,10 @@ object Orbit {
     fun caution(night: Boolean): Color = if (night) Color(0xFFFFC857) else Color(0xFF8A5A00)
 
     /** Text and icons on a filled accent disc: dark on the pale night accents, white on the dark day ones. */
-    fun onAccent(night: Boolean): Color = override?.let { if (night) it.onAccentNight else it.onAccentDay }
+    @androidx.compose.runtime.Composable @androidx.compose.runtime.ReadOnlyComposable
+    fun onAccent(night: Boolean): Color = onAccent(night, LocalOrbitThemed.current)
+
+    fun onAccent(night: Boolean, themed: Themed?): Color = themed?.let { if (night) it.onAccentNight else it.onAccentDay }
         ?: if (night) Color(0xFF06251A) else Color.White
 
     fun icon(world: World): ImageVector = when (world) {
@@ -112,15 +125,10 @@ object Orbit {
         text = Color(0xFF0E121B), secondary = Color(0xFF4A5468), background = Color(0xFFE9EEF2), halo = Color(0xFFFFFFFF),
     )
 
-    fun glass(night: Boolean) = override?.let { if (night) it.night else it.day } ?: if (night) NIGHT else DAY
+    @androidx.compose.runtime.Composable @androidx.compose.runtime.ReadOnlyComposable
+    fun glass(night: Boolean): Glass = glass(night, LocalOrbitThemed.current)
 
-    /**
-     * TH-1 (the owner: "our theming doesn't work"): the owner's theme, accent and own colours, taken
-     * by ORBIT. Null (the default theme, its own accent, no own colours): ORBIT's designed colours.
-     * Set by the engine while ORBIT draws; read wherever ORBIT reads [glass] and [accent], so a
-     * change shows at once.
-     */
-    var override by androidx.compose.runtime.mutableStateOf<Themed?>(null)
+    fun glass(night: Boolean, themed: Themed?): Glass = themed?.let { if (night) it.night else it.day } ?: if (night) NIGHT else DAY
 
     /** TH-1: ORBIT's colours from a car theme (after its accent and the owner's colours). */
     class Themed(
@@ -147,10 +155,13 @@ object Orbit {
     }
 
     /** The engine's tokens for ORBIT; the accent is Navigate's (home's world). */
-    fun tokens(night: Boolean): SkinTokens = glass(night).let { g ->
+    @androidx.compose.runtime.Composable @androidx.compose.runtime.ReadOnlyComposable
+    fun tokens(night: Boolean): SkinTokens = tokens(night, LocalOrbitThemed.current)
+
+    fun tokens(night: Boolean, themed: Themed?): SkinTokens = glass(night, themed).let { g ->
         SkinTokens(
             background = g.background, surface = g.glass, onSurface = g.text, dim = g.secondary,
-            accent = accent(World.NAVIGATE, night), onAccent = onAccent(night),
+            accent = accent(World.NAVIGATE, night, themed), onAccent = onAccent(night, themed),
             // ORBIT is round: a corner larger than any part makes every shape a circle or a pill.
             corner = 999.dp, edge = 44.dp, night = night,
         )

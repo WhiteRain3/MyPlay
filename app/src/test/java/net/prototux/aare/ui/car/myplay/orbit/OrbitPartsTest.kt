@@ -44,7 +44,7 @@ class OrbitPartsTest {
     @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
 
     @Test fun everyWorldHasItsOwnAccentAndIcon() {
-        for (night in listOf(true, false)) assertEquals(World.entries.size, World.entries.map { Orbit.accent(it, night) }.toSet().size)
+        for (night in listOf(true, false)) assertEquals(World.entries.size, World.entries.map { Orbit.accent(it, night, null) }.toSet().size)
         assertEquals(World.entries.size, World.entries.map(Orbit::icon).toSet().size)
     }
 
@@ -57,14 +57,14 @@ class OrbitPartsTest {
 
     @Test fun accentsReadOnTheirGlassDayAndNight() {
         for (night in listOf(true, false)) {
-            val g = Orbit.glass(night)
+            val g = Orbit.glass(night, null)
             for (w in World.entries) {
-                val a = Orbit.accent(w, night)
+                val a = Orbit.accent(w, night, null)
                 assertTrue("$w night=$night on glass", contrast(a, g.glass.copy(alpha = 1f)) >= 3.0)
                 assertTrue("$w night=$night on the background", contrast(a, g.background) >= 3.0)
                 // The focus ring against its halo.
                 assertTrue("$w night=$night ring on halo", contrast(a, g.halo) >= 3.0)
-                assertTrue("$w night=$night text on a filled disc", contrast(Orbit.onAccent(night), a) >= 4.5)
+                assertTrue("$w night=$night text on a filled disc", contrast(Orbit.onAccent(night, null), a) >= 4.5)
             }
         }
     }
@@ -79,9 +79,9 @@ class OrbitPartsTest {
     @Test fun partsDay() = board(night = false, "orbit-parts-day")
 
     private fun board(night: Boolean, name: String) {
-        val g = Orbit.glass(night)
-        val nav = Orbit.accent(World.NAVIGATE, night)
-        val song = Orbit.accent(World.MUSIC, night)
+        val g = Orbit.glass(night, null)
+        val nav = Orbit.accent(World.NAVIGATE, night, null)
+        val song = Orbit.accent(World.MUSIC, night, null)
         rule.setContent {
             Column(Modifier.testTag("board").background(g.background).padding(40.dp), verticalArrangement = Arrangement.spacedBy(40.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(48.dp), verticalAlignment = Alignment.CenterVertically) {

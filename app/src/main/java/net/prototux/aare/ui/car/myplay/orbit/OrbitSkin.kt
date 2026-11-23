@@ -186,7 +186,7 @@ import net.prototux.aare.car.LimitShown
 object OrbitSkin : MyPlaySkin {
     override val id = "orbit"
 
-    override fun tokens(night: Boolean): SkinTokens = Orbit.tokens(night)
+    @Composable override fun tokens(night: Boolean): SkinTokens = Orbit.tokens(night)
 
     override val drawsFocus get() = true
     override val showsSpeed get() = true

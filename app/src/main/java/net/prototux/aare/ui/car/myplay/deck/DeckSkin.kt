@@ -157,7 +157,7 @@ object DeckSkin : MyPlaySkin by OrbitSkin {
 
     override val id = "deck"
 
-    override fun tokens(night: Boolean): SkinTokens = Deck.tokens(night)
+    @Composable override fun tokens(night: Boolean): SkinTokens = Deck.tokens(night)
 
     override val drawsFocus get() = true
     override val showsSpeed get() = true

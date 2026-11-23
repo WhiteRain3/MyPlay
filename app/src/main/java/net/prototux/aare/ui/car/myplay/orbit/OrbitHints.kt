@@ -88,7 +88,8 @@ internal fun OrbitPadHints(hints: PadHints, speedShown: Boolean, night: Boolean,
     val cx = half
     val cy = box - half
     class Hint(val degrees: Float, val icon: ImageVector, val colour: Color, val tag: String)
-    fun padColour(a: HomePadAction) = OrbitHints.world(a)?.let { Orbit.accent(it, night) } ?: g.text
+    val themed = LocalOrbitThemed.current
+    fun padColour(a: HomePadAction) = OrbitHints.world(a)?.let { Orbit.accent(it, night, themed) } ?: g.text
     val all = buildList {
         hints.up?.let { add(Hint(270f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_UP)) }
         hints.down?.let { add(Hint(90f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_DOWN)) }
