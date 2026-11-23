@@ -2,8 +2,9 @@ package net.prototux.aare.ui.car.myplay.orbit
 
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.isShiftPressed
@@ -495,7 +496,8 @@ object OrbitSkin : MyPlaySkin {
         var at by remember { androidx.compose.runtime.mutableIntStateOf(0) }
         val focus = remember { androidx.compose.ui.focus.FocusRequester() }
         LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-        androidx.activity.compose.BackHandler { input.hide() }
+        // LR-2: while something over the app holds the knob (a ringing call, a notice with buttons), Back is its.
+        androidx.activity.compose.BackHandler(enabled = !input.held()) { input.hide() }
         fun press(i: Int) { at = i; net.prototux.aare.ui.car.myplay.LetterRing.press(keys[i], input) }
         Box(
             modifier.fillMaxSize().testTag(LETTER_RING_TAG).focusRequester(focus).focusable()
@@ -540,7 +542,9 @@ object OrbitSkin : MyPlaySkin {
                         Box(
                             Modifier.offset((LETTER_RADIUS.value * kotlin.math.cos(a)).dp, (LETTER_RADIUS.value * kotlin.math.sin(a)).dp)
                                 .size(disc).let { if (on) it.orbitFocus(true, accent, g.halo) else it }
-                                .clip(CircleShape).background(fill).testTag(letterKeyTag(i)).clickable { press(i) },
+                                .clip(CircleShape).background(fill).testTag(letterKeyTag(i))
+                                // LR-1: a tap types the key; not a focus stop (the ring owns the focus and its own ring).
+                                .pointerInput(i) { detectTapGestures { press(i) } },
                             contentAlignment = Alignment.Center,
                         ) {
                             when (key) {

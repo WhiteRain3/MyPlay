@@ -184,7 +184,12 @@ internal fun MyPlayAppFrame(
     }
 
     // Look C (design 10): parked search in a hosted app types on the skin's letter ring, when it has one.
-    CompositionLocalProvider(LocalSkinTokens provides tokens, LocalLetterRing provides skin.letterRing) {
+    // LR-2: held while a call rings or a notice holds the knob, so Back is theirs first.
+    val ringHeld by rememberUpdatedState(modal)
+    val letterRing: (@Composable (LetterRingInput, Modifier) -> Unit)? = remember(skin.letterRing) {
+        skin.letterRing?.let { draw -> { input, m -> draw(input.heldBy { ringHeld }, m) } }
+    }
+    CompositionLocalProvider(LocalSkinTokens provides tokens, LocalLetterRing provides letterRing) {
         BoxWithConstraints(
             Modifier.fillMaxSize().background(tokens.background).then(modifier).testTag(FRAME_TAG)
                 .onFocusChanged { frameHasFocus = it.hasFocus }

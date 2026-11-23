@@ -30,10 +30,12 @@ class LetterRingTest {
 
     private var text = ""
     private val done = mutableListOf<String>()
+    private var held = false
     private fun input(found: Int? = null) = LetterRingInput(
         text, "Search Waze", found,
         type = { text += it }, backspace = { text = text.dropLast(1) },
         submit = { done += "submit" }, hide = { done += "hide" },
+        held = { held },
     )
 
     @Test fun twentyNineKeysAToZThenSpaceDeleteSearch() {
@@ -97,6 +99,21 @@ class LetterRingTest {
         rule.onNodeWithText("6 places so far").assertExists()
         rule.onNodeWithTag(OrbitSkin.LETTER_RING_TAG).performKeyInput { pressKey(Key.DirectionDown) }
         assertEquals(listOf("submit"), done)
+    }
+
+    /** LR-2: a notice holding the knob over the ring gets Back first (its handler is older, as the frame's is). */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun whileTheKnobIsHeldBackIsNotTheRings() {
+        held = true
+        rule.setContent {
+            androidx.activity.compose.BackHandler { done += "notice" }
+            CompositionLocalProvider(LocalSkinTokens provides OrbitSkin.tokens(true)) {
+                OrbitSkin.letterRing(input(), Modifier)
+            }
+        }
+        rule.waitForIdle()
+        rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }
+        assertEquals(listOf("notice"), done)
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")

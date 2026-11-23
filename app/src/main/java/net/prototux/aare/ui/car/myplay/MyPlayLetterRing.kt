@@ -24,7 +24,16 @@ class LetterRingInput(
     val submit: () -> Unit,
     /** Back: the ring closes, the text stays. */
     val hide: () -> Unit,
-)
+    /**
+     * LR-2: true while something over the app holds the knob (a ringing call, a notice with
+     * buttons): Back is then its, not the ring's. Read as state, so the ring follows it. Set by the
+     * app frame.
+     */
+    val held: () -> Boolean = { false },
+) {
+    /** The same input, held while [held] says so. */
+    fun heldBy(held: () -> Boolean) = LetterRingInput(query, hint, found, type, backspace, submit, hide, held)
+}
 
 /** Where a SearchTemplate finds the skin's letter ring; null: the plain keyboard. Provided by the app frame. */
 val LocalLetterRing = staticCompositionLocalOf<(@Composable (LetterRingInput, Modifier) -> Unit)?> { null }
