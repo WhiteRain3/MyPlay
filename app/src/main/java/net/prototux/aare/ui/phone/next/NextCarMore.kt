@@ -294,6 +294,7 @@ fun NextSpeedPage() {
                             Text(stringResource(R.string.next_speed_downloading_label), style = NextType.Label, color = NextColors.Text)
                             Text(regionName ?: region, style = NextType.Help, color = NextColors.Text3)
                         }
+                        NextButton(stringResource(R.string.next_speed_stop_label), { SpeedLimitDownload.cancel() }, kind = ButtonKind.TEXT, small = true)
                     }
                 } else {
                     NextRow(

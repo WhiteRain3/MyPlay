@@ -42,6 +42,13 @@ object SpeedLimitDownload {
     private val _state = MutableStateFlow<State>(State.Idle)
     val state: StateFlow<State> = _state.asStateFlow()
     private val busy = AtomicBoolean(false)
+    private val stop = AtomicBoolean(false)
+
+    /**
+     * Stops a download under way (the new phone app's Stop). The part already fetched is thrown
+     * away; the file kept before stays as it was, since it is only replaced once a new one is checked.
+     */
+    fun cancel() { if (busy.get()) stop.set(true) }
     private val waitingLogged = AtomicBoolean(false)
 
     /** Whether the phone is on a network that is not metered (Wi-Fi, usually). */
@@ -112,6 +119,7 @@ object SpeedLimitDownload {
         if (region.isEmpty()) return
         if (!mayDownload(context)) { if (force) _state.value = if (hasInternet(context)) State.NeedsWifi else State.NoInternet; return }
         if (!busy.compareAndSet(false, true)) return
+        stop.set(false)
         try {
             _state.value = State.Checking
             val result = withContext(Dispatchers.IO) { fetch(context, region) }
@@ -155,7 +163,10 @@ object SpeedLimitDownload {
         val dir = SpeedLimitFiles.dir(context.filesDir).apply { mkdirs() }
         val tmp = File(dir, "$region.bin.tmp")
         try {
-            if (!download(SpeedLimitFiles.fileUrl(region), tmp, remote.bytes)) return State.Failed
+            if (!download(SpeedLimitFiles.fileUrl(region), tmp, remote.bytes)) {
+                if (stop.get()) { DiagLog.add("speed limits: download stopped by the owner"); return State.Idle }
+                return State.Failed
+            }
             val head = tmp.inputStream().use { s -> ByteArray(5).also { s.read(it) } }
             if (!SpeedLimitCheck.verified(remote, tmp.length(), sha256(tmp), head)) {
                 DiagLog.add("speed limits: the downloaded file did not match its description; not kept")
@@ -200,6 +211,7 @@ object SpeedLimitDownload {
                     while (true) {
                         val n = input.read(buf)
                         if (n < 0) break
+                        if (stop.get()) return false
                         done += n
                         if (done > expected || done > SpeedLimitFiles.MAX_BYTES) return false
                         out.write(buf, 0, n)
