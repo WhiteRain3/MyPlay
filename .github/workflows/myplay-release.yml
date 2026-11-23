@@ -134,9 +134,18 @@ jobs:
       # first time only. A test that fails fails every time, so it is still caught.
       - name: Protocol, app, head unit and host shims tests
         if: env.PUBLISH == 'true'
+        # WF-1: a pass that needed a retry says so loudly (a titled warning on the run and a line in
+        # its summary), so a flaky test is seen, not hidden by the retry.
         run: |
           for try in 1 2 3; do
-            ./gradlew --no-daemon :aap:test :app:testDebugUnitTest :headunit:test :xposed:testDebugUnitTest && exit 0
+            if ./gradlew --no-daemon :aap:test :app:testDebugUnitTest :headunit:test :xposed:testDebugUnitTest; then
+              if [ "$try" != 1 ]; then
+                echo "::warning title=Tests passed only on attempt $try::Check this run's log: a download refused (429) or a flaky test."
+                echo "### Tests passed only on attempt $try" >> "$GITHUB_STEP_SUMMARY"
+                echo "A download refused by the server, or a flaky test: see the failed attempts in the log." >> "$GITHUB_STEP_SUMMARY"
+              fi
+              exit 0
+            fi
             [ "$try" = 3 ] || { echo "::warning::tests attempt $try failed, trying again in 60 s"; sleep 60; }
           done
           exit 1
