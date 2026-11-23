@@ -112,6 +112,7 @@ object NextSearchIndex {
         SearchEntry(R.string.next_maps_car_gps_label, "car/maps"),
         SearchEntry(R.string.next_maps_parked_label, "car/maps"),
         SearchEntry(R.string.next_speed_mobile_label, "car/speed"),
+        SearchEntry(R.string.next_speed_fill_label, "car/speed"),
         SearchEntry(R.string.next_speed_warnings_label, "car/speed"),
         SearchEntry(R.string.next_speed_pulse_label, "car/speed"),
         SearchEntry(R.string.next_sound_switch_label, "car", R.string.next_syn_sound_info),
