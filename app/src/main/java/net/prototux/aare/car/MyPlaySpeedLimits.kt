@@ -91,11 +91,9 @@ class FileSpeedLimits(context: Context) : SpeedLimits {
             matcher = Matcher(SpeedLimitFile(buffer))
         }
         val m = matcher ?: return LimitShown.Unknown
-        // Option A: the owner's "Fill in standard limits" (on by default); off leaves the guesses out.
-        m.withGuessed = settings.myplayFillStandardLimits
         val month = Calendar.getInstance().apply { timeInMillis = fix.atMillis }.get(Calendar.MONTH) + 1
         return when (val r = m.match(fix.lat, fix.lon, fix.bearingDeg, fix.accuracyM, month)) {
-            is Matcher.Result.Known -> LimitShown.Known(r.limit, r.defaulted, r.guessed)
+            is Matcher.Result.Known -> LimitShown.Known(r.limit, r.defaulted)
             Matcher.Result.Unknown -> LimitShown.Unknown
         }
     }
@@ -108,12 +106,3 @@ class FileSpeedLimits(context: Context) : SpeedLimits {
         const val TAG = "MyPlaySpeedLimits"
     }
 }
-
-/**
- * Option A (docs/ideas/speed-limits.md): show Lithuania's standard limit, marked as a guess, where
- * the map data has none (when the file carries them). On by default. Backed up.
- */
-const val KEY_FILL_STANDARD_LIMITS = "myplay_fill_standard_limits"
-var Settings.myplayFillStandardLimits: Boolean
-    get() = prefs.getBoolean(KEY_FILL_STANDARD_LIMITS, true)
-    set(v) = prefs.edit().putBoolean(KEY_FILL_STANDARD_LIMITS, v).apply()

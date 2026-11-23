@@ -61,11 +61,8 @@ data class SpeedReading(val kmh: Int, val from: From, val limit: LimitShown? = n
 
 /** N20: what the car shows about the speed limit; always labelled as map data that may be wrong. */
 sealed interface LimitShown {
-    /**
-     * [defaulted]: from the road's kind or zone, not a sign tagged on the road. [guessed] (option A):
-     * nothing tagged at all, Lithuania's standard for the road's type and place: a best guess.
-     */
-    data class Known(val kmh: Int, val defaulted: Boolean = false, val guessed: Boolean = false) : LimitShown
+    /** [defaulted]: from the road's kind or zone, not a sign tagged on the road. */
+    data class Known(val kmh: Int, val defaulted: Boolean = false) : LimitShown
     /** No road matched, or not sure which: "no limit known". */
     data object Unknown : LimitShown
 }

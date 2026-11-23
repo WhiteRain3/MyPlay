@@ -21,13 +21,9 @@ class Matcher(private val near: (lat: Int, lon: Int) -> List<Piece>) {
     constructor(file: SpeedLimitFile) : this(file::piecesNear)
 
     sealed interface Result {
-        /** [guessed] (option A): the road's standard limit, nothing tagged; always [defaulted] too. */
-        data class Known(val limit: Int, val defaulted: Boolean, val guessed: Boolean = false) : Result
+        data class Known(val limit: Int, val defaulted: Boolean) : Result
         data object Unknown : Result
     }
-
-    /** Option A: false leaves guessed limits out (the owner's "Fill in standard limits" off), as if not in the file. */
-    @Volatile var withGuessed: Boolean = true
 
     /** The piece matched last time (for ties), or null. */
     var previous: Piece? = null
@@ -46,7 +42,6 @@ class Matcher(private val near: (lat: Int, lon: Int) -> List<Piece>) {
         val y0 = lat * 1e5; val x0 = lon * 1e5
         val scored = ArrayList<Pair<Piece, Double>>()
         for (p in pieces) {
-            if (!withGuessed && p.flags and SpeedLimitFormat.GUESSED != 0) continue
             var best = Double.MAX_VALUE
             for (k in 1 until p.lats.size) {
                 // In metres, east (x) and north (y), from the fix.
@@ -80,8 +75,7 @@ class Matcher(private val near: (lat: Int, lon: Int) -> List<Piece>) {
             ?: close.minBy { it.second }.first.takeIf { b -> close.all { it.first.limit == b.limit && it.first.winterLimit == b.winterLimit } }
             ?: return forget()
         previous = chosen
-        return Result.Known(chosen.limitIn(month), chosen.flags and (SpeedLimitFormat.DEFAULTED or SpeedLimitFormat.GUESSED) != 0,
-            chosen.flags and SpeedLimitFormat.GUESSED != 0)
+        return Result.Known(chosen.limitIn(month), chosen.flags and SpeedLimitFormat.DEFAULTED != 0)
     }
 
     private fun forget(): Result {

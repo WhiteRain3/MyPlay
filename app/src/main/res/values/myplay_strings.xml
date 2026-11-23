@@ -80,7 +80,6 @@
     <string name="myplay_car_line_speed_limit" translatable="false">Speed limit</string>
     <string name="myplay_frame_home" translatable="false">Home</string>
     <string name="myplay_wheel_home" translatable="false">MyPlay home</string>
-    <string name="myplay_speed_limit_guessed" translatable="false">probably (no sign in the map)</string>
     <string name="myplay_notice_hidden" translatable="false">Message · hidden while driving</string>
     <string name="myplay_wheel_move_map" translatable="false">Move map</string>
     <string name="myplay_wheel_more" translatable="false">%1$d more</string>
