@@ -358,6 +358,8 @@ class CarRuntime(
         ui.drivingRestricted = carDriving && !settings.ignoreDriving
         ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
             .withCustomColours(CustomColours.decode(settings.myplayLookColours)) // MyPlay (F3)
+        // TH-1: ORBIT keeps its own colours until the owner chooses a theme, an accent or own colours.
+        ui.orbitThemed = settings.carThemeId != "aare" || settings.carAccent != "theme" || !CustomColours.decode(settings.myplayLookColours).isEmpty
         ui.layout = CarLayout.byId(settings.carLayoutId)
         ui.layoutSpec = settings.myplayLayoutSpec // MyPlay (M3)
         ui.statusStyle = settings.statusStyle // MyPlay (F4)
@@ -407,7 +409,7 @@ class CarRuntime(
             in SCREEN_SETTING_KEYS -> main.post { applyScreenSettings() }
             "wallpaper" -> main.post { ui.wallpaper = ""; applyScreenSettings() }
             // Apps shown or hidden from the phone: update the car's app list now.
-            "hidden_apps", "phone_screen", "assistant_pkg", "app_order" -> main.post { refreshApps() }
+            in APP_LIST_KEYS -> main.post { refreshApps() }
             // MyPlay (F4): the status icons' and clock's look.
             else -> if (isStatusStyleKey(key)) main.post { applyScreenSettings() }
         }
@@ -986,7 +988,15 @@ class CarRuntime(
          * connected is applied at once (MyPlay K11-1: the map apps' day/night switch too; LG-1: the
          * new screen's language). A key [applyScreenSettings] reads must be here.
          */
-        internal val SCREEN_SETTING_KEYS = setOf(
+        internal /**
+         * The settings that change which apps the car lists: applied at once. AP-1 (the settings
+         * audit): the browser, the car data app and the phone apps on the car were applied only on
+         * the next connection.
+         */
+        val APP_LIST_KEYS = setOf("hidden_apps", "phone_screen", "assistant_pkg", "app_order",
+            "browser", "car_data_app", "standalone_apps", "standalone_app_pkgs")
+
+        val SCREEN_SETTING_KEYS = setOf(
             "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",
             "car_text_size", "car_control_size", "myplay_home_maps", "myplay_debug_map_areas", "myplay_map_filter", "myplay_engine_preview", KEY_ENGINE_LANGUAGE, "myplay_speed_source", "myplay_debug_nav_text",
             KEY_PANEL_TIMEOUT, net.prototux.aare.ui.car.myplay.KEY_HOME_PAD, net.prototux.aare.ui.car.myplay.KEY_MAPS_IDLE_HOME, net.prototux.aare.ui.car.myplay.KEY_INFO_HOME, net.prototux.aare.ui.car.myplay.KEY_ORBIT_SHADE,

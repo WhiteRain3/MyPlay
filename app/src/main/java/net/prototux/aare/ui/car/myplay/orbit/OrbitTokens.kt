@@ -1,5 +1,7 @@
 package net.prototux.aare.ui.car.myplay.orbit
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.DirectionsCar
@@ -32,7 +34,10 @@ object Orbit {
      * the night glass. By day (O-1) the same hues darkened, each at least 4.9:1 on the day glass
      * (the sheet's pale ones were 1.4 to 2.5:1, under the 3:1 needed for icons and rings).
      */
-    fun accent(world: World, night: Boolean): Color = if (night) when (world) {
+    fun accent(world: World, night: Boolean): Color = override?.accentFor(world, night) ?: designAccent(world, night)
+
+    /** The sheet's own accent for [world] (no theme chosen). */
+    private fun designAccent(world: World, night: Boolean): Color = if (night) when (world) {
         World.NAVIGATE -> Color(0xFF6EE7A8)
         World.MUSIC -> Color(0xFFA78BFA)
         World.CALLS -> Color(0xFF5FD39A)
@@ -55,7 +60,8 @@ object Orbit {
     fun caution(night: Boolean): Color = if (night) Color(0xFFFFC857) else Color(0xFF8A5A00)
 
     /** Text and icons on a filled accent disc: dark on the pale night accents, white on the dark day ones. */
-    fun onAccent(night: Boolean): Color = if (night) Color(0xFF06251A) else Color.White
+    fun onAccent(night: Boolean): Color = override?.let { if (night) it.onAccentNight else it.onAccentDay }
+        ?: if (night) Color(0xFF06251A) else Color.White
 
     fun icon(world: World): ImageVector = when (world) {
         World.NAVIGATE -> Icons.Rounded.Navigation
@@ -106,7 +112,39 @@ object Orbit {
         text = Color(0xFF0E121B), secondary = Color(0xFF4A5468), background = Color(0xFFE9EEF2), halo = Color(0xFFFFFFFF),
     )
 
-    fun glass(night: Boolean) = if (night) NIGHT else DAY
+    fun glass(night: Boolean) = override?.let { if (night) it.night else it.day } ?: if (night) NIGHT else DAY
+
+    /**
+     * TH-1 (the owner: "our theming doesn't work"): the owner's theme, accent and own colours, taken
+     * by ORBIT. Null (the default theme, its own accent, no own colours): ORBIT's designed colours.
+     * Set by the engine while ORBIT draws; read wherever ORBIT reads [glass] and [accent], so a
+     * change shows at once.
+     */
+    var override by androidx.compose.runtime.mutableStateOf<Themed?>(null)
+
+    /** TH-1: ORBIT's colours from a car theme (after its accent and the owner's colours). */
+    class Themed(
+        val night: Glass, val day: Glass,
+        val accentNight: Color, val accentDay: Color,
+        val onAccentNight: Color, val onAccentDay: Color,
+        /** A single-colour theme: every world in its one colour, not only Navigate. */
+        val single: Boolean,
+    ) {
+        /** Navigate (home's world and the focus ring) takes the theme's accent; the other worlds keep theirs, unless single-colour. */
+        fun accentFor(world: World, night: Boolean): Color? =
+            if (single || world == World.NAVIGATE) (if (night) accentNight else accentDay) else null
+
+        companion object {
+            fun from(theme: net.prototux.aare.ui.theme.CarThemeSpec): Themed {
+                fun g(s: androidx.compose.material3.ColorScheme, base: Glass) = Glass(
+                    glass = s.surface.copy(alpha = base.glass.alpha), edge = s.outline.copy(alpha = 0.3f), track = s.surfaceVariant,
+                    text = s.onSurface, secondary = s.onSurfaceVariant, background = s.background, halo = s.background,
+                )
+                return Themed(g(theme.night, NIGHT), g(theme.day, DAY), theme.night.primary, theme.day.primary,
+                    theme.night.onPrimary, theme.day.onPrimary, single = theme.singleColor != null)
+            }
+        }
+    }
 
     /** The engine's tokens for ORBIT; the accent is Navigate's (home's world). */
     fun tokens(night: Boolean): SkinTokens = glass(night).let { g ->

@@ -548,6 +548,11 @@ internal fun MyPlayEngineShell(
     val currentApps by rememberUpdatedState(apps)
     val currentMusicActions by rememberUpdatedState(musicActions)
     val covers = remember { MapCoverRegistry() }
+    // TH-1: ORBIT takes the owner's theme while it draws (other skins and the default theme: its own).
+    val themed = remember(state.theme, state.orbitThemed, skin.id) {
+        if (skin.id == net.prototux.aare.ui.car.myplay.orbit.OrbitSkin.id && state.orbitThemed) net.prototux.aare.ui.car.myplay.orbit.Orbit.Themed.from(state.theme) else null
+    }
+    androidx.compose.runtime.SideEffect { net.prototux.aare.ui.car.myplay.orbit.Orbit.override = themed }
     // MC-1: the skin's free area, centred or the largest.
     androidx.compose.runtime.SideEffect { covers.centred = skin.mapAreaCentred }
     val focus = remember { FocusRequester() }

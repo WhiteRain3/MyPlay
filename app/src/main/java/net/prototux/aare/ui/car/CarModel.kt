@@ -143,6 +143,9 @@ class CarUiState {
      */
     var knobBusy by mutableStateOf(false)
 
+    /** TH-1: the owner chose a theme, an accent or own colours, so ORBIT takes [theme]'s colours. */
+    var orbitThemed by mutableStateOf(false)
+
     /**
      * HN-2: the actions of the buttons the owner taught in the car (their codes' order), for the
      * hints by ORBIT's speed: a button with an action gets its icon, one with none nothing.
