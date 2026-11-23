@@ -87,6 +87,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -231,8 +232,13 @@ object OrbitSkin : MyPlaySkin {
         // soft plate that hugs each part (the turn, the song, the clock), feathered at its edge;
         // nothing in the map's free middle. None at all when the driver chose so.
         if (!parts.soft) return
-        val turn by animateFloatAsState(if (parts.turn) 1f else 0f, tween(400), label = "turn shade")
-        val song by animateFloatAsState(if (parts.song) 1f else 0f, tween(400), label = "song shade")
+        // SM-1: the fades are read where the plates are drawn, not here: while one runs only its plate
+        // is drawn again, instead of the whole backdrop composed again on every frame. Whether a plate is
+        // there at all is read through derivedStateOf, which changes twice per fade, not 24 times.
+        val turn = animateFloatAsState(if (parts.turn) 1f else 0f, tween(400), label = "turn shade")
+        val song = animateFloatAsState(if (parts.song) 1f else 0f, tween(400), label = "song shade")
+        val turnOn by remember { derivedStateOf { turn.value > 0f } }
+        val songOn by remember { derivedStateOf { song.value > 0f } }
         val night = LocalSkinTokens.current.night
         val strength = if (night) PLATE_NIGHT else PLATE_DAY
         // Keep the last place while fading out.
@@ -248,9 +254,11 @@ object OrbitSkin : MyPlaySkin {
             }
         }
         Box(modifier) {
-            if (turn > 0f) last[0]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_TURN_TAG)) { plate(paint, halo, turn * strength, b) } }
-            if (song > 0f) last[1]?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_SONG_TAG)) { plate(paint, halo, song * strength, b) } }
-            parts.statusBox?.let { b -> Canvas(Modifier.fillMaxSize().testTag(SHADE_STATUS_TAG)) { plate(paint, halo, strength, b) } }
+            // SM-1: each plate on a layer of its own (graphicsLayer), so its blur is drawn again only
+            // when the plate itself changes, not whenever something else on the home is redrawn.
+            if (turnOn) last[0]?.let { b -> Canvas(Modifier.fillMaxSize().graphicsLayer().testTag(SHADE_TURN_TAG)) { plate(paint, halo, turn.value * strength, b) } }
+            if (songOn) last[1]?.let { b -> Canvas(Modifier.fillMaxSize().graphicsLayer().testTag(SHADE_SONG_TAG)) { plate(paint, halo, song.value * strength, b) } }
+            parts.statusBox?.let { b -> Canvas(Modifier.fillMaxSize().graphicsLayer().testTag(SHADE_STATUS_TAG)) { plate(paint, halo, strength, b) } }
         }
     }
 
