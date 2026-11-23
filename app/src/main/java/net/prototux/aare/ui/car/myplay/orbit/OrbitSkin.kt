@@ -50,7 +50,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AcUnit
@@ -191,6 +190,7 @@ import net.prototux.aare.ui.car.rememberPhoneStatus
 import kotlin.math.cos
 import kotlin.math.sin
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.isSpecified
 import net.prototux.aare.car.LimitShown
 
 /**
@@ -791,6 +791,10 @@ object OrbitSkin : MyPlaySkin {
     private val TEMP_Y = 26.dp + SONG_RING / 2 - 34.dp
     private val BATTERY_Y = 26.dp + SONG_RING / 2 + 40.dp
     private val PILL_H = 42.dp
+    /** SC-3: the widest a pill gets: centred on [PILL_X], it ends at the corner's left edge. */
+    private val PILL_MAX = PILL_X * 2
+    private val PILL_PAD = 10.dp
+    private val PILL_ICON = 22.dp
 
     /**
      * Look C (35): the corner's parts. Always [CORNER_W] by [CORNER_H] whatever shows (the badge,
@@ -814,49 +818,68 @@ object OrbitSkin : MyPlaySkin {
             val outside = LocalOutsideTemp.current
             val ice = LocalRoadIce.current
             PillPlace(TEMP_Y, Modifier.testTag(ICE_SLOT_TAG)) {
-                if (ice || outside.degrees != null) {
-                    val colour = if (ice) Orbit.warning(night) else g.text
-                    StatusPill(PILL_H) {
-                        if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(22.dp).testTag(ICE_TAG), tint = colour)
-                        outside.degrees?.let {
-                            Text("$it°", style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"),
-                                maxLines = 1, modifier = Modifier.testTag(OUTSIDE_TEMP_TAG))
-                        }
-                    }
-                }
+                if (ice || outside.degrees != null) TempPill(outside.degrees, ice)
             }
             // The battery, only when low (red) or charging. N5-3: never when the phone does not tell it.
             val battery = rememberPhoneStatus()?.takeIf { it.batteryKnown && batteryShown(it.battery, it.charging) }
             battery?.let { b ->
-                val colour = if (batteryLow(b.battery, b.charging)) Orbit.warning(night) else Orbit.accent(World.NAVIGATE, night)
-                PillPlace(BATTERY_Y) {
-                    StatusPill(PILL_H, Modifier.testTag(BATTERY_TAG).carPart(CarPart.Status)) {
-                        Icon(batteryIcon(b.battery, b.charging), null, Modifier.size(24.dp), tint = colour)
-                        Text("${b.battery}%", style = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = colour, fontFeatureSettings = "tnum"),
-                            maxLines = 1, modifier = Modifier.testTag(BATTERY_NUMBER_TAG))
-                    }
+                PillPlace(BATTERY_Y) { BatteryPill(b.battery, b.charging) }
+            }
+        }
+    }
+
+    /** Look C (35): the outside temperature, with the ice sign (and in the warning colour) when icy. */
+    @Composable
+    internal fun TempPill(degrees: Int?, ice: Boolean) {
+        val night = LocalSkinTokens.current.night
+        val colour = if (ice) Orbit.warning(night) else glass().text
+        StatusPill(PILL_H, Modifier.widthIn(max = PILL_MAX).testTag(TEMP_PILL_TAG), PILL_PAD) {
+            if (ice) Icon(Icons.Rounded.AcUnit, stringResource(R.string.myplay_warning_ice_sign), Modifier.size(PILL_ICON).testTag(ICE_TAG), tint = colour)
+            degrees?.let {
+                // SC-3: a long reading ("-12°" with the ice sign) is made smaller, never wider than the pill.
+                Box(Modifier.testTag(OUTSIDE_TEMP_TAG)) {
+                    FitText("$it°", PILL_TEXT.copy(fontSize = 24.sp, lineHeight = 24.sp, color = colour),
+                        PILL_MAX - PILL_PAD * 2 - if (ice) PILL_ICON + 6.dp else 0.dp)
                 }
             }
         }
     }
 
-    /** A pill's place: centred on ([PILL_X], [y]); a wider pill grows both ways. */
+    /** Look C (35): the battery, red when low; shown only when low or charging ([batteryShown]). */
+    @Composable
+    internal fun BatteryPill(level: Int, charging: Boolean) {
+        val night = LocalSkinTokens.current.night
+        val colour = if (batteryLow(level, charging)) Orbit.warning(night) else Orbit.accent(World.NAVIGATE, night)
+        StatusPill(PILL_H, Modifier.widthIn(max = PILL_MAX).testTag(BATTERY_TAG).carPart(CarPart.Status), PILL_PAD) {
+            Icon(batteryIcon(level, charging), null, Modifier.size(PILL_ICON), tint = colour)
+            // SC-3: "100%" while charging is made smaller, never wider than the pill.
+            Box(Modifier.testTag(BATTERY_NUMBER_TAG)) {
+                FitText("$level%", PILL_TEXT.copy(fontSize = 22.sp, lineHeight = 22.sp, color = colour), PILL_MAX - PILL_PAD * 2 - PILL_ICON - 6.dp)
+            }
+        }
+    }
+
+    private val PILL_TEXT = TextStyle(fontWeight = FontWeight.ExtraBold, fontFeatureSettings = "tnum")
+
+    /**
+     * A pill's place: centred on ([PILL_X], [y]), [PILL_MAX] wide. SC-3: a pill is never wider, so it
+     * never draws past the corner's left edge over the map (outside what the corner says it covers).
+     */
     @Composable
     private fun BoxScope.PillPlace(y: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
         Box(
-            modifier.align(Alignment.TopStart).offset(y = y - PILL_H / 2).width(PILL_X * 2).height(PILL_H)
-                .wrapContentWidth(Alignment.CenterHorizontally, unbounded = true),
+            modifier.align(Alignment.TopStart).offset(y = y - PILL_H / 2).width(PILL_MAX).height(PILL_H),
             contentAlignment = Alignment.Center,
         ) { content() }
     }
 
     /** Look C (35): a small dark pill with the glass's edge, its parts in a row. */
     @Composable
-    private fun StatusPill(height: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier, content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+    private fun StatusPill(height: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier, pad: androidx.compose.ui.unit.Dp = 14.dp, content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
         val g = glass()
         val shape = RoundedCornerShape(50)
         Row(
-            modifier.height(height).clip(shape).background(g.glass.copy(alpha = 1f)).border(2.dp, g.edge, shape).padding(horizontal = 14.dp),
+            modifier.height(height).clip(shape).background(g.glass.copy(alpha = 1f)).border(2.dp, g.edge, shape).padding(horizontal = pad),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp), content = content,
         )
     }
@@ -912,7 +935,11 @@ object OrbitSkin : MyPlaySkin {
         val room = with(LocalDensity.current) { width.toPx() }
         val needed = remember(text, style) { measurer.measure(text, style, maxLines = 1).size.width }
         val fit = if (needed > room && needed > 0) room / needed else 1f
-        Text(text, style = style.copy(fontSize = style.fontSize * fit, lineHeight = style.lineHeight * fit), maxLines = 1)
+        // SC-4: a style without a line height (or size) keeps it unspecified; Unspecified * fit throws.
+        Text(text, style = style.copy(
+            fontSize = if (style.fontSize.isSpecified) style.fontSize * fit else style.fontSize,
+            lineHeight = if (style.lineHeight.isSpecified) style.lineHeight * fit else style.lineHeight,
+        ), maxLines = 1)
     }
 
     /** The sheet's artwork stand-in when a song has none. */
@@ -1754,6 +1781,8 @@ object OrbitSkin : MyPlaySkin {
     const val STATUS_CORNER_TAG = "orbit_status_corner"
     /** Look C (35): the time's badge on the song's ring. */
     const val CLOCK_BADGE_TAG = "orbit_clock_badge"
+    /** SC-3: the temperature's pill. */
+    const val TEMP_PILL_TAG = "orbit_temp_pill"
     /** Look C (35): the empty ring with nothing playing. */
     const val NO_SONG_TAG = "orbit_no_song"
 
