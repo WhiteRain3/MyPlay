@@ -43,25 +43,49 @@ import net.prototux.aare.R
 import net.prototux.aare.audio.CaptureMethods
 import rikka.shizuku.Shizuku
 
-/** Where the owner is with Shizuku, for the Phone apps card (one step at a time). */
-enum class ShizukuStep { INSTALL, START, ALLOW, READY }
+/**
+ * How Phone apps can launch apps for the car, for its card (one step at a time). Root first (the
+ * launcher uses su directly), then Shizuku; UNSUPPORTED when neither can work on this phone.
+ */
+enum class ShizukuStep { INSTALL, START, ALLOW, READY, ROOT_READY, ROOT_ALLOW, OLD_SHIZUKU, OLD_ANDROID }
 
 /** Shizuku's own package, to tell "not installed" from "not running". */
 internal const val SHIZUKU_PACKAGE = "moe.shizuku.privileged.api"
 internal const val SHIZUKU_DOWNLOAD = "https://shizuku.rikka.app/download/"
 private const val SHIZUKU_REQUEST = 43
 
-fun shizukuStep(installed: Boolean, running: Boolean, allowed: Boolean): ShizukuStep = when {
+fun shizukuStep(
+    installed: Boolean, running: Boolean, allowed: Boolean,
+    android12: Boolean = true, rootGranted: Boolean = false, suPresent: Boolean = false, preV11: Boolean = false,
+): ShizukuStep = when {
+    // The launcher's root and Shizuku paths both need Android 12 (CaptureMethods' gates).
+    !android12 -> ShizukuStep.OLD_ANDROID
+    rootGranted -> ShizukuStep.ROOT_READY
+    suPresent -> ShizukuStep.ROOT_ALLOW
+    running && preV11 -> ShizukuStep.OLD_SHIZUKU
     running && allowed -> ShizukuStep.READY
     running -> ShizukuStep.ALLOW
     installed -> ShizukuStep.START
     else -> ShizukuStep.INSTALL
 }
 
+/** An su binary on the usual paths: a rooted phone, whether or not MyPlay was allowed yet. */
+internal fun suPresent(): Boolean =
+    listOf("/system/bin", "/system/xbin", "/sbin", "/su/bin", "/debug_ramdisk", "/system_ext/bin")
+        .any { runCatching { java.io.File(it, "su").exists() }.getOrDefault(false) }
+
+/** Tests set this: a computer running them may have its own su. */
+internal var suPresentCheck: () -> Boolean = ::suPresent
+
 internal fun shizukuStepNow(ctx: Context): ShizukuStep {
     val installed = runCatching { ctx.packageManager.getPackageInfo(SHIZUKU_PACKAGE, 0) }.isSuccess
     val running = runCatching { Shizuku.pingBinder() }.getOrDefault(false)
-    return shizukuStep(installed, running, runCatching { CaptureMethods.shizukuAvailable() }.getOrDefault(false))
+    // Review PH-1: "allowed" is Shizuku's own answer, not shizukuAvailable() (which also folds in the gates).
+    val allowed = running && runCatching { Shizuku.checkSelfPermission() == android.content.pm.PackageManager.PERMISSION_GRANTED }.getOrDefault(false)
+    val preV11 = running && runCatching { Shizuku.isPreV11() }.getOrDefault(false)
+    return shizukuStep(installed, running, allowed,
+        android12 = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S,
+        rootGranted = CaptureMethods.rootAvailable(ctx), suPresent = suPresentCheck(), preV11 = preV11)
 }
 
 /** Re-reads the step on resume and when Shizuku answers the Allow question. */
@@ -70,12 +94,13 @@ internal fun rememberShizukuStep(): ShizukuStep {
     val ctx = LocalContext.current
     val resumed = rememberResumeTicks()
     var answered by remember { mutableIntStateOf(0) }
+    val rootAnswered by rememberSetting("root_audio") { rootAudio }
     DisposableEffect(Unit) {
         val l = Shizuku.OnRequestPermissionResultListener { _, _ -> answered++ }
         runCatching { Shizuku.addRequestPermissionResultListener(l) }
         onDispose { runCatching { Shizuku.removeRequestPermissionResultListener(l) } }
     }
-    return remember(resumed, answered) { shizukuStepNow(ctx) }
+    return remember(resumed, answered, rootAnswered) { shizukuStepNow(ctx) }
 }
 
 internal fun askShizuku() { runCatching { Shizuku.requestPermission(SHIZUKU_REQUEST) } }
@@ -113,6 +138,43 @@ private fun StepLine(number: Int, text: String, state: Int /* -1 done, 0 now, 1 
 fun ShizukuCard(step: ShizukuStep) {
     val ctx = LocalContext.current
     val nav = LocalNextNavigator.current
+    when (step) {
+        ShizukuStep.ROOT_READY -> {
+            NextCard(modifier = Modifier.testTag("next-shizuku-card")) {
+                NextRow(stringResource(R.string.next_shz_root_ready_label), icon = Icons.Rounded.Check, disc = DiscTone.WORLD,
+                    note = RowNote.Help(stringResource(R.string.next_shz_root_ready_help)))
+            }
+            return
+        }
+        ShizukuStep.ROOT_ALLOW -> {
+            // A rooted phone: one question, through su itself (the same check as Sound's), no Shizuku.
+            NextCard(warn = true, modifier = Modifier.testTag("next-shizuku-card")) {
+                NextRow(stringResource(R.string.next_shz_root_allow_title_label), icon = Icons.Outlined.Lock, disc = DiscTone.WARN,
+                    note = RowNote.Help(stringResource(R.string.next_shz_root_allow_help)))
+                Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp)) {
+                    NextButton(stringResource(R.string.next_shz_root_allow_label), {
+                        CaptureMethods.checkRoot { granted ->
+                            android.os.Handler(android.os.Looper.getMainLooper()).post { if (granted) net.prototux.aare.Settings(ctx).rootAudio = true }
+                        }
+                    }, Modifier.fillMaxWidth(), small = true)
+                }
+            }
+            return
+        }
+        ShizukuStep.OLD_ANDROID, ShizukuStep.OLD_SHIZUKU -> {
+            NextCard(warn = true, modifier = Modifier.testTag("next-shizuku-card")) {
+                NextRow(stringResource(if (step == ShizukuStep.OLD_ANDROID) R.string.next_shz_old_android_label else R.string.next_shz_old_shizuku_label),
+                    icon = Icons.Outlined.Lock, disc = DiscTone.WARN,
+                    note = RowNote.Help(stringResource(if (step == ShizukuStep.OLD_ANDROID) R.string.next_shz_old_android_help else R.string.next_shz_old_shizuku_help)))
+                if (step == ShizukuStep.OLD_SHIZUKU) Box(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 14.dp)) {
+                    NextButton(stringResource(R.string.next_shz_get_label), { ctx.startSafely(Intent(Intent.ACTION_VIEW, Uri.parse(SHIZUKU_DOWNLOAD))) },
+                        Modifier.fillMaxWidth(), small = true, icon = Icons.AutoMirrored.Outlined.OpenInNew)
+                }
+            }
+            return
+        }
+        else -> Unit
+    }
     NextCard(warn = true, modifier = Modifier.testTag("next-shizuku-card")) {
         NextRow(stringResource(R.string.next_apps_needs_root_label), icon = Icons.Outlined.Lock, disc = DiscTone.WARN,
             note = RowNote.Help(stringResource(R.string.next_apps_needs_root_help)))
@@ -128,7 +190,7 @@ fun ShizukuCard(step: ShizukuStep) {
                     ctx.packageManager.getLaunchIntentForPackage(SHIZUKU_PACKAGE)?.let { ctx.startSafely(it) }
                 }, Modifier.weight(1f), small = true, icon = Icons.AutoMirrored.Outlined.OpenInNew)
                 ShizukuStep.ALLOW -> NextButton(stringResource(R.string.next_upd_allow_button_label), { askShizuku() }, Modifier.weight(1f), small = true)
-                ShizukuStep.READY -> Unit
+                else -> Unit
             }
             NextButton(stringResource(R.string.next_shz_how_label), { nav.open("apps/phone-apps/shizuku") }, Modifier.weight(1f),
                 ButtonKind.GHOST, small = true, icon = Icons.AutoMirrored.Outlined.HelpOutline)

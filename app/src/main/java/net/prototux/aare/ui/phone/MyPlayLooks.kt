@@ -30,9 +30,10 @@ object MyPlayLooks {
         "myplay_status_color", "myplay_status_color_by_level", "myplay_status_signal",
         "myplay_clock_size", "myplay_clock_bold", "myplay_clock_color",
         "myplay_map_filter",
-        "myplay_engine_language",
         "myplay_orbit_shade",
     )
+    // TH-2: not myplay_engine_language. Choosing a look keeps the design in use (a DECK driver stays on
+    // DECK); older look files that carry it still load, the key is just not taken.
 
     /** In a look file, next to the settings backup's own fields. */
     const val NAME_KEY = "look_name"
@@ -66,7 +67,6 @@ object MyPlayLooks {
         "myplay_status_battery_icon" to true, "myplay_status_battery_number" to true, "myplay_status_percent_sign" to false,
         "myplay_status_size" to "normal", "myplay_status_color_by_level" to false, "myplay_status_signal" to true,
         "myplay_clock_size" to "normal", "myplay_clock_bold" to false,
-        "myplay_engine_language" to "orbit",
         "myplay_orbit_shade" to "soft",
     )
 

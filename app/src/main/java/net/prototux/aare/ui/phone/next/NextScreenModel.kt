@@ -68,9 +68,3 @@ fun lookChanges(all: Map<String, *>, look: Look): List<LookPart> {
     return MyPlayLooks.KEYS.filter { now[it] != then[it] }.map(::lookPartOf).distinct().sorted()
 }
 
-/** The design [look] would set ("orbit" or "deck"), and whether that is a switch from [all]'s. */
-fun lookSwitchesDesign(all: Map<String, *>, look: Look): String? {
-    val now = all["myplay_engine_language"] as? String ?: "orbit"
-    val then = look.values["myplay_engine_language"] as? String ?: "orbit"
-    return then.takeIf { it != now }
-}

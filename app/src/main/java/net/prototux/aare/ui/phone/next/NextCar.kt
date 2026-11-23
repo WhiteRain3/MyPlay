@@ -167,6 +167,8 @@ fun NextCarRoot() {
     val banners by rememberSetting("message_banners") { messageBanners }
     val assistant by rememberSetting("assistant_pkg") { assistantPackage }
     val passenger by rememberSetting("ignore_driving") { ignoreDriving }
+    val micTicks = rememberResumeTicks()
+    val micOk = remember(micTicks) { micGranted(ctx) }
     val state by ProjectionService.state.collectAsState()
     val audioReady = remember(state.audioCapture) {
         runCatching { CaptureMethods.audioPolicyAvailable(ctx) || CaptureMethods.shizukuAvailable() || CaptureMethods.rootAvailable(ctx) }
@@ -205,7 +207,8 @@ fun NextCarRoot() {
                 {
                     NextValueRow(stringResource(R.string.next_car_voice_label),
                         assistant?.let { appLabel(ctx, it) } ?: stringResource(R.string.next_car_same_as_phone_label),
-                        Icons.Outlined.Mic) { nav.open("car/voice") }
+                        Icons.Outlined.Mic,
+                        note = if (!micOk) RowNote.Warn(stringResource(R.string.next_voice_mic_off_help)) else null) { nav.open("car/voice") }
                 },
             ))
             Spacer(Modifier.height(12.dp))

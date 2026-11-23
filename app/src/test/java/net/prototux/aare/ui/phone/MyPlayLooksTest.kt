@@ -143,7 +143,6 @@ class LookDefaultsTest {
                 prefs.getBoolean("myplay_status_percent_sign", false), net.prototux.aare.ui.car.StatusSize.byKey(prefs.getString("myplay_status_size", null)),
                 prefs.getBoolean("myplay_status_color_by_level", false), prefs.getBoolean("myplay_status_signal", true),
                 net.prototux.aare.ui.car.StatusSize.byKey(prefs.getString("myplay_clock_size", null)), prefs.getBoolean("myplay_clock_bold", false),
-                net.prototux.aare.ui.car.myplay.MyPlaySkins.byId(prefs.getString("myplay_engine_language", null)).id,
                 s.myplayOrbitShade)
         }
         val unset = read()

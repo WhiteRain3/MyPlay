@@ -64,6 +64,18 @@ class NextCarMoreTest {
         assertEquals(NextTab.MORE, NextRoutes.tabOf("more/advanced/sound"))
     }
 
+    @Test fun voiceAsksForTheMicrophoneOnlyWhenMissing() {
+        // Review CH-1: since chunk 14 this is the one place the microphone is asked for.
+        rule.setContent { NextVoicePage() }
+        rule.onNodeWithText("Allow the microphone").assertExists()
+    }
+
+    @Test fun voiceSaysNothingWhenTheMicrophoneIsAllowed() {
+        org.robolectric.Shadows.shadowOf(androidx.test.core.app.ApplicationProvider.getApplicationContext<android.app.Application>()).grantPermissions(android.Manifest.permission.RECORD_AUDIO)
+        rule.setContent { NextVoicePage() }
+        rule.onNodeWithText("Allow the microphone").assertDoesNotExist()
+    }
+
     @Test fun soundSaysNoMethodNamesOutsideItsRows() {
         rule.setContent { NextSoundPage() }
         // On a phone with nothing set up: the status is words only.

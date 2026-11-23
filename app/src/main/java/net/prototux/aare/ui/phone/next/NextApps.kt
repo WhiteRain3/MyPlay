@@ -330,7 +330,8 @@ fun NextPhoneAppsPage() {
         contentPadding = PaddingValues(start = NextSpace.Gutter, end = NextSpace.Gutter, bottom = 24.dp),
     ) {
         // Only while neither root nor a running, allowed Shizuku is there: then say exactly what to do.
-        if (!available && shizuku != ShizukuStep.READY) item {
+        // Root in use says so once; the rest shows only while phone apps can't launch yet.
+        if (shizuku == ShizukuStep.ROOT_READY || (!available && shizuku != ShizukuStep.READY)) item {
             ShizukuCard(shizuku)
             Spacer(Modifier.height(12.dp))
         }
