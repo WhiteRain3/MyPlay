@@ -599,4 +599,36 @@ add({
          <div style="margin-top:6px;font-size:20px;color:${t.secondary}">82%</div></div>`;
   },
 });
+// ---- the owner's pick: (c), and c2 (the time over the album art), plus no music
+/** The song disc with a chosen [art] (CSS background) and [over] drawn centred on the art. */
+const songWith = (t, art, over = '', p = 0.38) => P.plate(t, 1040, 470, 260, 260) + `<div style="position:absolute;left:1088px;top:528px;width:152px;height:152px">
+    <svg width="152" height="152" style="position:absolute"><circle cx="76" cy="76" r="72.5" fill="none" stroke="${t.track}" stroke-width="7"/>${p === null ? '' : `<circle cx="76" cy="76" r="72.5" fill="none" stroke="${t.music}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${2 * Math.PI * 72.5 * p} 999" transform="rotate(-90 76 76)"/>`}</svg>
+    <div style="position:absolute;left:13px;top:13px;width:126px;height:126px;border-radius:50%;overflow:hidden;background:${art};display:flex;align-items:center;justify-content:center">${over}</div></div>`;
+/** A pale, busy cover: the hard case for white text. */
+const PALE_ART = 'radial-gradient(circle at 30% 30%,#FFFFFF 0 18%,transparent 19%),radial-gradient(circle at 75% 65%,#FFE07A 0 22%,transparent 23%),linear-gradient(135deg,#FFF4C2,#FFC9E0 50%,#BDEBFF)';
+const navNoClock = (t) => map(t, NAV) + turn(t, { lanes: LANES }) + hub(t, { trip: TRIP }) + speedDisc(t);
+const SONG_C = { cx: 1164, cy: 604, R: 76 };
+const iceSide = (t) => badge(t, SONG_C.cx - SONG_C.R - 6, SONG_C.cy - 34, iceBadge(t), 42);
+
+add({
+  slug: 'status-c2-scrim', fileName: '35-status-c2-scrim', group: 'status', section: 'Status',
+  title: 'Status c2 · the time over the art, on a soft scrim', template: 'ORBIT Status → the song disc', fields: STATUS_FIELDS,
+  desc: 'The time is centred on the album art, white and extra bold, over a soft dark scrim that fades out before the disc’s edge, so the art still shows round it. Drawn on a pale, busy cover, the hard case. The temperature badge stays on the ring’s left; the battery appears only when low.',
+  html: (t) => navNoClock(t) + songWith(t, PALE_ART,
+      `<div style="position:absolute;inset:0;background:radial-gradient(closest-side,rgba(6,8,13,0.82) 0,rgba(6,8,13,0.68) 55%,rgba(6,8,13,0) 100%)"></div><div style="position:relative;font-size:38px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6)">14:07</div>`) + iceSide(t),
+});
+add({
+  slug: 'status-c2-badge', fileName: '35-status-c2-badge', group: 'status', section: 'Status',
+  title: 'Status c2 · the time over the art, on a glass badge', template: 'ORBIT Status → the song disc', fields: STATUS_FIELDS,
+  desc: 'The same place, but the time sits on a small pill of ORBIT’s glass in the middle of the art: legible on any cover, at the cost of hiding a strip of it. Same pale cover.',
+  html: (t) => navNoClock(t) + songWith(t, PALE_ART,
+      `<div style="height:50px;padding:0 14px;border-radius:25px;background:rgba(8,12,20,0.86);border:2px solid rgba(255,255,255,0.14);display:flex;align-items:center;font-size:34px;font-weight:800;color:#EEF1F7">14:07</div>`) + iceSide(t),
+});
+add({
+  slug: 'status-c-nomusic', fileName: '35-status-c-nomusic', group: 'status', section: 'Status',
+  title: 'Status · no music (for c and c2)', template: 'ORBIT Status → the empty song disc', fields: STATUS_FIELDS + ' · no song (SongSlot null)',
+  desc: 'Nothing playing: the music circle stays where it is, empty glass with just its track ring, and holds the time, big and centred. With c2 the time does not move at all when music stops or starts; with c it drops from the ring’s top badge into the middle. The temperature badge keeps its place.',
+  html: (t) => navNoClock(t) + songWith(t, t.glass, `<div style="font-size:40px;font-weight:800;color:${t.text}">14:07</div>`, null) + iceSide(t),
+});
+
 module.exports = { SCREENS, NIGHT, DAY };

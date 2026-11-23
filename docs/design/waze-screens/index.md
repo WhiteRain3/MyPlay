@@ -89,7 +89,7 @@ These are MyPlay's own screens, not templates. Their fields are the skin's data 
 | PNG | Screen | Drawn by | Fields drawn | Notes |
 |---|---|---|---|---|
 | [33-apps-ring](33-apps-ring.png) | Apps: a ring of apps | `MyPlay · AppsWorld (CarAppEntry list, page / pages)` | CarAppEntry: label · icon · kind · ringed tile · page / pages | The grid becomes ORBIT’s dial: eight apps round a ring, the focused one bigger with the focus ring, its name in the middle. Turning goes round the ring; past the last app the next page turns in (the dots). |
-| [34-phone-apps](34-phone-apps.png) | Phone apps list | `MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)` | CarAppEntry: label · icon · kind | The phone’s own apps that the owner allowed on the car, on the wheel: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the same CarAppEntry list as the ring.) |
+| [34-phone-apps](34-phone-apps.png) | Phone apps list | `MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)` | CarAppEntry: label · icon · kind | The phone’s own apps that the owner allowed on the car, on the wheel: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Confirmed by the owner: the same CarAppEntry list as the ring.) |
 
 ## The status column: four options (35-status-*)
 
@@ -104,7 +104,17 @@ The owner finds today's top-right column out of place in ORBIT. It shows the clo
 
 The data is the same in every option: clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate).
 
-**Recommendation: (a), the speed ring.** The time, speed, temperature and battery become one round part in the left column, beside the turn and the hub, so every fact you glance at sits on one side and the top-right corner goes back to the map. The battery stays quiet as a thin arc until it matters (≤ 20 % or charging adds the number). (d) is the boldest and keeps the time biggest, but it adds a fifth large part. (c) puts the time on the music part, which is the wrong place when music is off. (b) reads well but is a small part of its own again.
+**The owner's pick: (c), the time on the song's ring**, drawn as in [35-status-c-song-ring](35-status-c-song-ring.png). (My earlier recommendation was (a).) The owner asked to see one variant, c2, with the time over the album art:
+
+| PNG | Option | Notes |
+|---|---|---|
+| [35-status-c2-scrim](35-status-c2-scrim.png) | Status c2 · the time over the art, on a soft scrim | The time is centred on the album art, white and extra bold, over a soft dark scrim that fades out before the disc’s edge, so the art still shows round it. Drawn on a pale, busy cover, the hard case. The temperature badge stays on the ring’s left; the battery appears only when low. |
+| [35-status-c2-badge](35-status-c2-badge.png) | Status c2 · the time over the art, on a glass badge | The same place, but the time sits on a small pill of ORBIT’s glass in the middle of the art: legible on any cover, at the cost of hiding a strip of it. Same pale cover. |
+| [35-status-c-nomusic](35-status-c-nomusic.png) | Status · no music (for c and c2) | Nothing playing: the music circle stays where it is, empty glass with just its track ring, and holds the time, big and centred. With c2 the time does not move at all when music stops or starts; with c it drops from the ring’s top badge into the middle. The temperature badge keeps its place. |
+
+- **Of the two c2 variants I recommend the glass badge.** It stays legible on any cover, even a white one. The scrim shows more of the art but goes grey on pale covers.
+- **No music:** the music circle keeps its place as empty glass and holds just the time, big and centred. With c2 the time never moves when music starts or stops. With (c) it drops from the badge on the ring's top into the middle.
+- **Fields:** the time, the outside temperature with the ice sign, and the battery (shown only when low), from the status data, plus the song (SongSlot). The arrival time stays in the hub.
 
 Labels are straight glass badges set into the rings, not text bent along them: on a ring this small, bent text was hard to read.
 
@@ -139,7 +149,6 @@ Labels are straight glass badges set into the rings, not text bent along them: o
 
 - The letter ring: is turning through 29 keys quick enough, or should the d-pad jump a quarter of the ring?
 - The actions wheel: is the pad's centre free while navigating, or should only Back open it?
-- Phone apps list: I assumed it is drawn from the same `CarAppEntry` list as the Apps ring (the phone apps allowed on the car, opened on the mirrored screen). Is that the list meant?
 
 ## Rebuilding
 

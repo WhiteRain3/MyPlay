@@ -302,5 +302,29 @@
   "template": "ORBIT Status → a quarter disc in the corner",
   "fields": "clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate)",
   "desc": "My idea: the top-right corner becomes a planet rising out of the screen’s edge, a quarter disc of glass, so every corner is now round (turn, orb, hub, song). The time is big inside it. Its rim is the battery ring, emptying from the bottom like the trip ring fills. The temperature and ice sign sit on the rim’s low end. It stays right of the free area (x ≥ 1010)."
+ },
+ {
+  "file": "35-status-c2-scrim",
+  "title": "Status c2 · the time over the art, on a soft scrim",
+  "group": "status",
+  "template": "ORBIT Status → the song disc",
+  "fields": "clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate)",
+  "desc": "The time is centred on the album art, white and extra bold, over a soft dark scrim that fades out before the disc’s edge, so the art still shows round it. Drawn on a pale, busy cover, the hard case. The temperature badge stays on the ring’s left; the battery appears only when low."
+ },
+ {
+  "file": "35-status-c2-badge",
+  "title": "Status c2 · the time over the art, on a glass badge",
+  "group": "status",
+  "template": "ORBIT Status → the song disc",
+  "fields": "clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate)",
+  "desc": "The same place, but the time sits on a small pill of ORBIT’s glass in the middle of the art: legible on any cover, at the cost of hiding a strip of it. Same pale cover."
+ },
+ {
+  "file": "35-status-c-nomusic",
+  "title": "Status · no music (for c and c2)",
+  "group": "status",
+  "template": "ORBIT Status → the empty song disc",
+  "fields": "clock (phone time) · outside temperature (car, when reported) + ice sign at ≤ 4 °C · phone battery level + charging (when the phone tells it) · arrival stays in the hub (TravelEstimate) · no song (SongSlot null)",
+  "desc": "Nothing playing: the music circle stays where it is, empty glass with just its track ring, and holds the time, big and centred. With c2 the time does not move at all when music stops or starts; with c it drops from the ring’s top badge into the middle. The temperature badge keeps its place."
  }
 ]
