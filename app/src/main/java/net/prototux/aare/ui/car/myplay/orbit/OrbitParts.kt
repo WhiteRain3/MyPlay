@@ -3,6 +3,7 @@ package net.prototux.aare.ui.car.myplay.orbit
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -88,6 +89,30 @@ fun OrbitRing(
         content()
     }
 }
+
+/**
+ * Look C (designs 19, 22): ORBIT's spinner: a [track] circle and an arc of [colour] a little over
+ * a quarter round, turning once a second (the turn read in the draw phase only).
+ */
+@Composable
+fun OrbitSpinner(size: Dp, stroke: Dp, colour: Color, track: Color, modifier: Modifier = Modifier) {
+    val turn = androidx.compose.animation.core.rememberInfiniteTransition(label = "orbit spinner")
+    val angle = turn.animateFloat(
+        0f, 360f,
+        androidx.compose.animation.core.infiniteRepeatable(tween(1_000, easing = androidx.compose.animation.core.LinearEasing)),
+        label = "orbit spinner angle",
+    )
+    Canvas(modifier.requiredSize(size)) {
+        val w = stroke.toPx()
+        val inset = w / 2
+        val arcSize = Size(this.size.width - w, this.size.height - w)
+        drawArc(track, 0f, 360f, false, Offset(inset, inset), arcSize, style = Stroke(w))
+        drawArc(colour, angle.value - 90f, SPINNER_SWEEP, false, Offset(inset, inset), arcSize, style = Stroke(w, cap = StrokeCap.Round))
+    }
+}
+
+/** The spinner's arc, in degrees (the sheet's: about 28 % of the ring). */
+const val SPINNER_SWEEP = 100f
 
 /**
  * ORBIT's focus ring around a round part: an accent circle [Orbit.FOCUS_WIDTH] wide,

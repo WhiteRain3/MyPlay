@@ -4,6 +4,10 @@ import androidx.car.app.model.CarText
 import androidx.car.app.model.LongMessageTemplate
 import androidx.car.app.model.MessageTemplate
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -54,6 +58,8 @@ internal fun MessageBody(
 ) {
     val scheme = MaterialTheme.colorScheme
     val inCard = LocalInCard.current
+    // Look C (21, 22): a maps app's message under ORBIT: the icon in a ring, ORBIT's spinner, bold words.
+    val orbit = LocalWheelLists.current && !LocalCompactMap.current
     // centered when it fits, scrollable when it does not
     BoxWithConstraints(Modifier.fillMaxSize()) {
         Column(
@@ -62,9 +68,18 @@ internal fun MessageBody(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (loading) {
+            if (loading && orbit) {
+                net.prototux.aare.ui.car.myplay.orbit.OrbitSpinner(120.dp, 10.dp, scheme.primary, scheme.surfaceVariant, Modifier.testTag(MESSAGE_SPINNER_TAG))
+                Spacer(Modifier.height(28.dp))
+            } else if (loading) {
                 CircularProgressIndicator(Modifier.size(64.dp), strokeWidth = 5.dp)
                 Spacer(Modifier.height(24.dp))
+            } else if (icon != null && orbit) {
+                Box(
+                    Modifier.size(150.dp).clip(CircleShape).background(scheme.surface).border(5.dp, scheme.primary, CircleShape).testTag(MESSAGE_ICON_RING_TAG),
+                    contentAlignment = Alignment.Center,
+                ) { CarIconView(icon, 72.dp) }
+                Spacer(Modifier.height(28.dp))
             } else if (icon != null) {
                 CarIconView(icon, 88.dp)
                 Spacer(Modifier.height(24.dp))
@@ -72,12 +87,17 @@ internal fun MessageBody(
             CarTextView(
                 message,
                 Modifier.widthIn(max = 720.dp),
-                style = if (inCard) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
+                style = when {
+                    orbit -> MaterialTheme.typography.headlineSmall.copy(fontSize = 30.sp, lineHeight = 40.sp, fontWeight = FontWeight.ExtraBold)
+                    inCard -> MaterialTheme.typography.titleLarge
+                    else -> MaterialTheme.typography.headlineSmall
+                },
                 color = scheme.onSurface,
                 maxLines = 6,
                 textAlign = TextAlign.Center,
             )
-            if (!CarText.isNullOrEmpty(debug)) {
+            // Look C (21): the app's debug text is never shown in the car under ORBIT.
+            if (!orbit && !CarText.isNullOrEmpty(debug)) {
                 Spacer(Modifier.height(16.dp))
                 CarTextView(
                     debug,
@@ -94,6 +114,10 @@ internal fun MessageBody(
         }
     }
 }
+
+/** Look C (21, 22): a message's icon ring and its spinner, under ORBIT. */
+internal const val MESSAGE_ICON_RING_TAG = "message_icon_ring"
+internal const val MESSAGE_SPINNER_TAG = "message_spinner"
 
 /**
  * LongMessageTemplate: scrolling text with buttons. Android Auto only shows it while parked,

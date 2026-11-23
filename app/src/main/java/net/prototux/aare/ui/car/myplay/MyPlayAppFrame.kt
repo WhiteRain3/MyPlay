@@ -226,8 +226,17 @@ internal fun MyPlayAppFrame(
                     // Look C, step 3: the maps app's lists in the orbit wheel's look.
                     net.prototux.aare.host.templates.LocalWheelLists provides (wheel != null),
                 ) {
-                    ContentArea(state, actions, appContent, navMap,
-                        Modifier.weight(1f).fillMaxHeight().testTag(FRAME_APP_TAG))
+                    // Look C (23, 24): the maps app's screens in the skin's own colours, by day as by night.
+                    val base = androidx.compose.material3.MaterialTheme.colorScheme
+                    val scheme = if (isMaps) skin.mapsAppScheme(base, state.night) else null
+                    androidx.compose.material3.MaterialTheme(
+                        colorScheme = scheme ?: base,
+                        typography = androidx.compose.material3.MaterialTheme.typography,
+                        shapes = androidx.compose.material3.MaterialTheme.shapes,
+                    ) {
+                        ContentArea(state, actions, appContent, navMap,
+                            Modifier.weight(1f).fillMaxHeight().testTag(FRAME_APP_TAG))
+                    }
                 }
                 if (state.railOnRight) rail()
             }

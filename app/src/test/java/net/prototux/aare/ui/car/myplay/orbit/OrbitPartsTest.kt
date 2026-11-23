@@ -55,6 +55,25 @@ class OrbitPartsTest {
         return maxOf(la, lb) / minOf(la, lb)
     }
 
+    /**
+     * Look C (23, 24): the maps app's screens in ORBIT's colours read by day and by night: the
+     * accent (buttons, Go now, rings) on the glass at 4.5:1 or more, the words at 7:1, the words on
+     * a filled button at 4.5:1.
+     */
+    @Test fun theMapsAppsColoursReadDayAndNight() {
+        val base = androidx.compose.material3.darkColorScheme()
+        for (night in listOf(true, false)) {
+            val s = Orbit.appScheme(base, night, null)
+            assertTrue("night=$night accent on glass", contrast(s.primary, s.surface) >= 4.5)
+            assertTrue("night=$night accent on the background", contrast(s.primary, s.background) >= 4.5)
+            assertTrue("night=$night words on glass", contrast(s.onSurface, s.surface) >= 7.0)
+            assertTrue("night=$night quiet words on glass", contrast(s.onSurfaceVariant, s.surface) >= 4.5)
+            assertTrue("night=$night words on a button", contrast(s.onPrimary, s.primary) >= 4.5)
+            assertEquals(Orbit.accent(World.NAVIGATE, night, null), s.primary)
+            assertEquals(1f, s.surface.alpha)
+        }
+    }
+
     @Test fun accentsReadOnTheirGlassDayAndNight() {
         for (night in listOf(true, false)) {
             val g = Orbit.glass(night, null)
