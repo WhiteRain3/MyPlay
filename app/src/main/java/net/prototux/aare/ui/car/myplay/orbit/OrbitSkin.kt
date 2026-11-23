@@ -485,7 +485,7 @@ object OrbitSkin : MyPlaySkin {
 
     /**
      * Look C (design 10): a ring of letters (A to Z, then space, delete and Search) round the text
-     * typed so far. Turn the knob (or left and right) to a key, push to type it; down or Search
+     * typed so far. Turn the knob to a key (left and right on the pad jump five), push to type it; down or Search
      * searches, Back closes it. A tap types the key tapped. The middle shows the text, the key the
      * knob is on, and how many places the app has found so far.
      */
@@ -506,8 +506,9 @@ object OrbitSkin : MyPlaySkin {
                     }
                     when (e.key) {
                         Key.Tab -> { at = net.prototux.aare.ui.car.myplay.LetterRing.move(at, if (e.isShiftPressed) -1 else 1); true }
-                        Key.DirectionRight -> { at = net.prototux.aare.ui.car.myplay.LetterRing.move(at, 1); true }
-                        Key.DirectionLeft -> { at = net.prototux.aare.ui.car.myplay.LetterRing.move(at, -1); true }
+                        // The pad crosses the ring faster than the knob: a jump of PAD_JUMP keys.
+                        Key.DirectionRight -> { at = net.prototux.aare.ui.car.myplay.LetterRing.move(at, net.prototux.aare.ui.car.myplay.LetterRing.PAD_JUMP); true }
+                        Key.DirectionLeft -> { at = net.prototux.aare.ui.car.myplay.LetterRing.move(at, -net.prototux.aare.ui.car.myplay.LetterRing.PAD_JUMP); true }
                         Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> { press(at); true }
                         Key.DirectionDown -> { input.submit(); true }
                         else -> false

@@ -82,6 +82,11 @@ class LetterRingTest {
         assertEquals("c", text)
         ring.performKeyInput { withKeyDown(Key.ShiftLeft) { pressKey(Key.Tab) }; pressKey(Key.Enter) }
         assertEquals("cb", text)
+        // The pad jumps five: from B, right is G; left twice from G is B, then round past Search to Z.
+        ring.performKeyInput { pressKey(Key.DirectionRight); pressKey(Key.DirectionCenter) }
+        assertEquals("cbg", text)
+        ring.performKeyInput { pressKey(Key.DirectionLeft); pressKey(Key.DirectionLeft); pressKey(Key.DirectionCenter) }
+        assertEquals("cbgz", text)
     }
 
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")

@@ -41,6 +41,9 @@ object LetterRing {
     /** Clockwise from the top: A to Z, then space, delete and Search, which sits just left of A. */
     val KEYS: List<Key> = ('A'..'Z').map { Key.Letter(it) } + listOf(Key.Space, Key.Delete, Key.Search)
 
+    /** The dispatcher (the design's open question): pad left and right jump this many keys, the knob one. */
+    const val PAD_JUMP = 5
+
     /** The key [by] steps (a knob detent each; negative: back) from [index], round the ring. */
     fun move(index: Int, by: Int): Int = Math.floorMod(index + by, KEYS.size)
 
