@@ -78,6 +78,13 @@ data class CarGeometry(
  */
 @Stable
 class CarUiState {
+    /**
+     * MyPlay (Preview): the phone's interactive Preview's pretend speed (CarRuntime.pretendSpeed);
+     * null in a car session, which never pretends. Set once, when the runtime is made.
+     */
+    var pretendSpeed: net.prototux.aare.car.PretendSpeed? = null
+        internal set
+
     var night by mutableStateOf(true)
     var screen by mutableStateOf<CarScreen>(CarScreen.Dashboard)
     /**
