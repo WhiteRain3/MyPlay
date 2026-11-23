@@ -88,18 +88,30 @@ class MyPlayScreenModel(
     /** HN-3: the world shown was opened from the dial (Back is then the dial), not from the hand or the home pad (Back is home). */
     private var fromDial = false
 
+    /** CR-1: the world the shown one was opened from (Car from Settings): Back goes back to it. */
+    private var parent: World? = null
+
     /** N13: open [world] from the hand (or, O6, the home pad). */
     fun enter(world: World) {
         last = world
         front = world
         place = Place.InWorld(world)
         fromDial = false
+        parent = null
+    }
+
+    /** CR-1: open [world] from the world shown now; Back comes back to that one, as it was. */
+    fun enterFrom(world: World) {
+        val here = (place as? Place.InWorld)?.world ?: return enter(world)
+        last = world
+        place = Place.InWorld(world)
+        parent = here
     }
 
     fun push() {
         // O7: the dial opens on the world last entered when it is on the dial, else on its first.
         val next = Moves.push(place, centre ?: if (dial == null || last in dial) last else dial.first())
-        if (next is Place.InWorld) { last = next.world; fromDial = true }
+        if (next is Place.InWorld) { last = next.world; fromDial = true; parent = null }
         place = next
     }
 
@@ -110,11 +122,13 @@ class MyPlayScreenModel(
         last = world
         place = Place.InWorld(world)
         fromDial = true
+        parent = null
     }
 
     /** True when Back was used here. */
     fun back(): Boolean {
         val p = place
+        parent?.let { if (p is Place.InWorld) { place = Place.InWorld(it); last = it; parent = null; return true } }
         // N13: with a hand there is no dial: a world goes straight home, its card in front.
         if (hand != null && p is Place.InWorld) { front = p.world; place = Place.Home; return true }
         // O7, HN-3: with a dial, a world opened from the home pad (not from the dial) goes straight home.

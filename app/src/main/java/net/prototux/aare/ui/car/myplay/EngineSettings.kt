@@ -32,6 +32,9 @@ sealed interface SettingItem {
     ) : SettingItem
 
     /** [options]: value to label; a push steps to the next one, round. */
+    /** CR-1: a row that opens another page (Car data from Settings); [value] shown at its end, if any. */
+    data class Open(override val id: String, override val title: String, val value: String? = null, val open: () -> Unit) : SettingItem
+
     data class Choice(
         override val id: String, override val title: String, val options: List<Pair<String, String>>, val selected: String,
         val select: (String) -> Unit,

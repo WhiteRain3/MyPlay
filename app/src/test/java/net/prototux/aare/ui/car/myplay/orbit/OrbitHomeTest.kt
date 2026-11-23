@@ -368,6 +368,35 @@ class OrbitHomeTest {
         assertTrue(rule.onAllNodesWithText("push: open", substring = true).fetchSemanticsNodes().isEmpty())
     }
 
+    /** CR-1: Car, off ORBIT's dial, is the Settings world's first row; Back from it is Settings, then the dial. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun carIsSettingsFirstRow() {
+        show()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        fun back() { rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }; rule.waitForIdle() }
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        engine.performKeyInput { pressKey(Key.DirectionDown) }
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_SETTINGS).assertExists()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.settingRowTag(net.prototux.aare.ui.car.myplay.SETTING_CAR)).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionCenter) }
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_CAR).assertExists()
+        back()
+        rule.onNodeWithTag(net.prototux.aare.ui.car.myplay.SLOT_SETTINGS).assertExists()
+        back()
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+        back()
+        rule.onNodeWithTag(SLOT_CHOOSER).assertDoesNotExist()
+    }
+
+    /** CR-1: the car's data page, reached from Settings. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi") fun carNight() {
+        show()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        for (k in listOf(Key.DirectionCenter, Key.DirectionDown, Key.DirectionCenter)) engine.performKeyInput { pressKey(k) }
+        rule.mainClock.advanceTimeBy(1_000)
+        picture2("orbit-car-1280x720-night")
+    }
+
     @Test fun theDialHoldsFourWorldsClockwiseFromTheTop() {
         assertEquals(listOf(net.prototux.aare.ui.car.myplay.World.NAVIGATE, net.prototux.aare.ui.car.myplay.World.CALLS, net.prototux.aare.ui.car.myplay.World.SETTINGS, net.prototux.aare.ui.car.myplay.World.MUSIC), OrbitSkin.dial)
         assertEquals(net.prototux.aare.ui.car.myplay.World.APPS, OrbitSkin.dialCentre)
