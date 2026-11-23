@@ -207,8 +207,16 @@ internal fun MyPlayAppFrame(
                 val rail = @Composable { if (!state.appFullscreen && skin.appRail) skin.AppRail(actions::goHome, Modifier.fillMaxHeight().testTag(FRAME_RAIL_TAG)) }
                 if (!state.railOnRight) rail()
                 val origin = memory.origin
-                ContentArea(state, actions, appContent, navMap,
-                    Modifier.weight(1f).fillMaxHeight().testTag(FRAME_APP_TAG))
+                // Look C: a maps app under ORBIT gets the actions wheel in place of its strips.
+                val wheelHome = stringResource(R.string.myplay_wheel_home)
+                val wheelMove = stringResource(R.string.myplay_wheel_move_map)
+                val wheel = remember(skin.actionsWheel && isMaps, wheelHome, wheelMove) {
+                    if (skin.actionsWheel && isMaps) net.prototux.aare.host.templates.ActionsWheelHost(actions::goHome, wheelHome, wheelMove) else null
+                }
+                CompositionLocalProvider(net.prototux.aare.host.templates.LocalActionsWheel provides wheel) {
+                    ContentArea(state, actions, appContent, navMap,
+                        Modifier.weight(1f).fillMaxHeight().testTag(FRAME_APP_TAG))
+                }
                 if (state.railOnRight) rail()
             }
             // O3-3: the app shows through a window growing out of its stop (over any surface view).

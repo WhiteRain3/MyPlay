@@ -86,7 +86,7 @@ internal val LocalOwnTurnShown = androidx.compose.runtime.staticCompositionLocal
 internal fun NavigationTemplateView(t: NavigationTemplate) {
     val compact = LocalCompactMap.current
     // in the dashboard card only the turn card stays, so the map keeps most of the card
-    MapScaffold(t.actionStrip, t.mapActionStrip, t.panModeDelegate, inCompact = true) {
+    MapScaffold(t.actionStrip, t.mapActionStrip, t.panModeDelegate, inCompact = true, wheel = true) {
         val info = t.navigationInfo
         val estimate = t.destinationTravelEstimate.takeIf { !compact }
         val width = if (narrow) maxWidth else panelWidth()
