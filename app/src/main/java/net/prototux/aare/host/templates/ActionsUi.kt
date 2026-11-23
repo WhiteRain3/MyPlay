@@ -28,6 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -60,6 +63,20 @@ internal enum class ActionLook {
 internal class PanControl(val active: Boolean, val toggle: () -> Unit)
 
 internal val LocalPanControl = compositionLocalOf<PanControl?> { null }
+
+/**
+ * MyPlay (GO-1, the owner: Waze's route preview needs a knob turn to reach "Go now"): the screen's
+ * primary button (a large button the app marks FLAG_PRIMARY, or the route preview's Navigate) gives
+ * its focus requester here, the first one drawn; CarAppScreen puts the knob's ring on it when a new
+ * screen comes, instead of on the screen's first item. Refreshes of the same screen do nothing.
+ */
+internal class PrimaryFocus {
+    val requester = androidx.compose.ui.focus.FocusRequester()
+    /** Which drawn action holds [requester] now (null: none on this screen). */
+    var holder by androidx.compose.runtime.mutableStateOf<Any?>(null)
+}
+
+internal val LocalPrimaryFocus = androidx.compose.runtime.staticCompositionLocalOf<PrimaryFocus?> { null }
 
 /**
  * Draws one Action and wires it: BACK pops the app's screen, APP_ICON shows the app icon,
@@ -142,6 +159,16 @@ internal fun ActionView(
     }
     val hasIcon = vec != null || icon != null
     val iconSize = if (titled) 30.dp else d.iconSize
+    // GO-1: a large primary button that can be pressed takes the screen's primary focus (the first).
+    val primaryFocus = LocalPrimaryFocus.current.takeIf { primary && look == ActionLook.Button && onClick != null && action.isEnabled }
+    val me = androidx.compose.runtime.remember { Any() }
+    if (primaryFocus != null) {
+        androidx.compose.runtime.DisposableEffect(primaryFocus) {
+            if (primaryFocus.holder == null) primaryFocus.holder = me
+            onDispose { if (primaryFocus.holder === me) primaryFocus.holder = null }
+        }
+    }
+    val focusMod = if (primaryFocus != null && primaryFocus.holder === me) Modifier.focusRequester(primaryFocus.requester) else Modifier
     ActionSurface(
         bg = bg,
         height = height,
@@ -149,7 +176,7 @@ internal fun ActionView(
         elevated = look == ActionLook.MapStrip || look == ActionLook.Fab,
         enabled = action.isEnabled,
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.then(focusMod),
         horizontalPadding = if (titled) (if (look == ActionLook.Button) 28.dp else 20.dp) else 0.dp,
     ) {
         if (vec != null) {

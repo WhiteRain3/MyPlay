@@ -98,14 +98,28 @@ fun CarAppScreen(conn: CarAppConnection, runtime: CarRuntime, modifier: Modifier
                 val entry = remember { FocusRequester() }
                 val focusedNow = remember { FocusHeld() }
                 val refocus = remember(template) { focusedNow.value }
+                val primary = remember { net.prototux.aare.host.templates.PrimaryFocus() }
+                // GO-1: a new screen (not a refresh of this one) with a primary button: the ring goes
+                // there (Waze's route preview: "Go now"), so a list being scrolled is never left.
+                val newScreen = remember(conn.templateId) { focusedNow.value || refocus }
+                LaunchedEffect(conn.templateId) {
+                    if (!newScreen || !CarFocusVisibility.keyInput) return@LaunchedEffect
+                    withFrameNanos { } // the new template laid out
+                    withFrameNanos { } // and its primary button registered
+                    if (primary.holder != null && runCatching { primary.requester.requestFocus() }.isSuccess) {
+                        net.prototux.aare.DiagLog.add("focus: the primary button of ${template.javaClass.simpleName}")
+                    }
+                }
                 LaunchedEffect(template) {
                     if (!refocus || !CarFocusVisibility.keyInput) return@LaunchedEffect
                     withFrameNanos { } // the new template laid out
-                    if (!focusedNow.value) runCatching { entry.requestFocus() }
+                    if (!focusedNow.value && primary.holder == null) runCatching { entry.requestFocus() }
                 }
                 Box(Modifier.fillMaxSize().onFocusChanged { focusedNow.value = it.hasFocus }.focusRequester(entry)) {
                     androidx.compose.runtime.key(conn.templateId) {
-                        CompositionLocalProvider(LocalCompactMap provides compact) { RenderTemplate(template, host, Modifier.fillMaxSize()) }
+                        CompositionLocalProvider(LocalCompactMap provides compact, net.prototux.aare.host.templates.LocalPrimaryFocus provides (if (compact) null else primary)) {
+                            RenderTemplate(template, host, Modifier.fillMaxSize())
+                        }
                     }
                 }
             }

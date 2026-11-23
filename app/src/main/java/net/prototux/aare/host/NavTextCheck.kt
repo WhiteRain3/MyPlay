@@ -121,6 +121,28 @@ internal object NavTextCheck {
         }
     }
 
+    /**
+     * MyPlay (lanes on ORBIT): whether a maps app sends lanes for its turn, as counts only:
+     * "nav lanes <app> <where>: 3 lanes, 1 to take, image yes". Never a road or a direction.
+     */
+    fun laneLine(app: String, where: String, lanes: Int, take: Int, image: Boolean): String =
+        "nav lanes $app $where: $lanes lanes, $take to take, image ${if (image) "yes" else "no"}"
+
+    /** The current turn's lanes, from a trip (its first step) or a navigation template's turn card. */
+    fun stepLanes(step: androidx.car.app.navigation.model.Step?): Triple<Int, Int, Boolean>? = step?.let { s ->
+        Triple(s.lanes.size, s.lanes.count { l -> l.directions.any { it.isRecommended } }, s.lanesImage != null)
+    }
+
+    /** Logs the lanes of [step] once per distinct count, while [on]. Never throws. */
+    fun noteLanes(app: String, where: String, step: () -> androidx.car.app.navigation.model.Step?) {
+        if (!on) return
+        runCatching {
+            val (n, take, image) = stepLanes(step()) ?: return
+            val line = laneLine(app, where, n, take, image)
+            synchronized(seen) { if (seen.size < MAX_LINES && seen.add(line)) DiagLog.add(line) }
+        }
+    }
+
     /** A new connection to the car: log again from the start. */
     fun reset() = synchronized(seen) { seen.clear() }
 

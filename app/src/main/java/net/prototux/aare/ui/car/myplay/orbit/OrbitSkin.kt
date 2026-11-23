@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -279,7 +280,8 @@ object OrbitSkin : MyPlaySkin {
         Scaled {
             val g = glass()
             val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
-            Row(Modifier.carPart(CarPart.OrbitTurn), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.carPart(CarPart.OrbitTurn), verticalAlignment = Alignment.Top) {
+              Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 OrbitDisc(132.dp, LocalSkinTokens.current.night, Modifier.coversMap().orbitFocus(LocalStopRinged.current, nav, g.halo), fill = nav, edge = nav) {
                     val arrow = turn.arrow
                     if (arrow != null) {
@@ -289,13 +291,55 @@ object OrbitSkin : MyPlaySkin {
                         Icon(arrowIcon(turn.direction), null, Modifier.size(78.dp), tint = Orbit.onAccent(LocalSkinTokens.current.night))
                     }
                 }
+                // The lanes for this turn, when the maps app sends them: under the disc, never wider than
+                // it, so they stay left of the map's free area (MC-1) and are not a part that counts.
+                if (turn.lanes.isNotEmpty()) Lanes(turn.lanes, nav, g, Modifier.padding(top = 10.dp))
+              }
                 Spacer(Modifier.width(22.dp))
-                Column(Modifier.weight(1f, fill = false)) {
+                // LN-1: the text stays centred on the disc; the lanes reach below it without moving it.
+                Box(Modifier.weight(1f, fill = false).heightIn(min = 132.dp), contentAlignment = Alignment.CenterStart) {
+                  Column {
                     turn.distance?.let { Text(it, style = Orbit.Type.hero.floating(g.text), maxLines = 1) }
                     turn.road?.let { Text(it, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 2, overflow = TextOverflow.Ellipsis) }
+                  }
                 }
             }
         }
+    }
+
+    /**
+     * The lanes as small arrows on a glass pill as wide as the turn disc at most: the lanes to take
+     * in Navigate's colour, the others dimmed. The arrows shrink to fit up to [LaneHints.MAX] lanes.
+     */
+    @Composable
+    private fun Lanes(lanes: List<net.prototux.aare.ui.car.myplay.LaneHint>, accent: Color, g: Orbit.Glass, modifier: Modifier) {
+        val gap = 3.dp
+        val size = laneArrowSize(lanes.size)
+        Row(
+            modifier.widthIn(max = LANES_WIDTH).clip(CircleShape).background(g.glass).border(1.5.dp, g.edge, CircleShape)
+                .padding(horizontal = 8.dp, vertical = 4.dp).testTag(LANES_TAG),
+            horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.CenterVertically,
+        ) {
+            lanes.forEachIndexed { i, lane ->
+                Icon(
+                    net.prototux.aare.host.templates.laneVector(lane.shape), null,
+                    Modifier.size(size).testTag(laneTag(i, lane.recommended)),
+                    tint = if (lane.recommended) accent else g.secondary.copy(alpha = 0.45f),
+                )
+            }
+        }
+    }
+
+    /** The widest the lanes get: the turn disc's width. */
+    val LANES_WIDTH = 132.dp
+    const val LANES_TAG = "orbit_lanes"
+    fun laneTag(i: Int, recommended: Boolean) = "orbit_lane_${i}_" + if (recommended) "take" else "other"
+
+    /** Each arrow's size for [n] lanes: 26 dp, smaller when many lanes must fit inside [LANES_WIDTH]. */
+    fun laneArrowSize(n: Int): androidx.compose.ui.unit.Dp {
+        if (n <= 0) return 26.dp
+        val room = LANES_WIDTH.value - 16f - 3f * (n - 1)
+        return (room / n).coerceIn(11f, 26f).dp
     }
 
     /** The arrow for a turn MyPlay can draw; otherwise only the plain navigation arrow, never a guessed direction. */

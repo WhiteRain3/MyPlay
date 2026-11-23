@@ -335,6 +335,7 @@ class CarAppConnection(
             screenStack = stack
             template = wrapper.template
             NavTextCheck.note(info.packageName, "turn card") { NavTextCheck.templateTexts(wrapper.template) } // MyPlay (N3 check)
+            NavTextCheck.noteLanes(info.packageName, "turn card") { ((wrapper.template as? androidx.car.app.navigation.model.NavigationTemplate)?.navigationInfo as? androidx.car.app.navigation.model.RoutingInfo)?.currentStep } // MyPlay: lanes
             // A refresh of the same screen (search results while typing, a navigation update, a
             // toggled row) keeps the on-screen state: what's typed, pan mode, the scroll position.
             if (!refresh) templateId = wrapper.id
@@ -529,6 +530,7 @@ class CarAppConnection(
         override fun updateTrip(tripBundle: Bundleable) {
             val t = runCatching { tripBundle.get() as Trip }.getOrNull() ?: return
             NavTextCheck.note(info.packageName, "trip") { NavTextCheck.tripTexts(t) } // MyPlay (N3 check)
+            NavTextCheck.noteLanes(info.packageName, "trip") { t.steps.firstOrNull() } // MyPlay: lanes
             main.post { trip = t; env.tripUpdated(this@CarAppConnection, t) }
         }
     }

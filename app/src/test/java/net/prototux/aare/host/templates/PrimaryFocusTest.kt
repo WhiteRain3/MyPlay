@@ -1,0 +1,98 @@
+package net.prototux.aare.host.templates
+
+import androidx.activity.ComponentActivity
+import androidx.car.app.OnDoneCallback
+import androidx.car.app.model.Action
+import androidx.car.app.model.ActionStrip
+import androidx.car.app.model.CarIcon
+import androidx.car.app.model.ItemList
+import androidx.car.app.model.Row
+import androidx.car.app.navigation.model.RoutePreviewNavigationTemplate
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
+import net.prototux.aare.ui.theme.CarTheme
+import net.prototux.aare.ui.theme.CarThemes
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+
+/**
+ * MyPlay (GO-1, the owner: Waze's route preview needs a knob turn to reach "Go now"): the screen's
+ * primary button gives CarAppScreen its focus requester, so a new screen starts with the ring on it.
+ */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [35], qualifiers = "w1280dp-h720dp-land-mdpi")
+class PrimaryFocusTest {
+    @get:Rule val rule = createAndroidComposeRule<ComponentActivity>()
+
+    private val host = object : TemplateHost {
+        override val driving = false
+        override val night = true
+        override val appLabel = "Maps"
+        override fun contentLimit(type: Int) = 6
+        override val done = object : OnDoneCallback {}
+        override fun back() = Unit
+        override fun loadIcon(icon: CarIcon, sizePx: Int): ImageBitmap? = null
+        override fun showParkedOnlyMessage() = Unit
+        @androidx.compose.runtime.Composable override fun MapSurface(modifier: Modifier) = Unit
+        override fun setVisibleArea(left: Int, top: Int, right: Int, bottom: Int) = Unit
+        override fun setStableArea(left: Int, top: Int, right: Int, bottom: Int) = Unit
+        override fun mapScroll(dx: Float, dy: Float) = Unit
+        override fun mapFling(vx: Float, vy: Float) = Unit
+        override fun mapScale(focusX: Float, focusY: Float, factor: Float) = Unit
+        override fun mapClick(x: Float, y: Float) = Unit
+    }
+
+    /** A route row's title must carry its duration (the car library checks). */
+    private fun timed(text: String, seconds: Long) = android.text.SpannableString(text).apply {
+        setSpan(androidx.car.app.model.DurationSpan.create(seconds), 0, length, android.text.Spanned.SPAN_INCLUSIVE_INCLUSIVE)
+    }
+
+    private fun routes() = ItemList.Builder()
+        .addItem(Row.Builder().setTitle(timed("24 min", 24 * 60L)).addText("Via A1").build())
+        .addItem(Row.Builder().setTitle(timed("27 min", 27 * 60L)).addText("Via B2").build())
+        .setOnSelectedListener { }
+        .build()
+
+    /** [go]: the routes and the Go button; else still loading (the library allows no Go button then). */
+    private fun preview(go: Boolean) = RoutePreviewNavigationTemplate.Builder()
+        .apply { if (go) setItemList(routes()) else setLoading(true) }
+        .setTitle("Home")
+        .setActionStrip(ActionStrip.Builder().addAction(Action.Builder().setTitle("Settings").setOnClickListener { }.build()).build())
+        .apply { if (go) setNavigateAction(Action.Builder().setTitle("Go now").setOnClickListener { }.build()) }
+        .build()
+
+    private fun show(t: RoutePreviewNavigationTemplate, primary: PrimaryFocus) = rule.setContent {
+        CarTheme(night = true, theme = CarThemes.byId("aare")) {
+            CompositionLocalProvider(LocalTemplateHost provides host, LocalPrimaryFocus provides primary) {
+                @Suppress("DEPRECATION")
+                RoutePreviewNavigationTemplateView(t)
+            }
+        }
+    }
+
+    @Test fun theRoutePreviewsGoButtonTakesTheRing() {
+        val primary = PrimaryFocus()
+        show(preview(go = true), primary)
+        rule.waitForIdle()
+        assertNotNull("Go now registered", primary.holder)
+        rule.runOnIdle { primary.requester.requestFocus() }
+        rule.onNodeWithText("Go now").assertIsFocused()
+    }
+
+    /** No primary button (the routes still loading; the strip's small buttons never count): nothing registers. */
+    @Test fun noPrimaryButtonLeavesTheUsualStart() {
+        val primary = PrimaryFocus()
+        show(preview(go = false), primary)
+        rule.waitForIdle()
+        assertNull(primary.holder)
+    }
+}
