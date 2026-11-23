@@ -36,6 +36,7 @@ import net.prototux.aare.Settings
 import net.prototux.aare.audio.MicRouter
 import net.prototux.aare.car.ButtonTable
 import net.prototux.aare.car.CarInputs
+import net.prototux.aare.car.myplayLearnButton
 import net.prototux.aare.host.CarRuntime
 import net.prototux.aare.media.MediaHub
 import net.prototux.aare.ui.car.CarScreen
@@ -75,6 +76,10 @@ class CarPreviewActivity : ComponentActivity() {
         runtime.screenHeightDp = (dm.heightPixels / dm.density).toInt()
         runtime.microphone = { sink, stopped -> mic.open(sink, stopped) }
         runtime.start()
+        // Review PR-1: the Preview never teaches a button. A teach armed on Car › Buttons (a setting the
+        // car's input path follows) is cancelled here and on every return, so a Menu or corner press in
+        // the Preview can't rebind that key for the real car. Teaching needs the car anyway.
+        settings.myplayLearnButton = null
         inputs = CarInputs(runtime, settings, CarInputs.ActivityHost(this))
         inputs.start()
         val bridge = object : PreviewInputs {
@@ -119,6 +124,11 @@ class CarPreviewActivity : ComponentActivity() {
                 if (runtime.ui.screen == CarScreen.Dashboard) finish() else runtime.back()
             }
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Settings(this).myplayLearnButton = null // PR-1, see onCreate
     }
 
     override fun onDestroy() {
