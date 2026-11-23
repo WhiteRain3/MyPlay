@@ -584,8 +584,9 @@ class OrbitHomeTest {
         }
         if (calls) {
             val engine = rule.onNodeWithTag(ENGINE_TAG)
+            // HN-3: Calls is the dial's right; then one row down the wheel.
             engine.performKeyInput { pressKey(Key.DirectionCenter) }
-            engine.performKeyInput { pressKey(Key.DirectionUp) }
+            engine.performKeyInput { pressKey(Key.DirectionRight) }
             engine.performKeyInput { pressKey(Key.DirectionDown) }
             rule.mainClock.advanceTimeBy(1_000)
         }

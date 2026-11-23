@@ -17,6 +17,14 @@ class OrbitWheelTest {
         assertEquals(0..0, OrbitWheelSpec.window(0f, 1))
     }
 
+    /** "N more" counts only the rows out of sight (the neighbours show). */
+    @Test fun moreCountsOnlyHiddenRows() {
+        assertEquals(0 to 5, OrbitWheelSpec.hidden(0, 7))
+        assertEquals(0 to 3, OrbitWheelSpec.hidden(1, 6))
+        assertEquals(3 to 0, OrbitWheelSpec.hidden(4, 5))
+        assertEquals(0 to 0, OrbitWheelSpec.hidden(0, 1))
+    }
+
     @Test fun theArcBendsAwayFromTheMiddle() {
         assertEquals(0f, OrbitWheelSpec.arcX(0.dp).value, 0.01f)
         val one = OrbitWheelSpec.arcX(OrbitWheelSpec.STEP).value

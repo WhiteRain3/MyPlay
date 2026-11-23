@@ -59,6 +59,9 @@ internal object OrbitWheelSpec {
         return (r - sqrt(r * r - y * y)).dp
     }
 
+    /** How many rows are out of sight above and below the ringed one (its neighbours show). */
+    fun hidden(ringed: Int, count: Int): Pair<Int, Int> = (ringed - 1).coerceAtLeast(0) to (count - ringed - 2).coerceAtLeast(0)
+
     /** The rows composed for a wheel turned to [at] (fractional while it turns): one either side. */
     fun window(at: Float, count: Int): IntRange =
         if (count <= 0) IntRange.EMPTY else (floor(at).toInt() - 1).coerceAtLeast(0)..(ceil(at).toInt() + 1).coerceAtMost(count - 1)
@@ -89,8 +92,8 @@ internal fun OrbitWheel(
             val a = Math.toRadians((-half + 2 * half * f).toDouble())
             drawCircle(accent, 9.dp.toPx(), Offset(cx + r * kotlin.math.cos(a).toFloat(), cy + r * kotlin.math.sin(a).toFloat()))
         }
-        val above = ringed
-        val below = count - ringed - 1
+        // Rows out of sight: the neighbour either side is on screen.
+        val (above, below) = OrbitWheelSpec.hidden(ringed, count)
         val more = TextStyle(fontSize = 22.sp, color = g.secondary)
         if (above > 0) Text(stringResource(R.string.myplay_wheel_more, above), style = more,
             modifier = Modifier.align(Alignment.TopStart).offset(OrbitWheelSpec.MIDDLE_X + 40.dp, OrbitWheelSpec.MIDDLE_Y - OrbitWheelSpec.STEP * 1.75f))

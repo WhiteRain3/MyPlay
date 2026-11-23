@@ -142,7 +142,9 @@ internal fun BoxScope.ActionsWheelView(entries: List<WheelEntry>, ringed: Int, m
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text(if (ringed > 0) stringResource(R.string.myplay_wheel_more, ringed) else "", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant, modifier = Modifier.height(20.dp))
+        // Rows out of sight only: the neighbour either side shows.
+        val before = ringed - 1
+        Text(if (before > 0) stringResource(R.string.myplay_wheel_more, before) else "", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant, modifier = Modifier.height(20.dp))
         for (d in -1..1) {
             val e = entries.getOrNull(ringed + d)
             if (e == null) { Spacer(Modifier.height(if (d == 0) 84.dp else 60.dp)); continue }
@@ -168,7 +170,7 @@ internal fun BoxScope.ActionsWheelView(entries: List<WheelEntry>, ringed: Int, m
                 }
             }
         }
-        val after = entries.size - ringed - 1
+        val after = entries.size - ringed - 2
         Text(if (after > 0) stringResource(R.string.myplay_wheel_more, after) else "", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant, modifier = Modifier.height(20.dp))
     }
 }
