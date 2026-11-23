@@ -178,6 +178,7 @@ class CarSession(
         // The head unit is waiting for our version answer: start the protocol before the UI work.
         aap.start()
         DriveSummary.begin(System.currentTimeMillis()) // MyPlay: this drive's line in the log, at the end
+        net.prototux.aare.video.FrameStats.reset() // MyPlay (smoothness): this drive's slow frames, at the end
         runtime.microphone = { sink, stopped -> micRouter.open(sink, stopped) }
         runtime.projection = projection
         runtime.exitToCar = ::exitToCar
@@ -1314,6 +1315,7 @@ class CarSession(
     private fun teardown() {
         closed = true
         DriveSummary.end(System.currentTimeMillis())?.let(DiagLog::add) // MyPlay: how the speed and its limit did
+        net.prototux.aare.video.FrameStats.line()?.let(DiagLog::add) // MyPlay (smoothness): numbers only, debug setting on
         // MyPlay (#11): where the car stopped, if turned on (on the phone only; never logged).
         runCatching { ParkedHere.driveEnded(context, settings, runtime.carLocation, DashboardInfo.phoneLocation(context), SpeedRules.carSpeed(CarData.state.value, System.currentTimeMillis())) }
         settings.unregisterListener(carKeyPrefsListener)

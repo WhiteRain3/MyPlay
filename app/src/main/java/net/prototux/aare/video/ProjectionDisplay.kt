@@ -50,6 +50,7 @@ class ProjectionDisplay(
     private val main = Handler(Looper.getMainLooper())
     private val display: VirtualDisplay
     private var presentation: CarPresentation? = null
+    private var stopFrameStats: (() -> Unit)? = null
 
     init {
         val dm = context.getSystemService(DisplayManager::class.java)
@@ -64,6 +65,8 @@ class ProjectionDisplay(
         val p = CarPresentation(context, display.display, content)
         p.show()
         presentation = p
+        // MyPlay (smoothness): the frames' times for the drive's log line (counted only with the debug setting on).
+        stopFrameStats = p.window?.let(FrameStats::watch)
     }
 
     /** Swaps the target surface (e.g. after the encoder restarted). */
@@ -135,6 +138,8 @@ class ProjectionDisplay(
 
     fun release() {
         main.post {
+            stopFrameStats?.invoke()
+            stopFrameStats = null
             presentation?.dismissSafely()
             presentation = null
             display.release()

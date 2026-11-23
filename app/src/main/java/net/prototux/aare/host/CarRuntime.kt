@@ -379,6 +379,7 @@ class CarRuntime(
         ui.mapsIdleHomeMin = settings.myplayMapsIdleHome // MyPlay (O2b): a full-screen maps app goes home when idle
         ui.speedSource = settings.myplaySpeedSource // MyPlay (N3): the engine's speed source
         NavTextCheck.on = settings.myplayDebugNavText // MyPlay (N3 check): maps apps' text in the log
+        net.prototux.aare.video.FrameStats.on = settings.myplayDebugNavText // MyPlay (smoothness): slow frames, numbers only
         ui.textScale = CarTextSize.byId(settings.carTextSize).fontScale
         ui.controlScale = CarControlSize.byId(settings.carControlSize).scale
         ui.darkBar = settings.darkBar

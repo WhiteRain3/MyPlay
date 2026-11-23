@@ -806,7 +806,7 @@ internal fun MyPlayEngineShell(
                     // A tap does what a push does. Not clickable(): that would make the slot a
                     // Compose focus stop, and a knob turn could then leave the engine (N2-1).
                     .pointerInput(id) { detectTapGestures { chosen = id; currentActions[id]?.invoke() } }
-                    .onGloballyPositioned { c -> c.boundsInRoot().let { boxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                    .onGloballyPositioned { c -> c.boundsInRoot().let { boxes.putIfChanged(id, FocusGraph.Box(it.left, it.top, it.right, it.bottom)) } }
                     .semantics { selected = ring == id }
                     .let { if (showRing && ring == id && !skin.drawsFocus) it.border(3.dp, tokens.accent, RoundedCornerShape(tokens.corner)) else it }
                     .testTag(id)
@@ -900,7 +900,7 @@ internal fun MyPlayEngineShell(
                             skin.MusicPanel(musicPage, panelRing, { id ->
                                 Modifier
                                     .pointerInput(id) { detectTapGestures { panelChosen = id; currentPanel[id]?.invoke() } }
-                                    .onGloballyPositioned { c -> c.boundsInRoot().let { panelBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                                    .onGloballyPositioned { c -> c.boundsInRoot().let { panelBoxes.putIfChanged(id, FocusGraph.Box(it.left, it.top, it.right, it.bottom)) } }
                                     .semantics { selected = id == panelRing }
                                     .testTag(id)
                             }, Modifier.slot(Slot.SONG).testTag(SLOT_MUSIC_PANEL))
@@ -930,7 +930,7 @@ internal fun MyPlayEngineShell(
                             { id ->
                                 Modifier
                                     .pointerInput(id) { detectTapGestures { musicChosen = id; currentMusicActions[id]?.invoke() } }
-                                    .onGloballyPositioned { c -> c.boundsInRoot().let { musicBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                                    .onGloballyPositioned { c -> c.boundsInRoot().let { musicBoxes.putIfChanged(id, FocusGraph.Box(it.left, it.top, it.right, it.bottom)) } }
                                     .semantics { selected = id == musicRing }
                                     .testTag(id)
                             },
@@ -998,7 +998,7 @@ internal fun MyPlayEngineShell(
                                             detectTapGestures { currentApps.indexOfFirst { it.id == id }.takeIf { it >= 0 }?.let { appRing = it; openTile(currentApps[it]) } }
                                         }
                                     }
-                                    .onGloballyPositioned { c -> c.boundsInRoot().let { appBoxes[global.toString()] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                                    .onGloballyPositioned { c -> c.boundsInRoot().let { appBoxes.putIfChanged(global.toString(), FocusGraph.Box(it.left, it.top, it.right, it.bottom)) } }
                                     .semantics { selected = global == appIndex }
                                     .testTag(appTag(apps[global]))
                             },
@@ -1037,7 +1037,7 @@ internal fun MyPlayEngineShell(
                 skin.Ringing(call!!, canEnd, callRing, { id ->
                     Modifier
                         .pointerInput(id) { detectTapGestures { callChosen = id; currentCall[id]?.invoke() } }
-                        .onGloballyPositioned { c -> c.boundsInRoot().let { callBoxes[id] = FocusGraph.Box(it.left, it.top, it.right, it.bottom) } }
+                        .onGloballyPositioned { c -> c.boundsInRoot().let { callBoxes.putIfChanged(id, FocusGraph.Box(it.left, it.top, it.right, it.bottom)) } }
                         .semantics { selected = id == callRing }
                         .testTag(id)
                 }, Modifier.fillMaxSize().testTag(SLOT_CALL)
@@ -1208,4 +1208,13 @@ internal fun dialIndex(key: Key): Int? = when (key) {
     Key.DirectionDown -> 2
     Key.DirectionLeft -> 3
     else -> null
+}
+
+/**
+ * SM-4: a stop's box, written only when it changed. The home reads the boxes while it is composed
+ * (which stops are live, the shades' places), and a state map write, even of an equal box, composed
+ * the whole home again after every layout of a stop (a turn's distance, a song's title).
+ */
+internal fun androidx.compose.runtime.snapshots.SnapshotStateMap<String, FocusGraph.Box>.putIfChanged(id: String, box: FocusGraph.Box) {
+    if (this[id] != box) this[id] = box
 }

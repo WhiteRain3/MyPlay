@@ -41,14 +41,16 @@ internal class MapCoverRegistry {
 
     /** [key] is at [rect]; it covers the map now when [now]. */
     fun place(key: Any, rect: Rect, now: Boolean) {
-        reserved[key] = rect
-        if (now) shown[key] = rect else shown.remove(key)
+        // SM-4: a place laid out again where it was is not written again: a state map write (even of
+        // an equal rectangle) composes the map's host again and works its areas out afresh.
+        if (reserved[key] != rect) reserved[key] = rect
+        if (now) { if (shown[key] != rect) shown[key] = rect } else shown.remove(key)
     }
 
     /** [key] now covers the map or not, at the place it was last given ([place]); nothing if it has none yet. */
     fun setNow(key: Any, now: Boolean) {
         val rect = reserved[key] ?: return
-        if (now) shown[key] = rect else shown.remove(key)
+        if (now) { if (shown[key] != rect) shown[key] = rect } else shown.remove(key)
     }
 
     /**
