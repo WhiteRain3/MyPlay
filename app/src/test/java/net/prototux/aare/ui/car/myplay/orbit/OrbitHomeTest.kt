@@ -683,6 +683,10 @@ class OrbitHomeTest {
         // F: the owner's remap shows at once.
         rule.runOnIdle { state.homePad = net.prototux.aare.ui.car.myplay.HomePad.DEFAULT + (net.prototux.aare.ui.car.myplay.HomePadKey.DOWN to net.prototux.aare.ui.car.myplay.HomePadAction.CALLS) }
         rule.onNodeWithTag(OrbitHints.TAG_DOWN).assertExists()
+        // PL-R: left and right are apart: one set to nothing loses its icon, the other keeps it.
+        rule.runOnIdle { state.homePad = state.homePad + (net.prototux.aare.ui.car.myplay.HomePadKey.LEFT to net.prototux.aare.ui.car.myplay.HomePadAction.NOTHING) }
+        rule.onNodeWithTag(OrbitHints.TAG_LEFT).assertDoesNotExist()
+        rule.onNodeWithTag(OrbitHints.TAG_RIGHT).assertExists()
         // C: they fade after the panel time without input.
         rule.mainClock.advanceTimeBy(30_000)
         rule.waitForIdle()

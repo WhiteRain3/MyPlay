@@ -17,7 +17,8 @@ import net.prototux.aare.ui.car.myplay.HomePadKey
 val HOME_PAD_KEY_NAMES: List<Pair<HomePadKey, Int>> = listOf(
     HomePadKey.CENTER to R.string.phone_home_pad_center,
     HomePadKey.UP to R.string.phone_home_pad_up,
-    HomePadKey.SIDE to R.string.phone_home_pad_side,
+    HomePadKey.LEFT to R.string.phone_home_pad_left,
+    HomePadKey.RIGHT to R.string.phone_home_pad_right,
     HomePadKey.DOWN to R.string.phone_home_pad_down,
 )
 

@@ -10,7 +10,8 @@ import net.prototux.aare.Settings
  * before, until the ring hides again after the panel timeout. A direction set to [HomePadAction.NOTHING]
  * moves the ring as before.
  */
-enum class HomePadKey(val id: String) { CENTER("center"), UP("up"), DOWN("down"), SIDE("side") }
+/** PL-R (the owner): left and right each have their own action (they were one "side" before). */
+enum class HomePadKey(val id: String) { CENTER("center"), UP("up"), DOWN("down"), LEFT("left"), RIGHT("right") }
 
 /** What a pad key does on the home while the ring is hidden. */
 enum class HomePadAction(val id: String) {
@@ -39,19 +40,26 @@ object HomePad {
     val DEFAULT: Map<HomePadKey, HomePadAction> = mapOf(
         HomePadKey.CENTER to HomePadAction.MUSIC,
         HomePadKey.UP to HomePadAction.MAPS,
-        HomePadKey.SIDE to HomePadAction.DIAL,
+        HomePadKey.LEFT to HomePadAction.DIAL,
+        HomePadKey.RIGHT to HomePadAction.DIAL,
         HomePadKey.DOWN to HomePadAction.NOTHING,
     )
 
-    /** "center=music;up=maps;..."; unknown parts are skipped, missing keys take the default. */
+    /**
+     * "center=music;up=maps;..."; unknown parts are skipped, missing keys take the default. PL-R:
+     * a mapping saved before left and right were apart has "side=…": it seeds both, unless one of
+     * them is stored itself.
+     */
     fun decode(s: String?): Map<HomePadKey, HomePadAction> {
-        val stored = s.orEmpty().split(';').mapNotNull { e ->
+        val pairs = s.orEmpty().split(';').mapNotNull { e ->
             val (k, v) = e.split('=', limit = 2).takeIf { it.size == 2 } ?: return@mapNotNull null
-            val key = HomePadKey.entries.firstOrNull { it.id == k.trim() } ?: return@mapNotNull null
             val action = HomePadAction.byId(v.trim()) ?: return@mapNotNull null
-            key to action
-        }.toMap()
-        return DEFAULT + stored
+            k.trim() to action
+        }
+        val side = pairs.lastOrNull { it.first == "side" }?.second
+        val seeded = if (side != null) mapOf(HomePadKey.LEFT to side, HomePadKey.RIGHT to side) else emptyMap()
+        val stored = pairs.mapNotNull { (k, a) -> HomePadKey.entries.firstOrNull { it.id == k }?.let { it to a } }.toMap()
+        return DEFAULT + seeded + stored
     }
 
     fun encode(m: Map<HomePadKey, HomePadAction>): String = HomePadKey.entries.joinToString(";") { k -> "${k.id}=${(m[k] ?: HomePadAction.NOTHING).id}" }

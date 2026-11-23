@@ -203,7 +203,7 @@ internal fun MyPlayEngineShell(
     // O1: the music panel over the home, opened by a push on the song (never the music app itself).
     // O1-1: keyed on the skin, so a new language (DECK has no song slot to draw it) starts closed.
     var panelOpen by remember(skin.id) { mutableStateOf(false) }
-    var panelChosen by remember(skin.id) { mutableStateOf(PANEL_PLAY) }
+    var panelChosen by remember(skin.id) { mutableStateOf(PANEL_OPENS_ON) }
     // G-4: the car side takes the knob's push as a plain press while the panel or an alert holds it.
     val knobBusy = panelOpen || homeAlert != null
     // G-5: cleared when the engine leaves the screen (an app opened over an alert), so the knob's
@@ -237,7 +237,7 @@ internal fun MyPlayEngineShell(
         }
         if (slots.turn != null) put(STOP_TURN) { memory.origin = boxes[STOP_TURN]; openMaps() }
         if (hand != null) put(STOP_HUB) { openFront() } else put(STOP_HUB) { model.push() }
-        if (slots.song != null && hand == null) put(STOP_SONG) { panelOpen = true; panelChosen = PANEL_PLAY }
+        if (slots.song != null && hand == null) put(STOP_SONG) { panelOpen = true; panelChosen = PANEL_OPENS_ON }
     }
     // A stop that went away (the song ended) leaves the graph; the ring goes back to the hub.
     val live = boxes.filterKeys { it in actionsOf }
@@ -286,7 +286,7 @@ internal fun MyPlayEngineShell(
     }
     // N7-1: keyed on the next songs, so boxes of songs that left the queue do not pile up.
     val musicBoxes = remember(music.transport.upNext) { mutableStateMapOf<String, FocusGraph.Box>() }
-    var musicChosen by remember { mutableStateOf(MUSIC_PLAY) }
+    var musicChosen by remember { mutableStateOf(MUSIC_OPENS_ON) }
     val musicActions: Map<String, () -> Unit> = buildMap {
         if (musicPage.song != null) {
             put(MUSIC_ART, music::playPause)
@@ -298,7 +298,7 @@ internal fun MyPlayEngineShell(
         put(MUSIC_LIBRARY) { music.library()?.let { library = it } ?: run { memory.origin = musicBoxes[MUSIC_LIBRARY]; openMusic() } }
         for (u in musicPage.transport.upNext) put(upNextStop(u.queueId)) { music.skipTo(u.queueId) }
     }
-    val musicRing = musicChosen.takeIf { it in musicActions } ?: if (musicPage.song != null) MUSIC_PLAY else MUSIC_LIBRARY
+    val musicRing = musicChosen.takeIf { it in musicActions } ?: if (musicPage.song != null) MUSIC_OPENS_ON else MUSIC_LIBRARY
     var pendingSeek by remember { mutableStateOf<Long?>(null) }
     val np = music.nowPlaying
     // R5-9: the player's report confirms the seek; R5-4: or it stops counting after a while.
@@ -321,7 +321,7 @@ internal fun MyPlayEngineShell(
         put(PANEL_PLAY, music::playPause)
         put(PANEL_NEXT, music::next)
     }
-    val panelRing = panelChosen.takeIf { it in panelActions } ?: PANEL_PLAY
+    val panelRing = panelChosen.takeIf { it in panelActions } ?: PANEL_OPENS_ON.takeIf { it in panelActions } ?: PANEL_PLAY
     // The song ended, or the home was left: the panel closes.
     LaunchedEffect(model.place, slots.song == null, hand) { if (model.place != Place.Home || slots.song == null || hand != null) panelOpen = false }
     // O2: a panel over the map (the music panel, the dial) closes by itself after the driver's
@@ -456,7 +456,7 @@ internal fun MyPlayEngineShell(
     fun freshWorld(w: World) {
         when (w) {
             World.APPS -> appRing = 0
-            World.MUSIC -> musicChosen = MUSIC_PLAY
+            World.MUSIC -> musicChosen = MUSIC_OPENS_ON
             World.CALLS -> phoneChosen = null
             World.SETTINGS -> settingChosen = null
             World.CAR -> carChosen = null
@@ -572,7 +572,7 @@ internal fun MyPlayEngineShell(
     /** O6: what a home pad key does while the ring is hidden. */
     fun runPad(action: HomePadAction) {
         when (action) {
-            HomePadAction.MUSIC -> if (slots.song != null) { panelOpen = true; panelChosen = PANEL_PLAY } else { model.enter(World.MUSIC); freshWorld(World.MUSIC) }
+            HomePadAction.MUSIC -> if (slots.song != null) { panelOpen = true; panelChosen = PANEL_OPENS_ON } else { model.enter(World.MUSIC); freshWorld(World.MUSIC) }
             HomePadAction.MAPS -> { memory.origin = null; openMaps() }
             HomePadAction.DIAL -> model.push()
             HomePadAction.APPS -> { model.enter(World.APPS); freshWorld(World.APPS) }
@@ -1153,6 +1153,13 @@ internal fun libraryRowTag(i: Int) = "library_row_$i"
 internal fun appTag(app: CarAppEntry) = "app_${app.id}"
 
 /** O6: the home pad key a key is, or null. */
+/**
+ * NX-1 (the owner): the music panel and the Music world open with the knob's highlight on Next,
+ * the control used most while driving (play and pause are on the knob's push already).
+ */
+internal const val PANEL_OPENS_ON = PANEL_NEXT
+internal const val MUSIC_OPENS_ON = MUSIC_NEXT
+
 /** HN-2: the hints round the hub (their layer). */
 internal const val SLOT_HINTS = "slot_hints"
 
@@ -1160,7 +1167,8 @@ internal fun padKeyOf(key: Key): HomePadKey? = when (key) {
     Key.Enter, Key.DirectionCenter, Key.NumPadEnter -> HomePadKey.CENTER
     Key.DirectionUp -> HomePadKey.UP
     Key.DirectionDown -> HomePadKey.DOWN
-    Key.DirectionLeft, Key.DirectionRight -> HomePadKey.SIDE
+    Key.DirectionLeft -> HomePadKey.LEFT
+    Key.DirectionRight -> HomePadKey.RIGHT
     else -> null
 }
 

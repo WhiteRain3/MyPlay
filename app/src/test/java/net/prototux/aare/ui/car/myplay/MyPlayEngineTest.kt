@@ -294,6 +294,9 @@ class MyPlayEngineTest {
     fun theMusicWorldPlaysSeeksAndSkips() {
         openMusic()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
+        // NX-1: the world opens on Next.
+        rule.onNodeWithTag(MUSIC_NEXT).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
         rule.onNodeWithTag(MUSIC_PLAY).assertIsSelected()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         assertEquals(listOf("playPause"), asked)
@@ -332,7 +335,9 @@ class MyPlayEngineTest {
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
         assertTrue("the push opened no app: $asked", asked.isEmpty())
-        // The ring starts on play/pause.
+        // NX-1: the ring starts on Next.
+        rule.onNodeWithTag(PANEL_NEXT).assertIsSelected()
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
         rule.onNodeWithTag(PANEL_PLAY).assertIsSelected()
         engine.performKeyInput { pressKey(Key.DirectionCenter) }
         engine.performKeyInput { pressKey(Key.DirectionRight) }
@@ -496,6 +501,36 @@ class MyPlayEngineTest {
         rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
     }
 
+    /** PL-R: pad left and pad right each do their own thing. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun padLeftAndRightAreApart() {
+        val state = show()
+        rule.runOnIdle { state.homePad = HomePad.decode("center=music;up=maps;left=apps;right=dial;down=nothing") }
+        rule.waitForIdle()
+        val engine = rule.onNodeWithTag(ENGINE_TAG)
+        fun back() { rule.runOnIdle { rule.activity.onBackPressedDispatcher.onBackPressed() }; rule.waitForIdle() }
+        engine.performKeyInput { pressKey(Key.DirectionLeft) }
+        rule.onNodeWithTag(SLOT_APPS).assertExists()
+        while (rule.onAllNodes(hasTestTag(STOP_HUB)).fetchSemanticsNodes().isEmpty() || rule.onAllNodes(hasTestTag(SLOT_CHOOSER)).fetchSemanticsNodes().isNotEmpty()) back()
+        engine.performKeyInput { pressKey(Key.DirectionRight) }
+        rule.onNodeWithTag(SLOT_CHOOSER).assertExists()
+    }
+
+    /** PL-R: a mapping saved before left and right were apart ("side=…") seeds both; one stored itself wins. */
+    @Test fun anOldSideSeedsLeftAndRight() {
+        val old = HomePad.decode("center=music;up=maps;side=calls;down=nothing")
+        assertEquals(HomePadAction.CALLS, old[HomePadKey.LEFT])
+        assertEquals(HomePadAction.CALLS, old[HomePadKey.RIGHT])
+        val mixed = HomePad.decode("side=calls;right=apps")
+        assertEquals(HomePadAction.CALLS, mixed[HomePadKey.LEFT])
+        assertEquals(HomePadAction.APPS, mixed[HomePadKey.RIGHT])
+        // Saved again, it is written with left and right, no "side".
+        val saved = HomePad.encode(old)
+        assertTrue(saved, "left=calls" in saved && "right=calls" in saved && "side" !in saved)
+        assertEquals(HomePadAction.DIAL, HomePad.DEFAULT[HomePadKey.LEFT])
+        assertEquals(HomePadAction.DIAL, HomePad.DEFAULT[HomePadKey.RIGHT])
+    }
+
     /** O9-1: the maps app's turn card is left out only while the home shows a turn of its own. */
     @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
     fun theAppsTurnCardStaysWhenTheHomeHasNoTurn() {
@@ -612,7 +647,8 @@ class MyPlayEngineTest {
         rule.onNodeWithTag(SLOT_MUSIC_PANEL).assertExists()
         rule.onNodeWithTag(PANEL_SEEK).assertDoesNotExist()
         engine.performKeyInput { pressKey(Key.DirectionDown) }
-        rule.onNodeWithTag(PANEL_PLAY).assertIsSelected()
+        // NX-1: it opened on Next; with no progress bar, down goes nowhere.
+        rule.onNodeWithTag(PANEL_NEXT).assertIsSelected()
     }
 
     /** Where the player does not allow seeking, left and right on the artwork move the ring instead. */

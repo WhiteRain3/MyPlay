@@ -51,7 +51,8 @@ class LearnedButtonsTest {
             listOf(ButtonAction.NAVIGATE_HOME, ButtonAction.NEXT, ButtonAction.PREVIOUS))
         org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.MAPS, h.up)
         org.junit.Assert.assertNull(h.down)
-        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.DIAL, h.side)
+        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.DIAL, h.left)
+        org.junit.Assert.assertEquals(net.prototux.aare.ui.car.myplay.HomePadAction.DIAL, h.right)
         org.junit.Assert.assertEquals(listOf(ButtonAction.NAVIGATE_HOME, ButtonAction.NEXT), h.corners)
         org.junit.Assert.assertTrue(net.prototux.aare.ui.car.myplay.PadHints.of(null, emptyList()).isEmpty)
     }

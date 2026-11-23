@@ -45,7 +45,7 @@ import net.prototux.aare.ui.car.myplay.World
 
 /**
  * HN-2 (the owner's hints A, E and F): small icon discs on a thin ring round the hub, one per pad
- * direction that opens something (up, down, and left and right alike for the side), in the colour
+ * direction that opens something (up, down, left and right, each its own), in the colour
  * of what it opens; and the buttons taught in the car on the left diagonals (the first up-left, the
  * second down-left; the up-right one is the limit sign's). Icons only. Everything stays left of the
  * map's free area (MC-1): the right disc ends 20 dp short of it on a 1280x720 screen.
@@ -125,10 +125,8 @@ internal fun OrbitPadHints(hints: PadHints, speedShown: Boolean, night: Boolean,
     val all = buildList {
         hints.up?.let { add(Hint(270f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_UP)) }
         hints.down?.let { add(Hint(90f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_DOWN)) }
-        hints.side?.let {
-            add(Hint(180f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_LEFT))
-            add(Hint(0f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_RIGHT))
-        }
+        hints.left?.let { add(Hint(180f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_LEFT)) }
+        hints.right?.let { add(Hint(0f, OrbitHints.icon(it), padColour(it), OrbitHints.TAG_RIGHT)) }
         hints.corners.forEachIndexed { i, a ->
             OrbitHints.CORNER_DEGREES.getOrNull(i)?.let { add(Hint(it, OrbitHints.icon(a), keyColour(a), OrbitHints.cornerTag(i))) }
         }

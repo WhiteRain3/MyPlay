@@ -282,7 +282,8 @@
     <string name="next_car_wheel_label" translatable="false">Steering wheel</string>
     <string name="next_car_pad_center_label" translatable="false">Knob push</string>
     <string name="next_car_pad_up_label" translatable="false">Pad up</string>
-    <string name="next_car_pad_side_label" translatable="false">Pad left or right</string>
+    <string name="next_car_pad_left_label" translatable="false">Pad left</string>
+    <string name="next_car_pad_right_label" translatable="false">Pad right</string>
     <string name="next_car_pad_down_label" translatable="false">Pad down</string>
     <string name="next_car_info_home_label" translatable="false">Home: information only</string>
     <string name="next_car_info_home_help" translatable="false">No ring on home; needs The dial or Apps</string>

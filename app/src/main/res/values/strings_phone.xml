@@ -411,7 +411,8 @@
     <string name="phone_home_pad_title" translatable="false">ORBIT home: pad shortcuts</string>
     <string name="phone_home_pad_center" translatable="false">Knob push</string>
     <string name="phone_home_pad_up" translatable="false">Pad up</string>
-    <string name="phone_home_pad_side" translatable="false">Pad left or right</string>
+    <string name="phone_home_pad_left" translatable="false">Pad left</string>
+    <string name="phone_home_pad_right" translatable="false">Pad right</string>
     <string name="phone_home_pad_down" translatable="false">Pad down</string>
     <string name="phone_home_pad_music" translatable="false">Music</string>
     <string name="phone_home_pad_maps" translatable="false">Maps</string>

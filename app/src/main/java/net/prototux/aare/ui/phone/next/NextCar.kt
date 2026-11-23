@@ -535,7 +535,8 @@ private fun Knob(pushOn: Boolean, padOn: Boolean, onPush: () -> Unit, onPad: () 
 private val PAD_ROWS: List<Pair<HomePadKey, Int>> = listOf(
     HomePadKey.CENTER to R.string.next_car_pad_center_label,
     HomePadKey.UP to R.string.next_car_pad_up_label,
-    HomePadKey.SIDE to R.string.next_car_pad_side_label,
+    HomePadKey.LEFT to R.string.next_car_pad_left_label,
+    HomePadKey.RIGHT to R.string.next_car_pad_right_label,
     HomePadKey.DOWN to R.string.next_car_pad_down_label,
 )
 
@@ -572,7 +573,8 @@ private fun PadDrawing(pad: Map<HomePadKey, HomePadAction>) {
         Box(Modifier.size(270.dp).clip(CircleShape).border(1.dp, NextColors.Edge2, CircleShape))
         Spot(HomePadKey.UP, Modifier.align(Alignment.TopCenter))
         Spot(HomePadKey.CENTER, Modifier.align(Alignment.Center))
-        Spot(HomePadKey.SIDE, Modifier.align(Alignment.CenterEnd).padding(end = 8.dp))
+        Spot(HomePadKey.LEFT, Modifier.align(Alignment.CenterStart).padding(start = 8.dp))
+        Spot(HomePadKey.RIGHT, Modifier.align(Alignment.CenterEnd).padding(end = 8.dp))
         Spot(HomePadKey.DOWN, Modifier.align(Alignment.BottomCenter))
     }
 }
