@@ -700,4 +700,15 @@
     <string name="next_voice_mic_label" translatable="false">Allow the microphone</string>
     <string name="next_voice_mic_help" translatable="false">For the assistant and the maps app\'s voice search</string>
     <string name="next_voice_mic_off_help" translatable="false">Microphone not allowed</string>
+    <string name="next_prev_testing_label" translatable="false">Testing aid</string>
+    <string name="next_prev_push_label" translatable="false">Push</string>
+    <string name="next_prev_back_label" translatable="false">Back</string>
+    <string name="next_prev_menu_label" translatable="false">Menu</string>
+    <string name="next_prev_turn_left_label" translatable="false">Turn left</string>
+    <string name="next_prev_turn_right_label" translatable="false">Turn right</string>
+    <string name="next_prev_corner_label" translatable="false">Corner %1$d</string>
+    <string name="next_prev_pretend_label" translatable="false">Pretend speed</string>
+    <string name="next_prev_speed_off_label" translatable="false">Off</string>
+    <string name="next_prev_speed_label" translatable="false">%1$d km/h</string>
+    <string name="next_prev_cannot_help" translatable="false">Not pretended: outside temperature, car night mode, car data</string>
 </resources>
