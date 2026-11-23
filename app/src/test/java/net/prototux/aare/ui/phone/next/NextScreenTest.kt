@@ -5,6 +5,10 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.hasTextExactly
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.core.app.ApplicationProvider
@@ -16,6 +20,7 @@ import net.prototux.aare.ui.phone.MyPlayLooks
 import net.prototux.aare.ui.theme.MapColourFilter
 import net.prototux.aare.ui.theme.myplayMapFilter
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,6 +56,20 @@ class NextScreenTest {
             assertEquals("screen/wallpaper", routeForPart(CarPart.Wallpaper, d))
             assertEquals("apps", routeForPart(CarPart.AppsButton, d))
         }
+    }
+
+    @Test fun holdingThePictureNamesItsParts() {
+        rule.setContent { NextApp(start = "screen") { NextScreenRoot() } }
+        fun texts() = rule.onAllNodes(hasTextExactly("\u0000").not(), useUnmergedTree = true).fetchSemanticsNodes()
+            .mapNotNull { n -> n.config.firstOrNull { it.key == SemanticsProperties.Text }?.value?.toString() }
+        val before = texts()
+        rule.onNodeWithContentDescription("Car screen").performTouchInput { down(center) }
+        rule.waitForIdle()
+        // Every part with a page is ringed and named while the finger is down, and only then.
+        assertTrue(texts().size > before.size)
+        rule.onNodeWithContentDescription("Car screen").performTouchInput { up() }
+        rule.waitForIdle()
+        assertEquals(before, texts())
     }
 
     @Test fun rowValues() {

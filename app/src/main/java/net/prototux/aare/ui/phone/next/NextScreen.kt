@@ -150,6 +150,7 @@ fun NextScreenRoot() {
                 CarPicture(
                     stringResource(R.string.next_home_car_screen_label), Modifier.fillMaxWidth(), onPart = null,
                     onCarPart = { part -> routeForPart(part, design)?.let { nav.open(it) } },
+                    partLabel = { part -> routeForPart(part, design)?.let { NextPages.title(it) }?.let(ctx::getString) },
                 )
                 NextNote(stringResource(R.string.next_scr_tap_part_help), Icons.Outlined.TouchApp)
                 Spacer(Modifier.height(12.dp))

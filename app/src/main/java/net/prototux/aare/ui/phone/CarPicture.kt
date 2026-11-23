@@ -1,5 +1,11 @@
 package net.prototux.aare.ui.phone
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.draw.drawBehind
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -256,6 +262,8 @@ fun CarPicture(
     night: Boolean? = null,
     /** The new phone app: the car's own part (null for the whole picture), mapped per design by the caller. */
     onCarPart: ((CarPart?) -> Unit)? = null,
+    /** The new phone app: while the picture is pressed, every part with a name here gets a dashed ring and its name (frame 09). */
+    partLabel: ((CarPart) -> String?)? = null,
     onPart: ((PicturePart) -> Unit)?,
 ) {
     val context = LocalContext.current
@@ -276,7 +284,7 @@ fun CarPicture(
             runCatching { BitmapFactory.decodeFile(java.io.File(context.filesDir, Settings.WALLPAPER_FILE).path) }.getOrNull()
         } else null
     }
-    CarPictureFrame(ui, description, modifier, onPart, densityDpi = remember(changes) { settings.carDensity }, onCarPart = onCarPart)
+    CarPictureFrame(ui, description, modifier, onPart, densityDpi = remember(changes) { settings.carDensity }, onCarPart = onCarPart, partLabel = partLabel)
 }
 
 /** Draws [ui] at the car's size, scaled down to the width it is given, with its parts tappable when [onPart] is set. */
@@ -288,6 +296,7 @@ internal fun CarPictureFrame(
     onPart: ((PicturePart) -> Unit)?,
     densityDpi: Int = 0,
     onCarPart: ((CarPart?) -> Unit)? = null,
+    partLabel: ((CarPart) -> String?)? = null,
 ) {
     // Either callback makes the parts tappable; the raw one wins (the new phone app maps per design).
     val tapped: ((CarPart?) -> Unit)? = onCarPart ?: onPart?.let { f -> { part: CarPart? -> f(picturePartOf(part)) } }
@@ -363,7 +372,25 @@ internal fun CarPictureFrame(
                 }
             },
         ) {
-            pressed?.let { r ->
+            if (pressed != null && partLabel != null) {
+                // Press to show (frame 09): every part that can be tapped, ringed and named, until let go.
+                val density = LocalDensity.current
+                registry.regions.mapNotNull { (part, r) -> partLabel(part)?.let { it to r.translate(-frame.topLeft) } }
+                    .filter { (_, r) -> r.width > 0f && r.height > 0f }.distinctBy { it.second }.forEach { (name, r) ->
+                        with(density) {
+                            Box(
+                                Modifier.offset(r.left.toDp() - 4.dp, r.top.toDp() - 4.dp).size(r.width.toDp() + 8.dp, r.height.toDp() + 8.dp)
+                                    .drawBehind {
+                                        drawRoundRect(Color.White, cornerRadius = CornerRadius(minOf(size.width, size.height) / 2),
+                                            style = Stroke(2.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx()))))
+                                    },
+                            )
+                            Text(name, style = MaterialTheme.typography.labelSmall, color = Color(0xFF0A1015),
+                                modifier = Modifier.offset(r.right.toDp() - 8.dp, r.top.toDp())
+                                    .background(Color(0xFFE6EAF2), RoundedCornerShape(10.dp)).padding(horizontal = 8.dp, vertical = 2.dp))
+                        }
+                    }
+            } else pressed?.let { r ->
                 val density = LocalDensity.current
                 with(density) {
                     Box(
