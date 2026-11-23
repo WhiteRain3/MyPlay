@@ -96,6 +96,7 @@ private sealed interface Line {
  * selection lists (OnSelectedDelegate) and reports the visible range of each list to its
  * OnItemVisibilityChangedDelegate (apps use it to lazily load or to drive map markers).
  */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun ItemListView(
     sections: List<ListSection>,
@@ -125,36 +126,52 @@ internal fun ItemListView(
     ReportVisibleItems(state, lines, sections)
 
     val pad = if (inCard) 12.dp else 24.dp
-    LazyColumn(
-        modifier.fillMaxSize(),
-        state = state,
-        contentPadding = PaddingValues(start = pad, end = pad, top = if (inCard) 0.dp else 4.dp, bottom = pad + bottomClearance),
-        verticalArrangement = Arrangement.spacedBy(3.dp),
+    // Look C, step 3: on a wheel (a maps app under ORBIT), the focused row is kept in the middle and
+    // the others fade, shrink and bend left with their distance from it, as ORBIT's own lists turn.
+    val wheel = LocalWheelLists.current && !inCard
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxSize()) {
+    val ends = if (wheel) (maxHeight / 2 - WheelLook.ROW / 2).coerceAtLeast(0.dp) else 0.dp
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.foundation.gestures.LocalBringIntoViewSpec provides if (wheel) WheelLook.Centre else androidx.compose.foundation.gestures.LocalBringIntoViewSpec.current,
     ) {
-        itemsIndexed(lines, contentType = { _, l -> l::class }) { _, line ->
-            when (line) {
-                is Line.Title -> SectionTitle(line.text, Modifier.padding(top = if (line.section == 0) 4.dp else 20.dp))
-                is Line.Empty -> EmptyRow(line.text)
-                is Line.Entry -> {
-                    val list = sections[line.section].list
-                    val selectDelegate = list.onSelectedDelegate
-                    val row = line.item as? Row
-                    if (row == null) {
-                        // ListTemplate only allows rows and, from messaging apps, conversations
-                        (line.item as? ConversationItem)?.let { ConversationRow(it, groupShape(line.first, line.last)) }
-                        return@itemsIndexed
-                    }
-                    val shape = groupShape(line.first, line.last)
-                    if (selectDelegate != null) {
-                        val selected = (selections[line.section] ?: list.selectedIndex) == line.index
-                        RowItem(row, shape, radio = selected) {
-                            selections[line.section] = line.index
-                            safeCall("onSelected") { selectDelegate.sendSelected(line.index, host.done) }
-                        }
-                    } else {
-                        RowItem(row, shape)
-                    }
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        state = state,
+        contentPadding = PaddingValues(start = pad, end = pad, top = if (wheel) ends else if (inCard) 0.dp else 4.dp, bottom = if (wheel) ends + bottomClearance else pad + bottomClearance),
+        verticalArrangement = Arrangement.spacedBy(if (wheel) 12.dp else 3.dp),
+    ) {
+        itemsIndexed(lines, contentType = { _, l -> l::class }) { lineIndex, line ->
+            if (wheel) WheelLook.Item(state, lineIndex) { LineView(line, sections, selections, host) } else LineView(line, sections, selections, host)
+        }
+    }
+    }
+    }
+}
+
+/** One line of [ItemListView]: a section title, a row (radio when the list selects), or a section's empty message. */
+@Composable
+private fun LineView(line: Line, sections: List<ListSection>, selections: MutableMap<Int, Int>, host: TemplateHost) {
+    when (line) {
+        is Line.Title -> SectionTitle(line.text, Modifier.padding(top = if (line.section == 0) 4.dp else 20.dp))
+        is Line.Empty -> EmptyRow(line.text)
+        is Line.Entry -> {
+            val list = sections[line.section].list
+            val selectDelegate = list.onSelectedDelegate
+            val row = line.item as? Row
+            if (row == null) {
+                // ListTemplate only allows rows and, from messaging apps, conversations
+                (line.item as? ConversationItem)?.let { ConversationRow(it, groupShape(line.first, line.last)) }
+                return
+            }
+            val shape = groupShape(line.first, line.last)
+            if (selectDelegate != null) {
+                val selected = (selections[line.section] ?: list.selectedIndex) == line.index
+                RowItem(row, shape, radio = selected) {
+                    selections[line.section] = line.index
+                    safeCall("onSelected") { selectDelegate.sendSelected(line.index, host.done) }
                 }
+            } else {
+                RowItem(row, shape)
             }
         }
     }

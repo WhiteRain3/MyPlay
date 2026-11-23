@@ -215,7 +215,11 @@ internal fun MyPlayAppFrame(
                 val wheel = remember(skin.actionsWheel && isMaps, wheelHome, wheelMove) {
                     if (skin.actionsWheel && isMaps) net.prototux.aare.host.templates.ActionsWheelHost(actions::goHome, wheelHome, wheelMove, held = { heldNow }) else null
                 }
-                CompositionLocalProvider(net.prototux.aare.host.templates.LocalActionsWheel provides wheel) {
+                CompositionLocalProvider(
+                    net.prototux.aare.host.templates.LocalActionsWheel provides wheel,
+                    // Look C, step 3: the maps app's lists in the orbit wheel's look.
+                    net.prototux.aare.host.templates.LocalWheelLists provides (wheel != null),
+                ) {
                     ContentArea(state, actions, appContent, navMap,
                         Modifier.weight(1f).fillMaxHeight().testTag(FRAME_APP_TAG))
                 }
