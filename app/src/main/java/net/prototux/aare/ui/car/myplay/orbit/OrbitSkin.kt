@@ -310,6 +310,16 @@ object OrbitSkin : MyPlaySkin {
     const val SHADE_STATUS_TAG = "orbit_shade_status"
 
     const val SHADE_TURN_TAG = "orbit_shade_turn"
+
+    /** Look C (18, 19): the turn's spinner, a message's icon and its title. */
+    const val TURN_SPINNER_TAG = "orbit_turn_spinner"
+    const val TURN_MESSAGE_ICON_TAG = "orbit_turn_message_icon"
+    const val TURN_MESSAGE_TITLE_TAG = "orbit_turn_message_title"
+
+    override val drawsNavMessages get() = true
+
+    @Composable
+    override fun mapsAppScheme(base: androidx.compose.material3.ColorScheme, night: Boolean) = Orbit.appScheme(base, night, LocalOrbitThemed.current)
     const val SHADE_SONG_TAG = "orbit_shade_song"
 
     @Composable
@@ -317,11 +327,21 @@ object OrbitSkin : MyPlaySkin {
         Scaled {
             val g = glass()
             val nav = Orbit.accent(World.NAVIGATE, LocalSkinTokens.current.night)
+            // Look C (18, 19): a message from the maps app in the turn's place: its image in the
+            // accent disc, or, while the way is worked out (or it sends no image), the spinner on glass.
+            val message = turn.message
+            val spinning = message != null && (message.loading || message.icon == null)
             Row(Modifier.carPart(CarPart.OrbitTurn), verticalAlignment = Alignment.Top) {
               Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                OrbitDisc(132.dp, LocalSkinTokens.current.night, Modifier.coversMap().orbitFocus(LocalStopRinged.current, nav, g.halo), fill = nav, edge = nav) {
+                OrbitDisc(132.dp, LocalSkinTokens.current.night, Modifier.coversMap().orbitFocus(LocalStopRinged.current, nav, g.halo),
+                    fill = if (spinning) null else nav, edge = if (spinning) null else nav) {
                     val arrow = turn.arrow
-                    if (arrow != null) {
+                    if (spinning) {
+                        OrbitSpinner(92.dp, 8.dp, nav, g.track, Modifier.testTag(TURN_SPINNER_TAG))
+                    } else if (message?.icon != null) {
+                        Image(message.icon, null, Modifier.size(66.dp).testTag(TURN_MESSAGE_ICON_TAG), contentScale = ContentScale.Fit,
+                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Orbit.onAccent(LocalSkinTokens.current.night)))
+                    } else if (arrow != null) {
                         val image = remember(arrow) { arrow.asImageBitmap() }
                         Image(image, null, Modifier.size(84.dp), contentScale = ContentScale.Fit)
                     } else {
@@ -336,7 +356,14 @@ object OrbitSkin : MyPlaySkin {
                 // LN-1: the text stays centred on the disc; the lanes reach below it without moving it.
                 Box(Modifier.weight(1f, fill = false).heightIn(min = 132.dp), contentAlignment = Alignment.CenterStart) {
                   Column {
-                    turn.distance?.let { Text(it, style = Orbit.Type.hero.floating(g.text), maxLines = 1) }
+                    // Look C (18, 19): a message's title is smaller than a distance (46, 40 while loading), on up to two lines.
+                    val titleStyle = when {
+                        message == null -> Orbit.Type.hero
+                        spinning -> Orbit.Type.hero.copy(fontSize = 40.sp, lineHeight = 44.sp)
+                        else -> Orbit.Type.hero.copy(fontSize = 46.sp, lineHeight = 50.sp)
+                    }
+                    turn.distance?.let { Text(it, style = titleStyle.floating(g.text), maxLines = if (message == null) 1 else 2, overflow = TextOverflow.Ellipsis,
+                        modifier = if (message != null) Modifier.testTag(TURN_MESSAGE_TITLE_TAG) else Modifier) }
                     turn.road?.let { Text(it, style = Orbit.Type.secondary.floating(g.secondary), maxLines = 2, overflow = TextOverflow.Ellipsis) }
                   }
                 }

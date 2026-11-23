@@ -168,6 +168,8 @@ class OrbitHomeTest {
         override fun open() = Unit
     }
 
+    private var messageSink: ((net.prototux.aare.ui.car.myplay.NavMessage?) -> Unit)? = null
+
     private fun show(night: Boolean = true, trip: Boolean = true, withArt: Boolean = true, speed: SpeedReading? = null): CarUiState {
         val state = PadWalkStates.state(CarLayout.MAP_BEHIND, CarScreen.Dashboard).apply {
             enginePreview = true
@@ -189,7 +191,7 @@ class OrbitHomeTest {
                     }
                 }) {
                     CarShell(state, actions, appContent = { _, m -> Box(m.background(Color.DarkGray)) },
-                        navMap = { _, m -> covers = net.prototux.aare.host.templates.LocalMapCovers.current; themedSeen = LocalOrbitThemed.current; Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
+                        navMap = { _, m -> covers = net.prototux.aare.host.templates.LocalMapCovers.current; themedSeen = LocalOrbitThemed.current; messageSink = net.prototux.aare.ui.car.myplay.LocalNavMessageSink.current; Box(m.background(if (night) Color(0xFF0B1318) else Color(0xFFDCE3E8))) })
                 }
             }
         }
@@ -460,6 +462,30 @@ class OrbitHomeTest {
         rule.onNodeWithText("100%").assertExists()
         rule.onNodeWithText("15%").assertExists()
         rule.onNodeWithText("5°").assertExists()
+    }
+
+    /** Look C (18, 19): the maps app's message takes the turn's place (the spinner while it has no image); then the turn again. */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun aMapsAppsMessageTakesTheTurnsPlace() {
+        show()
+        rule.onNodeWithText("350 m").assertExists()
+        val sink = rule.runOnIdle { messageSink }
+        org.junit.Assert.assertNotNull("ORBIT takes the maps app's messages", sink)
+        rule.runOnIdle { sink!!(net.prototux.aare.ui.car.myplay.NavMessage("Recalculating…", null, null, loading = true)) }
+        rule.waitForIdle()
+        rule.onNodeWithText("Recalculating…").assertExists()
+        rule.onNodeWithTag(OrbitSkin.TURN_SPINNER_TAG, useUnmergedTree = true).assertExists()
+        assertTrue(rule.onAllNodesWithText("350 m").fetchSemanticsNodes().isEmpty())
+        rule.runOnIdle { sink!!(net.prototux.aare.ui.car.myplay.NavMessage("You have arrived", "Work · Harbour Street 21",
+            androidx.compose.ui.graphics.ImageBitmap(16, 16), loading = false)) }
+        rule.waitForIdle()
+        rule.onNodeWithText("You have arrived").assertExists()
+        rule.onNodeWithText("Work · Harbour Street 21").assertExists()
+        rule.onNodeWithTag(OrbitSkin.TURN_MESSAGE_ICON_TAG, useUnmergedTree = true).assertExists()
+        rule.onNodeWithTag(OrbitSkin.TURN_SPINNER_TAG, useUnmergedTree = true).assertDoesNotExist()
+        rule.runOnIdle { sink!!(null) }
+        rule.waitForIdle()
+        rule.onNodeWithText("350 m").assertExists()
     }
 
     @Test fun theBatteryShowsOnlyWhenLowOrCharging() {

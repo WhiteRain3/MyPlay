@@ -84,7 +84,12 @@ data class PadHints(
  */
 data class TurnSlot(val distance: String?, val road: String?, val arrow: Bitmap? = null, val direction: TurnDirection? = null,
     /** The lanes for this turn, when the maps app sends them (MyPlayLanes.kt); empty: none shown. */
-    val lanes: List<LaneHint> = emptyList())
+    val lanes: List<LaneHint> = emptyList(),
+    /**
+     * Look C (18, 19): set when the maps app shows a message in the turn's place (arrived,
+     * recalculating); [distance] is then its title and [road] its text.
+     */
+    val message: NavMessage? = null)
 
 /** The turns a skin can draw an arrow for; anything else gets no arrow (never a guessed one). */
 enum class TurnDirection { STRAIGHT, SLIGHT_LEFT, LEFT, SHARP_LEFT, SLIGHT_RIGHT, RIGHT, SHARP_RIGHT, U_TURN_LEFT, U_TURN_RIGHT;
@@ -284,6 +289,18 @@ interface MyPlaySkin {
     @Composable fun Hub(trip: TripSlot?, modifier: Modifier)
     @Composable fun Song(song: SongSlot, modifier: Modifier)
     @Composable fun Status(modifier: Modifier)
+
+    /**
+     * Look C (18, 19): the skin draws the maps app's navigation messages (arrived, recalculating)
+     * in the turn's place ([TurnSlot.message]); otherwise the app's own card shows them.
+     */
+    val drawsNavMessages: Boolean get() = false
+
+    /**
+     * Look C (23, 24): the colours a hosted maps app's screens take under this skin, from the car
+     * theme's [base] scheme and [night] (the car's day or night); null: the car theme's own.
+     */
+    @Composable fun mapsAppScheme(base: androidx.compose.material3.ColorScheme, night: Boolean): androidx.compose.material3.ColorScheme? = null
 
     /**
      * Look C (35, the owner's option C): on the home the status (the clock, the outside temperature

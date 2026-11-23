@@ -91,10 +91,14 @@ internal fun NavigationTemplateView(t: NavigationTemplate) {
         val estimate = t.destinationTravelEstimate.takeIf { !compact }
         val width = if (narrow) maxWidth else panelWidth()
         val top = Modifier.align(Alignment.TopStart).width(width)
+        // Look C (18, 19): where MyPlay's skin draws the maps app's messages, they go to it instead of a card.
+        val messageSink = net.prototux.aare.ui.car.myplay.LocalNavMessageSink.current
+        if (messageSink != null) MessageToSkin(info, messageSink)
         when (info) {
-            is RoutingInfo -> if (LocalOwnTurnShown.current) LanesToSkin(info)
+            is RoutingInfo -> if (messageSink != null && routingLoading(info)) Unit
+                else if (LocalOwnTurnShown.current) LanesToSkin(info)
                 else if (compact) CompactRoutingCard(info, t.backgroundColor, top.obstructsMap()) else RoutingCard(info, t.backgroundColor, top.obstructsMap())
-            is MessageInfo -> MessageInfoCard(info, t.backgroundColor, top.obstructsMap())
+            is MessageInfo -> if (messageSink == null) MessageInfoCard(info, t.backgroundColor, top.obstructsMap())
         }
         if (estimate != null) {
             // narrow screens: leave room for the map action strip at the bottom end
@@ -186,6 +190,35 @@ private fun CompactRoutingCard(info: RoutingInfo, background: CarColor?, modifie
         }
         val cue = if (!CarText.isNullOrEmpty(step.cue)) step.cue else step.road
         CarTextView(cue, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, color = fg, maxLines = 1)
+    }
+}
+
+/** Whether a routing info is still working out the way (no turn to show yet). */
+private fun routingLoading(info: RoutingInfo): Boolean = info.isLoading || info.currentStep == null
+
+/**
+ * Look C (18, 19): the template's message handed to MyPlay's skin: a MessageInfo (with its image,
+ * or the spinner when it has none), or the spinner while the way is worked out; nothing otherwise.
+ * Taken back when the template goes.
+ */
+@Composable
+private fun MessageToSkin(info: androidx.car.app.navigation.model.NavigationTemplate.NavigationInfo?, sink: (net.prototux.aare.ui.car.myplay.NavMessage?) -> Unit) {
+    val host = LocalTemplateHost.current
+    // Remembered per template info, so the same message (and its icon) is handed over once.
+    val message = remember(info) { when (info) {
+        is MessageInfo -> {
+            val icon = info.image?.let { host.loadIcon(it, 168) }
+            net.prototux.aare.ui.car.myplay.NavMessage(
+                info.title?.toString()?.takeIf { it.isNotBlank() }, info.text?.toString()?.takeIf { it.isNotBlank() },
+                icon, loading = icon == null,
+            )
+        }
+        is RoutingInfo -> if (routingLoading(info)) net.prototux.aare.ui.car.myplay.NavMessage(null, null, null, loading = true) else null
+        else -> null
+    } }
+    androidx.compose.runtime.DisposableEffect(message, sink) {
+        sink(message)
+        onDispose { sink(null) }
     }
 }
 

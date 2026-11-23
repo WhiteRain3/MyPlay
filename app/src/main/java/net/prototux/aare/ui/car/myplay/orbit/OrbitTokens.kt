@@ -167,6 +167,28 @@ object Orbit {
         )
     }
 
+    /**
+     * Look C (23, 24): the maps app's screens under ORBIT in ORBIT's own colours, by night and by
+     * day as the car is: the glass for its cards and rows, the text colours, and Navigate's accent
+     * (darkened by day, at least 4.9:1 on the day glass) for its primary buttons, Go now and rings.
+     * [base] (the car theme's scheme) keeps everything else.
+     */
+    fun appScheme(base: androidx.compose.material3.ColorScheme, night: Boolean, themed: Themed?): androidx.compose.material3.ColorScheme {
+        val g = glass(night, themed)
+        val accent = accent(World.NAVIGATE, night, themed)
+        val on = onAccent(night, themed)
+        val solid = g.glass.copy(alpha = 1f)
+        return base.copy(
+            primary = accent, onPrimary = on, primaryContainer = accent, onPrimaryContainer = on,
+            secondaryContainer = solid, onSecondaryContainer = g.text,
+            background = g.background, onBackground = g.text,
+            surface = solid, onSurface = g.text, surfaceVariant = g.track, onSurfaceVariant = g.secondary,
+            surfaceContainerLowest = solid, surfaceContainerLow = solid, surfaceContainer = solid,
+            surfaceContainerHigh = solid, surfaceContainerHighest = solid,
+            outline = g.edge, outlineVariant = g.edge,
+        )
+    }
+
     /** The focus ring: an accent outline [FOCUS_WIDTH] wide, [FOCUS_GAP] away from the shape, in a dark halo. */
     val FOCUS_WIDTH = 7.dp
     val FOCUS_GAP = 5.dp

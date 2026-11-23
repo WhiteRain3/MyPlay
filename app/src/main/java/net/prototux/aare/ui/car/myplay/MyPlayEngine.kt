@@ -154,9 +154,14 @@ private fun EngineShellThemed(
     // Lanes: the trip's own, else those the maps app's turn card hands over (LocalLaneSink).
     var templateLanes by remember { mutableStateOf<List<LaneHint>>(emptyList()) }
     val laneSink: (List<LaneHint>) -> Unit = remember { { l -> templateLanes = l } }
+    // Look C (18, 19): the maps app's message (arrived, recalculating) takes the turn's place.
+    var navMessage by remember { mutableStateOf<NavMessage?>(null) }
+    val messageSink: (NavMessage?) -> Unit = remember { { m -> navMessage = m } }
+    val shownMessage = navMessage.takeIf { skin.drawsNavMessages }
     val slots = plain.copy(
         trip = plain.trip?.copy(progress = progress),
-        turn = plain.turn?.let { t -> LaneHints.pick(t.lanes, templateLanes).let { if (it == t.lanes) t else t.copy(lanes = it) } },
+        turn = shownMessage?.asTurn()
+            ?: plain.turn?.let { t -> LaneHints.pick(t.lanes, templateLanes).let { if (it == t.lanes) t else t.copy(lanes = it) } },
     )
     // The home's stops and where they are, as the slots report them.
     val boxes = remember { mutableStateMapOf<String, FocusGraph.Box>() }
@@ -812,7 +817,8 @@ private fun EngineShellThemed(
                 CompositionLocalProvider(LocalMapTapIsKnobStop provides false, LocalSkinMapFilter provides tokens.mapFilter,
                     net.prototux.aare.host.templates.LocalOwnTurnShown provides (slots.turn != null),
                     LocalMapAlertSink provides (if (skin.drawsMapAlerts) alertSink else null),
-                    LocalLaneSink provides laneSink) {
+                    LocalLaneSink provides laneSink,
+                    LocalNavMessageSink provides (if (skin.drawsNavMessages) messageSink else null)) {
                     if (nav != null) navMap(nav, Modifier.fillMaxSize()) else Wallpaper(state, Modifier.fillMaxSize())
                 }
                 val edge = Modifier.padding(tokens.edge).widthIn(max = maxWidth * 0.4f)
