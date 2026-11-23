@@ -355,4 +355,156 @@ add({
     hub(t, { trip: { eta: '14:32', left: '24 min', km: '18 km', p: 0.18 } }) + song(t) + actionStrip(t, { focusedIndex: 1 }) + mapStrip(t),
 });
 
+
+// ================================================================= MyPlay's own worlds, in the same look
+// Worlds with no map to keep in view use the whole free area (the same glass, rows and ring as the
+// column); everything else is unchanged: corners, focus ring, primary action focused.
+
+const wide = (t, inner) => card(t, P.FREE.x, P.FREE.y, P.FREE.w, P.FREE.h, inner, 'padding:22px 28px');
+const homeMap = (t, o = {}) => map(t, { car: { x: 640, y: 470 }, seed: 21, dim: 0.35, ...o });
+/** A setting row: title, the value on the right, or a switch. */
+function setting(t, { title, value = null, sw = null, note = null, focused = false }) {
+  const end = sw === null ? `<div style="font-size:23px;font-weight:700;color:${focused ? t.accent : t.secondary};white-space:nowrap">${P.esc(value)}</div>${ic('chevron-right', 26, t.secondary)}`
+    : `<div style="width:76px;height:42px;border-radius:21px;background:${sw ? t.accent : t.track};position:relative;flex:none"><div style="position:absolute;top:5px;left:${sw ? 39 : 5}px;width:32px;height:32px;border-radius:50%;background:${sw ? t.onAccent : t.secondary}"></div></div>`;
+  return `<div style="min-height:76px;flex:none;box-sizing:border-box;border-radius:38px;background:${focused ? t.rowFocus : t.row};padding:8px 22px 8px 30px;display:flex;align-items:center;gap:16px;${focused ? P.focus(t) : ''}">
+    <div style="flex:1;min-width:0"><div style="font-size:26px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${P.esc(title)}</div>${note ? `<div style="font-size:20px;color:${t.secondary}">${P.esc(note)}</div>` : ''}</div>${end}</div>`;
+}
+/** A made-up app icon: a coloured disc with a glyph (no real logos). */
+const appIcon = (icon, colour, size = 96) => `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${colour};display:flex;align-items:center;justify-content:center;flex:none">${ic(icon, Math.round(size * 0.48), '#fff', 2.4)}</div>`;
+const APPS = [
+  ['Waze', 'map-pin', '#2E8BC0'], ['Music', 'music', '#7C4DDB'], ['Podcasts', 'radio', '#C2185B'], ['Audiobooks', 'file-text', '#B7791F'],
+  ['Messages', 'message-circle', '#17734A'], ['Phone', 'phone', '#1F9D63'], ['Phone screen', 'smartphone', '#3A5AA6'], ['Car data', 'gauge', '#8A5A00'],
+  ['Notifications', 'bell', '#5B6478'], ['Weather', 'sun', '#E08A1E'], ['Radio', 'disc-3', '#9C3D54'], ['Settings', 'settings', '#4A5468'],
+];
+const SETTINGS = [
+  { title: 'Colors', value: 'Car’s day/night' },
+  { title: 'Speed on the car screen', value: 'Car, else phone' },
+  { title: 'Speed colour over the limit', value: 'over by 5 km/h' },
+  { title: 'Close panels by themselves', value: 'After 8 s' },
+  { title: 'Shade behind ORBIT’s parts', value: 'Soft' },
+  { title: 'Ice and phone warnings', sw: true },
+  { title: 'Limit sign pulse', sw: false },
+  { title: 'Message notifications', sw: true },
+];
+
+add({
+  slug: 'settings', title: 'Settings world', group: 'more', section: 'Settings',
+  template: 'MyPlay · SettingsWorld (SettingsPage)',
+  fields: 'SettingRow: title · value (a choice’s label) · switch + on · note',
+  desc: 'The same pills as Waze’s lists, across the whole free area: a choice shows its value and a chevron (a push steps it on), a switch shows ORBIT’s accent switch. Six rows fit; the first is focused.',
+  html: (t) => homeMap(t) + corners(t) + wide(t,
+    `<div style="display:flex;align-items:center;gap:16px;height:72px"><div style="width:64px;height:64px;border-radius:50%;background:${t.track};display:flex;align-items:center;justify-content:center">${ic('settings', 32, '#9DB4E8')}</div><div style="font-size:32px;font-weight:800">Settings</div></div>` +
+    SETTINGS.slice(0, 6).map((r, i) => setting(t, { ...r, focused: i === 0 })).join('') + more(t, 4)),
+});
+add({
+  slug: 'settings-switch', title: 'Settings world, on a switch with a note', group: 'more', section: 'Settings',
+  template: 'MyPlay · SettingsWorld (SettingsPage)',
+  fields: 'SettingRow: title · switch + on · note',
+  desc: 'Turned further down: the focus on a switch; a push flips it. A setting’s note (here: it can only be turned on while stopped) goes under its title.',
+  html: (t) => homeMap(t) + corners(t) + wide(t,
+    `<div style="display:flex;align-items:center;gap:16px;height:72px"><div style="width:64px;height:64px;border-radius:50%;background:${t.track};display:flex;align-items:center;justify-content:center">${ic('settings', 32, '#9DB4E8')}</div><div style="font-size:32px;font-weight:800">Settings</div></div>` +
+    `<div style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:20px;color:${t.secondary}">${ic('arrow-up', 20, t.secondary)}4 earlier</div>` +
+    [SETTINGS[4], SETTINGS[5], SETTINGS[6], SETTINGS[7], { title: 'Read messages aloud', sw: false, note: 'Can be turned on only while the car is stopped' }].map((r, i) => setting(t, { ...r, focused: i === 2 })).join('')),
+});
+
+/** A notice banner (CarNotice), at the top between the turn and the clock. */
+function notice(t, { icon, colour, title, text, actions, ring }) {
+  return `<div style="position:absolute;left:470px;top:43px;width:500px;box-sizing:border-box;border-radius:44px;background:${t.glass};border:2px solid ${t.edge};padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;align-items:center;gap:16px">${appIcon(icon, colour, 64)}<div style="flex:1;min-width:0"><div style="font-size:27px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${P.esc(title)}</div><div style="font-size:21px;color:${t.secondary};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${P.esc(text)}</div></div></div>
+    <div style="display:flex;gap:16px;justify-content:flex-end">${actions.map((a, i) => button(t, a, { h: 60, focused: i === ring, filled: i === 0 && a !== 'Dismiss' })).join('')}</div></div>`;
+}
+add({
+  slug: 'notice-message', title: 'A message banner while driving', group: 'more', section: 'Notices and banners',
+  template: 'MyPlay · Notice (CarNotice, message = true)',
+  fields: 'CarNotice: icon · title · text (hidden while driving for a message) · actions (labels) · asked = false → the ring on Dismiss',
+  desc: 'The same glass and buttons as Waze’s alert, at the top of the free area, 500 px wide so it clears the turn’s distance and the clock. Nobody asked for it, so the focus ring is on Dismiss: a stray push never acts. A message’s text is hidden while driving.',
+  html: (t) => map(t, NAV) + turn(t, { lanes: [{ dir: 'u' }, { dir: 'u' }, { dir: 'r', on: true }] }) + clock(t) +
+    hub(t, { trip: { eta: '14:32', left: '24 min', km: '18 km', p: 0.18 } }) + song(t) + mapStrip(t) +
+    notice(t, { icon: 'message-circle', colour: '#17734A', title: 'Sam Taylor', text: 'Message · hidden while driving', actions: ['Read aloud', 'Dismiss'], ring: 1 }),
+});
+add({
+  slug: 'notice-asked', title: 'A banner the driver asked for', group: 'more', section: 'Notices and banners',
+  template: 'MyPlay · Notice (CarNotice, asked = true)',
+  fields: 'CarNotice: icon · title · text · actions · asked = true → the ring on the first action',
+  desc: 'After “Call back” the driver expects to act: the ring is on the first button, so one push calls.',
+  html: (t) => homeMap(t) + corners(t) +
+    notice(t, { icon: 'phone', colour: '#1F9D63', title: 'Call back Alex Morgan?', text: 'Missed call · 13:52', actions: ['Call', 'Dismiss'], ring: 0 }),
+});
+add({
+  slug: 'notifications', title: 'Notifications list', group: 'more', section: 'Notices and banners',
+  template: 'MyPlay · NoticeList (NoticeListPage)',
+  fields: 'NoticeRow: notice (icon, title) · text · time · action (the label a push runs) · a null notice = Clear all',
+  desc: 'The same rows: the notice’s app icon, its title, its text, the time at the end and, when it has one, the action a push runs as a small pill. Clear all closes the list.',
+  html: (t) => homeMap(t) + corners(t) + wide(t,
+    `<div style="display:flex;align-items:center;gap:16px;height:72px"><div style="width:64px;height:64px;border-radius:50%;background:${t.track};display:flex;align-items:center;justify-content:center">${ic('bell', 30, t.accent)}</div><div style="flex:1;font-size:32px;font-weight:800">Notifications</div><div style="font-size:22px;color:${t.secondary}">3</div></div>` +
+    [['message-circle', '#17734A', 'Sam Taylor', 'Message · hidden while driving', '14:02', 'Read aloud'],
+     ['phone', '#1F9D63', 'Alex Morgan', 'Missed call', '13:52', 'Call'],
+     ['sun', '#E08A1E', 'Weather', 'Rain from 16:00', '12:30', null]].map(([ico, col, ti, tx, tm, ac], i) =>
+      `<div style="min-height:88px;flex:none;box-sizing:border-box;border-radius:44px;background:${i === 0 ? t.rowFocus : t.row};padding:10px 22px 10px 14px;display:flex;align-items:center;gap:16px;${i === 0 ? P.focus(t) : ''}">${appIcon(ico, col, 60)}
+        <div style="flex:1;min-width:0"><div style="font-size:27px;font-weight:800">${ti}</div><div style="font-size:21px;color:${t.secondary}">${tx}</div></div>
+        ${ac ? `<div style="padding:8px 18px;border-radius:24px;background:${t.track};font-size:21px;font-weight:800">${ac}</div>` : ''}<div style="font-size:21px;color:${t.secondary};width:64px;text-align:right">${tm}</div></div>`).join('') +
+    '<div style="flex:1"></div>' + `<div style="display:flex;justify-content:center">${button(t, 'Clear all', { h: 64 })}</div>`),
+});
+
+const initials = (t, name, size, colour) => `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${colour};display:flex;align-items:center;justify-content:center;font-size:${size * 0.36}px;font-weight:800;color:${t.onAccent}">${name.split(' ').map((w) => w[0]).join('')}</div>`;
+const CALLS = '#5FD39A';
+add({
+  slug: 'call-ringing', title: 'A call ringing', group: 'more', section: 'Calls',
+  template: 'MyPlay · Ringing (CarCall, ringing = true)',
+  fields: 'CarCall: name · ringing · canEnd → Answer / Decline (CALL_ANSWER, CALL_DECLINE)',
+  desc: 'Centred in the free area: the caller’s initials in Calls’ green ring, the name, and two big discs. Answer holds the focus; Decline is a turn away. While the driver is navigating the turn and the hub stay.',
+  html: (t) => map(t, { ...NAV, dim: 0.35 }) + turn(t) + clock(t) + hub(t, { trip: { eta: '14:32', left: '24 min', km: '18 km', p: 0.18 } }) + song(t) +
+    P.plate(t, 300, 40, 680, 640) + `<div style="position:absolute;left:288px;top:83px;width:704px;display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div style="width:200px;height:200px;border-radius:50%;border:7px solid ${CALLS};box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:${t.glass}">${initials(t, 'Alex Morgan', 160, CALLS)}</div>
+      <div style="font-size:46px;font-weight:800;${P.floatText(t, t.text)}">Alex Morgan</div><div style="font-size:26px;margin-top:-10px;${P.floatText(t, t.secondary)}">Incoming call</div>
+      <div style="display:flex;gap:90px;margin-top:22px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px"><div style="width:112px;height:112px;border-radius:50%;background:${CALLS};display:flex;align-items:center;justify-content:center;${P.focus({ ...t, accent: CALLS })}">${ic('phone', 52, t.onAccent, 2.6)}</div><div style="font-size:24px;font-weight:800;${P.floatText(t, t.text)}">Answer</div></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px"><div style="width:112px;height:112px;border-radius:50%;background:${t.warning};display:flex;align-items:center;justify-content:center;transform:rotate(135deg)">${ic('phone', 52, '#fff', 2.6)}</div><div style="font-size:24px;font-weight:800;${P.floatText(t, t.text)}">Decline</div></div></div></div>`,
+});
+add({
+  slug: 'call-in-call', title: 'In a call', group: 'more', section: 'Calls',
+  template: 'MyPlay · InCall (CarCall, ringing = false)',
+  fields: 'CarCall: name · sinceMs (the time) · canEnd → the red hang-up disc',
+  desc: 'The call shrinks to a pill at the bottom of the free area, like the alert, so the map comes back. The ring is not on it until the driver turns there; hang-up is red and one turn from the call pill.',
+  html: (t) => map(t, NAV) + turn(t, { lanes: [{ dir: 'u' }, { dir: 'u' }, { dir: 'r', on: true }] }) + clock(t) +
+    hub(t, { trip: { eta: '14:32', left: '24 min', km: '18 km', p: 0.18 } }) + song(t) + actionStrip(t) + mapStrip(t) +
+    `<div style="position:absolute;left:400px;top:597px;display:flex;align-items:center;gap:18px">
+      <div style="height:76px;border-radius:38px;background:${t.glass};border:2px solid ${t.edge};display:flex;align-items:center;gap:14px;padding:0 28px 0 8px">${initials(t, 'Alex Morgan', 60, CALLS)}<div style="font-size:26px;font-weight:800">Alex Morgan · 3:12</div></div>
+      <div style="width:76px;height:76px;border-radius:50%;background:${t.warning};display:flex;align-items:center;justify-content:center;transform:rotate(135deg)">${ic('phone', 36, '#fff', 2.6)}</div></div>`,
+});
+add({
+  slug: 'calls-world', title: 'Calls world', group: 'more', section: 'Calls',
+  template: 'MyPlay · PhoneWorld (PhonePage)',
+  fields: 'PhoneRow: title · subtitle · kind (RECENT, MISSED, FAVOURITE, PHONE_APP — last) · loading · permitted',
+  desc: 'Recent calls, then favourites, then the phone app, as the same pills. A missed call is in the warning red; the first row is focused so one push calls back.',
+  html: (t) => homeMap(t) + corners(t) + wide(t,
+    `<div style="display:flex;align-items:center;gap:16px;height:72px"><div style="width:64px;height:64px;border-radius:50%;background:${t.track};display:flex;align-items:center;justify-content:center">${ic('phone', 30, CALLS)}</div><div style="font-size:32px;font-weight:800">Calls</div></div>` +
+    [['Alex Morgan', 'Missed · 13:52', 'missed'], ['Sam Taylor', 'Mobile · yesterday', 'history'], ['Home', 'Favourite', 'heart'], ['Dr. Patel Dental Care', 'Yesterday', 'history'], ['Phone', 'Keypad and all contacts', 'smartphone']].map(([ti, sub, k], i) => {
+      const red = k === 'missed';
+      return `<div style="min-height:84px;flex:none;box-sizing:border-box;border-radius:42px;background:${i === 0 ? t.rowFocus : t.row};padding:10px 26px 10px 14px;display:flex;align-items:center;gap:16px;${i === 0 ? P.focus(t) : ''}">
+        <div style="width:56px;height:56px;border-radius:50%;background:${t.track};display:flex;align-items:center;justify-content:center">${ic(red ? 'phone' : k, 28, red ? t.warning : k === 'heart' ? CALLS : t.secondary)}</div>
+        <div style="flex:1"><div style="font-size:28px;font-weight:800;color:${red ? t.warning : t.text}">${ti}</div><div style="font-size:21px;color:${t.secondary}">${sub}</div></div>${k === 'smartphone' ? ic('chevron-right', 28, t.secondary) : ''}</div>`;
+    }).join('')),
+});
+add({
+  slug: 'apps-grid', title: 'Apps grid', group: 'more', section: 'Apps',
+  template: 'MyPlay · AppsWorld (CarAppEntry list, page / pages)',
+  fields: 'CarAppEntry: label · icon · kind · ringed tile · page / pages',
+  desc: 'Round icons in a 4 × 2 grid (8 per page), the label under each; the focused app gets the ring round its icon and a bolder label. The page dots say how many pages there are; turning past the last tile goes to the next page.',
+  html: (t) => homeMap(t) + corners(t) + wide(t,
+    `<div style="display:flex;align-items:center;gap:16px;height:72px"><div style="width:64px;height:64px;border-radius:50%;background:${t.track};display:flex;align-items:center;justify-content:center">${ic('layout-grid', 30, '#FF8FB1')}</div><div style="font-size:32px;font-weight:800">Apps</div></div>` +
+    `<div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);align-content:center;row-gap:34px">${APPS.slice(0, 8).map(([l, i, c], k) => `<div style="display:flex;flex-direction:column;align-items:center;gap:14px"><div style="border-radius:50%;${k === 0 ? P.focus(t) : ''}">${appIcon(i, c, 112)}</div><div style="font-size:24px;font-weight:${k === 0 ? 800 : 600};color:${k === 0 ? t.text : t.secondary}">${l}</div></div>`).join('')}</div>` +
+    `<div style="display:flex;justify-content:center;gap:12px">${[1, 0].map((on) => `<div style="width:${on ? 30 : 12}px;height:12px;border-radius:6px;background:${on ? t.accent : t.track}"></div>`).join('')}</div>`),
+});
+add({
+  slug: 'phone-apps', title: 'Phone apps list', group: 'more', section: 'Apps',
+  template: 'MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)',
+  fields: 'CarAppEntry: label · icon · kind',
+  desc: 'The phone’s own apps that the owner allowed on the car (Apps › Phone apps on the phone), as rows rather than tiles: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the data is the same CarAppEntry list as the grid.)',
+  html: (t) => homeMap(t) + corners(t) + wide(t,
+    `<div style="display:flex;align-items:center;gap:16px;height:72px">${disc(t, { icon: 'arrow-left', size: 64 })}<div style="font-size:32px;font-weight:800">Phone apps</div></div>` +
+    [['Weather', 'sun', '#E08A1E'], ['Parking', 'car', '#3A5AA6'], ['Fuel prices', 'gauge', '#8A5A00'], ['Calendar', 'timer', '#C2185B'], ['Notes', 'file-text', '#5B6478']].map(([l, i, c], k) =>
+      `<div style="min-height:84px;flex:none;box-sizing:border-box;border-radius:42px;background:${k === 0 ? t.rowFocus : t.row};padding:10px 26px 10px 14px;display:flex;align-items:center;gap:18px;${k === 0 ? P.focus(t) : ''}">${appIcon(i, c, 60)}<div style="flex:1;font-size:28px;font-weight:800">${l}</div>${ic('smartphone', 26, t.secondary)}</div>`).join('') + more(t, 3)),
+});
+
 module.exports = { SCREENS, NIGHT, DAY };

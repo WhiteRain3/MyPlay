@@ -1,6 +1,6 @@
-# Waze screens in ORBIT
+# Waze screens and MyPlay's worlds in ORBIT
 
-Design proposals for every Waze screen the owner meets in the Audi, drawn in ORBIT's language (glass, rings, Navigate's green, the focus ring) at the MMI's 1280 × 720. Waze is a car-app-library app: it sends templates, MyPlay's host (`host/templates`) draws everything except Waze's map surface. These PNGs show how the host's renderers could draw those templates under ORBIT.
+Design proposals for every Waze screen the owner meets in the Audi, drawn in ORBIT's language (glass, rings, Navigate's green, the focus ring) at the MMI's 1280 × 720. Waze is a car-app-library app: it sends templates, MyPlay's host (`host/templates`) draws everything except Waze's map surface. These PNGs show how the host's renderers could draw those templates under ORBIT. The owner asked for **one look everywhere**, so MyPlay's own Settings, notices, calls and apps screens (screens 25–34) are drawn in the same style: the same glass, pill rows, buttons, focus ring and corners.
 
 ![All screens](overview.png)
 
@@ -46,6 +46,40 @@ Design proposals for every Waze screen the owner meets in the Audi, drawn in ORB
 | [23-route-preview-day](23-route-preview-day.png) | Route preview by day | `RoutePreviewNavigationTemplate` | as Route preview | ORBIT’s day glass and darkened accent (each at least 4.9:1); the same layout. |
 | [24-navigating-day](24-navigating-day.png) | Navigating by day | `NavigationTemplate` | as Navigating | The day glass over a day map. |
 
+## MyPlay's own worlds, in the same look
+
+Worlds that have no map to keep in view (Settings, Notifications, Calls, Apps) use the whole free area (x 288–992) in the same glass card as Waze's column. Banners and calls over the map use the alert's pill and buttons. These are MyPlay's own screens, not templates: the fields are the skin's data classes (`ui/car/myplay/MyPlaySkin.kt`, `ui/car/CarModel.kt`), and the setting titles are the real ones from `EngineSettings.kt`.
+
+### Settings
+
+| PNG | Screen | Drawn by | Fields drawn | Notes |
+|---|---|---|---|---|
+| [25-settings](25-settings.png) | Settings world | `MyPlay · SettingsWorld (SettingsPage)` | SettingRow: title · value (a choice’s label) · switch + on · note | The same pills as Waze’s lists, across the whole free area: a choice shows its value and a chevron (a push steps it on), a switch shows ORBIT’s accent switch. Six rows fit; the first is focused. |
+| [26-settings-switch](26-settings-switch.png) | Settings world, on a switch with a note | `MyPlay · SettingsWorld (SettingsPage)` | SettingRow: title · switch + on · note | Turned further down: the focus on a switch; a push flips it. A setting’s note (here: it can only be turned on while stopped) goes under its title. |
+
+### Notices and banners
+
+| PNG | Screen | Drawn by | Fields drawn | Notes |
+|---|---|---|---|---|
+| [27-notice-message](27-notice-message.png) | A message banner while driving | `MyPlay · Notice (CarNotice, message = true)` | CarNotice: icon · title · text (hidden while driving for a message) · actions (labels) · asked = false → the ring on Dismiss | The same glass and buttons as Waze’s alert, at the top of the free area, 500 px wide so it clears the turn’s distance and the clock. Nobody asked for it, so the focus ring is on Dismiss: a stray push never acts. A message’s text is hidden while driving. |
+| [28-notice-asked](28-notice-asked.png) | A banner the driver asked for | `MyPlay · Notice (CarNotice, asked = true)` | CarNotice: icon · title · text · actions · asked = true → the ring on the first action | After “Call back” the driver expects to act: the ring is on the first button, so one push calls. |
+| [29-notifications](29-notifications.png) | Notifications list | `MyPlay · NoticeList (NoticeListPage)` | NoticeRow: notice (icon, title) · text · time · action (the label a push runs) · a null notice = Clear all | The same rows: the notice’s app icon, its title, its text, the time at the end and, when it has one, the action a push runs as a small pill. Clear all closes the list. |
+
+### Calls
+
+| PNG | Screen | Drawn by | Fields drawn | Notes |
+|---|---|---|---|---|
+| [30-call-ringing](30-call-ringing.png) | A call ringing | `MyPlay · Ringing (CarCall, ringing = true)` | CarCall: name · ringing · canEnd → Answer / Decline (CALL_ANSWER, CALL_DECLINE) | Centred in the free area: the caller’s initials in Calls’ green ring, the name, and two big discs. Answer holds the focus; Decline is a turn away. While the driver is navigating the turn and the hub stay. |
+| [31-call-in-call](31-call-in-call.png) | In a call | `MyPlay · InCall (CarCall, ringing = false)` | CarCall: name · sinceMs (the time) · canEnd → the red hang-up disc | The call shrinks to a pill at the bottom of the free area, like the alert, so the map comes back. The ring is not on it until the driver turns there; hang-up is red and one turn from the call pill. |
+| [32-calls-world](32-calls-world.png) | Calls world | `MyPlay · PhoneWorld (PhonePage)` | PhoneRow: title · subtitle · kind (RECENT, MISSED, FAVOURITE, PHONE_APP — last) · loading · permitted | Recent calls, then favourites, then the phone app, as the same pills. A missed call is in the warning red; the first row is focused so one push calls back. |
+
+### Apps
+
+| PNG | Screen | Drawn by | Fields drawn | Notes |
+|---|---|---|---|---|
+| [33-apps-grid](33-apps-grid.png) | Apps grid | `MyPlay · AppsWorld (CarAppEntry list, page / pages)` | CarAppEntry: label · icon · kind · ringed tile · page / pages | Round icons in a 4 × 2 grid (8 per page), the label under each; the focused app gets the ring round its icon and a bolder label. The page dots say how many pages there are; turning past the last tile goes to the next page. |
+| [34-phone-apps](34-phone-apps.png) | Phone apps list | `MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)` | CarAppEntry: label · icon · kind | The phone’s own apps that the owner allowed on the car (Apps › Phone apps on the phone), as rows rather than tiles: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the data is the same CarAppEntry list as the grid.) |
+
 ## Placement, in the car's pixels
 
 | Part | Where | Size |
@@ -58,6 +92,10 @@ Design proposals for every Waze screen the owner meets in the Audi, drawn in ORB
 | Alert | bottom of the free area, x 288–908, y 556 | pill; icon in an 84 ring that counts down `durationMillis` |
 | Message (MessageTemplate) | centred, x 338–942, y 103–617 | 604 × 514 |
 | Letter ring (parked search) | centred in the free area | 620 ring |
+| World panel (Settings, Notifications, Calls, Apps) | the whole free area, x 288–992, y 43–677 | 704 × 634; rows 76–88 high |
+| Notice banner | top of the free area, x 470–970 | 500 wide, clear of the turn's distance and the clock |
+| Ringing call | centred in the free area | caller ring 200; Answer / Decline discs 112 |
+| In-call pill | bottom of the free area | pill 76 high + red hang-up disc 76 |
 
 ## What the host would change
 
@@ -71,6 +109,7 @@ Design proposals for every Waze screen the owner meets in the Audi, drawn in ORB
 
 ## Open questions for the owner
 
+- Phone apps list: drawn from the same `CarAppEntry` list as the grid (phone apps allowed on the car, opened on the mirrored screen). Is that the list meant?
 - The letter ring is new: is turning through 29 keys quick enough, or should the d-pad jump by a quarter of the ring?
 - Should the column sit on the driver's side (left, as drawn) in every case, or move right when Waze's map needs the left?
 

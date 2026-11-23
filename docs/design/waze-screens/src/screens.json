@@ -190,5 +190,85 @@
   "template": "NavigationTemplate",
   "fields": "as Navigating",
   "desc": "The day glass over a day map."
+ },
+ {
+  "file": "25-settings",
+  "title": "Settings world",
+  "group": "more",
+  "template": "MyPlay · SettingsWorld (SettingsPage)",
+  "fields": "SettingRow: title · value (a choice’s label) · switch + on · note",
+  "desc": "The same pills as Waze’s lists, across the whole free area: a choice shows its value and a chevron (a push steps it on), a switch shows ORBIT’s accent switch. Six rows fit; the first is focused."
+ },
+ {
+  "file": "26-settings-switch",
+  "title": "Settings world, on a switch with a note",
+  "group": "more",
+  "template": "MyPlay · SettingsWorld (SettingsPage)",
+  "fields": "SettingRow: title · switch + on · note",
+  "desc": "Turned further down: the focus on a switch; a push flips it. A setting’s note (here: it can only be turned on while stopped) goes under its title."
+ },
+ {
+  "file": "27-notice-message",
+  "title": "A message banner while driving",
+  "group": "more",
+  "template": "MyPlay · Notice (CarNotice, message = true)",
+  "fields": "CarNotice: icon · title · text (hidden while driving for a message) · actions (labels) · asked = false → the ring on Dismiss",
+  "desc": "The same glass and buttons as Waze’s alert, at the top of the free area, 500 px wide so it clears the turn’s distance and the clock. Nobody asked for it, so the focus ring is on Dismiss: a stray push never acts. A message’s text is hidden while driving."
+ },
+ {
+  "file": "28-notice-asked",
+  "title": "A banner the driver asked for",
+  "group": "more",
+  "template": "MyPlay · Notice (CarNotice, asked = true)",
+  "fields": "CarNotice: icon · title · text · actions · asked = true → the ring on the first action",
+  "desc": "After “Call back” the driver expects to act: the ring is on the first button, so one push calls."
+ },
+ {
+  "file": "29-notifications",
+  "title": "Notifications list",
+  "group": "more",
+  "template": "MyPlay · NoticeList (NoticeListPage)",
+  "fields": "NoticeRow: notice (icon, title) · text · time · action (the label a push runs) · a null notice = Clear all",
+  "desc": "The same rows: the notice’s app icon, its title, its text, the time at the end and, when it has one, the action a push runs as a small pill. Clear all closes the list."
+ },
+ {
+  "file": "30-call-ringing",
+  "title": "A call ringing",
+  "group": "more",
+  "template": "MyPlay · Ringing (CarCall, ringing = true)",
+  "fields": "CarCall: name · ringing · canEnd → Answer / Decline (CALL_ANSWER, CALL_DECLINE)",
+  "desc": "Centred in the free area: the caller’s initials in Calls’ green ring, the name, and two big discs. Answer holds the focus; Decline is a turn away. While the driver is navigating the turn and the hub stay."
+ },
+ {
+  "file": "31-call-in-call",
+  "title": "In a call",
+  "group": "more",
+  "template": "MyPlay · InCall (CarCall, ringing = false)",
+  "fields": "CarCall: name · sinceMs (the time) · canEnd → the red hang-up disc",
+  "desc": "The call shrinks to a pill at the bottom of the free area, like the alert, so the map comes back. The ring is not on it until the driver turns there; hang-up is red and one turn from the call pill."
+ },
+ {
+  "file": "32-calls-world",
+  "title": "Calls world",
+  "group": "more",
+  "template": "MyPlay · PhoneWorld (PhonePage)",
+  "fields": "PhoneRow: title · subtitle · kind (RECENT, MISSED, FAVOURITE, PHONE_APP — last) · loading · permitted",
+  "desc": "Recent calls, then favourites, then the phone app, as the same pills. A missed call is in the warning red; the first row is focused so one push calls back."
+ },
+ {
+  "file": "33-apps-grid",
+  "title": "Apps grid",
+  "group": "more",
+  "template": "MyPlay · AppsWorld (CarAppEntry list, page / pages)",
+  "fields": "CarAppEntry: label · icon · kind · ringed tile · page / pages",
+  "desc": "Round icons in a 4 × 2 grid (8 per page), the label under each; the focused app gets the ring round its icon and a bolder label. The page dots say how many pages there are; turning past the last tile goes to the next page."
+ },
+ {
+  "file": "34-phone-apps",
+  "title": "Phone apps list",
+  "group": "more",
+  "template": "MyPlay · AppsWorld, phone apps (CarAppEntry, kind PHONE_SCREEN / STANDALONE)",
+  "fields": "CarAppEntry: label · icon · kind",
+  "desc": "The phone’s own apps that the owner allowed on the car (Apps › Phone apps on the phone), as rows rather than tiles: there can be many, and a name reads quicker than an icon. Each opens on the phone’s mirrored screen. (Assumed: the data is the same CarAppEntry list as the grid.)"
  }
 ]
