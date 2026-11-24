@@ -250,8 +250,8 @@ class OrbitHomeTest {
         rule.onNodeWithText("350 m").assertExists()
         rule.onNodeWithText("Hauptstraße").assertExists()
         rule.onNodeWithText("18 min", substring = true).assertExists()
-        // Look C (35): the song's name is the ring's description (the corner draws no text for it).
-        rule.onNode(androidx.compose.ui.test.hasContentDescription(PadWalkStates.SONG_TITLE, substring = true), useUnmergedTree = true).assertExists()
+        // SC-2: the song's title beside the music ring again.
+        rule.onNodeWithText(PadWalkStates.SONG_TITLE).assertExists()
         val engine = rule.onNodeWithTag(ENGINE_TAG)
         rule.onNodeWithTag(STOP_HUB).assertIsSelected()
         engine.performKeyInput { pressKey(Key.Tab) }
@@ -371,6 +371,26 @@ class OrbitHomeTest {
         // In the bottom right, nothing of it in the top half.
         val corner = rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
         assertTrue("corner $corner", corner.top > 360f && corner.right > 1200f)
+    }
+
+    /**
+     * SC-2 (the owner): the title and artist beside the ring, left of the corner (clear of the badge
+     * and the pills), not counted in what covers the map; gone when nothing plays.
+     */
+    @Test @Config(qualifiers = "w1280dp-h720dp-land-mdpi")
+    fun theSongsTitleAndArtistAreBesideTheRing() {
+        val state = show()
+        rule.onNodeWithText(PadWalkStates.SONG_TITLE).assertExists()
+        rule.onNodeWithText("The Synthwaves").assertExists()
+        val label = rule.onNodeWithTag(OrbitSkin.SONG_LABEL_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val corner = rule.onNodeWithTag(OrbitSkin.STATUS_CORNER_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        val ring = rule.onNodeWithTag(OrbitSkin.SONG_RING_TAG, useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
+        assertTrue("label $label corner $corner", label.right <= corner.left + 0.5f)
+        assertTrue("label $label ring $ring", label.center.y > ring.top && label.center.y < ring.bottom)
+        rule.runOnIdle { state.nowPlaying = null }
+        rule.waitForIdle()
+        rule.onNodeWithTag(OrbitSkin.SONG_LABEL_TAG, useUnmergedTree = true).assertDoesNotExist()
+        assertTrue(rule.onAllNodesWithText(PadWalkStates.SONG_TITLE).fetchSemanticsNodes().isEmpty())
     }
 
     /** Look C (35-status-c-nomusic): nothing playing: the empty ring with the time in its middle, in the same place and size. */

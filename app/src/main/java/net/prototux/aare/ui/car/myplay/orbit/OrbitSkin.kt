@@ -790,9 +790,21 @@ object OrbitSkin : MyPlaySkin {
         Scaled {
             val g = glass()
             val musicColour = Orbit.accent(World.MUSIC, LocalSkinTokens.current.night)
+            Row(verticalAlignment = Alignment.Top) {
+            // SC-2 (the owner): the song's title and artist beside the corner, on two lines, right-aligned
+            // and cut with "…": text over the map (as before look C), not part of what covers it, so the
+            // map's free area does not change; left of the corner, so clear of the badge and the pills.
+            Box(Modifier.weight(1f, fill = false).widthIn(max = SONG_LABEL_MAX).height(CORNER_H).padding(top = 26.dp, end = 10.dp),
+                contentAlignment = Alignment.CenterEnd) {
+                Column(Modifier.testTag(SONG_LABEL_TAG), horizontalAlignment = Alignment.End) {
+                    if (song.title.isNotBlank()) Text(song.title, style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 30.sp).floating(g.text),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
+                    if (song.subtitle.isNotBlank()) Text(song.subtitle, style = TextStyle(fontSize = 22.sp, lineHeight = 26.sp).floating(g.secondary),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.End)
+                }
+            }
             StatusCorner(badge = true, Modifier.carPart(CarPart.OrbitSong)) {
-                SongRing(song, musicColour, g.track, Modifier.testTag(SONG_RING_TAG).orbitFocus(LocalStopRinged.current, musicColour, g.halo)
-                    .semantics { contentDescription = listOf(song.title, song.subtitle).filter { it.isNotBlank() }.joinToString(", ") }) {
+                SongRing(song, musicColour, g.track, Modifier.testTag(SONG_RING_TAG).orbitFocus(LocalStopRinged.current, musicColour, g.halo)) {
                     val art = song.art
                     if (art != null) {
                         val image = remember(art) { art.asImageBitmap() }
@@ -805,8 +817,12 @@ object OrbitSkin : MyPlaySkin {
                     }
                 }
             }
+            }
         }
     }
+
+    /** SC-2: the widest the song's label beside the corner gets (it is cut with "…" past it). */
+    private val SONG_LABEL_MAX = 280.dp
 
     /** Look C (35, 35-status-c-nomusic): nothing playing: the empty ring with the time in its middle, the pills beside it. */
     @Composable
@@ -1834,6 +1850,8 @@ object OrbitSkin : MyPlaySkin {
     const val STATUS_CORNER_TAG = "orbit_status_corner"
     /** Look C (35): the time's badge on the song's ring. */
     const val CLOCK_BADGE_TAG = "orbit_clock_badge"
+    /** SC-2: the song's title and artist beside the corner. */
+    const val SONG_LABEL_TAG = "orbit_song_label"
     /** SC-3: the temperature's pill. */
     const val TEMP_PILL_TAG = "orbit_temp_pill"
     /** Look C (35): the empty ring with nothing playing. */

@@ -157,12 +157,18 @@ val LocalCarTheme = staticCompositionLocalOf { AareTheme }
  */
 @Composable
 fun CarTheme(night: Boolean, theme: CarThemeSpec = LocalCarTheme.current, content: @Composable () -> Unit) {
+    val scheme = if (night) theme.night else theme.day
     MaterialTheme(
-        colorScheme = if (night) theme.night else theme.day,
+        colorScheme = scheme,
         typography = theme.typography,
         shapes = theme.shapes,
     ) {
         CompositionLocalProvider(
+            // MyPlay (the owner: Poweramp's titles black and unreadable, whatever the theme): text and
+            // icons drawn with no colour of their own take the theme's text colour, not Compose's
+            // default black. Only a Material Surface set it before, and the car screens (a media app's
+            // lists, its now playing, the queue) draw on plain backgrounds.
+            androidx.compose.material3.LocalContentColor provides scheme.onBackground,
             LocalCarTheme provides theme,
             LocalCarColors provides if (night) theme.nightColors else theme.dayColors,
             LocalCarDimens provides theme.dimens.scaled(LocalCarControlScale.current),
