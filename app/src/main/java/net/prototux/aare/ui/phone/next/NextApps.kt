@@ -82,6 +82,9 @@ import net.prototux.aare.ui.phone.swappedVideoApp
 import net.prototux.aare.host.myplayVideoApp
 import net.prototux.aare.ui.phone.youTubeAppOnCar
 
+/** VA-16: the Video app swap runs here, not on the page, so it finishes even if the page is left. */
+private val videoSwapScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
+
 /** Everything the car's launcher lists, as it groups it (the same rules as CarRuntime.applyApps). */
 private class Lists(val carApps: List<CarAppInfo>, val media: List<PhoneApp>, val messaging: List<PhoneApp>)
 
@@ -330,14 +333,14 @@ fun NextPhoneAppsPage() {
     val apps by produceState<List<Triple<String, String, Bitmap?>>?>(null) { value = withContext(Dispatchers.IO) { launchable(ctx) } }
     var adding by rememberSaveable { mutableStateOf(false) }
     var askYouTube by rememberSaveable { mutableStateOf(false) }
-    val swapScope = androidx.compose.runtime.rememberCoroutineScope()
     // VA-14: a new Video app takes the old one's place on the car. Only the app that was the video app
     // is swapped (put on by its row or by the once-only add); other phone apps are left alone.
     fun swapVideoApp(choice: String?) {
         val old = youTubePkg
         settings.myplayVideoApp = choice
-        swapScope.launch {
-            val now = withContext(Dispatchers.IO) { runCatching { net.prototux.aare.host.VideoApps.youTubeApp(ctx, settings) }.getOrNull() }
+        // VA-16: on a scope that outlives the page, so leaving it at once still swaps.
+        videoSwapScope.launch {
+            val now = runCatching { net.prototux.aare.host.VideoApps.youTubeApp(ctx.applicationContext, settings) }.getOrNull()
             settings.standaloneAppPackages = swappedVideoApp(settings.standaloneAppPackages, old, now)
         }
     }
