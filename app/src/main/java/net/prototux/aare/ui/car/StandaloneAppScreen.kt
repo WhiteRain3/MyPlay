@@ -75,13 +75,16 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
         }
     }
 
-    // VA-5: a video link for this app ("Play on car", "Open on car") opens in it once it runs (parked).
+    // VA-5: a video link for this app ("Play on car", "Open on car") opens in it once it runs.
+    // VA-9: only parked: while driving it waits (a kept app runs even then), so nothing starts playing.
     val link = runtime.ui.videoLink
-    LaunchedEffect(link, started) {
-        if (link == null || link.packageName != packageName) return@LaunchedEffect
-        if (link.link == null) { runtime.ui.videoLink = null; return@LaunchedEffect }
-        if (!started) return@LaunchedEffect
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { launcher.open(packageName, link.link) }
+    LaunchedEffect(link, started, driving) {
+        if (!VideoLinkGate.opensNow(link, packageName, started, driving)) {
+            if (link != null && link.packageName == packageName && link.link == null) runtime.ui.videoLink = null
+            return@LaunchedEffect
+        }
+        val uri = link?.link ?: return@LaunchedEffect
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { launcher.open(packageName, uri) }
         if (runtime.ui.videoLink === link) runtime.ui.videoLink = null
     }
 
@@ -165,3 +168,9 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
 
 /** VA-7: how long the "not an Android Auto app" line stays over a hosted app once it runs. */
 internal const val BANNER_MS = 3_000L
+
+/** VA-5, VA-9: when a waiting video link opens in the hosted app: its own, a link to open, the app running, and parked. */
+internal object VideoLinkGate {
+    fun opensNow(link: net.prototux.aare.host.CarVideo.Link?, packageName: String, started: Boolean, driving: Boolean): Boolean =
+        link != null && link.packageName == packageName && link.link != null && started && !driving
+}
