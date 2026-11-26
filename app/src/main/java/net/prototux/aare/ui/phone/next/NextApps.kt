@@ -77,6 +77,7 @@ import net.prototux.aare.launch.AppLauncher
 import net.prototux.aare.car.myplayMirrorTurns
 import net.prototux.aare.ui.phone.withMirrorTurn
 import net.prototux.aare.ui.phone.withYouTubeApp
+import net.prototux.aare.host.myplayVideoApp
 import net.prototux.aare.ui.phone.youTubeAppOnCar
 
 /** Everything the car's launcher lists, as it groups it (the same rules as CarRuntime.applyApps). */
@@ -319,7 +320,11 @@ fun NextPhoneAppsPage() {
     val resumed = rememberResumeTicks()
     val shizuku = rememberShizukuStep()
     val available = remember(resumed, shizuku) { runCatching { AppLauncher.available(ctx) }.getOrDefault(false) }
-    val youTube = remember { runCatching { ctx.packageManager.getApplicationInfo(CarRuntime.YOUTUBE_PACKAGE, 0) }.isSuccess }
+    // VA-4: the YouTube app is the owner's "Video app", or the one MyPlay finds (a patched build first).
+    val videoChoice by rememberSetting("myplay_video_app") { myplayVideoApp }
+    val youTubePkg by produceState<String?>(null, videoChoice, resumed) {
+        value = withContext(Dispatchers.IO) { runCatching { net.prototux.aare.host.VideoApps.youTubeApp(ctx, settings) }.getOrNull() }
+    }
     val apps by produceState<List<Triple<String, String, Bitmap?>>?>(null) { value = withContext(Dispatchers.IO) { launchable(ctx) } }
     var adding by rememberSaveable { mutableStateOf(false) }
     var askYouTube by rememberSaveable { mutableStateOf(false) }
@@ -366,15 +371,28 @@ fun NextPhoneAppsPage() {
                 NextCard { NextSwitchRow(stringResource(R.string.next_apps_no_sleep_label), awake, { settings.standaloneKeepScreenAwake = it }, Icons.Outlined.LightMode) }
             }
         }
-        if (youTube) {
-            item { NextSection(stringResource(R.string.next_apps_youtube_app_section_label)) }
-            item {
-                val onCar = youTubeAppOnCar(enabled, allowed)
-                NextCard {
+        item { NextSection(stringResource(R.string.next_apps_youtube_app_section_label)) }
+        item {
+            val list = apps.orEmpty()
+            val name: (String?) -> String? = { p -> p?.let { q -> list.firstOrNull { it.first == q }?.second ?: q } }
+            val auto = if (videoChoice == null) name(youTubePkg) else null
+            NextCard {
+                // VA-4: which app counts as YouTube (a patched build such as Morphe); Automatic lets MyPlay find it.
+                NextPickerRow(
+                    stringResource(R.string.next_apps_video_app_label),
+                    listOf(Choice("", auto?.let { stringResource(R.string.next_apps_video_auto_named_label, it) } ?: stringResource(R.string.next_apps_video_auto_label))) +
+                        list.map { (p, label, _) -> Choice(p, label) },
+                    videoChoice.orEmpty(), { settings.myplayVideoApp = it.ifEmpty { null } }, default = "",
+                    icon = Icons.Outlined.Tv, info = stringResource(R.string.next_apps_video_app_info),
+                )
+                val pkg = youTubePkg
+                if (pkg != null) {
+                    NextDivider()
+                    val onCar = youTubeAppOnCar(enabled, allowed, pkg)
                     NextRow(stringResource(R.string.next_apps_youtube_app_label), note = RowNote.Help(stringResource(R.string.next_apps_youtube_parked_help)),
                         lead = { BuiltInIcon(Icons.Outlined.Tv) }) {
                         if (onCar) NextButton(stringResource(R.string.next_apps_take_off_label), {
-                            settings.standaloneAppPackages = allowed - CarRuntime.YOUTUBE_PACKAGE
+                            settings.standaloneAppPackages = allowed - pkg
                         }, kind = ButtonKind.GHOST, small = true)
                         else NextButton(stringResource(R.string.next_apps_put_on_label), { askYouTube = true }, kind = ButtonKind.GHOST, small = true, enabled = available)
                     }
@@ -388,7 +406,7 @@ fun NextPhoneAppsPage() {
         onConfirm = {
             askYouTube = false
             settings.standaloneApps = true
-            settings.standaloneAppPackages = withYouTubeApp(allowed)
+            youTubePkg?.let { settings.standaloneAppPackages = withYouTubeApp(allowed, it) }
         }, onDismiss = { askYouTube = false },
     )
     if (adding) NextSheet(stringResource(R.string.next_apps_add_label), { adding = false }) {

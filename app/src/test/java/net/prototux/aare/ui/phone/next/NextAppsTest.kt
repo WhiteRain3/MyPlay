@@ -109,6 +109,16 @@ class NextAppsTest {
         } finally { suPresentCheck = { false }; rootDeclined = false; rootRefusedAtPrompt = false }
     }
 
+    @Test fun videoAppAutomaticClearsTheChoice() {
+        // VA-4: Automatic stores nothing (MyPlay finds the YouTube app, a patched build first).
+        settings.prefs.edit().putString("myplay_video_app", "app.morphe.android.youtube").commit()
+        rule.setContent { NextPhoneAppsPage() }
+        rule.onNodeWithText("Video app").performClick()
+        rule.onNodeWithText("Automatic").performClick()
+        rule.waitForIdle()
+        assertEquals(null, settings.prefs.getString("myplay_video_app", null))
+    }
+
     @Test fun shizukuSteps() {
         assertEquals(ShizukuStep.INSTALL, shizukuStep(installed = false, running = false, allowed = false))
         assertEquals(ShizukuStep.START, shizukuStep(installed = true, running = false, allowed = false))

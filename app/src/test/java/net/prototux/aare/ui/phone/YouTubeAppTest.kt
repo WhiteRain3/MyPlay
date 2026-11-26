@@ -18,5 +18,9 @@ class YouTubeAppTest {
         assertTrue(youTubeAppOnCar(true, setOf(CarRuntime.YOUTUBE_PACKAGE)))
         assertFalse(youTubeAppOnCar(false, setOf(CarRuntime.YOUTUBE_PACKAGE)))
         assertFalse(youTubeAppOnCar(true, emptySet()))
+        // VA-4: a patched build is the one added and checked.
+        assertEquals(setOf("app.morphe.android.youtube"), withYouTubeApp(emptySet(), "app.morphe.android.youtube"))
+        assertTrue(youTubeAppOnCar(true, setOf("app.morphe.android.youtube"), "app.morphe.android.youtube"))
+        assertFalse(youTubeAppOnCar(true, setOf(CarRuntime.YOUTUBE_PACKAGE), "app.morphe.android.youtube"))
     }
 }

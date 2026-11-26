@@ -720,4 +720,8 @@
     <string name="next_speed_fill_help" translatable="false">Usual limits where the map has none, shown as a guess</string>
     <string name="next_speed_fill_info" translatable="false">Where the map has no limit, show Lithuania\'s usual one for the road (50 in towns, 90 outside, 70 on gravel), marked as a guess.</string>
     <string name="next_home_screenshot_help" translatable="false">Saved to Pictures › MyPlay on this phone</string>
+    <string name="next_apps_video_app_label" translatable="false">Video app</string>
+    <string name="next_apps_video_auto_label" translatable="false">Automatic</string>
+    <string name="next_apps_video_auto_named_label" translatable="false">Automatic (%1$s)</string>
+    <string name="next_apps_video_app_info" translatable="false">The app the car treats as YouTube, for example a patched build. Automatic picks the app that opens YouTube links, a patched one before Google\'s.</string>
 </resources>
