@@ -51,6 +51,7 @@ class MyPlayBackupKeysTest {
             "myplay_parked_here", // where I parked (#11): goes with the spot it keeps, which belongs to this phone
             "myplay_parked_spot", // where the car was last parked (#11): a location, private, stays on this phone
             "myplay_whats_new_seen", // which release notes this install has shown: belongs to the install
+            "myplay_video_apps_added", // VA-2: the video apps were added once on this install; a restore must not re-add removed ones
             "myplay_wallpaper_edit", // how the wallpaper photo is placed and treated: the photo is not in backups either
             "myplay_car_sends_holds", // what the Car check saw this car do (#1): belongs to the car and the check
             "myplay_speed_limit_checked", // when this phone last looked for a newer speed limit file (N21): belongs to the phone
