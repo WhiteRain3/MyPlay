@@ -188,8 +188,8 @@ fun NextHome() {
             }
             override fun dismissUpdate() = UpdateChecker.dismiss(ctx)
             override fun dismissCertificate() = CertificateUpdates.dismiss(ctx)
-            // Off the main thread: capturing and saving the frame takes a moment.
-            override fun screenshot() { Thread { net.prototux.aare.video.CarScreenshot.take(ctx) }.start() }
+            // take() doesn't block: it posts the capture to the car's display and saves on its own thread.
+            override fun screenshot() { net.prototux.aare.video.CarScreenshot.take(ctx) }
         }
     }
     NextHomeContent(
