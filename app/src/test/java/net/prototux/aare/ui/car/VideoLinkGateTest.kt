@@ -28,4 +28,11 @@ class VideoLinkGateTest {
         assertTrue(VideoLinkGate.expired(asked, 1_001 + CarVideo.WAIT_MS))
         assertFalse("no time given", VideoLinkGate.expired(link, Long.MAX_VALUE))
     }
+
+    @Test fun theWaitLeft() {
+        val asked = link.copy(atMs = 1_000)
+        assertTrue(VideoLinkGate.leftMs(asked, 1_000) == CarVideo.WAIT_MS + 1)
+        assertTrue(VideoLinkGate.expired(asked, 1_000 + VideoLinkGate.leftMs(asked, 1_000)))
+        assertTrue(VideoLinkGate.leftMs(asked, 1_000 + 2 * CarVideo.WAIT_MS) == 0L)
+    }
 }

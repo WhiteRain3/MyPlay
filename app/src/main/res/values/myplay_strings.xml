@@ -141,5 +141,6 @@
     <string name="myplay_play_on_car_opening" translatable="false">Opening on the car (plays when parked)</string>
     <string name="myplay_play_on_car_no_link" translatable="false">No link to play on the car</string>
     <string name="myplay_play_on_car_no_car" translatable="false">Connect to the car to play this on it</string>
+    <string name="myplay_play_on_car_dropped" translatable="false">Link from phone dropped: not parked within 10 minutes</string>
     <string name="myplay_play_on_car_no_app" translatable="false">Add the app to Phone apps in MyPlay to play this on the car</string>
 </resources>
