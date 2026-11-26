@@ -20,4 +20,12 @@ class VideoLinkGateTest {
         assertFalse("just the app, no link", VideoLinkGate.opensNow(link.copy(link = null), link.packageName, started = true, driving = false))
         assertFalse(VideoLinkGate.opensNow(null, link.packageName, started = true, driving = false))
     }
+
+    /** VA-12: a link that waited too long (driving) is dropped, so it can't open much later. */
+    @Test fun aLinkWaitsOnlySoLong() {
+        val asked = link.copy(atMs = 1_000)
+        assertFalse(VideoLinkGate.expired(asked, 1_000 + CarVideo.WAIT_MS))
+        assertTrue(VideoLinkGate.expired(asked, 1_001 + CarVideo.WAIT_MS))
+        assertFalse("no time given", VideoLinkGate.expired(link, Long.MAX_VALUE))
+    }
 }

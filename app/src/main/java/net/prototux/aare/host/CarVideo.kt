@@ -6,8 +6,11 @@ package net.prototux.aare.host
  * video app that is playing. Pure parts here; [CarRuntime.openVideo] does it.
  */
 object CarVideo {
-    /** A link to open in [packageName] on the car screen; null [link]: just the app. */
-    data class Link(val packageName: String, val link: String?)
+    /** A link to open in [packageName] on the car screen; null [link]: just the app. [atMs]: when asked (elapsedRealtime). */
+    data class Link(val packageName: String, val link: String?, val atMs: Long = 0)
+
+    /** VA-12: how long a link waits (driving) before it is dropped, so it can't open much later. */
+    const val WAIT_MS = 10 * 60_000L
 
     private val URL = Regex("""(?:https?://|vnd\.youtube:)[^\s<>"']+""", RegexOption.IGNORE_CASE)
     private val YOUTUBE_HOSTS = setOf("youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be")
