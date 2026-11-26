@@ -533,7 +533,9 @@ private fun EngineShellThemed(
         if (!sources.picture && state.app(state.homeNavAppId ?: state.activeNavAppId) == null) showApps(setOf(CarAppKind.NAVIGATION))
         else sources.openMaps()
     }
-    openMusic = {
+    openMusic = open@{
+        // VA-6: a video app playing (YouTube…) opens as the real app on the car, not its media player.
+        if (actions.openPlayingOnCar()) return@open
         if (!sources.picture && state.app(state.nowPlaying?.appId ?: state.activeMediaAppId) == null) showApps(setOf(CarAppKind.MEDIA))
         else sources.music.open()
     }

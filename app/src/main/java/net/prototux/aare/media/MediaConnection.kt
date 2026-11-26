@@ -477,6 +477,7 @@ internal class MediaConnection(
             positionMs = b.currentPosition.coerceAtLeast(0),
             durationMs = b.duration.takeIf { it != C.TIME_UNSET }?.coerceAtLeast(0) ?: 0,
             sampledAtMs = SystemClock.elapsedRealtime(),
+            mediaId = b.currentMediaItem?.mediaId?.takeIf { it.isNotBlank() && it != androidx.media3.common.MediaItem.DEFAULT_MEDIA_ID },
         )
         val error = b.playerError?.let { e ->
             val (label, intent) = errorAction(e.extras)

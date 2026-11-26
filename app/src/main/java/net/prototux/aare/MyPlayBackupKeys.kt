@@ -19,6 +19,7 @@ internal object MyPlayBackupKeys {
         "log_car_input" to Type.BOOLEAN,
         "myplay_maps_follow_car_lights" to Type.BOOLEAN,
         "myplay_mirror_turns" to Type.STRING, // what a knob turn means in each mirrored app (G1)
+        "myplay_video_app" to Type.STRING, // the owner's "Video app", the YouTube build to use (VA-4)
         "myplay_gesture_line" to Type.BOOLEAN, // the line after a button gesture (R6)
         "myplay_speed_source" to Type.STRING, // where the car screen's speed comes from (N3)
         "myplay_engine_preview" to Type.BOOLEAN, // MyPlay's own car screen (ORBIT) rather than an older layout (N10: on by default)

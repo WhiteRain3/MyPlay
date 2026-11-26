@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,8 +48,14 @@ import net.prototux.aare.media.Placeholder
 @Composable
 internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageName: String, modifier: Modifier) {
     val context = LocalContext.current
-    val launcher = remember(packageName) { AppLauncher(context) }
-    var started by remember(packageName) { mutableStateOf(false) }
+    // VA-8: the app kept from before, if it is this one (it carries on), else a new one.
+    val hosted = remember(packageName) { runtime.hostedApps.take(packageName) }
+    val launcher = hosted.launcher
+    var started by remember(packageName) { mutableStateOf(hosted.started) }
+    // VA-8: picture hidden, sound off: driving off pauses the app's playing video.
+    LaunchedEffect(driving) {
+        if (driving) runtime.media.playback.value?.takeIf { it.packageName == packageName && it.playing }?.let { runtime.media.pause() }
+    }
 
     DisposableEffect(packageName) {
         // Hardware / head-unit Back goes to the launched app.
@@ -64,8 +71,21 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
         runtime.screenBack = back
         onDispose {
             if (runtime.screenBack === back) runtime.screenBack = null
-            launcher.release()
+            runtime.hostedApps.leave(hosted)
         }
+    }
+
+    // VA-5: a video link for this app ("Play on car", "Open on car") opens in it once it runs.
+    // VA-9: only parked: while driving it waits (a kept app runs even then), so nothing starts playing.
+    val link = runtime.ui.videoLink
+    LaunchedEffect(link, started, driving) {
+        if (!VideoLinkGate.opensNow(link, packageName, started, driving)) {
+            if (link != null && link.packageName == packageName && link.link == null) runtime.ui.videoLink = null
+            return@LaunchedEffect
+        }
+        val uri = link?.link ?: return@LaunchedEffect
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { launcher.open(packageName, uri) }
+        if (runtime.ui.videoLink === link) runtime.ui.videoLink = null
     }
 
     Box(modifier.background(Color.Black)) {
@@ -78,11 +98,16 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
                                 val surface = Surface(st)
                                 // connect() blocks (binds Shizuku / spawns su), so do it off the main thread.
                                 Thread {
-                                    if (launcher.connect()) {
+                                    if (hosted.started) {
+                                        // VA-8: the kept display gets the new surface; the app carries on.
+                                        launcher.resize(surface, w, h, runtime.densityDpi)
+                                        started = true
+                                    } else if (launcher.connect()) {
                                         val id = launcher.start(
                                             surface, w, h, runtime.densityDpi, packageName,
                                             runtime.settings.standaloneKeepScreenAwake,
                                         )
+                                        hosted.displayId = id
                                         started = id >= 0
                                     }
                                 }.apply { isDaemon = true }.start()
@@ -90,7 +115,8 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
                             override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) {
                                 launcher.resize(Surface(st), w, h, runtime.densityDpi)
                             }
-                            override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean = true
+                            // VA-8: hidden while driving: the display keeps the app, with no surface.
+                            override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean { launcher.detach(); return true }
                             override fun onSurfaceTextureUpdated(st: SurfaceTexture) = Unit
                         }
                     }
@@ -121,9 +147,12 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
             MirroredKeyStop(
                 net.prototux.aare.car.MirroredKeys.turnFor(runtime.settings.myplayMirrorTurns, packageName),
                 send = { action, code -> launcher.key(android.os.SystemClock.uptimeMillis(), action, code) },
+                takeRing = started,
             )
-            // A quiet reminder that this isn't an Android Auto app.
-            Text(
+            // A quiet reminder that this isn't an Android Auto app; VA-7: only for a few seconds, as it covers the video's top.
+            var banner by remember(packageName) { mutableStateOf(true) }
+            LaunchedEffect(packageName, started) { if (started) { kotlinx.coroutines.delay(BANNER_MS); banner = false } }
+            if (banner) Text(
                 stringResource(R.string.standalone_not_native),
                 style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
@@ -135,4 +164,13 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
             Placeholder(stringResource(R.string.standalone_paused_driving), loading = false, icon = Icons.Rounded.PauseCircle)
         }
     }
+}
+
+/** VA-7: how long the "not an Android Auto app" line stays over a hosted app once it runs. */
+internal const val BANNER_MS = 3_000L
+
+/** VA-5, VA-9: when a waiting video link opens in the hosted app: its own, a link to open, the app running, and parked. */
+internal object VideoLinkGate {
+    fun opensNow(link: net.prototux.aare.host.CarVideo.Link?, packageName: String, started: Boolean, driving: Boolean): Boolean =
+        link != null && link.packageName == packageName && link.link != null && started && !driving
 }

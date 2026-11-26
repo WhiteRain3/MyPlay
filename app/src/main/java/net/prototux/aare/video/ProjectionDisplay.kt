@@ -205,8 +205,8 @@ class ProjectionDisplay(
     }
 
     private companion object {
-        /** How long a screenshot waits for its frame; the display normally gives one within a frame or two. */
-        const val CAPTURE_TIMEOUT_MS = 1_000L
+        /** How long a screenshot waits for its frame (CS-1: the encoder gets nothing meanwhile, so short); the display normally gives one within a frame or two, as the capture forces a redraw. */
+        const val CAPTURE_TIMEOUT_MS = 200L
 
         /** Keys that move or use focus, as in the platform's own check for leaving touch mode. */
         fun isNavigationKey(code: Int) = when (code) {

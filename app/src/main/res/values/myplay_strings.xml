@@ -136,4 +136,10 @@
     <string name="myplay_screenshot_failed" translatable="false">Couldn\'t take the car screenshot</string>
     <string name="myplay_screenshot_no_car" translatable="false">Connect to the car to take a car screenshot</string>
     <string name="myplay_screenshot_old_android" translatable="false">Car screenshots need Android 10 or newer</string>
+    <!-- MyPlay (VA-5, VA-6): video apps on the car as the real apps -->
+    <string name="myplay_play_on_car" translatable="false">Play on car</string>
+    <string name="myplay_play_on_car_opening" translatable="false">Opening on the car (plays when parked)</string>
+    <string name="myplay_play_on_car_no_link" translatable="false">No link to play on the car</string>
+    <string name="myplay_play_on_car_no_car" translatable="false">Connect to the car to play this on it</string>
+    <string name="myplay_play_on_car_no_app" translatable="false">Add the app to Phone apps in MyPlay to play this on the car</string>
 </resources>

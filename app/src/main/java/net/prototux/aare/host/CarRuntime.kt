@@ -368,7 +368,9 @@ class CarRuntime(
         }
         val position = settings.railPosition
         // Passenger mode lifts the driving restrictions (keyboard, list lengths, phone screen).
+        val wasDriving = ui.drivingRestricted
         ui.drivingRestricted = carDriving && !settings.ignoreDriving
+        if (ui.drivingRestricted && !wasDriving) pauseHiddenVideo()
         ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
             .withCustomColours(CustomColours.decode(settings.myplayLookColours)) // MyPlay (F3)
         // TH-1: ORBIT keeps its own colours until the owner chooses a theme, an accent or own colours.
@@ -472,6 +474,7 @@ class CarRuntime(
 
     fun stop() {
         running.remove(this)
+        hostedApps.releaseAll() // VA-8
         ui.pretendSpeed?.stop() // MyPlay (Preview)
         runCatching { context.unregisterReceiver(packageReceiver) }
         settings.unregisterListener(settingsListener)
@@ -489,7 +492,13 @@ class CarRuntime(
             val (found, messaging) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 CarAppCatalog.query(context) to AndroidAutoApps.messagingApps(context)
             }
-            applyApps(found, messaging)
+            // VA-4: the phone's YouTube app, whatever build; VA-2: the phone's apps, to add the video apps once.
+            val (youTube, launchable) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                val installed = VideoApps.launchable(context)
+                VideoApps.youTubeApp(context, settings, installed) to installed.takeUnless { settings.myplayVideoAppsAdded }
+            }
+            youTubeApp = youTube
+            applyApps(found, messaging, launchable)
         }
     }
 
@@ -499,7 +508,26 @@ class CarRuntime(
         pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
     }.getOrDefault("")
 
-    private fun applyApps(found: List<CarAppInfo>, messaging: List<PhoneApp>) {
+    /**
+     * VA-2: puts YouTube and MovieBox Pro (when installed) among the phone apps on the car screen,
+     * and switches phone apps on, once; only with root or Shizuku there to run them. The owner asked
+     * for these as the real apps (YouTube's media player shows no video).
+     */
+    private fun addVideoAppsOnce(launchable: Map<String, String>?) {
+        if (settings.myplayVideoAppsAdded || launchable == null) return
+        val add = MyPlayAppList.videoDefaults(youTubeApp, launchable)
+        if (add.isNotEmpty()) {
+            settings.standaloneAppPackages = settings.standaloneAppPackages + add
+            settings.standaloneApps = true
+        }
+        settings.myplayVideoAppsAdded = true
+    }
+
+    /** VA-4: the phone's YouTube app (a patched build or Google's, or the owner's choice), from the last app scan. */
+    @Volatile var youTubeApp: String? = null
+        private set
+
+    private fun applyApps(found: List<CarAppInfo>, messaging: List<PhoneApp>, launchable: Map<String, String>? = null) {
         val hidden = settings.hiddenApps
         val assistantPkg = assistantPackage()
         carApps.clear()
@@ -518,9 +546,16 @@ class CarRuntime(
             entries += CarAppEntry(id, app.packageName, app.label, app.icon, kind)
         }
         val messagingOnly = AndroidAutoApps.messagingOnly(messaging)
+        // VA-2: YouTube and MovieBox Pro go on the car screen as the real apps, once.
+        val launcherAvailable = AppLauncher.available(context)
+        if (launcherAvailable) addVideoAppsOnce(launchable)
+        // VA-1: apps that run on the car screen as themselves.
+        val realApps = if (launcherAvailable) realApps() else emptySet()
         for (m in media.apps.value) {
             // An app that has a car UI of its own is shown once, as that; a messaging app, as messaging.
             if (m.packageName in hidden || m.packageName in messagingOnly || entries.any { it.packageName == m.packageName }) continue
+            // VA-1: an app that runs on the car screen itself is shown once, as itself (not its media player).
+            if (!MyPlayAppList.mediaEntryShown(m.packageName, realApps)) continue
             if (!MyPlayAppList.canShow(m.packageName)) continue // MyPlay (K8)
             entries += CarAppEntry(mediaId(m.packageName), m.packageName, m.label, m.icon, CarAppKind.MEDIA)
         }
@@ -537,14 +572,14 @@ class CarRuntime(
         }
         // Ordinary phone apps the user allowed onto the car screen (parked only; needs root/Shizuku).
         var realYouTube = false // MyPlay (YT-3): the YouTube app itself is among them
-        if (settings.standaloneApps && AppLauncher.available(context)) {
+        if (settings.standaloneApps && launcherAvailable) {
             for (pkg in settings.standaloneAppPackages) {
                 if (pkg in hidden) continue
                 val info = runCatching { context.packageManager.getApplicationInfo(pkg, 0) }.getOrNull() ?: continue
                 val label = context.packageManager.getApplicationLabel(info).toString()
                 val icon = runCatching { context.packageManager.getApplicationIcon(info).toBitmap(128, 128) }.getOrNull()
                 entries += CarAppEntry(standaloneId(pkg), pkg, label, icon, CarAppKind.STANDALONE)
-                if (pkg == YOUTUBE_PACKAGE) realYouTube = true
+                if (pkg == youTubeApp || pkg == YOUTUBE_PACKAGE) realYouTube = true
             }
         }
         if (settings.browser) {
@@ -554,7 +589,7 @@ class CarRuntime(
             // YT-3: left out while the YouTube app itself is on the car screen (one YouTube, the real
             // one); otherwise named "YouTube (web)", so it is not taken for the app.
             if (showsWebYouTube(realYouTube)) {
-                val ytIcon = runCatching { context.packageManager.getApplicationIcon(YOUTUBE_PACKAGE).toBitmap(128, 128) }.getOrNull()
+                val ytIcon = runCatching { context.packageManager.getApplicationIcon(youTubeApp ?: YOUTUBE_PACKAGE).toBitmap(128, 128) }.getOrNull()
                 entries += CarAppEntry(YOUTUBE_ID, context.packageName, context.getString(R.string.myplay_youtube_label), ytIcon ?: builtinIcon(R.drawable.ic_car_browser), CarAppKind.BROWSER)
             }
         }
@@ -785,6 +820,56 @@ class CarRuntime(
         main.postDelayed({ ui.notices.remove(n) }, durationMs)
     }
 
+    /** VA-8: the phone apps on the car screen, kept a while when their screen is left. */
+    val hostedApps = net.prototux.aare.launch.HostedApps.of(context)
+
+    /** VA-8: the hosted app kept without its screen goes quiet when driving starts (picture hidden, sound off). */
+    private fun pauseHiddenVideo() {
+        val kept = hostedApps.keptPackage ?: return
+        media.playback.value?.takeIf { it.packageName == kept && it.playing }?.let { media.pause() }
+    }
+
+    /** VA-5: a car session's runtime (not the phone's preview). */
+    val isCar: Boolean get() = primary
+
+    /** VA-1: the apps that run on the car screen as themselves (Phone apps, with root or Shizuku there). */
+    private fun realApps(): Set<String> =
+        if (settings.standaloneApps && AppLauncher.available(context)) settings.standaloneAppPackages - settings.hiddenApps else emptySet()
+
+    /**
+     * VA-5: opens [link] (a video link; null: just the app) in the real app on the car screen, never
+     * the phone's screen: [packageName] when given and allowed, else the app that opens the link
+     * ([CarVideo.appFor]: the YouTube app for YouTube). The phone's copy of that app is paused if it
+     * plays. While driving the app's screen waits (paused), and the link opens once parked. Main
+     * thread; false (and a notice on the car) when no app allowed on the car screen can open it.
+     */
+    fun openVideo(link: String?, packageName: String? = null): Boolean {
+        val allowed = realApps()
+        val pkg = packageName?.takeIf { it in allowed } ?: link?.let {
+            val handlers = runCatching {
+                context.packageManager.queryIntentActivities(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(it)), android.content.pm.PackageManager.MATCH_ALL)
+                    .map { r -> r.activityInfo.packageName }
+            }.getOrDefault(emptyList())
+            CarVideo.appFor(it, youTubeApp, allowed, handlers)
+        }
+        val entry = pkg?.let { p -> ui.apps.firstOrNull { it.kind == CarAppKind.STANDALONE && it.packageName == p } }
+        if (entry == null) {
+            notice(context.getString(R.string.myplay_play_on_car), context.getString(R.string.myplay_play_on_car_no_app))
+            return false
+        }
+        media.playback.value?.takeIf { it.packageName == entry.packageName && it.playing }?.let { media.pause() }
+        ui.videoLink = CarVideo.Link(entry.packageName, link)
+        actions.openApp(entry)
+        return true
+    }
+
+    /** VA-6: the video app playing (on the phone) opened on the car screen, at the same video when its session says which. */
+    fun openPlayingOnCar(): Boolean {
+        val p = media.playback.value ?: return false
+        if (p.packageName !in realApps()) return false
+        return openVideo(CarVideo.linkForMediaId(p.mediaId), p.packageName)
+    }
+
     // ------------------------------------------------------------------ actions from the car UI
 
     val actions = object : CarActions {
@@ -831,6 +916,7 @@ class CarRuntime(
         override fun callBackLastMissed() = this@CarRuntime.callBackLastMissed()
         override fun carScreenshot() { net.prototux.aare.video.CarScreenshot.take(context) }
         override fun navigateHome() { this@CarRuntime.navigateHome() }
+        override fun openPlayingOnCar() = this@CarRuntime.openPlayingOnCar()
     }
 
     /** The chosen assistant's package, or the phone's default assistant. */
@@ -1011,7 +1097,8 @@ class CarRuntime(
          * the next connection.
          */
         val APP_LIST_KEYS = setOf("hidden_apps", "phone_screen", "assistant_pkg", "app_order",
-            "browser", "car_data_app", "standalone_apps", "standalone_app_pkgs")
+            "browser", "car_data_app", "standalone_apps", "standalone_app_pkgs",
+            "myplay_video_app") // VA-4: another "Video app" changes which app is YouTube
 
         val SCREEN_SETTING_KEYS = setOf(
             "car_theme", "myplay_look_colours", "myplay_maps_follow_car_lights", "myplay_layout_spec", "rail_position", "style_theme", "style_layout", "style_accent", "dark_bar", "dashboard_cards", "show_weather", "ignore_driving", "rail_widgets",

@@ -60,6 +60,10 @@ class LaunchHostService : ILaunchHost.Stub {
         display = vd
         displayId = vd.display.displayId
         if (keepDisplayAwake) enableKeepAwakeFallback(ctx, displayId)
+        // VA-7: the car screen is landscape; a portrait-locked app (YouTube's player, most phone
+        // apps) would be pillarboxed in the middle of it. Like a tablet or a desktop window, this
+        // display ignores the app's orientation request, so the app fills it.
+        ignoreOrientationRequest(displayId)
         if (!launch(ctx, packageName, displayId)) {
             Log.w(TAG, "created display ${displayId} but could not launch $packageName on it")
         }
@@ -84,6 +88,24 @@ class LaunchHostService : ILaunchHost.Stub {
         val ev = KeyEvent(eventTime, eventTime, action, keyCode, 0, 0, -1, 0, 0, SOURCE_KEYBOARD)
         setDisplayId(ev, displayId)
         inject(ev)
+    }
+
+    override fun open(packageName: String, uri: String): Boolean {
+        val id = displayId
+        if (id < 0) return false
+        val ctx = injectedContext ?: systemContext() ?: return false
+        return runCatching {
+            // The app's own handler of the link, as the phone would pick it (never a fixed activity:
+            // patched builds name theirs differently).
+            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(uri)).setPackage(packageName)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent, fullScreen(ActivityOptions.makeBasic().setLaunchDisplayId(id)).toBundle())
+            true
+        }.onFailure { Log.w(TAG, "open($packageName) failed: ${it.message}") }.getOrDefault(false)
+    }
+
+    override fun detach() {
+        runCatching { display?.surface = null }
     }
 
     override fun stop() {
@@ -184,10 +206,35 @@ class LaunchHostService : ILaunchHost.Stub {
     private fun launch(ctx: Context, pkg: String, onDisplay: Int): Boolean = runCatching {
         val intent = ctx.packageManager.getLaunchIntentForPackage(pkg)
             ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK) ?: return false
-        val opts = ActivityOptions.makeBasic().setLaunchDisplayId(onDisplay)
+        val opts = fullScreen(ActivityOptions.makeBasic().setLaunchDisplayId(onDisplay))
         ctx.startActivity(intent, opts.toBundle())
         true
     }.onFailure { Log.w(TAG, "startActivity($pkg) failed: ${it.message}") }.getOrDefault(false)
+
+    /**
+     * VA-7: `wm set-ignore-orientation-request -d <id> true` (Android 12L and newer): the display
+     * keeps its own (landscape) orientation whatever the app asks. Logged and skipped where the
+     * command is missing or refused.
+     */
+    private fun ignoreOrientationRequest(id: Int) {
+        if (id < 0 || Build.VERSION.SDK_INT < 32) return
+        Thread {
+            runCatching {
+                val p = ProcessBuilder("/system/bin/cmd", "window", "set-ignore-orientation-request", "-d", id.toString(), "true")
+                    .redirectErrorStream(true).start()
+                val out = p.inputStream.bufferedReader().use { it.readText().trim() }
+                if (p.waitFor() != 0) Log.w(TAG, "set-ignore-orientation-request on $id: $out")
+            }.onFailure { Log.w(TAG, "set-ignore-orientation-request on $id failed: ${it.message}") }
+        }.apply { name = "AARE-orientation"; isDaemon = true }.start()
+    }
+
+    /** VA-7: launch full screen on the display (hidden ActivityOptions.setLaunchWindowingMode), not as a freeform window. */
+    private fun fullScreen(opts: ActivityOptions): ActivityOptions {
+        runCatching {
+            opts.javaClass.getMethod("setLaunchWindowingMode", Int::class.javaPrimitiveType).invoke(opts, WINDOWING_MODE_FULLSCREEN)
+        }.onFailure { Log.w(TAG, "setLaunchWindowingMode: ${it.message}") }
+        return opts
+    }
 
     /** Inject one event into the launched app's display via InputManager's hidden injectInputEvent. */
     private fun inject(event: InputEvent) {
@@ -225,7 +272,7 @@ class LaunchHostService : ILaunchHost.Stub {
             HiddenApiBypass.addHiddenApiExemptions(
                 "Landroid/app/ActivityThread;", "Landroid/hardware/input/InputManager;",
                 "Landroid/hardware/display/DisplayManager;", "Landroid/os/PowerManager;",
-                "Landroid/view/MotionEvent;", "Landroid/view/KeyEvent;",
+                "Landroid/view/MotionEvent;", "Landroid/view/KeyEvent;", "Landroid/app/ActivityOptions;",
             )
         }
     }
@@ -235,6 +282,7 @@ class LaunchHostService : ILaunchHost.Stub {
         const val SOURCE_TOUCHSCREEN = 0x00001002 // InputDevice.SOURCE_TOUCHSCREEN
         const val SOURCE_KEYBOARD = 0x00000101 // InputDevice.SOURCE_KEYBOARD
         const val INJECT_INPUT_EVENT_MODE_ASYNC = 0
+        const val WINDOWING_MODE_FULLSCREEN = 1 // WindowConfiguration.WINDOWING_MODE_FULLSCREEN (hidden)
 
         // VirtualDisplay flags (public + hidden bits). Hidden ones let a foreign app run and take focus.
         const val FLAG_PUBLIC = 1 shl 0

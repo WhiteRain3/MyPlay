@@ -163,6 +163,8 @@ class CarUiState {
     var limitPulse by mutableStateOf(true)
     /** MyPlay (#5): Home and the saved places, for the Navigate world's list (Places.destinations); empty: none. */
     var navPlaces by mutableStateOf<List<net.prototux.aare.car.SavedPlace>>(emptyList())
+    /** MyPlay (VA-5): a video link waiting to open in a phone app on the car screen (StandaloneAppScreen takes it). */
+    var videoLink by mutableStateOf<net.prototux.aare.host.CarVideo.Link?>(null)
     /** MyPlay (O6): what ORBIT's home pad opens while the ring is hidden; empty: the ring always (as in tests). */
     var homePad by mutableStateOf<Map<net.prototux.aare.ui.car.myplay.HomePadKey, net.prototux.aare.ui.car.myplay.HomePadAction>>(emptyMap())
     /** MyPlay (O3): how often this drive has shown the way home over an app (the first few times only). */
@@ -265,4 +267,6 @@ interface CarActions {
     fun carScreenshot() = Unit
     /** HN-3: the maps app to the home address set on the phone; without one, a notice says so. */
     fun navigateHome() = Unit
+    /** VA-6: the video app playing opened on the car screen as the real app; false when the playing app can't be. */
+    fun openPlayingOnCar(): Boolean = false
 }
