@@ -28,6 +28,10 @@ import java.util.concurrent.Executors
  * key set to "Car screenshot"), and only while a car session shows MyPlay's screen. Saved as a PNG
  * in Pictures/MyPlay through MediaStore, which needs no permission (Android 10 and newer); nothing
  * is taken, kept or logged on its own.
+ *
+ * CS-2: a picture holds whatever the car shows (a message notice, a caller, a destination), and
+ * shared Pictures can be read by gallery apps and any app allowed to see photos; that is the
+ * owner's own choice each time (docs/ideas/car-screenshot.md).
  */
 object CarScreenshot {
     /** Takes one frame of the car screen; the frame (or null) goes to the callback on the main thread. */
