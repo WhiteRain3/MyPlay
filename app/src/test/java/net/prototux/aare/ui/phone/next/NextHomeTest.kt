@@ -40,6 +40,7 @@ class NextHomeTest {
         override fun setUp(item: SetupItem) { taps += "setUp $item" }
         override fun dismissUpdate() { taps += "dismissUpdate" }
         override fun dismissCertificate() { taps += "dismissCertificate" }
+        override fun screenshot() { taps += "screenshot" }
     }
 
     private fun show(hero: Hero, attention: Set<Attention> = emptySet(), setupLeft: List<SetupItem> = emptyList(),
@@ -58,6 +59,21 @@ class NextHomeTest {
         rule.onNodeWithText("Disconnect").performClick()
         rule.onNodeWithText("Preview").performClick()
         assertEquals(listOf("disconnect", "preview"), taps)
+    }
+
+    @Test fun carScreenshotOnlyWhileTheCarShowsMyPlay() {
+        rule.setContent {
+            NextHomeContent(HomeInputs(Hero.Connected("Sedan", Link.USB, "1080p", "MyPlay's"), emptySet(), DesignInUse.ORBIT, canScreenshot = true), actions) {
+                Box(Modifier.height(120.dp))
+            }
+        }
+        rule.onNodeWithText("Car screenshot").performClick()
+        assertEquals(listOf("screenshot"), taps)
+    }
+
+    @Test fun noCarScreenshotWhenNotLive() {
+        show(Hero.Connected("Sedan", Link.USB, "1080p", "MyPlay's"))
+        rule.onNodeWithText("Car screenshot").assertDoesNotExist()
     }
 
     @Test fun connecting() {

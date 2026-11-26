@@ -719,4 +719,5 @@
     <string name="next_speed_fill_label" translatable="false">Fill in standard limits</string>
     <string name="next_speed_fill_help" translatable="false">Usual limits where the map has none, shown as a guess</string>
     <string name="next_speed_fill_info" translatable="false">Where the map has no limit, show Lithuania\'s usual one for the road (50 in towns, 90 outside, 70 on gravel), marked as a guess.</string>
+    <string name="next_home_screenshot_help" translatable="false">Saved to Pictures › MyPlay on this phone</string>
 </resources>

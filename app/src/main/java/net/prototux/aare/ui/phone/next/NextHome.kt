@@ -43,6 +43,7 @@ import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.GppGood
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Screenshot
 import androidx.compose.material.icons.outlined.Key
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.SystemUpdate
@@ -116,6 +117,8 @@ data class HomeInputs(
     val setupLeft: List<SetupItem> = emptyList(),
     /** When the hero's error was first seen, for "What happened". */
     val errorAt: Long? = null,
+    /** A car session shows MyPlay's screen now, so a car screenshot can be taken (CarScreenshot.live). */
+    val canScreenshot: Boolean = false,
     /** The Car check's run, for its card (in progress or stopped). */
     val carCheck: CarCheckStatus = CarCheckStatus.NotRun,
 )
@@ -135,6 +138,8 @@ interface HomeActions {
     fun setUp(item: SetupItem)
     fun dismissUpdate()
     fun dismissCertificate()
+    /** Saves the car's screen to Pictures/MyPlay; CarScreenshot shows its own toasts. */
+    fun screenshot() {}
 }
 
 /** Home (plan §16 chunk 2): the hero, what needs attention, the small car picture. */
@@ -158,6 +163,7 @@ fun NextHome() {
     val setupLeft = remember(resumed, state.audioCapture, carAudioOn) { setupLeft(ctx, state.audioCapture) }
     val design = designInUse(preview, language)
     val carCheck = rememberCarCheckStatus()
+    val canScreenshot by net.prototux.aare.video.CarScreenshot.live.collectAsState()
     val attention = buildSet {
         expiring?.let { add(if (it.expired) Attention.CERT_EXPIRED else Attention.CERT_EXPIRING) }
         if (setupLeft.isNotEmpty()) add(Attention.FINISH_SETUP)
@@ -182,10 +188,12 @@ fun NextHome() {
             }
             override fun dismissUpdate() = UpdateChecker.dismiss(ctx)
             override fun dismissCertificate() = CertificateUpdates.dismiss(ctx)
+            // Off the main thread: capturing and saving the frame takes a moment.
+            override fun screenshot() { Thread { net.prototux.aare.video.CarScreenshot.take(ctx) }.start() }
         }
     }
     NextHomeContent(
-        HomeInputs(hero, attention, design, update, expiring, setupLeft, errorAt.takeIf { it > 0 }, carCheck),
+        HomeInputs(hero, attention, design, update, expiring, setupLeft, errorAt.takeIf { it > 0 }, canScreenshot, carCheck),
         actions,
         picture = { CarPicture(stringResource(R.string.next_home_car_screen_label), Modifier.fillMaxWidth(), onPart = null) },
     )
@@ -203,7 +211,7 @@ fun NextHomeContent(inputs: HomeInputs, actions: HomeActions, picture: @Composab
         contentPadding = PaddingValues(start = NextSpace.Gutter, end = NextSpace.Gutter, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        item { HeroBlock(inputs.hero, actions, inputs.errorAt) }
+        item { HeroBlock(inputs.hero, actions, inputs.errorAt, inputs.canScreenshot) }
         items(cards.shown.size) { i -> AttentionCard(cards.shown[i], inputs, actions) }
         if (cards.more.isNotEmpty()) item {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -228,7 +236,7 @@ fun NextHomeContent(inputs: HomeInputs, actions: HomeActions, picture: @Composab
 
 
 @Composable
-private fun HeroBlock(hero: Hero, actions: HomeActions, errorAt: Long?) {
+private fun HeroBlock(hero: Hero, actions: HomeActions, errorAt: Long?, canScreenshot: Boolean = false) {
     val nav = LocalNextNavigator.current
     var details by rememberSaveable { mutableStateOf(false) }
     var whatHappened by rememberSaveable { mutableStateOf(false) }
@@ -241,6 +249,13 @@ private fun HeroBlock(hero: Hero, actions: HomeActions, errorAt: Long?) {
                 Spacer(Modifier.height(16.dp))
                 NextCard {
                     NextValueRow(stringResource(R.string.next_home_details_label), hero.video.ifBlank { null }, Icons.Outlined.Info) { details = true }
+                    // Dispatcher: a picture of what the car shows, only while it shows MyPlay's screen.
+                    if (canScreenshot) {
+                        NextDivider()
+                        NextRow(stringResource(R.string.myplay_screenshot_action), icon = Icons.Outlined.Screenshot,
+                            note = RowNote.Help(stringResource(R.string.next_home_screenshot_help)),
+                            onClick = actions::screenshot, role = Role.Button)
+                    }
                 }
             }
             is Hero.Connecting -> {
