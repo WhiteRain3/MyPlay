@@ -339,9 +339,11 @@ fun NextPhoneAppsPage() {
         val old = youTubePkg
         settings.myplayVideoApp = choice
         // VA-16: on a scope that outlives the page, so leaving it at once still swaps.
+        val app = ctx.applicationContext
         videoSwapScope.launch {
-            val now = runCatching { net.prototux.aare.host.VideoApps.youTubeApp(ctx.applicationContext, settings) }.getOrNull()
-            settings.standaloneAppPackages = swappedVideoApp(settings.standaloneAppPackages, old, now)
+            val s = net.prototux.aare.Settings(app) // nothing from the page is held by the scope
+            val now = runCatching { net.prototux.aare.host.VideoApps.youTubeApp(app, s) }.getOrNull()
+            s.standaloneAppPackages = swappedVideoApp(s.standaloneAppPackages, old, now)
         }
     }
     var turning by rememberSaveable { mutableStateOf<String?>(null) }
