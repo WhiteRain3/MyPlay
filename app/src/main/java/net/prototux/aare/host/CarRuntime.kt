@@ -858,7 +858,7 @@ class CarRuntime(
             return false
         }
         media.playback.value?.takeIf { it.packageName == entry.packageName && it.playing }?.let { media.pause() }
-        ui.videoLink = CarVideo.Link(entry.packageName, link)
+        ui.videoLink = CarVideo.Link(entry.packageName, link, android.os.SystemClock.elapsedRealtime())
         actions.openApp(entry)
         return true
     }

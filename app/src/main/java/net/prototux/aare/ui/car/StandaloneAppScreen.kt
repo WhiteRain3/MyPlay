@@ -72,6 +72,8 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
         onDispose {
             if (runtime.screenBack === back) runtime.screenBack = null
             runtime.hostedApps.leave(hosted)
+            // VA-12: a link still waiting (driving) goes with the screen; it never opens later on its own.
+            if (runtime.ui.videoLink?.packageName == packageName) runtime.ui.videoLink = null
         }
     }
 
@@ -79,10 +81,12 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
     // VA-9: only parked: while driving it waits (a kept app runs even then), so nothing starts playing.
     val link = runtime.ui.videoLink
     LaunchedEffect(link, started, driving) {
-        if (!VideoLinkGate.opensNow(link, packageName, started, driving)) {
-            if (link != null && link.packageName == packageName && link.link == null) runtime.ui.videoLink = null
+        if (link != null && link.packageName == packageName &&
+            (link.link == null || VideoLinkGate.expired(link, android.os.SystemClock.elapsedRealtime()))) {
+            runtime.ui.videoLink = null
             return@LaunchedEffect
         }
+        if (!VideoLinkGate.opensNow(link, packageName, started, driving)) return@LaunchedEffect
         val uri = link?.link ?: return@LaunchedEffect
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { launcher.open(packageName, uri) }
         if (runtime.ui.videoLink === link) runtime.ui.videoLink = null
@@ -171,6 +175,10 @@ internal const val BANNER_MS = 3_000L
 
 /** VA-5, VA-9: when a waiting video link opens in the hosted app: its own, a link to open, the app running, and parked. */
 internal object VideoLinkGate {
+    /** VA-12: a link that waited longer than [CarVideo.WAIT_MS] is dropped. */
+    fun expired(link: net.prototux.aare.host.CarVideo.Link, nowMs: Long): Boolean =
+        link.atMs > 0 && nowMs - link.atMs > net.prototux.aare.host.CarVideo.WAIT_MS
+
     fun opensNow(link: net.prototux.aare.host.CarVideo.Link?, packageName: String, started: Boolean, driving: Boolean): Boolean =
         link != null && link.packageName == packageName && link.link != null && started && !driving
 }
