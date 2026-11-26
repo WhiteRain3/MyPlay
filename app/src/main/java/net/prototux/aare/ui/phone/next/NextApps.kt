@@ -62,6 +62,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.prototux.aare.R
 import net.prototux.aare.Settings
@@ -77,6 +78,7 @@ import net.prototux.aare.launch.AppLauncher
 import net.prototux.aare.car.myplayMirrorTurns
 import net.prototux.aare.ui.phone.withMirrorTurn
 import net.prototux.aare.ui.phone.withYouTubeApp
+import net.prototux.aare.ui.phone.swappedVideoApp
 import net.prototux.aare.host.myplayVideoApp
 import net.prototux.aare.ui.phone.youTubeAppOnCar
 
@@ -328,6 +330,17 @@ fun NextPhoneAppsPage() {
     val apps by produceState<List<Triple<String, String, Bitmap?>>?>(null) { value = withContext(Dispatchers.IO) { launchable(ctx) } }
     var adding by rememberSaveable { mutableStateOf(false) }
     var askYouTube by rememberSaveable { mutableStateOf(false) }
+    val swapScope = androidx.compose.runtime.rememberCoroutineScope()
+    // VA-14: a new Video app takes the old one's place on the car. Only the app that was the video app
+    // is swapped (put on by its row or by the once-only add); other phone apps are left alone.
+    fun swapVideoApp(choice: String?) {
+        val old = youTubePkg
+        settings.myplayVideoApp = choice
+        swapScope.launch {
+            val now = withContext(Dispatchers.IO) { runCatching { net.prototux.aare.host.VideoApps.youTubeApp(ctx, settings) }.getOrNull() }
+            settings.standaloneAppPackages = swappedVideoApp(settings.standaloneAppPackages, old, now)
+        }
+    }
     var turning by rememberSaveable { mutableStateOf<String?>(null) }
     LazyColumn(
         Modifier.fillMaxSize().testTag("next-page-apps/phone-apps"),
@@ -382,7 +395,7 @@ fun NextPhoneAppsPage() {
                     stringResource(R.string.next_apps_video_app_label),
                     listOf(Choice("", auto?.let { stringResource(R.string.next_apps_video_auto_named_label, it) } ?: stringResource(R.string.next_apps_video_auto_label))) +
                         list.map { (p, label, _) -> Choice(p, label) },
-                    videoChoice.orEmpty(), { settings.myplayVideoApp = it.ifEmpty { null } }, default = "",
+                    videoChoice.orEmpty(), { swapVideoApp(it.ifEmpty { null }) }, default = "",
                     icon = Icons.Outlined.Tv, info = stringResource(R.string.next_apps_video_app_info),
                 )
                 val pkg = youTubePkg

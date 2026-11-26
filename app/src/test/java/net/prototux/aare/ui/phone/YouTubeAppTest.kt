@@ -22,5 +22,10 @@ class YouTubeAppTest {
         assertEquals(setOf("app.morphe.android.youtube"), withYouTubeApp(emptySet(), "app.morphe.android.youtube"))
         assertTrue(youTubeAppOnCar(true, setOf("app.morphe.android.youtube"), "app.morphe.android.youtube"))
         assertFalse(youTubeAppOnCar(true, setOf(CarRuntime.YOUTUBE_PACKAGE), "app.morphe.android.youtube"))
+        // VA-14: a new Video app takes the old one's place, only when the old one was on the car.
+        val m = "app.morphe.android.youtube"
+        assertEquals(setOf("org.example", m), swappedVideoApp(setOf("org.example", CarRuntime.YOUTUBE_PACKAGE), CarRuntime.YOUTUBE_PACKAGE, m))
+        assertEquals(setOf("org.example"), swappedVideoApp(setOf("org.example"), CarRuntime.YOUTUBE_PACKAGE, m))
+        assertEquals(setOf(m), swappedVideoApp(setOf(m), m, m))
     }
 }

@@ -723,5 +723,5 @@
     <string name="next_apps_video_app_label" translatable="false">Video app</string>
     <string name="next_apps_video_auto_label" translatable="false">Automatic</string>
     <string name="next_apps_video_auto_named_label" translatable="false">Automatic (%1$s)</string>
-    <string name="next_apps_video_app_info" translatable="false">The app the car treats as YouTube, for example a patched build. Automatic picks the app that opens YouTube links, a patched one before Google\'s. Changing it keeps the previous app on the car until you take it off.</string>
+    <string name="next_apps_video_app_info" translatable="false">The app the car treats as YouTube, for example a patched build. Automatic picks the app that opens YouTube links, a patched one before Google\'s. If the previous one was on the car, the new one takes its place.</string>
 </resources>
