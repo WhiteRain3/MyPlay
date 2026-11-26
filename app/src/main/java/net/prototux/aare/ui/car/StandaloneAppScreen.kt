@@ -81,9 +81,17 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
     // VA-9: only parked: while driving it waits (a kept app runs even then), so nothing starts playing.
     val link = runtime.ui.videoLink
     LaunchedEffect(link, started, driving) {
-        if (link != null && link.packageName == packageName &&
-            (link.link == null || VideoLinkGate.expired(link, android.os.SystemClock.elapsedRealtime()))) {
+        if (link != null && link.packageName == packageName && link.link == null) { runtime.ui.videoLink = null; return@LaunchedEffect }
+        // VA-12: not parked within the wait: the link is dropped, and the car says so.
+        fun drop() {
+            if (runtime.ui.videoLink !== link) return
             runtime.ui.videoLink = null
+            runtime.notice(context.getString(R.string.myplay_play_on_car), context.getString(R.string.myplay_play_on_car_dropped))
+        }
+        if (link != null && link.packageName == packageName && VideoLinkGate.expired(link, android.os.SystemClock.elapsedRealtime())) { drop(); return@LaunchedEffect }
+        if (link != null && link.packageName == packageName && driving && link.atMs > 0) {
+            kotlinx.coroutines.delay(VideoLinkGate.leftMs(link, android.os.SystemClock.elapsedRealtime()))
+            drop()
             return@LaunchedEffect
         }
         if (!VideoLinkGate.opensNow(link, packageName, started, driving)) return@LaunchedEffect
@@ -178,6 +186,10 @@ internal object VideoLinkGate {
     /** VA-12: a link that waited longer than [CarVideo.WAIT_MS] is dropped. */
     fun expired(link: net.prototux.aare.host.CarVideo.Link, nowMs: Long): Boolean =
         link.atMs > 0 && nowMs - link.atMs > net.prototux.aare.host.CarVideo.WAIT_MS
+
+    /** VA-12: how much longer [link] may wait at [nowMs] (just past the limit, so [expired] holds then). */
+    fun leftMs(link: net.prototux.aare.host.CarVideo.Link, nowMs: Long): Long =
+        (link.atMs + net.prototux.aare.host.CarVideo.WAIT_MS + 1 - nowMs).coerceAtLeast(0)
 
     fun opensNow(link: net.prototux.aare.host.CarVideo.Link?, packageName: String, started: Boolean, driving: Boolean): Boolean =
         link != null && link.packageName == packageName && link.link != null && started && !driving
