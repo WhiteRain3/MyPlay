@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
@@ -40,7 +41,10 @@ import net.prototux.aare.car.MirroredKeys
  * saying the knob now works the app and how to leave (holding Back, or Back three times quickly).
  */
 @Composable
-internal fun MirroredKeyStop(turn: MirroredKeys.TurnMode, send: (action: Int, keyCode: Int) -> Unit, modifier: Modifier = Modifier) {
+internal fun MirroredKeyStop(turn: MirroredKeys.TurnMode, send: (action: Int, keyCode: Int) -> Unit, modifier: Modifier = Modifier, takeRing: Boolean = false) {
+    // VA-3: an app that runs on the car screen gets the knob and the pad from the start, not after a first turn onto it.
+    val ring = remember { androidx.compose.ui.focus.FocusRequester() }
+    if (takeRing) LaunchedEffect(Unit) { runCatching { ring.requestFocus() } }
     val down = remember { HashSet<Int>() }
     var focused by remember { mutableStateOf(false) }
     var hintShown by remember { mutableStateOf(false) }
@@ -66,6 +70,7 @@ internal fun MirroredKeyStop(turn: MirroredKeys.TurnMode, send: (action: Int, ke
                 true
             }
             .carFocusHighlight(MaterialTheme.shapes.small)
+            .focusRequester(ring)
             .focusable(),
     ) {
         if (hint) {

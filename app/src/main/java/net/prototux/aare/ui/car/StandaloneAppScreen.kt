@@ -121,6 +121,7 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
             MirroredKeyStop(
                 net.prototux.aare.car.MirroredKeys.turnFor(runtime.settings.myplayMirrorTurns, packageName),
                 send = { action, code -> launcher.key(android.os.SystemClock.uptimeMillis(), action, code) },
+                takeRing = started,
             )
             // A quiet reminder that this isn't an Android Auto app.
             Text(

@@ -39,4 +39,44 @@ class MyPlayAppListTest {
             listOf("Spotify", "Fermata · Music", "Other · Music"),
             names(Named("com.spotify", "Spotify", "Spotify"), Named("me.aap.fermata", "Music", "Fermata"), Named("com.other", "Music", "Other")),
         )
+
+    // VA-1: an app on the car screen as itself is not also listed as a media player.
+    @Test fun aRealAppHidesItsMediaPlayer() {
+        val real = setOf(MyPlayAppList.YOUTUBE)
+        assertFalse(MyPlayAppList.mediaEntryShown(MyPlayAppList.YOUTUBE, real))
+        assertTrue("YouTube Music stays a media app", MyPlayAppList.mediaEntryShown("com.google.android.apps.youtube.music", real))
+        assertTrue("phone apps off: the media player is the only YouTube", MyPlayAppList.mediaEntryShown(MyPlayAppList.YOUTUBE, emptySet()))
+    }
+
+    // VA-2: the phone's YouTube app and MovieBox Pro (by name: its package varies) are the video apps put on the car.
+    @Test fun theVideoAppsAreYouTubeAndMovieBox() {
+        val installed = mapOf(
+            "app.morphe.android.youtube" to "YouTube Morphe",
+            MyPlayAppList.YOUTUBE to "YouTube",
+            "com.google.android.apps.youtube.music" to "YouTube Music",
+            "com.movieboxpro.android" to "MovieBox Pro",
+            "org.example.box" to "Movie Box",
+            "com.spotify.music" to "Spotify",
+        )
+        assertEquals(setOf("app.morphe.android.youtube", "com.movieboxpro.android", "org.example.box"),
+            MyPlayAppList.videoDefaults("app.morphe.android.youtube", installed))
+        assertEquals(emptySet<String>(), MyPlayAppList.videoDefaults(null, mapOf("com.spotify.music" to "Spotify")))
+        assertTrue(MyPlayAppList.isMovieBox("MOVIEBOX PRO"))
+        assertFalse(MyPlayAppList.isMovieBox("Movies & TV"))
+    }
+
+    // VA-4: the YouTube app is whatever opens YouTube links, a patched build first, or the owner's choice.
+    @Test fun theYouTubeAppIsFoundNotFixed() {
+        val morphe = "app.morphe.android.youtube"
+        val chrome = "com.android.chrome"
+        val installed = mapOf(morphe to "YouTube Morphe", MyPlayAppList.YOUTUBE to "YouTube", chrome to "Chrome")
+        val handlers = listOf(MyPlayAppList.YOUTUBE, chrome, morphe)
+        assertEquals("a patched build before Google's", morphe, MyPlayAppList.youTubeApp(handlers, setOf(chrome), null, installed))
+        assertEquals("the owner's choice", MyPlayAppList.YOUTUBE, MyPlayAppList.youTubeApp(handlers, setOf(chrome), MyPlayAppList.YOUTUBE, installed))
+        assertEquals("a choice no longer installed is passed over", morphe, MyPlayAppList.youTubeApp(handlers, setOf(chrome), "gone.app", installed))
+        assertEquals("only Google's", MyPlayAppList.YOUTUBE, MyPlayAppList.youTubeApp(listOf(MyPlayAppList.YOUTUBE, chrome), setOf(chrome), null, installed))
+        assertEquals("a browser is never it", null, MyPlayAppList.youTubeApp(listOf(chrome), setOf(chrome), null, mapOf(chrome to "Chrome")))
+        assertEquals("a patched build that claims no links, by its name", morphe,
+            MyPlayAppList.youTubeApp(emptyList(), emptySet(), null, mapOf(morphe to "YouTube Morphe", "com.google.android.apps.youtube.music" to "YouTube Music")))
+    }
 }

@@ -6,6 +6,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.foundation.focusable
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isFocusable
 import androidx.compose.ui.test.onNodeWithTag
@@ -72,5 +73,19 @@ class MirroredKeyStopTest {
         rule.onAllNodes(hasTestTag(MIRROR_HINT_TAG)).assertCountEquals(0)
         rule.onNode(isFocusable()).requestFocus()
         rule.onNodeWithTag(MIRROR_HINT_TAG).assertExists()
+    }
+
+    /** VA-3: an app running on the car screen has the knob from the start, no turn onto it first. */
+    @Test fun aRunningAppTakesTheRing() {
+        rule.setContent {
+            androidx.compose.foundation.layout.Column {
+                androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.testTag("before").focusable())
+                androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.weight(1f)) {
+                    MirroredKeyStop(MirroredKeys.TurnMode.UP_DOWN, send = { _, _ -> }, takeRing = true)
+                }
+            }
+        }
+        rule.waitForIdle()
+        rule.onNode(isFocusable() and hasTestTag("before").not()).assertIsFocused()
     }
 }

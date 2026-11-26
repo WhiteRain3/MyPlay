@@ -1,5 +1,8 @@
 package net.prototux.aare.host
 
+import androidx.core.content.edit
+import net.prototux.aare.Settings
+
 /**
  * MyPlay (K8): two rules for the car's app grid, so each entry can be told apart and can start.
  *
@@ -13,6 +16,49 @@ internal object MyPlayAppList {
 
     /** Whether an entry from [packageName] may be in the car's app grid at all. */
     fun canShow(packageName: String): Boolean = packageName != GOOGLE_ANDROID_AUTO
+
+    /**
+     * VA-1: whether [packageName]'s media-player entry (its MediaBrowserService, driven by the car's
+     * media screen) is shown. Not when the app itself runs on the car screen ([realApps], AARE's
+     * "Phone apps"): YouTube's media service only gives an empty library and no picture, so tapping
+     * "YouTube" must open the real app. Apps that are only media apps (YouTube Music) keep theirs.
+     */
+    fun mediaEntryShown(packageName: String, realApps: Set<String>): Boolean = packageName !in realApps
+
+    /** Google's own YouTube app; a patched build (ReVanced, Morphe…) has another package. */
+    const val YOUTUBE = "com.google.android.youtube"
+
+    /** VA-2: MovieBox Pro, found by its name (it is sideloaded, and its package differs between builds). */
+    fun isMovieBox(label: String): Boolean = label.filterNot { it.isWhitespace() }.contains("moviebox", ignoreCase = true)
+
+    /**
+     * VA-4: "the YouTube app": the owner's choice [chosen] when it is installed ([installed],
+     * launchable apps, package to name); else, of the apps that open a youtube.com/watch link
+     * ([handlers]) and are not plain browsers ([browsers]), a patched build (not Google's own
+     * package) before Google's; else an app named YouTube (not Music or Kids), as a patched build
+     * may not claim the links. Null when there is none.
+     */
+    fun youTubeApp(handlers: List<String>, browsers: Set<String>, chosen: String?, installed: Map<String, String>): String? {
+        if (chosen != null && chosen in installed) return chosen
+        val apps = handlers.filter { it !in browsers }.distinct()
+        apps.firstOrNull { it != YOUTUBE }?.let { return it }
+        apps.firstOrNull()?.let { return it }
+        val named = installed.filter { (_, label) -> isYouTubeName(label) }.keys
+        return named.firstOrNull { it != YOUTUBE } ?: named.firstOrNull()
+    }
+
+    private fun isYouTubeName(label: String): Boolean {
+        val l = label.lowercase()
+        return "youtube" in l && "music" !in l && "kids" !in l && "studio" !in l
+    }
+
+    /**
+     * VA-2: of the launchable apps [installed] (package to name), the video apps put on the car
+     * screen as real phone apps once, by default: the phone's YouTube app ([youTubeApp], whatever
+     * build) and MovieBox Pro.
+     */
+    fun videoDefaults(youTubeApp: String?, installed: Map<String, String>): Set<String> =
+        installed.filter { (pkg, label) -> pkg == youTubeApp || isMovieBox(label) }.keys
 
     /** One entry as the naming rule sees it. [appLabel] is the name of the app it belongs to. */
     data class Named(val packageName: String, val label: String, val appLabel: String)
@@ -35,3 +81,19 @@ internal object MyPlayAppList {
         }
     }
 }
+
+/**
+ * VA-2: the video apps (YouTube, MovieBox Pro) were put among the phone apps on the car screen once.
+ * After that the owner's own list rules: one taken off stays off.
+ */
+var Settings.myplayVideoAppsAdded: Boolean
+    get() = prefs.getBoolean("myplay_video_apps_added", false)
+    set(v) = prefs.edit { putBoolean("myplay_video_apps_added", v) }
+
+/**
+ * VA-4: the owner's "Video app": the package to treat as the YouTube app (a patched build among
+ * several), chosen on the phone's Apps page; null: [MyPlayAppList.youTubeApp] picks.
+ */
+var Settings.myplayVideoApp: String?
+    get() = prefs.getString("myplay_video_app", null)?.takeIf { it.isNotBlank() }
+    set(v) = prefs.edit { if (v.isNullOrBlank()) remove("myplay_video_app") else putString("myplay_video_app", v) }
