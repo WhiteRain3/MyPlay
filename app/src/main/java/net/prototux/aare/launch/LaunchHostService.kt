@@ -104,6 +104,10 @@ class LaunchHostService : ILaunchHost.Stub {
         }.onFailure { Log.w(TAG, "open($packageName) failed: ${it.message}") }.getOrDefault(false)
     }
 
+    override fun detach() {
+        runCatching { display?.surface = null }
+    }
+
     override fun stop() {
         screenOffReceiver?.let { receiver ->
             receiverContext?.let { context -> runCatching { context.unregisterReceiver(receiver) } }

@@ -32,6 +32,9 @@ interface ILaunchHost {
      */
     boolean open(String packageName, String uri) = 6;
 
+    /** MyPlay (VA-8): the car screen's surface went away: keep the display (and the app) with no surface. */
+    void detach() = 7;
+
     /** Shizuku's user-service teardown call. */
     void destroy() = 16777114;
 }

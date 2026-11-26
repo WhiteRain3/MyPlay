@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
  *
  * [connect] blocks and must run off the main thread.
  */
-class AppLauncher(private val context: Context) {
+class AppLauncher(private val context: Context) : HostedApps.Launcher {
     @Volatile private var host: ILaunchHost? = null
 
     // --- Shizuku path ---
@@ -80,7 +80,7 @@ class AppLauncher(private val context: Context) {
         return got.await(8, TimeUnit.SECONDS) && host != null
     }
 
-    val connected: Boolean get() = host != null
+    override val connected: Boolean get() = host != null
 
     /** Create the display into [surface] and launch [pkg] on it. Returns the display id, or -1. */
     fun start(surface: Surface, width: Int, height: Int, dpi: Int, pkg: String, keepDisplayAwake: Boolean): Int =
@@ -95,9 +95,12 @@ class AppLauncher(private val context: Context) {
     fun open(pkg: String, uri: String): Boolean = runCatching { host?.open(pkg, uri) == true }
         .onFailure { Log.w(TAG, "open", it) }.getOrDefault(false)
 
+    /** MyPlay (VA-8): keep the display and the app, with no surface (the car screen showed something else). */
+    override fun detach() { runCatching { host?.detach() } }
+
     fun key(eventTime: Long, action: Int, keyCode: Int) { runCatching { host?.key(eventTime, action, keyCode) } }
 
-    fun release() {
+    override fun release() {
         runCatching { host?.stop() }
         if (didBind) runCatching { Shizuku.unbindUserService(args, connection, true) }
         receiver?.let { runCatching { context.unregisterReceiver(it) } }

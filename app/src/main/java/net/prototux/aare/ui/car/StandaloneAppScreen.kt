@@ -48,8 +48,14 @@ import net.prototux.aare.media.Placeholder
 @Composable
 internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageName: String, modifier: Modifier) {
     val context = LocalContext.current
-    val launcher = remember(packageName) { AppLauncher(context) }
-    var started by remember(packageName) { mutableStateOf(false) }
+    // VA-8: the app kept from before, if it is this one (it carries on), else a new one.
+    val hosted = remember(packageName) { runtime.hostedApps.take(packageName) }
+    val launcher = hosted.launcher
+    var started by remember(packageName) { mutableStateOf(hosted.started) }
+    // VA-8: picture hidden, sound off: driving off pauses the app's playing video.
+    LaunchedEffect(driving) {
+        if (driving) runtime.media.playback.value?.takeIf { it.packageName == packageName && it.playing }?.let { runtime.media.pause() }
+    }
 
     DisposableEffect(packageName) {
         // Hardware / head-unit Back goes to the launched app.
@@ -65,7 +71,7 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
         runtime.screenBack = back
         onDispose {
             if (runtime.screenBack === back) runtime.screenBack = null
-            launcher.release()
+            runtime.hostedApps.leave(hosted)
         }
     }
 
@@ -89,11 +95,16 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
                                 val surface = Surface(st)
                                 // connect() blocks (binds Shizuku / spawns su), so do it off the main thread.
                                 Thread {
-                                    if (launcher.connect()) {
+                                    if (hosted.started) {
+                                        // VA-8: the kept display gets the new surface; the app carries on.
+                                        launcher.resize(surface, w, h, runtime.densityDpi)
+                                        started = true
+                                    } else if (launcher.connect()) {
                                         val id = launcher.start(
                                             surface, w, h, runtime.densityDpi, packageName,
                                             runtime.settings.standaloneKeepScreenAwake,
                                         )
+                                        hosted.displayId = id
                                         started = id >= 0
                                     }
                                 }.apply { isDaemon = true }.start()
@@ -101,7 +112,8 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
                             override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) {
                                 launcher.resize(Surface(st), w, h, runtime.densityDpi)
                             }
-                            override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean = true
+                            // VA-8: hidden while driving: the display keeps the app, with no surface.
+                            override fun onSurfaceTextureDestroyed(st: SurfaceTexture): Boolean { launcher.detach(); return true }
                             override fun onSurfaceTextureUpdated(st: SurfaceTexture) = Unit
                         }
                     }

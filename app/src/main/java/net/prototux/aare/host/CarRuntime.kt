@@ -368,7 +368,9 @@ class CarRuntime(
         }
         val position = settings.railPosition
         // Passenger mode lifts the driving restrictions (keyboard, list lengths, phone screen).
+        val wasDriving = ui.drivingRestricted
         ui.drivingRestricted = carDriving && !settings.ignoreDriving
+        if (ui.drivingRestricted && !wasDriving) pauseHiddenVideo()
         ui.theme = CarThemes.byId(settings.carThemeId).forPhone(context).withAccent(settings.carAccent, context)
             .withCustomColours(CustomColours.decode(settings.myplayLookColours)) // MyPlay (F3)
         // TH-1: ORBIT keeps its own colours until the owner chooses a theme, an accent or own colours.
@@ -472,6 +474,7 @@ class CarRuntime(
 
     fun stop() {
         running.remove(this)
+        hostedApps.releaseAll() // VA-8
         ui.pretendSpeed?.stop() // MyPlay (Preview)
         runCatching { context.unregisterReceiver(packageReceiver) }
         settings.unregisterListener(settingsListener)
@@ -518,6 +521,15 @@ class CarRuntime(
             settings.standaloneApps = true
         }
         settings.myplayVideoAppsAdded = true
+    }
+
+    /** VA-8: the phone apps on the car screen, kept a while when their screen is left. */
+    val hostedApps = net.prototux.aare.launch.HostedApps.of(context)
+
+    /** VA-8: the hosted app kept without its screen goes quiet when driving starts (picture hidden, sound off). */
+    private fun pauseHiddenVideo() {
+        val kept = hostedApps.keptPackage ?: return
+        media.playback.value?.takeIf { it.packageName == kept && it.playing }?.let { media.pause() }
     }
 
     /** VA-5: a car session's runtime (not the phone's preview). */
