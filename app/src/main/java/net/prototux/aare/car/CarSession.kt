@@ -84,6 +84,7 @@ import net.prototux.aare.R
 import net.prototux.aare.host.CarRuntime
 import net.prototux.aare.media.MediaHub
 import net.prototux.aare.video.BitrateController
+import net.prototux.aare.video.CarScreenshot
 import net.prototux.aare.video.ProjectionDisplay
 import net.prototux.aare.video.VideoCodecKind
 import net.prototux.aare.video.VideoEncoder
@@ -153,6 +154,8 @@ class CarSession(
     // encoder callback thread; without it a restart can leave them seeing a stale display/mapper.
     @Volatile private var encoder: VideoEncoder? = null
     @Volatile private var display: ProjectionDisplay? = null
+    /** MyPlay (car screenshot): how [CarScreenshot] takes this session's screen, while it shows. */
+    private var screenshot: CarScreenshot.Shooter? = null
     @Volatile private var touch: TouchMapper? = null
     /** Overrides for this specific head unit from vehicles.json (density, margins…), matched at discovery. */
     @Volatile private var vehicleOverride: VehicleOverride? = null
@@ -558,6 +561,15 @@ class CarSession(
         }
         display = pd
         pd.show()
+        // MyPlay (car screenshot): this screen can be taken while it is the one the car shows.
+        val visible = android.graphics.Rect(layout.marginLeft, layout.marginTop, w - layout.marginRight, h - layout.marginBottom)
+        val shooter = CarScreenshot.Shooter { done ->
+            if (closed || display !== pd || video?.focused != true) done(null) else pd.capture(visible, onFrame = done)
+        }
+        screenshot = shooter
+        CarScreenshot.attach(shooter) {
+            runtime.notice(context.getString(R.string.myplay_screenshot_action), context.getString(R.string.myplay_screenshot_saved_car), durationMs = 2_000)
+        }
         lastFrameMs = SystemClock.elapsedRealtime()
         main.removeCallbacks(stallCheck)
         main.postDelayed(stallCheck, STALL_CHECK_MS)
@@ -598,6 +610,7 @@ class CarSession(
 
     private fun teardownVideo() {
         main.removeCallbacks(stallCheck)
+        screenshot?.let(CarScreenshot::detach); screenshot = null
         display?.release(); display = null
         encoder?.stop(); encoder = null
     }

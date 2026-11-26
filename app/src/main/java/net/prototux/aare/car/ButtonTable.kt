@@ -152,6 +152,8 @@ enum class ButtonAction(val id: String) {
     NAVIGATE_HOME("navigate_home"),
     /** MyPlay (#10): the last missed call on the car screen, called back only with a push on its Call button. */
     CALL_BACK("call_back"),
+    /** MyPlay: a picture of exactly what the car shows, saved on the phone (on no button by default). */
+    CAR_SCREENSHOT("car_screenshot"),
     NOTHING("nothing"),
     ;
 

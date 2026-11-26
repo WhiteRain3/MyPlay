@@ -623,6 +623,7 @@ private fun EngineShellThemed(
             HomePadAction.PLACES -> if (state.navPlaces.isEmpty()) { memory.origin = null; openMaps() } else { model.enter(World.NAVIGATE); freshWorld(World.NAVIGATE) }
             HomePadAction.NEXT_SONG -> sources.music.next()
             HomePadAction.NAVIGATE_HOME -> actions.navigateHome()
+            HomePadAction.CAR_SCREENSHOT -> actions.carScreenshot()
             HomePadAction.NOTHING -> Unit
         }
     }

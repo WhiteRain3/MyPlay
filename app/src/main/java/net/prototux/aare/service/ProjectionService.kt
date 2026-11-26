@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -123,6 +124,10 @@ class ProjectionService : Service() {
         DrivingMode.recover(this)
         createChannel()
         _state.update { it.copy(running = true) }
+        // MyPlay (car screenshot): the notification's Screenshot action comes and goes with the car's screen.
+        scope.launch {
+            net.prototux.aare.video.CarScreenshot.live.drop(1).collect { if (!destroyed) updateNotification(_state.value.status) }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -134,6 +139,8 @@ class ProjectionService : Service() {
             ACTION_AUDIO_CONSENT -> acceptAudioConsent(intent)
             ACTION_DOWNLOAD_CERT -> downloadCertificate()
             ACTION_STOP -> { stopEverything(); return START_NOT_STICKY }
+            // MyPlay (car screenshot): only from the notification's action, only while the car shows our screen.
+            ACTION_SCREENSHOT -> net.prototux.aare.video.CarScreenshot.take(this)
         }
         applyListeners()
         // Nothing to do: go away (USB attach and the Bluetooth receiver start us again when needed).
@@ -595,6 +602,13 @@ class ProjectionService : Service() {
             .setContentIntent(open)
             .setOngoing(true)
             .addAction(Notification.Action.Builder(null, getString(R.string.notif_action_stop), stop).build())
+            .apply {
+                if (net.prototux.aare.video.CarScreenshot.live.value) {
+                    val shot = PendingIntent.getService(this@ProjectionService, 3,
+                        Intent(this@ProjectionService, ProjectionService::class.java).setAction(ACTION_SCREENSHOT), PendingIntent.FLAG_IMMUTABLE)
+                    addAction(Notification.Action.Builder(null, getString(R.string.notif_action_screenshot), shot).build())
+                }
+            }
             .build()
     }
 
@@ -732,6 +746,7 @@ class ProjectionService : Service() {
         const val ACTION_USB_PERMISSION = "net.prototux.aare.USB_PERMISSION"
         const val ACTION_IDLE = "net.prototux.aare.IDLE"
         const val ACTION_STOP = "net.prototux.aare.STOP"
+        const val ACTION_SCREENSHOT = "net.prototux.aare.CAR_SCREENSHOT"
         const val ACTION_DOWNLOAD_CERT = "net.prototux.aare.DOWNLOAD_CERT"
         const val ACTION_WIRELESS = "net.prototux.aare.WIRELESS"
         const val ACTION_PROBE_WIRELESS = "net.prototux.aare.PROBE_WIRELESS"

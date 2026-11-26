@@ -31,6 +31,8 @@ enum class HomePadAction(val id: String) {
     NEXT_SONG("next_song"),
     /** HN-3: the maps app to the home address set on the phone (a notice when none is set). */
     NAVIGATE_HOME("navigate_home"),
+    /** MyPlay: a picture of exactly what the car shows, saved on the phone (on no key by default). */
+    CAR_SCREENSHOT("car_screenshot"),
     NOTHING("nothing"),
     ;
 

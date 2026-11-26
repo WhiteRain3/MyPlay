@@ -128,4 +128,12 @@
     <string name="myplay_letter_ring_space" translatable="false">Space</string>
     <string name="myplay_letter_ring_delete" translatable="false">Delete</string>
     <string name="myplay_letter_ring_search" translatable="false">Search</string>
+    <!-- MyPlay (car screenshot) -->
+    <string name="myplay_screenshot_action" translatable="false">Car screenshot</string>
+    <string name="notif_action_screenshot" translatable="false">Screenshot</string>
+    <string name="myplay_screenshot_saved" translatable="false">Car screenshot saved to Pictures/MyPlay</string>
+    <string name="myplay_screenshot_saved_car" translatable="false">Screenshot saved</string>
+    <string name="myplay_screenshot_failed" translatable="false">Couldn\'t take the car screenshot</string>
+    <string name="myplay_screenshot_no_car" translatable="false">Connect to the car to take a car screenshot</string>
+    <string name="myplay_screenshot_old_android" translatable="false">Car screenshots need Android 10 or newer</string>
 </resources>

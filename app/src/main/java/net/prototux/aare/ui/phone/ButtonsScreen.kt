@@ -127,6 +127,7 @@ internal fun actionName(a: ButtonAction): Int = when (a) {
     ButtonAction.OPEN_PHONE -> R.string.phone_action_open_phone
     ButtonAction.NAVIGATE_HOME -> R.string.phone_action_navigate_home
     ButtonAction.CALL_BACK -> R.string.phone_action_call_back
+    ButtonAction.CAR_SCREENSHOT -> R.string.myplay_screenshot_action
     ButtonAction.NOTHING -> R.string.phone_action_nothing
 }
 

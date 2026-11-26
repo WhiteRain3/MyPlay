@@ -2,6 +2,10 @@ package net.prototux.aare.video
 
 import android.app.Presentation
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.PixelFormat
+import android.graphics.Rect
+import android.media.ImageReader
 import android.hardware.display.DisplayManager
 import android.hardware.display.VirtualDisplay
 import android.os.Bundle
@@ -51,6 +55,11 @@ class ProjectionDisplay(
     private val display: VirtualDisplay
     private var presentation: CarPresentation? = null
     private var stopFrameStats: (() -> Unit)? = null
+    /** The surface the display draws into when no screenshot is being taken (the encoder's). */
+    private val lock = Any()
+    private var target: Surface? = surface
+    /** MyPlay (car screenshot): the reader the display draws into for one frame, while a screenshot is taken. */
+    private var capturing: ImageReader? = null
 
     init {
         val dm = context.getSystemService(DisplayManager::class.java)
@@ -71,7 +80,56 @@ class ProjectionDisplay(
 
     /** Swaps the target surface (e.g. after the encoder restarted). */
     fun setSurface(surface: Surface?) {
-        display.surface = surface
+        synchronized(lock) {
+            target = surface
+            // A screenshot under way puts it back when its frame is in.
+            if (capturing == null) display.surface = surface
+        }
+    }
+
+    /**
+     * MyPlay (car screenshot): the next frame the car would get, as the car gets it (the whole
+     * display composed, the hosted maps app's surface included), at its real size, cropped to
+     * [crop] (the car's visible area). Main thread; [onFrame] runs on the main thread, with null
+     * when no frame came within [timeoutMs] or one is already being taken.
+     *
+     * The display draws that one frame into an [ImageReader] instead of the encoder, then goes back
+     * to the encoder and is redrawn, so the car misses a single frame and nothing else changes.
+     */
+    fun capture(crop: Rect?, timeoutMs: Long = CAPTURE_TIMEOUT_MS, onFrame: (Bitmap?) -> Unit) {
+        val reader = runCatching { ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2) }.getOrNull()
+            ?: return onFrame(null)
+        synchronized(lock) {
+            if (capturing != null) { reader.close(); return onFrame(null) }
+            capturing = reader
+            display.surface = reader.surface
+        }
+        var done = false
+        val timeout = Runnable { finish(reader, null, onFrame).also { done = true } }
+        reader.setOnImageAvailableListener({ r ->
+            if (done) return@setOnImageAvailableListener
+            val image = runCatching { r.acquireLatestImage() }.getOrNull() ?: return@setOnImageAvailableListener
+            val bitmap = runCatching { image.use { CarFrame.toBitmap(it, crop) } }.getOrNull()
+            done = true
+            main.removeCallbacks(timeout)
+            finish(reader, bitmap, onFrame)
+        }, main)
+        main.postDelayed(timeout, timeoutMs)
+        // A still screen draws nothing new by itself.
+        presentation?.window?.decorView?.invalidate()
+    }
+
+    /** Back to the encoder (or the surface set meanwhile), and a fresh frame for it. Main thread. */
+    private fun finish(reader: ImageReader, bitmap: Bitmap?, onFrame: (Bitmap?) -> Unit) {
+        synchronized(lock) {
+            if (capturing === reader) capturing = null
+            // The display may be released meanwhile (the car went away).
+            runCatching { display.surface = target }
+        }
+        reader.setOnImageAvailableListener(null, null)
+        runCatching { reader.close() }
+        presentation?.window?.decorView?.invalidate()
+        onFrame(bitmap)
     }
 
     /** Forces a redraw of the presentation window so a new buffer is produced for the encoder. */
@@ -147,6 +205,9 @@ class ProjectionDisplay(
     }
 
     private companion object {
+        /** How long a screenshot waits for its frame; the display normally gives one within a frame or two. */
+        const val CAPTURE_TIMEOUT_MS = 1_000L
+
         /** Keys that move or use focus, as in the platform's own check for leaving touch mode. */
         fun isNavigationKey(code: Int) = when (code) {
             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN, KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,

@@ -261,6 +261,8 @@ interface CarActions {
     fun navigateTo(place: String)
     /** MyPlay (#10): offer the last missed call on the car screen, to call back with one push. */
     fun callBackLastMissed() = Unit
+    /** MyPlay (car screenshot): a picture of the car screen, saved on the phone. */
+    fun carScreenshot() = Unit
     /** HN-3: the maps app to the home address set on the phone; without one, a notice says so. */
     fun navigateHome() = Unit
 }

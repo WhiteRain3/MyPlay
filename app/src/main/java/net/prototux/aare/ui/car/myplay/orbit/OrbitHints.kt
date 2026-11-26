@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material.icons.rounded.DonutLarge
 import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.Screenshot
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Navigation
 import androidx.compose.material.icons.rounded.Phone
@@ -65,6 +66,7 @@ internal object OrbitHints {
         HomePadAction.PLACES -> Icons.Rounded.Place
         HomePadAction.NEXT_SONG -> Icons.Rounded.SkipNext
         HomePadAction.NAVIGATE_HOME -> Icons.Rounded.Home
+        HomePadAction.CAR_SCREENSHOT -> Icons.Rounded.Screenshot
         HomePadAction.NOTHING -> Icons.Rounded.RadioButtonChecked
     }
 
