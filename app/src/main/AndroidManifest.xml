@@ -101,6 +101,23 @@
             android:exported="false"
             android:targetActivity=".ui.MainActivity" />
 
+        <!-- MyPlay (VA-5): "Play on car" in the share sheet: a shared video link opens in the real app
+             on the car screen. No window; a toast says how it went. -->
+        <activity
+            android:name=".ui.PlayOnCarActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:label="@string/myplay_play_on_car"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
         <activity
             android:name=".ui.CarPreviewActivity"
             android:exported="false"

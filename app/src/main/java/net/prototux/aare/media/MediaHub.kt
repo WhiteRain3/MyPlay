@@ -45,6 +45,8 @@ data class PlaybackInfo(
     val durationMs: Long,
     /** SystemClock.elapsedRealtime() when positionMs was sampled, to extrapolate progress. */
     val sampledAtMs: Long,
+    /** MyPlay (VA-6): the playing item's media id, when the app gives one (YouTube's is the video id). */
+    val mediaId: String? = null,
 )
 
 /**

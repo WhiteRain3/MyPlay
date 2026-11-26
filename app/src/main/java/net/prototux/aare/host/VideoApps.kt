@@ -24,7 +24,8 @@ internal object VideoApps {
 
     /** The phone's YouTube app (see [MyPlayAppList.youTubeApp]); null when none is installed. */
     fun youTubeApp(context: Context, settings: Settings, installed: Map<String, String> = launchable(context)): String? {
-        val handlers = YOUTUBE_LINKS.flatMap { handlersOf(context, it) }
+        // Never MyPlay itself (its "Play on car" takes shared links, not opened ones, but to be sure).
+        val handlers = YOUTUBE_LINKS.flatMap { handlersOf(context, it) }.filter { it != context.packageName }
         val browsers = handlersOf(context, ANY_PAGE).toSet()
         return MyPlayAppList.youTubeApp(handlers, browsers, settings.myplayVideoApp, installed)
     }

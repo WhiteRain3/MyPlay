@@ -86,6 +86,20 @@ class LaunchHostService : ILaunchHost.Stub {
         inject(ev)
     }
 
+    override fun open(packageName: String, uri: String): Boolean {
+        val id = displayId
+        if (id < 0) return false
+        val ctx = injectedContext ?: systemContext() ?: return false
+        return runCatching {
+            // The app's own handler of the link, as the phone would pick it (never a fixed activity:
+            // patched builds name theirs differently).
+            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(uri)).setPackage(packageName)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            ctx.startActivity(intent, ActivityOptions.makeBasic().setLaunchDisplayId(id).toBundle())
+            true
+        }.onFailure { Log.w(TAG, "open($packageName) failed: ${it.message}") }.getOrDefault(false)
+    }
+
     override fun stop() {
         screenOffReceiver?.let { receiver ->
             receiverContext?.let { context -> runCatching { context.unregisterReceiver(receiver) } }

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +67,16 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
             if (runtime.screenBack === back) runtime.screenBack = null
             launcher.release()
         }
+    }
+
+    // VA-5: a video link for this app ("Play on car", "Open on car") opens in it once it runs (parked).
+    val link = runtime.ui.videoLink
+    LaunchedEffect(link, started) {
+        if (link == null || link.packageName != packageName) return@LaunchedEffect
+        if (link.link == null) { runtime.ui.videoLink = null; return@LaunchedEffect }
+        if (!started) return@LaunchedEffect
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { launcher.open(packageName, link.link) }
+        if (runtime.ui.videoLink === link) runtime.ui.videoLink = null
     }
 
     Box(modifier.background(Color.Black)) {

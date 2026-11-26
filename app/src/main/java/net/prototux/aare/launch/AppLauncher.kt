@@ -91,6 +91,10 @@ class AppLauncher(private val context: Context) {
     fun touch(downTime: Long, eventTime: Long, action: Int, x: Float, y: Float, pointerId: Int) {
         runCatching { host?.touch(downTime, eventTime, action, x, y, pointerId) }
     }
+    /** MyPlay (VA-5): open [uri] in [pkg] on the app's display (after [start]). Any thread; false when it didn't. */
+    fun open(pkg: String, uri: String): Boolean = runCatching { host?.open(pkg, uri) == true }
+        .onFailure { Log.w(TAG, "open", it) }.getOrDefault(false)
+
     fun key(eventTime: Long, action: Int, keyCode: Int) { runCatching { host?.key(eventTime, action, keyCode) } }
 
     fun release() {

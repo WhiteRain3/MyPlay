@@ -187,6 +187,7 @@ internal class SessionSource(
                 durationMs = it.getLong(MediaMetadata.METADATA_KEY_DURATION).coerceAtLeast(0),
                 // PlaybackState samples its position at lastPositionUpdateTime (elapsedRealtime)
                 sampledAtMs = ps?.lastPositionUpdateTime?.takeIf { t -> t > 0 } ?: SystemClock.elapsedRealtime(),
+                mediaId = it.getString(MediaMetadata.METADATA_KEY_MEDIA_ID) ?: d.mediaId,
             )
         }
         // STATE_ERROR is fatal. Non-fatal errors ("sign in to see your library") keep the state and

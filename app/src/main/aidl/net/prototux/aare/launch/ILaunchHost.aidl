@@ -26,6 +26,12 @@ interface ILaunchHost {
     /** Tear the display down and stop feeding the app. */
     void stop() = 5;
 
+    /**
+     * MyPlay (VA-5): open [uri] (a video link) in [packageName] on the display made by start; true
+     * when the app took it.
+     */
+    boolean open(String packageName, String uri) = 6;
+
     /** Shizuku's user-service teardown call. */
     void destroy() = 16777114;
 }
