@@ -134,8 +134,10 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
                 send = { action, code -> launcher.key(android.os.SystemClock.uptimeMillis(), action, code) },
                 takeRing = started,
             )
-            // A quiet reminder that this isn't an Android Auto app.
-            Text(
+            // A quiet reminder that this isn't an Android Auto app; VA-7: only for a few seconds, as it covers the video's top.
+            var banner by remember(packageName) { mutableStateOf(true) }
+            LaunchedEffect(packageName, started) { if (started) { kotlinx.coroutines.delay(BANNER_MS); banner = false } }
+            if (banner) Text(
                 stringResource(R.string.standalone_not_native),
                 style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
@@ -148,3 +150,6 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
         }
     }
 }
+
+/** VA-7: how long the "not an Android Auto app" line stays over a hosted app once it runs. */
+internal const val BANNER_MS = 3_000L
