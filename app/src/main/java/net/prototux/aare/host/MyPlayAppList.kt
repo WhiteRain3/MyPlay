@@ -46,16 +46,16 @@ internal object MyPlayAppList {
         val yt = when {
             youTubeApp == null -> "no YouTube app found"
             youTubeApp !in allowed -> "YouTube app ($youTubeApp) not allowed"
-            youTubeApp in hidden -> "YouTube app ($youTubeApp) hidden"
             youTubeApp in missing -> "YouTube app ($youTubeApp) not installed"
             else -> "YouTube app ($youTubeApp) allowed"
         }
         fun list(xs: Collection<String>) = xs.sorted().joinToString(", ", "[", "]")
         return buildString {
             append("phone apps on the car: ${if (on) "on" else "off"}, root/Shizuku ${if (launcher) "yes" else "no"}, ")
-            append("${allowed.size} allowed (${(allowed intersect hidden).size} hidden); $yt")
+            append("${allowed.size} allowed; $yt")
             if (allowed.isNotEmpty()) append("; allowed ${list(allowed)}")
-            if ((allowed intersect hidden).isNotEmpty()) append(", hidden ${list(allowed intersect hidden)}")
+            // VA-23: a hide on the Apps page (a media player, a car app) doesn't hide the real app.
+            if ((allowed intersect hidden).isNotEmpty()) append(", other entries hidden ${list(allowed intersect hidden)}")
             if (missing.isNotEmpty()) append(", not installed ${list(missing)}")
             if (on && launcher) append("; on the car ${listed.joinToString(", ", "[", "]")}")
             if (candidates.isNotEmpty()) append("; YouTube candidates ${candidates.distinct().joinToString(", ", "[", "]")}")

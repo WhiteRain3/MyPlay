@@ -588,7 +588,9 @@ class CarRuntime(
         val missing = HashSet<String>()
         if (settings.standaloneApps && launcherAvailable) {
             for (pkg in settings.standaloneAppPackages) {
-                if (pkg in hidden) continue
+                // VA-23: hides are per entry. A package hidden on the phone's Apps page (its media
+                // player, its car app, its messaging entry) is not hidden as a phone app: that is the
+                // Phone apps list's own say. Hiding YouTube's old media player hid the real app too.
                 val info = runCatching { context.packageManager.getApplicationInfo(pkg, 0) }.getOrNull()
                 if (info == null) { missing += pkg; continue }
                 listed += pkg
@@ -854,7 +856,7 @@ class CarRuntime(
 
     /** VA-1: the apps that run on the car screen as themselves (Phone apps, with root or Shizuku there). */
     private fun realApps(): Set<String> =
-        if (settings.standaloneApps && AppLauncher.mayTry(context)) settings.standaloneAppPackages - settings.hiddenApps else emptySet()
+        if (settings.standaloneApps && AppLauncher.mayTry(context)) settings.standaloneAppPackages else emptySet() // VA-23: not the Apps page's hides
 
     /**
      * VA-5: opens [link] (a video link; null: just the app) in the real app on the car screen, never

@@ -83,15 +83,15 @@ class MyPlayAppListTest {
     // VA-18: the log says why YouTube is or isn't on the car.
     @Test fun thePhoneAppsLine() {
         val yt = "app.morphe.android.youtube"
-        assertEquals("phone apps on the car: off, root/Shizuku no, 0 allowed (0 hidden); no YouTube app found",
+        assertEquals("phone apps on the car: off, root/Shizuku no, 0 allowed; no YouTube app found",
             MyPlayAppList.phoneAppsLine(false, false, emptySet(), emptySet(), null))
-        assertEquals("phone apps on the car: on, root/Shizuku yes, 2 allowed (0 hidden); YouTube app ($yt) allowed; " +
+        assertEquals("phone apps on the car: on, root/Shizuku yes, 2 allowed; YouTube app ($yt) allowed; " +
             "allowed [$yt, x]; on the car [x, $yt]; YouTube candidates [$yt]",
             MyPlayAppList.phoneAppsLine(true, true, setOf(yt, "x"), emptySet(), yt, listOf("x", yt), candidates = listOf(yt, yt)))
         assertTrue(MyPlayAppList.phoneAppsLine(true, true, setOf("x"), emptySet(), yt).contains("YouTube app ($yt) not allowed"))
-        // VA-22: hidden (the owner hid the old media entry, the same package) and not installed say so.
+        // VA-23: the old media entry hidden (the same package) doesn't hide the real app; the log says so.
         val hiddenLine = MyPlayAppList.phoneAppsLine(true, true, setOf(yt), setOf(yt), yt)
-        assertTrue(hiddenLine.contains("YouTube app ($yt) hidden") && hiddenLine.contains("hidden [$yt]"))
+        assertTrue(hiddenLine.contains("YouTube app ($yt) allowed") && hiddenLine.contains("other entries hidden [$yt]"))
         assertTrue(MyPlayAppList.phoneAppsLine(true, true, setOf(yt), emptySet(), yt, missing = setOf(yt)).contains("not installed [$yt]"))
     }
 
