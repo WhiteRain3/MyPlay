@@ -45,11 +45,15 @@ class AppLauncher(private val context: Context) : HostedApps.Launcher {
 
     /** Connects via Shizuku if available, else root. Blocks up to a few seconds; false if neither works. */
     fun connect(): Boolean {
-        val ok = if (CaptureMethods.shizukuAvailable()) connectShizuku() else connectRoot()
-        if (!ok) failure = LaunchStatus.NOT_CONNECTED
+        val shizuku = CaptureMethods.shizukuAvailable()
+        val ok = if (shizuku) connectShizuku() else connectRoot()
+        // VA-20: how it failed, for the car (su denied, no answer, Shizuku refused).
+        if (!ok) failure = LaunchStatus.with(LaunchStatus.NOT_CONNECTED, if (shizuku) "Shizuku" else "root", connectError ?: "no answer")
         return ok
     }
 
+    /** VA-20: the last connect's error, in a few words. */
+    @Volatile private var connectError: String? = null
     /** VA-17: why the app side couldn't reach the privileged host (null: it could, or not tried). */
     @Volatile private var failure: String? = null
 
@@ -58,8 +62,10 @@ class AppLauncher(private val context: Context) : HostedApps.Launcher {
 
     private fun connectShizuku(): Boolean {
         runCatching { Shizuku.bindUserService(args, connection); didBind = true }
-            .onFailure { Log.w(TAG, "Shizuku bind failed", it); return false }
-        return bound.await(8, TimeUnit.SECONDS) && host != null
+            .onFailure { Log.w(TAG, "Shizuku bind failed", it); connectError = "bind failed: ${it.message}"; return false }
+        val ok = bound.await(8, TimeUnit.SECONDS) && host != null
+        if (!ok) connectError = "Shizuku service did not start within 8 s"
+        return ok
     }
 
     private fun connectRoot(): Boolean {
@@ -79,12 +85,22 @@ class AppLauncher(private val context: Context) : HostedApps.Launcher {
         val apk = context.applicationInfo.sourceDir
         val cmd = "CLASSPATH='$apk' app_process / ${LaunchMain::class.java.name} ${context.packageName}"
         suProcess = runCatching { ProcessBuilder("su", "-c", cmd).start() }
-            .onFailure { Log.w(TAG, "su launch failed", it) }.getOrNull() ?: return false
+            .onFailure { Log.w(TAG, "su launch failed", it); connectError = "su not runnable: ${it.message}" }.getOrNull() ?: return false
+        // VA-20: su's last word, for the car's message when it refuses.
+        var lastErr: String? = null
         suProcess?.let { p ->
-            Thread { runCatching { p.errorStream.bufferedReader().forEachLine { if (BuildConfig.DEBUG) Log.d(TAG, "su: $it") } } }
+            Thread { runCatching { p.errorStream.bufferedReader().forEachLine { lastErr = it; if (BuildConfig.DEBUG) Log.d(TAG, "su: $it") } } }
                 .apply { isDaemon = true }.start()
         }
-        return got.await(8, TimeUnit.SECONDS) && host != null
+        val ok = got.await(8, TimeUnit.SECONDS) && host != null
+        if (!ok) {
+            val p = suProcess
+            connectError = when {
+                p != null && !p.isAlive -> "su denied (exit ${runCatching { p.exitValue() }.getOrDefault(-1)})" + (lastErr?.let { ": $it" } ?: "")
+                else -> "su gave no answer within 8 s" + (lastErr?.let { ": $it" } ?: "")
+            }
+        }
+        return ok
     }
 
     override val connected: Boolean get() = host != null

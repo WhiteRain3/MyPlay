@@ -104,12 +104,14 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
     // VA-17: how the start went, said on the car (never a silent fallback to something else).
     var attempted by remember(packageName) { mutableStateOf(false) }
     var problem by remember(packageName) { mutableStateOf<net.prototux.aare.launch.LaunchStatus.Problem?>(null) }
+    var problemDetail by remember(packageName) { mutableStateOf<String?>(null) }
     LaunchedEffect(attempted) {
         if (!attempted) return@LaunchedEffect
         // The host checks where the app landed a moment after launching it.
         repeat(STATUS_POLLS) {
             val status = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { launcher.status() }
             problem = net.prototux.aare.launch.LaunchStatus.problem(status)
+            problemDetail = net.prototux.aare.launch.LaunchStatus.detail(status)
             if (problem != null || status == net.prototux.aare.launch.LaunchStatus.ON_CAR) {
                 net.prototux.aare.DiagLog.add("phone app on the car: ${status ?: "?"}")
                 return@LaunchedEffect
@@ -192,7 +194,7 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
                     .background(Color.Black.copy(alpha = 0.35f)).padding(horizontal = 12.dp, vertical = 3.dp),
             )
             val trouble = problem
-            if (trouble != null) Placeholder(LaunchProblemText.of(context, trouble, appLabel), loading = false, icon = Icons.Rounded.ErrorOutline)
+            if (trouble != null) Placeholder(LaunchProblemText.of(context, trouble, appLabel, problemDetail), loading = false, icon = Icons.Rounded.ErrorOutline)
             else if (!started) Placeholder(stringResource(R.string.standalone_starting), loading = true)
         } else {
             Placeholder(stringResource(R.string.standalone_paused_driving), loading = false, icon = Icons.Rounded.PauseCircle)
@@ -223,7 +225,8 @@ private const val STATUS_POLLS = 8
 
 /** VA-17: the car's words for a start that went wrong ([net.prototux.aare.launch.LaunchStatus]). */
 internal object LaunchProblemText {
-    fun of(context: android.content.Context, problem: net.prototux.aare.launch.LaunchStatus.Problem, app: String): String = context.getString(
+    /** VA-20: always with how it was tried and the concrete error ([detail]: "root: su denied…"). */
+    fun of(context: android.content.Context, problem: net.prototux.aare.launch.LaunchStatus.Problem, app: String, detail: String?): String = context.getString(
         when (problem) {
             net.prototux.aare.launch.LaunchStatus.Problem.NEEDS_ROOT, net.prototux.aare.launch.LaunchStatus.Problem.NOT_CONNECTED -> R.string.myplay_hosted_no_root
             net.prototux.aare.launch.LaunchStatus.Problem.NO_DISPLAY -> R.string.myplay_hosted_no_display
@@ -231,5 +234,6 @@ internal object LaunchProblemText {
             net.prototux.aare.launch.LaunchStatus.Problem.ON_PHONE -> R.string.myplay_hosted_on_phone
         },
         app,
+        detail ?: context.getString(R.string.myplay_hosted_no_detail),
     )
 }

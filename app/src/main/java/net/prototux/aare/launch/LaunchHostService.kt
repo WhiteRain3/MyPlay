@@ -34,6 +34,8 @@ class LaunchHostService : ILaunchHost.Stub {
     private val injectedContext: Context?
     @Volatile private var display: VirtualDisplay? = null
     @Volatile private var displayId: Int = -1
+    /** VA-20: why the last display could not be made. */
+    @Volatile private var displayError: String? = null
     /** VA-17: the last start's outcome (see [status]). */
     @Volatile private var lastStatus: String = ""
     @Volatile private var displayWakeLock: PowerManager.WakeLock? = null
@@ -57,8 +59,9 @@ class LaunchHostService : ILaunchHost.Stub {
         keepDisplayAwake: Boolean,
     ): Int {
         stop()
-        val ctx = injectedContext ?: systemContext() ?: return (-1).also { lastStatus = LaunchStatus.NO_CONTEXT }
-        val vd = createDisplay(ctx, surface, width, height, dpi) ?: return (-1).also { lastStatus = LaunchStatus.NO_DISPLAY }
+        val ctx = injectedContext ?: systemContext() ?: return (-1).also { lastStatus = LaunchStatus.with(LaunchStatus.NO_CONTEXT, method(), "no system context") }
+        val vd = createDisplay(ctx, surface, width, height, dpi)
+            ?: return (-1).also { lastStatus = LaunchStatus.with(LaunchStatus.NO_DISPLAY, method(), displayError ?: "createVirtualDisplay returned nothing") }
         display = vd
         displayId = vd.display.displayId
         if (keepDisplayAwake) enableKeepAwakeFallback(ctx, displayId)
@@ -66,9 +69,10 @@ class LaunchHostService : ILaunchHost.Stub {
         // apps) would be pillarboxed in the middle of it. Like a tablet or a desktop window, this
         // display ignores the app's orientation request, so the app fills it.
         ignoreOrientationRequest(displayId)
-        if (!launch(ctx, packageName, displayId)) {
-            Log.w(TAG, "created display ${displayId} but could not launch $packageName on it")
-            lastStatus = LaunchStatus.LAUNCH_FAILED
+        val failed = launch(ctx, packageName, displayId)
+        if (failed != null) {
+            Log.w(TAG, "created display ${displayId} but could not launch $packageName on it: $failed")
+            lastStatus = LaunchStatus.with(LaunchStatus.LAUNCH_FAILED, method(), failed)
         } else {
             lastStatus = LaunchStatus.LAUNCHED
             // VA-17: an app that refuses other screens opens on the phone instead; say so, don't let it pass.
@@ -78,7 +82,7 @@ class LaunchHostService : ILaunchHost.Stub {
                 if (displayId != id) return@Thread
                 lastStatus = when (onDisplay(ctx, packageName, id)) {
                     true -> LaunchStatus.ON_CAR
-                    false -> LaunchStatus.ON_PHONE
+                    false -> LaunchStatus.with(LaunchStatus.ON_PHONE, method(), "activity refused display $id")
                     null -> lastStatus
                 }
             }.apply { name = "AARE-placement"; isDaemon = true }.start()
@@ -110,14 +114,18 @@ class LaunchHostService : ILaunchHost.Stub {
         val id = displayId
         if (id < 0) return false
         val ctx = injectedContext ?: systemContext() ?: return false
-        return runCatching {
+        val direct = runCatching {
             // The app's own handler of the link, as the phone would pick it (never a fixed activity:
             // patched builds name theirs differently).
             val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(uri)).setPackage(packageName)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             ctx.startActivity(intent, fullScreen(ActivityOptions.makeBasic().setLaunchDisplayId(id)).toBundle())
-            true
-        }.onFailure { Log.w(TAG, "open($packageName) failed: ${it.message}") }.getOrDefault(false)
+        }
+        if (direct.isSuccess) return true
+        // VA-20: as the launch, through the activity manager's own command when the call is refused.
+        val am = amStart(id, listOf("-a", Intent.ACTION_VIEW, "-d", uri, "-p", packageName))
+        if (am != null) Log.w(TAG, "open($packageName) failed: ${direct.exceptionOrNull()?.message}; am: $am")
+        return am == null
     }
 
     override fun status(): String = lastStatus
@@ -230,7 +238,7 @@ class LaunchHostService : ILaunchHost.Stub {
         // if the framework rejects the hidden bits for this uid/version.
         for (flags in intArrayOf(FULL_FLAGS, FLAG_PUBLIC or FLAG_PRESENTATION or FLAG_OWN_CONTENT_ONLY)) {
             val vd = runCatching { dm.createVirtualDisplay("AARE app", w, h, dpi.coerceAtLeast(120), surface, flags) }
-                .onFailure { Log.w(TAG, "createVirtualDisplay(flags=$flags) failed: ${it.message}") }
+                .onFailure { Log.w(TAG, "createVirtualDisplay(flags=$flags) failed: ${it.message}"); displayError = "${it.javaClass.simpleName}: ${it.message}" }
                 .getOrNull()
             if (vd != null) return vd
         }
@@ -239,13 +247,46 @@ class LaunchHostService : ILaunchHost.Stub {
 
     /** Launch [pkg]'s main activity onto [onDisplay]. */
     @SuppressLint("QueryPermissionsNeeded")
-    private fun launch(ctx: Context, pkg: String, onDisplay: Int): Boolean = runCatching {
-        val intent = ctx.packageManager.getLaunchIntentForPackage(pkg)
-            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK) ?: return false
-        val opts = fullScreen(ActivityOptions.makeBasic().setLaunchDisplayId(onDisplay))
-        ctx.startActivity(intent, opts.toBundle())
-        true
-    }.onFailure { Log.w(TAG, "startActivity($pkg) failed: ${it.message}") }.getOrDefault(false)
+    /**
+     * Launch [pkg]'s main activity onto [onDisplay]: null when launched, else why not (VA-20: the
+     * concrete reason, for the car). The call from this process can be refused where the activity
+     * manager's own `am start` is not (as root, the system context's package is not root's), so
+     * that is tried next.
+     */
+    private fun launch(ctx: Context, pkg: String, onDisplay: Int): String? {
+        val pm = ctx.packageManager
+        val intent = runCatching { pm.getLaunchIntentForPackage(pkg) }.getOrNull()
+        if (intent == null && runCatching { pm.getApplicationInfo(pkg, 0) }.isFailure) return "package not found"
+        val direct = runCatching {
+            val i = (intent ?: Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER).setPackage(pkg))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            ctx.startActivity(i, fullScreen(ActivityOptions.makeBasic().setLaunchDisplayId(onDisplay)).toBundle())
+        }
+        if (direct.isSuccess) return null
+        val first = direct.exceptionOrNull().let { "${it?.javaClass?.simpleName}: ${it?.message}" }
+        val target = intent?.component?.flattenToShortString()
+        val args = if (target != null) listOf("-n", target)
+            else listOf("-a", Intent.ACTION_MAIN, "-c", Intent.CATEGORY_LAUNCHER, "-p", pkg)
+        val flags = (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK).toString()
+        val am = amStart(onDisplay, listOf("-f", flags) + args) ?: return null
+        return "$first; am start: $am"
+    }
+
+    /**
+     * VA-20: `am start --display <id> --windowingMode 1 <args>`, the arguments passed as they are (no
+     * shell). Null when it started the activity, else its error (or a timeout).
+     */
+    private fun amStart(display: Int, args: List<String>): String? = runCatching {
+        val cmd = listOf("/system/bin/am", "start", "--display", display.toString(), "--windowingMode", WINDOWING_MODE_FULLSCREEN.toString()) + args
+        val p = ProcessBuilder(cmd).redirectErrorStream(true).start()
+        if (!p.waitFor(AM_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)) { p.destroy(); return@runCatching "launch timeout" }
+        val out = p.inputStream.bufferedReader().use { it.readText() }
+        val error = out.lineSequence().firstOrNull { it.startsWith("Error") || it.contains("Exception") || it.startsWith("Warning: Activity not started") }
+        if (p.exitValue() == 0 && error == null) null else (error ?: "exit ${p.exitValue()}").trim()
+    }.getOrElse { "${it.javaClass.simpleName}: ${it.message}" }
+
+    /** VA-20: how this helper runs, for the car's message. */
+    private fun method(): String = if (android.os.Process.myUid() == 0) "root" else "Shizuku"
 
     /**
      * VA-7: `wm set-ignore-orientation-request -d <id> true` (Android 12L and newer): the display
@@ -329,5 +370,6 @@ class LaunchHostService : ILaunchHost.Stub {
         const val FLAG_ALWAYS_UNLOCKED = 1 shl 12 // hidden, API 30+
         const val FULL_FLAGS = FLAG_PUBLIC or FLAG_PRESENTATION or FLAG_OWN_CONTENT_ONLY or FLAG_TRUSTED or FLAG_OWN_DISPLAY_GROUP or FLAG_ALWAYS_UNLOCKED
         const val PLACEMENT_CHECK_MS = 1_500L
+        const val AM_TIMEOUT_S = 8L
     }
 }

@@ -85,10 +85,14 @@ class MyPlayAppListTest {
         val yt = "app.morphe.android.youtube"
         assertEquals("phone apps on the car: off, root/Shizuku no, 0 allowed (0 hidden); no YouTube app found",
             MyPlayAppList.phoneAppsLine(false, false, emptySet(), emptySet(), null))
-        assertEquals("phone apps on the car: on, root/Shizuku yes, 2 allowed (0 hidden); YouTube app ($yt) allowed",
-            MyPlayAppList.phoneAppsLine(true, true, setOf(yt, "x"), emptySet(), yt))
-        assertTrue(MyPlayAppList.phoneAppsLine(true, true, setOf("x"), emptySet(), yt).endsWith("not allowed"))
-        assertTrue(MyPlayAppList.phoneAppsLine(true, true, setOf(yt), setOf(yt), yt).endsWith("hidden"))
+        assertEquals("phone apps on the car: on, root/Shizuku yes, 2 allowed (0 hidden); YouTube app ($yt) allowed; " +
+            "allowed [$yt, x]; on the car [x, $yt]; YouTube candidates [$yt]",
+            MyPlayAppList.phoneAppsLine(true, true, setOf(yt, "x"), emptySet(), yt, listOf("x", yt), candidates = listOf(yt, yt)))
+        assertTrue(MyPlayAppList.phoneAppsLine(true, true, setOf("x"), emptySet(), yt).contains("YouTube app ($yt) not allowed"))
+        // VA-22: hidden (the owner hid the old media entry, the same package) and not installed say so.
+        val hiddenLine = MyPlayAppList.phoneAppsLine(true, true, setOf(yt), setOf(yt), yt)
+        assertTrue(hiddenLine.contains("YouTube app ($yt) hidden") && hiddenLine.contains("hidden [$yt]"))
+        assertTrue(MyPlayAppList.phoneAppsLine(true, true, setOf(yt), emptySet(), yt, missing = setOf(yt)).contains("not installed [$yt]"))
     }
 
     // VA-17: the car names what went wrong with a start; all is well says nothing.
@@ -100,5 +104,15 @@ class MyPlayAppListTest {
         assertEquals(null, s.problem(s.ON_CAR))
         assertEquals(null, s.problem(s.LAUNCHED))
         assertEquals(null, s.problem(null))
+    }
+
+    // VA-20: a failure carries how it was tried and the concrete error, shown on the car.
+    @Test fun launchDetails() {
+        val s = net.prototux.aare.launch.LaunchStatus
+        val st = s.with(s.LAUNCH_FAILED, "root", "SecurityException: not allowed\non display 7")
+        assertEquals(net.prototux.aare.launch.LaunchStatus.Problem.LAUNCH_FAILED, s.problem(st))
+        assertEquals("root: SecurityException: not allowed on display 7", s.detail(st))
+        assertEquals(null, s.detail(s.ON_CAR))
+        assertEquals(181 - 1, s.detail(s.with(s.NOT_CONNECTED, "root", "x".repeat(400)))!!.length)
     }
 }

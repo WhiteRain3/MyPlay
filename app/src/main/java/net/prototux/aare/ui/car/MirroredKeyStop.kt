@@ -76,6 +76,9 @@ internal fun MirroredKeyStop(turn: MirroredKeys.TurnMode, send: (action: Int, ke
         if (hint) {
             Text(
                 stringResource(R.string.myplay_mirror_knob_hint), style = MaterialTheme.typography.titleSmall,
+                // VA-21: its own colour for its own background, never the surrounding content colour
+                // (onBackground: light at night, which was white on the pale pill).
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp).clip(MaterialTheme.shapes.medium)
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest).padding(horizontal = 16.dp, vertical = 8.dp)
                     .testTag(MIRROR_HINT_TAG),

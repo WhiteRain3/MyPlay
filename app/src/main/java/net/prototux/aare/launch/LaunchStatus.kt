@@ -21,7 +21,19 @@ object LaunchStatus {
     /** What the car screen shows for [status], or null when all is well (or not known yet). */
     enum class Problem { NEEDS_ROOT, NOT_CONNECTED, NO_DISPLAY, LAUNCH_FAILED, ON_PHONE }
 
-    fun problem(status: String?): Problem? = when (status) {
+    /**
+     * VA-20: a status with how it was tried ([method]: root or Shizuku) and the concrete error, as
+     * "code|method: detail"; [problem] reads the code, [detail] the rest.
+     */
+    fun with(code: String, method: String, detail: String): String = "$code|$method: ${detail.replace('\n', ' ').trim()}"
+
+    /** VA-20: the "method: error" part of [status], at most [MAX_DETAIL] characters; null when there is none. */
+    fun detail(status: String?): String? = status?.substringAfter('|', "")?.trim()?.takeIf { it.isNotEmpty() }
+        ?.let { if (it.length > MAX_DETAIL) it.take(MAX_DETAIL - 1) + "…" else it }
+
+    private const val MAX_DETAIL = 180
+
+    fun problem(status: String?): Problem? = when (status?.substringBefore('|')) {
         NO_ROOT_OR_SHIZUKU -> Problem.NEEDS_ROOT
         NOT_CONNECTED -> Problem.NOT_CONNECTED
         NO_CONTEXT, NO_DISPLAY -> Problem.NO_DISPLAY

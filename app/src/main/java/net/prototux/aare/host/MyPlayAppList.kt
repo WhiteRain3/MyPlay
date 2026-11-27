@@ -29,19 +29,37 @@ internal object MyPlayAppList {
     const val YOUTUBE = "com.google.android.youtube"
 
     /**
-     * VA-18: one log line on the phone apps the car can run, so "YouTube isn't on the car" can be
-     * read off the log: the switch, root or Shizuku, how many apps are allowed (and hidden), and
-     * whether the YouTube app found is among them.
+     * VA-18, VA-22: one log line on the phone apps the car can run, so "YouTube isn't on the car" can
+     * be read off the log: the switch, root or Shizuku, the allowed apps (and which are hidden or
+     * not installed), the ones the car lists, the YouTube app's candidates and which one was taken.
      */
-    fun phoneAppsLine(on: Boolean, launcher: Boolean, allowed: Set<String>, hidden: Set<String>, youTubeApp: String?): String {
+    fun phoneAppsLine(
+        on: Boolean,
+        launcher: Boolean,
+        allowed: Set<String>,
+        hidden: Set<String>,
+        youTubeApp: String?,
+        listed: List<String> = emptyList(),
+        missing: Set<String> = emptySet(),
+        candidates: List<String> = emptyList(),
+    ): String {
         val yt = when {
             youTubeApp == null -> "no YouTube app found"
             youTubeApp !in allowed -> "YouTube app ($youTubeApp) not allowed"
             youTubeApp in hidden -> "YouTube app ($youTubeApp) hidden"
+            youTubeApp in missing -> "YouTube app ($youTubeApp) not installed"
             else -> "YouTube app ($youTubeApp) allowed"
         }
-        return "phone apps on the car: ${if (on) "on" else "off"}, root/Shizuku ${if (launcher) "yes" else "no"}, " +
-            "${allowed.size} allowed (${(allowed intersect hidden).size} hidden); $yt"
+        fun list(xs: Collection<String>) = xs.sorted().joinToString(", ", "[", "]")
+        return buildString {
+            append("phone apps on the car: ${if (on) "on" else "off"}, root/Shizuku ${if (launcher) "yes" else "no"}, ")
+            append("${allowed.size} allowed (${(allowed intersect hidden).size} hidden); $yt")
+            if (allowed.isNotEmpty()) append("; allowed ${list(allowed)}")
+            if ((allowed intersect hidden).isNotEmpty()) append(", hidden ${list(allowed intersect hidden)}")
+            if (missing.isNotEmpty()) append(", not installed ${list(missing)}")
+            if (on && launcher) append("; on the car ${listed.joinToString(", ", "[", "]")}")
+            if (candidates.isNotEmpty()) append("; YouTube candidates ${candidates.distinct().joinToString(", ", "[", "]")}")
+        }
     }
 
     /** VA-2: MovieBox Pro, found by its name (it is sideloaded, and its package differs between builds). */

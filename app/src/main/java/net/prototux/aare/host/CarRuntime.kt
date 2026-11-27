@@ -501,6 +501,7 @@ class CarRuntime(
                 VideoApps.youTubeApp(context, settings, installed) to installed.takeUnless { settings.myplayVideoAppsAdded }
             }
             youTubeApp = youTube
+            youTubeCandidates = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { VideoApps.candidates(context) }
             applyApps(found, messaging, launchable)
         }
     }
@@ -525,6 +526,9 @@ class CarRuntime(
         }
         settings.myplayVideoAppsAdded = true
     }
+
+    /** VA-22: the apps that open YouTube links (browsers left out), from the last app scan, for the log. */
+    private var youTubeCandidates: List<String> = emptyList()
 
     /** VA-18: the last phone-apps line written to the log. */
     private var lastAppsLine: String? = null
@@ -559,10 +563,6 @@ class CarRuntime(
         val launcherAvailable = AppLauncher.mayTry(context)
         // VA-1: apps that run on the car screen as themselves.
         val realApps = if (launcherAvailable) realApps() else emptySet()
-        // VA-18: why a phone app is (or isn't) on the car's app list, in the log (once per change).
-        val appsLine = MyPlayAppList.phoneAppsLine(settings.standaloneApps, launcherAvailable,
-            settings.standaloneAppPackages, hidden, youTubeApp)
-        if (appsLine != lastAppsLine) { lastAppsLine = appsLine; DiagLog.add(appsLine) }
         for (m in media.apps.value) {
             // An app that has a car UI of its own is shown once, as that; a messaging app, as messaging.
             if (m.packageName in hidden || m.packageName in messagingOnly || entries.any { it.packageName == m.packageName }) continue
@@ -584,16 +584,24 @@ class CarRuntime(
         }
         // Ordinary phone apps the user allowed onto the car screen (parked only; needs root/Shizuku).
         var realYouTube = false // MyPlay (YT-3): the YouTube app itself is among them
+        val listed = ArrayList<String>() // VA-22: for the log line
+        val missing = HashSet<String>()
         if (settings.standaloneApps && launcherAvailable) {
             for (pkg in settings.standaloneAppPackages) {
                 if (pkg in hidden) continue
-                val info = runCatching { context.packageManager.getApplicationInfo(pkg, 0) }.getOrNull() ?: continue
+                val info = runCatching { context.packageManager.getApplicationInfo(pkg, 0) }.getOrNull()
+                if (info == null) { missing += pkg; continue }
+                listed += pkg
                 val label = context.packageManager.getApplicationLabel(info).toString()
                 val icon = runCatching { context.packageManager.getApplicationIcon(info).toBitmap(128, 128) }.getOrNull()
                 entries += CarAppEntry(standaloneId(pkg), pkg, label, icon, CarAppKind.STANDALONE)
                 if (pkg == youTubeApp || pkg == YOUTUBE_PACKAGE) realYouTube = true
             }
         }
+        // VA-18, VA-22: why a phone app is (or isn't) on the car's app list, in the log (once per change).
+        val fullLine = MyPlayAppList.phoneAppsLine(settings.standaloneApps, launcherAvailable,
+            settings.standaloneAppPackages, hidden, youTubeApp, listed, missing, youTubeCandidates)
+        if (fullLine != lastAppsLine) { lastAppsLine = fullLine; DiagLog.add(fullLine) }
         if (settings.browser) {
             entries += CarAppEntry(BROWSER_ID, context.packageName, context.getString(R.string.browser_app_label), builtinIcon(R.drawable.ic_car_browser), CarAppKind.BROWSER)
             // MyPlay (the owner: "Add YouTube"): YouTube in the car browser (its mobile site, videos can
