@@ -553,8 +553,10 @@ class CarRuntime(
         }
         val messagingOnly = AndroidAutoApps.messagingOnly(messaging)
         // VA-2: YouTube and MovieBox Pro go on the car screen as the real apps, once.
-        val launcherAvailable = AppLauncher.available(context)
-        if (launcherAvailable) addVideoAppsOnce(launchable)
+        // VA-19: the once-only add needs a launcher that really works; listing phone apps on the car
+        // also tries a rooted phone's su (a refusal shows on the car).
+        if (AppLauncher.available(context)) addVideoAppsOnce(launchable)
+        val launcherAvailable = AppLauncher.mayTry(context)
         // VA-1: apps that run on the car screen as themselves.
         val realApps = if (launcherAvailable) realApps() else emptySet()
         // VA-18: why a phone app is (or isn't) on the car's app list, in the log (once per change).
@@ -844,7 +846,7 @@ class CarRuntime(
 
     /** VA-1: the apps that run on the car screen as themselves (Phone apps, with root or Shizuku there). */
     private fun realApps(): Set<String> =
-        if (settings.standaloneApps && AppLauncher.available(context)) settings.standaloneAppPackages - settings.hiddenApps else emptySet()
+        if (settings.standaloneApps && AppLauncher.mayTry(context)) settings.standaloneAppPackages - settings.hiddenApps else emptySet()
 
     /**
      * VA-5: opens [link] (a video link; null: just the app) in the real app on the car screen, never

@@ -121,12 +121,21 @@ class AppLauncher(private val context: Context) : HostedApps.Launcher {
         private const val TAG = "AareAppLauncher"
         /** Whether a privileged backend (Shizuku or allowed root) is available to run the launcher. */
         fun available(context: Context): Boolean =
-            CaptureMethods.shizukuAvailable() || CaptureMethods.rootAvailable(context) || suInstalled()
+            decide(CaptureMethods.shizukuAvailable(), CaptureMethods.rootAvailable(context), su = false)
 
         /**
-         * VA-17: a rooted phone whose owner never set up root audio (CaptureMethods.rootAvailable
-         * reads that setting) still has su: phone apps may try it, and the car says if it's refused.
+         * VA-17, VA-19: whether the car may list phone apps and try them: [available], or a rooted
+         * phone (su installed) whose owner never set root up in MyPlay; a refusal then shows on the
+         * car. Not for the phone's Phone apps page or the once-only add, which need a launcher that
+         * really works ([available]), so the root/Shizuku card still shows there.
          */
+        fun mayTry(context: Context): Boolean =
+            decide(CaptureMethods.shizukuAvailable(), CaptureMethods.rootAvailable(context), suInstalled())
+
+        /** VA-19: the rule behind [available] (su false) and [mayTry]. Pure. */
+        internal fun decide(shizuku: Boolean, root: Boolean, su: Boolean): Boolean = shizuku || root || su
+
+        /** VA-17: an su binary on the phone (granted or not). */
         fun suInstalled(): Boolean = SU_PATHS.any { runCatching { java.io.File(it).exists() }.getOrDefault(false) }
 
         private val SU_PATHS = listOf("/system/bin/su", "/system/xbin/su", "/sbin/su", "/debug_ramdisk/su", "/data/adb/ksu/bin/su", "/data/adb/ap/bin/su")
