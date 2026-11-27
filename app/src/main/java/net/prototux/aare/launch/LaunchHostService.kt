@@ -269,6 +269,8 @@ class LaunchHostService : ILaunchHost.Stub {
             else listOf("-a", Intent.ACTION_MAIN, "-c", Intent.CATEGORY_LAUNCHER, "-p", pkg)
         val flags = (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK).toString()
         val am = amStart(onDisplay, listOf("-f", flags) + args) ?: return null
+        // VA-20 low 4: am timed out, but the app may have started all the same: look before failing.
+        if (am == AM_TIMEOUT && onDisplay(ctx, pkg, onDisplay) == true) return null
         return "$first; am start: $am"
     }
 
@@ -279,7 +281,7 @@ class LaunchHostService : ILaunchHost.Stub {
     private fun amStart(display: Int, args: List<String>): String? = runCatching {
         val cmd = listOf("/system/bin/am", "start", "--display", display.toString(), "--windowingMode", WINDOWING_MODE_FULLSCREEN.toString()) + args
         val p = ProcessBuilder(cmd).redirectErrorStream(true).start()
-        if (!p.waitFor(AM_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)) { p.destroy(); return@runCatching "launch timeout" }
+        if (!p.waitFor(AM_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)) { p.destroy(); return@runCatching AM_TIMEOUT }
         val out = p.inputStream.bufferedReader().use { it.readText() }
         // "Warning: Activity not started" means an existing task came to the front or the intent
         // reached the activity on top: started, in effect (logged only).
@@ -374,5 +376,6 @@ class LaunchHostService : ILaunchHost.Stub {
         const val FULL_FLAGS = FLAG_PUBLIC or FLAG_PRESENTATION or FLAG_OWN_CONTENT_ONLY or FLAG_TRUSTED or FLAG_OWN_DISPLAY_GROUP or FLAG_ALWAYS_UNLOCKED
         const val PLACEMENT_CHECK_MS = 1_500L
         const val AM_TIMEOUT_S = 8L
+        const val AM_TIMEOUT = "launch timeout"
     }
 }
