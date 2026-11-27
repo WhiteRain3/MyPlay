@@ -281,7 +281,10 @@ class LaunchHostService : ILaunchHost.Stub {
         val p = ProcessBuilder(cmd).redirectErrorStream(true).start()
         if (!p.waitFor(AM_TIMEOUT_S, java.util.concurrent.TimeUnit.SECONDS)) { p.destroy(); return@runCatching "launch timeout" }
         val out = p.inputStream.bufferedReader().use { it.readText() }
-        val error = out.lineSequence().firstOrNull { it.startsWith("Error") || it.contains("Exception") || it.startsWith("Warning: Activity not started") }
+        // "Warning: Activity not started" means an existing task came to the front or the intent
+        // reached the activity on top: started, in effect (logged only).
+        out.lineSequence().firstOrNull { it.startsWith("Warning") }?.let { Log.i(TAG, "am start: $it") }
+        val error = out.lineSequence().firstOrNull { it.startsWith("Error") || it.contains("Exception") }
         if (p.exitValue() == 0 && error == null) null else (error ?: "exit ${p.exitValue()}").trim()
     }.getOrElse { "${it.javaClass.simpleName}: ${it.message}" }
 

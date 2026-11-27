@@ -87,17 +87,19 @@ class AppLauncher(private val context: Context) : HostedApps.Launcher {
         suProcess = runCatching { ProcessBuilder("su", "-c", cmd).start() }
             .onFailure { Log.w(TAG, "su launch failed", it); connectError = "su not runnable: ${it.message}" }.getOrNull() ?: return false
         // VA-20: su's last word, for the car's message when it refuses.
-        var lastErr: String? = null
-        suProcess?.let { p ->
-            Thread { runCatching { p.errorStream.bufferedReader().forEachLine { lastErr = it; if (BuildConfig.DEBUG) Log.d(TAG, "su: $it") } } }
-                .apply { isDaemon = true }.start()
+        val lastErr = java.util.concurrent.atomic.AtomicReference<String?>(null)
+        val reader = suProcess?.let { p ->
+            Thread { runCatching { p.errorStream.bufferedReader().forEachLine { lastErr.set(it); if (BuildConfig.DEBUG) Log.d(TAG, "su: $it") } } }
+                .apply { isDaemon = true }.also { it.start() }
         }
         val ok = got.await(8, TimeUnit.SECONDS) && host != null
         if (!ok) {
             val p = suProcess
+            // A su that already ended has its last line on the way: let the reader catch up a moment.
+            if (p != null && !p.isAlive) runCatching { reader?.join(500) }
             connectError = when {
-                p != null && !p.isAlive -> "su denied (exit ${runCatching { p.exitValue() }.getOrDefault(-1)})" + (lastErr?.let { ": $it" } ?: "")
-                else -> "su gave no answer within 8 s" + (lastErr?.let { ": $it" } ?: "")
+                p != null && !p.isAlive -> "su denied (exit ${runCatching { p.exitValue() }.getOrDefault(-1)})" + (lastErr.get()?.let { ": $it" } ?: "")
+                else -> "su gave no answer within 8 s" + (lastErr.get()?.let { ": $it" } ?: "")
             }
         }
         return ok
