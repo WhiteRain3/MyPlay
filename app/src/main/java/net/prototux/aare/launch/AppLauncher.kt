@@ -45,9 +45,16 @@ class AppLauncher(private val context: Context) : HostedApps.Launcher {
 
     /** Connects via Shizuku if available, else root. Blocks up to a few seconds; false if neither works. */
     fun connect(): Boolean {
-        if (CaptureMethods.shizukuAvailable()) return connectShizuku()
-        return connectRoot()
+        val ok = if (CaptureMethods.shizukuAvailable()) connectShizuku() else connectRoot()
+        if (!ok) failure = LaunchStatus.NOT_CONNECTED
+        return ok
     }
+
+    /** VA-17: why the app side couldn't reach the privileged host (null: it could, or not tried). */
+    @Volatile private var failure: String? = null
+
+    /** VA-17: how the last start went ([LaunchStatus]); the host's word once connected. Any thread. */
+    fun status(): String? = failure ?: runCatching { host?.status() }.getOrNull()?.takeIf { it.isNotEmpty() }
 
     private fun connectShizuku(): Boolean {
         runCatching { Shizuku.bindUserService(args, connection); didBind = true }
@@ -114,6 +121,14 @@ class AppLauncher(private val context: Context) : HostedApps.Launcher {
         private const val TAG = "AareAppLauncher"
         /** Whether a privileged backend (Shizuku or allowed root) is available to run the launcher. */
         fun available(context: Context): Boolean =
-            CaptureMethods.shizukuAvailable() || CaptureMethods.rootAvailable(context)
+            CaptureMethods.shizukuAvailable() || CaptureMethods.rootAvailable(context) || suInstalled()
+
+        /**
+         * VA-17: a rooted phone whose owner never set up root audio (CaptureMethods.rootAvailable
+         * reads that setting) still has su: phone apps may try it, and the car says if it's refused.
+         */
+        fun suInstalled(): Boolean = SU_PATHS.any { runCatching { java.io.File(it).exists() }.getOrDefault(false) }
+
+        private val SU_PATHS = listOf("/system/bin/su", "/system/xbin/su", "/sbin/su", "/debug_ramdisk/su", "/data/adb/ksu/bin/su", "/data/adb/ap/bin/su")
     }
 }

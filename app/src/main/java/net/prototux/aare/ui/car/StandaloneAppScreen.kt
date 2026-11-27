@@ -12,6 +12,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.PauseCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -100,6 +101,24 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
         if (runtime.ui.videoLink === link) runtime.ui.videoLink = null
     }
 
+    // VA-17: how the start went, said on the car (never a silent fallback to something else).
+    var attempted by remember(packageName) { mutableStateOf(false) }
+    var problem by remember(packageName) { mutableStateOf<net.prototux.aare.launch.LaunchStatus.Problem?>(null) }
+    LaunchedEffect(attempted) {
+        if (!attempted) return@LaunchedEffect
+        // The host checks where the app landed a moment after launching it.
+        repeat(STATUS_POLLS) {
+            val status = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { launcher.status() }
+            problem = net.prototux.aare.launch.LaunchStatus.problem(status)
+            if (problem != null || status == net.prototux.aare.launch.LaunchStatus.ON_CAR) {
+                net.prototux.aare.DiagLog.add("phone app on the car: ${status ?: "?"}")
+                return@LaunchedEffect
+            }
+            kotlinx.coroutines.delay(STATUS_POLL_MS)
+        }
+    }
+    val appLabel = runtime.ui.apps.firstOrNull { it.packageName == packageName }?.label ?: packageName
+
     Box(modifier.background(Color.Black)) {
         if (!driving) {
             androidx.compose.ui.viewinterop.AndroidView(
@@ -122,6 +141,7 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
                                         hosted.displayId = id
                                         started = id >= 0
                                     }
+                                    attempted = true // VA-17
                                 }.apply { isDaemon = true }.start()
                             }
                             override fun onSurfaceTextureSizeChanged(st: SurfaceTexture, w: Int, h: Int) {
@@ -171,7 +191,9 @@ internal fun StandaloneAppScreen(runtime: CarRuntime, driving: Boolean, packageN
                 modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth()
                     .background(Color.Black.copy(alpha = 0.35f)).padding(horizontal = 12.dp, vertical = 3.dp),
             )
-            if (!started) Placeholder(stringResource(R.string.standalone_starting), loading = true)
+            val trouble = problem
+            if (trouble != null) Placeholder(LaunchProblemText.of(context, trouble, appLabel), loading = false, icon = Icons.Rounded.ErrorOutline)
+            else if (!started) Placeholder(stringResource(R.string.standalone_starting), loading = true)
         } else {
             Placeholder(stringResource(R.string.standalone_paused_driving), loading = false, icon = Icons.Rounded.PauseCircle)
         }
@@ -193,4 +215,21 @@ internal object VideoLinkGate {
 
     fun opensNow(link: net.prototux.aare.host.CarVideo.Link?, packageName: String, started: Boolean, driving: Boolean): Boolean =
         link != null && link.packageName == packageName && link.link != null && started && !driving
+}
+
+/** VA-17: how often, and how many times, the car asks how the start went. */
+private const val STATUS_POLL_MS = 500L
+private const val STATUS_POLLS = 8
+
+/** VA-17: the car's words for a start that went wrong ([net.prototux.aare.launch.LaunchStatus]). */
+internal object LaunchProblemText {
+    fun of(context: android.content.Context, problem: net.prototux.aare.launch.LaunchStatus.Problem, app: String): String = context.getString(
+        when (problem) {
+            net.prototux.aare.launch.LaunchStatus.Problem.NEEDS_ROOT, net.prototux.aare.launch.LaunchStatus.Problem.NOT_CONNECTED -> R.string.myplay_hosted_no_root
+            net.prototux.aare.launch.LaunchStatus.Problem.NO_DISPLAY -> R.string.myplay_hosted_no_display
+            net.prototux.aare.launch.LaunchStatus.Problem.LAUNCH_FAILED -> R.string.myplay_hosted_launch_failed
+            net.prototux.aare.launch.LaunchStatus.Problem.ON_PHONE -> R.string.myplay_hosted_on_phone
+        },
+        app,
+    )
 }

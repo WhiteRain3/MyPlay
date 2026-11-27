@@ -143,4 +143,9 @@
     <string name="myplay_play_on_car_no_car" translatable="false">Connect to the car to play this on it</string>
     <string name="myplay_play_on_car_dropped" translatable="false">Link from phone dropped: not parked within 10 minutes</string>
     <string name="myplay_play_on_car_no_app" translatable="false">Add the app to Phone apps in MyPlay to play this on the car</string>
+    <!-- MyPlay (VA-17): a phone app that could not run on the car screen says why -->
+    <string name="myplay_hosted_no_root" translatable="false">%1$s runs on the car through root or Shizuku, and MyPlay got neither. Allow MyPlay in your root manager (or Shizuku), then open %1$s again.</string>
+    <string name="myplay_hosted_no_display" translatable="false">The phone refused the car screen for %1$s, so it can\'t run here.</string>
+    <string name="myplay_hosted_launch_failed" translatable="false">%1$s wouldn\'t start on the car screen.</string>
+    <string name="myplay_hosted_on_phone" translatable="false">%1$s opened on the phone instead of the car: it refuses other screens. MyPlay doesn\'t mirror the phone in its place.</string>
 </resources>

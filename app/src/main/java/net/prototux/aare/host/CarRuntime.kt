@@ -139,7 +139,10 @@ class CarRuntime(
      * colours. A source of its own (never CarData) and never saved; does nothing in a car session.
      */
     fun pretendSpeed(kmh: Float?) {
-        ui.pretendSpeed?.set(kmh?.let { Math.round(it) })
+        val p = ui.pretendSpeed ?: return
+        p.set(kmh?.let { Math.round(it) })
+        // VA-18: the Preview is parked (phone apps and video run) unless its pretend speed is above 0.
+        carDriving((kmh ?: 0f) >= 1f)
     }
 
     /** Hosted car app connections by entry id. */
@@ -523,6 +526,9 @@ class CarRuntime(
         settings.myplayVideoAppsAdded = true
     }
 
+    /** VA-18: the last phone-apps line written to the log. */
+    private var lastAppsLine: String? = null
+
     /** VA-4: the phone's YouTube app (a patched build or Google's, or the owner's choice), from the last app scan. */
     @Volatile var youTubeApp: String? = null
         private set
@@ -551,6 +557,10 @@ class CarRuntime(
         if (launcherAvailable) addVideoAppsOnce(launchable)
         // VA-1: apps that run on the car screen as themselves.
         val realApps = if (launcherAvailable) realApps() else emptySet()
+        // VA-18: why a phone app is (or isn't) on the car's app list, in the log (once per change).
+        val appsLine = MyPlayAppList.phoneAppsLine(settings.standaloneApps, launcherAvailable,
+            settings.standaloneAppPackages, hidden, youTubeApp)
+        if (appsLine != lastAppsLine) { lastAppsLine = appsLine; DiagLog.add(appsLine) }
         for (m in media.apps.value) {
             // An app that has a car UI of its own is shown once, as that; a messaging app, as messaging.
             if (m.packageName in hidden || m.packageName in messagingOnly || entries.any { it.packageName == m.packageName }) continue

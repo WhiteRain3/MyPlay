@@ -35,6 +35,12 @@ interface ILaunchHost {
     /** MyPlay (VA-8): the car screen's surface went away: keep the display (and the app) with no surface. */
     void detach() = 7;
 
+    /**
+     * MyPlay (VA-17): what happened to the last start, in a few words for the car screen: the
+     * display made, the app launched, and whether it is on the car's display or went to the phone.
+     */
+    String status() = 8;
+
     /** Shizuku's user-service teardown call. */
     void destroy() = 16777114;
 }

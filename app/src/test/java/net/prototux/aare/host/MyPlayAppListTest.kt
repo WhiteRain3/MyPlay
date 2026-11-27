@@ -79,4 +79,26 @@ class MyPlayAppListTest {
         assertEquals("a patched build that claims no links, by its name", morphe,
             MyPlayAppList.youTubeApp(emptyList(), emptySet(), null, mapOf(morphe to "YouTube Morphe", "com.google.android.apps.youtube.music" to "YouTube Music")))
     }
+
+    // VA-18: the log says why YouTube is or isn't on the car.
+    @Test fun thePhoneAppsLine() {
+        val yt = "app.morphe.android.youtube"
+        assertEquals("phone apps on the car: off, root/Shizuku no, 0 allowed (0 hidden); no YouTube app found",
+            MyPlayAppList.phoneAppsLine(false, false, emptySet(), emptySet(), null))
+        assertEquals("phone apps on the car: on, root/Shizuku yes, 2 allowed (0 hidden); YouTube app ($yt) allowed",
+            MyPlayAppList.phoneAppsLine(true, true, setOf(yt, "x"), emptySet(), yt))
+        assertTrue(MyPlayAppList.phoneAppsLine(true, true, setOf("x"), emptySet(), yt).endsWith("not allowed"))
+        assertTrue(MyPlayAppList.phoneAppsLine(true, true, setOf(yt), setOf(yt), yt).endsWith("hidden"))
+    }
+
+    // VA-17: the car names what went wrong with a start; all is well says nothing.
+    @Test fun launchProblems() {
+        val s = net.prototux.aare.launch.LaunchStatus
+        assertEquals(net.prototux.aare.launch.LaunchStatus.Problem.ON_PHONE, s.problem(s.ON_PHONE))
+        assertEquals(net.prototux.aare.launch.LaunchStatus.Problem.NO_DISPLAY, s.problem(s.NO_DISPLAY))
+        assertEquals(net.prototux.aare.launch.LaunchStatus.Problem.NOT_CONNECTED, s.problem(s.NOT_CONNECTED))
+        assertEquals(null, s.problem(s.ON_CAR))
+        assertEquals(null, s.problem(s.LAUNCHED))
+        assertEquals(null, s.problem(null))
+    }
 }

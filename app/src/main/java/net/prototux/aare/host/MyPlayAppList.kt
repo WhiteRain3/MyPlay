@@ -28,6 +28,22 @@ internal object MyPlayAppList {
     /** Google's own YouTube app; a patched build (ReVanced, Morphe…) has another package. */
     const val YOUTUBE = "com.google.android.youtube"
 
+    /**
+     * VA-18: one log line on the phone apps the car can run, so "YouTube isn't on the car" can be
+     * read off the log: the switch, root or Shizuku, how many apps are allowed (and hidden), and
+     * whether the YouTube app found is among them.
+     */
+    fun phoneAppsLine(on: Boolean, launcher: Boolean, allowed: Set<String>, hidden: Set<String>, youTubeApp: String?): String {
+        val yt = when {
+            youTubeApp == null -> "no YouTube app found"
+            youTubeApp !in allowed -> "YouTube app ($youTubeApp) not allowed"
+            youTubeApp in hidden -> "YouTube app ($youTubeApp) hidden"
+            else -> "YouTube app ($youTubeApp) allowed"
+        }
+        return "phone apps on the car: ${if (on) "on" else "off"}, root/Shizuku ${if (launcher) "yes" else "no"}, " +
+            "${allowed.size} allowed (${(allowed intersect hidden).size} hidden); $yt"
+    }
+
     /** VA-2: MovieBox Pro, found by its name (it is sideloaded, and its package differs between builds). */
     fun isMovieBox(label: String): Boolean = label.filterNot { it.isWhitespace() }.contains("moviebox", ignoreCase = true)
 

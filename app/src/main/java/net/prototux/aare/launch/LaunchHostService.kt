@@ -34,6 +34,8 @@ class LaunchHostService : ILaunchHost.Stub {
     private val injectedContext: Context?
     @Volatile private var display: VirtualDisplay? = null
     @Volatile private var displayId: Int = -1
+    /** VA-17: the last start's outcome (see [status]). */
+    @Volatile private var lastStatus: String = ""
     @Volatile private var displayWakeLock: PowerManager.WakeLock? = null
     private var screenOffReceiver: BroadcastReceiver? = null
     private var receiverContext: Context? = null
@@ -55,8 +57,8 @@ class LaunchHostService : ILaunchHost.Stub {
         keepDisplayAwake: Boolean,
     ): Int {
         stop()
-        val ctx = injectedContext ?: systemContext() ?: return -1
-        val vd = createDisplay(ctx, surface, width, height, dpi) ?: return -1
+        val ctx = injectedContext ?: systemContext() ?: return (-1).also { lastStatus = LaunchStatus.NO_CONTEXT }
+        val vd = createDisplay(ctx, surface, width, height, dpi) ?: return (-1).also { lastStatus = LaunchStatus.NO_DISPLAY }
         display = vd
         displayId = vd.display.displayId
         if (keepDisplayAwake) enableKeepAwakeFallback(ctx, displayId)
@@ -66,6 +68,20 @@ class LaunchHostService : ILaunchHost.Stub {
         ignoreOrientationRequest(displayId)
         if (!launch(ctx, packageName, displayId)) {
             Log.w(TAG, "created display ${displayId} but could not launch $packageName on it")
+            lastStatus = LaunchStatus.LAUNCH_FAILED
+        } else {
+            lastStatus = LaunchStatus.LAUNCHED
+            // VA-17: an app that refuses other screens opens on the phone instead; say so, don't let it pass.
+            val id = displayId
+            Thread {
+                Thread.sleep(PLACEMENT_CHECK_MS)
+                if (displayId != id) return@Thread
+                lastStatus = when (onDisplay(ctx, packageName, id)) {
+                    true -> LaunchStatus.ON_CAR
+                    false -> LaunchStatus.ON_PHONE
+                    null -> lastStatus
+                }
+            }.apply { name = "AARE-placement"; isDaemon = true }.start()
         }
         return displayId
     }
@@ -103,6 +119,21 @@ class LaunchHostService : ILaunchHost.Stub {
             true
         }.onFailure { Log.w(TAG, "open($packageName) failed: ${it.message}") }.getOrDefault(false)
     }
+
+    override fun status(): String = lastStatus
+
+    /**
+     * VA-17: whether [pkg]'s task is on display [id] (true), on another display (false), or unknown
+     * (null: no task seen, or the hidden TaskInfo.displayId could not be read).
+     */
+    @Suppress("DEPRECATION")
+    private fun onDisplay(ctx: Context, pkg: String, id: Int): Boolean? = runCatching {
+        val am = ctx.getSystemService(android.app.ActivityManager::class.java)
+        val tasks = am.getRunningTasks(20).filter { (it.topActivity ?: it.baseActivity)?.packageName == pkg }
+        if (tasks.isEmpty()) return@runCatching null
+        val field = android.app.TaskInfo::class.java.getField("displayId")
+        tasks.any { field.getInt(it) == id }
+    }.onFailure { Log.w(TAG, "placement check: ${it.message}") }.getOrNull()
 
     override fun detach() {
         runCatching { display?.surface = null }
@@ -187,12 +218,17 @@ class LaunchHostService : ILaunchHost.Stub {
         }.apply { name = "AARE-display-wakeup"; isDaemon = true }.start()
     }
 
-    /** Build the virtual display. Trusted + its own display group lets an arbitrary app run and focus on it. */
+    /**
+     * Build the virtual display. Trusted + its own display group lets an arbitrary app run and focus
+     * on it. VA-17: never a mirror of the phone (own content only): a public display with nothing of
+     * its own on it shows the phone's screen, which is how an app that refused this display looked
+     * like the phone mirrored.
+     */
     private fun createDisplay(ctx: Context, surface: Surface, w: Int, h: Int, dpi: Int): VirtualDisplay? {
         val dm = ctx.getSystemService(DisplayManager::class.java) ?: return null
         // Preferred flags for hosting a foreign app interactively; fall back to the plain public ones
         // if the framework rejects the hidden bits for this uid/version.
-        for (flags in intArrayOf(FULL_FLAGS, FLAG_PUBLIC or FLAG_PRESENTATION)) {
+        for (flags in intArrayOf(FULL_FLAGS, FLAG_PUBLIC or FLAG_PRESENTATION or FLAG_OWN_CONTENT_ONLY)) {
             val vd = runCatching { dm.createVirtualDisplay("AARE app", w, h, dpi.coerceAtLeast(120), surface, flags) }
                 .onFailure { Log.w(TAG, "createVirtualDisplay(flags=$flags) failed: ${it.message}") }
                 .getOrNull()
@@ -287,9 +323,11 @@ class LaunchHostService : ILaunchHost.Stub {
         // VirtualDisplay flags (public + hidden bits). Hidden ones let a foreign app run and take focus.
         const val FLAG_PUBLIC = 1 shl 0
         const val FLAG_PRESENTATION = 1 shl 1
+        const val FLAG_OWN_CONTENT_ONLY = 1 shl 3 // VA-17: never mirror the phone's screen
         const val FLAG_TRUSTED = 1 shl 10 // hidden, API 29+
         const val FLAG_OWN_DISPLAY_GROUP = 1 shl 11 // hidden, API 31+
         const val FLAG_ALWAYS_UNLOCKED = 1 shl 12 // hidden, API 30+
-        const val FULL_FLAGS = FLAG_PUBLIC or FLAG_PRESENTATION or FLAG_TRUSTED or FLAG_OWN_DISPLAY_GROUP or FLAG_ALWAYS_UNLOCKED
+        const val FULL_FLAGS = FLAG_PUBLIC or FLAG_PRESENTATION or FLAG_OWN_CONTENT_ONLY or FLAG_TRUSTED or FLAG_OWN_DISPLAY_GROUP or FLAG_ALWAYS_UNLOCKED
+        const val PLACEMENT_CHECK_MS = 1_500L
     }
 }
